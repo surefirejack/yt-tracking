@@ -2,6 +2,7 @@
 
 namespace App\Providers\Filament;
 
+use App\Models\Tenant;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
@@ -73,9 +74,10 @@ class DashboardPanelProvider extends PanelProvider
                         hasAvatars: false, // Enables the avatar upload form component (default = false)
                         slug: 'my-profile' // Sets the slug for the profile page (default = 'my-profile')
                     )
-                ->myProfileComponents([
-                    \App\Livewire\AddressForm::class,
-                ])
-            ]);
+                    ->myProfileComponents([
+                        \App\Livewire\AddressForm::class,
+                    ]),
+            ])
+            ->tenant(Tenant::class, 'uuid');
     }
 }

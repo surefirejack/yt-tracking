@@ -96,6 +96,7 @@ class PaddleWebhookHandler
                 'payment_provider_id' => $paymentProvider->id,
                 'trial_ends_at' => $trialEndsAt,
                 'canceled_at' => $canceledAt,
+                'quantity' => $item['quantity'] ?? 1,
             ]);
         } elseif ($eventType == 'transaction.created') {
             $subscriptionUuid = $eventData['custom_data']['subscriptionUuid'] ?? null;

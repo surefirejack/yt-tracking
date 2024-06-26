@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Constants\DiscountConstants;
+use App\Constants\PlanType;
 use App\Dto\CartDto;
 use App\Dto\TotalsDto;
 use App\Models\Currency;
@@ -44,7 +45,7 @@ class CalculationManager
         return $oneTimeProduct->prices()->where('currency_id', $defaultCurrency->id)->firstOrFail();
     }
 
-    public function calculatePlanTotals(?User $user, string $planSlug, ?string $discountCode = null, string $actionType = DiscountConstants::ACTION_TYPE_ANY): TotalsDto
+    public function calculatePlanTotals(?User $user, string $planSlug, ?string $discountCode = null, ?int $quantity = 1, string $actionType = DiscountConstants::ACTION_TYPE_ANY): TotalsDto
     {
         $plan = $this->planManager->getActivePlanBySlug($planSlug);
 
@@ -62,7 +63,11 @@ class CalculationManager
 
         $totalsDto->currencyCode = $currencyCode;
 
-        $totalsDto->subtotal = $planPrice->price;
+        if ($plan->type === PlanType::SEAT_BASED->value) {
+            $totalsDto->subtotal = $planPrice->price * $quantity;
+        } else {
+            $totalsDto->subtotal = $planPrice->price;
+        }
 
         $totalsDto->discountAmount = 0;
         if ($discountCode !== null) {

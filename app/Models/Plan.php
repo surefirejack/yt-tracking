@@ -20,6 +20,8 @@ class Plan extends Model
         'trial_interval_id',
         'trial_interval_count',
         'is_active',
+        'type',
+        'max_users_per_tenant',
     ];
 
     public function product()
@@ -62,6 +64,7 @@ class Plan extends Model
                 'interval_count',
                 'trial_interval_id',
                 'trial_interval_count',
+                'max_users_per_tenant',
             ]) || boolval($plan->getOriginal('has_trial')) !== boolval($plan->has_trial)) {
                 $plan->paymentProviderData()->delete();
                 foreach ($plan->prices as $planPrice) {

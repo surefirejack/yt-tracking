@@ -37,7 +37,7 @@ class StripeProvider implements PaymentProviderInterface
 
     }
 
-    public function createSubscriptionCheckoutRedirectLink(Plan $plan, Subscription $subscription, ?Discount $discount = null): string
+    public function createSubscriptionCheckoutRedirectLink(Plan $plan, Subscription $subscription, ?Discount $discount = null, int $quantity = 1): string
     {
         $paymentProvider = $this->assertProviderIsActive();
 
@@ -66,7 +66,7 @@ class StripeProvider implements PaymentProviderInterface
                 'mode' => 'subscription',
                 'line_items' => [[
                     'price' => $stripePriceId,
-                    'quantity' => 1,
+                    'quantity' => $quantity,
                 ]],
                 'subscription_data' => [
                     'metadata' => [
@@ -323,7 +323,7 @@ class StripeProvider implements PaymentProviderInterface
         return PaymentProviderConstants::STRIPE_SLUG;
     }
 
-    public function initSubscriptionCheckout(Plan $plan, Subscription $subscription, ?Discount $discount = null): array
+    public function initSubscriptionCheckout(Plan $plan, Subscription $subscription, ?Discount $discount = null, int $quantity = 1): array
     {
         // stripe does not need any initialization
 
@@ -532,5 +532,10 @@ class StripeProvider implements PaymentProviderInterface
         }
 
         return $paymentProvider;
+    }
+
+    public function supportsSeatBasedSubscriptions(): bool
+    {
+        return true;
     }
 }

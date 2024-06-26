@@ -52,7 +52,11 @@
                         </div>
                     </div>
 
-                    <div class="text-primary-900 my-4">
+                    @if ($plan->type === \App\Constants\PlanType::SEAT_BASED->value)
+                        <livewire:checkout.subscription-seats :plan="$plan" />
+                    @endif
+
+                    <div class="text-primary-900 font-semibold my-4">
                         {{ __('What you get:') }}
                     </div>
                     <div>

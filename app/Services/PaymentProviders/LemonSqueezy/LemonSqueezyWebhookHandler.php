@@ -299,7 +299,9 @@ class LemonSqueezyWebhookHandler
             return null;
         }
 
-        return $this->subscriptionManager->create($plan->slug, $user->id, $paymentProvider, $providerSubscriptionId);
+        $quantity = $attributes['first_subscription_item']['quantity'] ?? 1;
+
+        return $this->subscriptionManager->create($plan->slug, $user->id, $paymentProvider, $providerSubscriptionId, $quantity);
     }
 
     private function mapOrderStatusToTransactionStatus(string $providerOrderStatus): TransactionStatus

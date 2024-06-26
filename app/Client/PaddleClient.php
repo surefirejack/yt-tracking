@@ -27,6 +27,7 @@ class PaddleClient
         string $currencyCode,
         ?string $trialInterval = null,
         ?int $trialFrequency = null,
+        int $maxQuantity = 1,
     ): Response {
 
         $priceObject = [
@@ -42,7 +43,7 @@ class PaddleClient
             ],
             'quantity' => [
                 'minimum' => 1,
-                'maximum' => 1,
+                'maximum' => $maxQuantity,
             ],
         ];
 

@@ -6,6 +6,7 @@ use App\Client\PaddleClient;
 use App\Constants\DiscountConstants;
 use App\Constants\PaddleConstants;
 use App\Constants\PaymentProviderConstants;
+use App\Constants\PlanType;
 use App\Filament\Dashboard\Resources\SubscriptionResource\Pages\PaymentProviders\Paddle\PaddleUpdatePaymentDetails;
 use App\Models\Currency;
 use App\Models\Discount;
@@ -37,7 +38,7 @@ class PaddleProvider implements PaymentProviderInterface
 
     }
 
-    public function initSubscriptionCheckout(Plan $plan, Subscription $subscription, ?Discount $discount = null): array
+    public function initSubscriptionCheckout(Plan $plan, Subscription $subscription, ?Discount $discount = null, int $quantity = 1): array
     {
         $paymentProvider = $this->assertProviderIsActive();
 
@@ -62,7 +63,7 @@ class PaddleProvider implements PaymentProviderInterface
                 [
                     'paddleProductId' => $paddleProductId,
                     'paddlePriceId' => $paddlePrice,
-                    'quantity' => 1,
+                    'quantity' => $quantity,
                 ],
             ],
         ];
@@ -219,7 +220,7 @@ class PaddleProvider implements PaymentProviderInterface
         return PaymentProviderConstants::PADDLE_SLUG;
     }
 
-    public function createSubscriptionCheckoutRedirectLink(Plan $plan, Subscription $subscription, ?Discount $discount = null): string
+    public function createSubscriptionCheckoutRedirectLink(Plan $plan, Subscription $subscription, ?Discount $discount = null, int $quantity = 1): string
     {
         throw new \Exception('Not a redirect payment provider');
     }
@@ -326,6 +327,11 @@ class PaddleProvider implements PaymentProviderInterface
             $trialFrequency = $plan->trial_interval_count;
         }
 
+        $maxQuantity = 1;
+        if ($plan->type === PlanType::SEAT_BASED->value) {
+            $maxQuantity = $plan->max_users_per_tenant > 0 ? $plan->max_users_per_tenant : 10000;
+        }
+
         $response = $this->paddleClient->createPriceForPlan(
             $paddleProductId,
             $plan->interval()->firstOrFail()->date_identifier,
@@ -334,6 +340,7 @@ class PaddleProvider implements PaymentProviderInterface
             $currency->code,
             $trialInterval,
             $trialFrequency,
+            $maxQuantity,
         );
 
         if ($response->failed()) {
@@ -404,5 +411,10 @@ class PaddleProvider implements PaymentProviderInterface
         }
 
         return true;
+    }
+
+    public function supportsSeatBasedSubscriptions(): bool
+    {
+        return false;
     }
 }

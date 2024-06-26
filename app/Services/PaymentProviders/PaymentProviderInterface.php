@@ -13,15 +13,17 @@ interface PaymentProviderInterface
 
     public function getName(): string;
 
-    public function createSubscriptionCheckoutRedirectLink(Plan $plan, Subscription $subscription, ?Discount $discount = null): string;
+    public function createSubscriptionCheckoutRedirectLink(Plan $plan, Subscription $subscription, ?Discount $discount = null, int $quantity = 1): string;
 
     public function createProductCheckoutRedirectLink(Order $order, ?Discount $discount = null): string;
 
-    public function initSubscriptionCheckout(Plan $plan, Subscription $subscription, ?Discount $discount = null): array;
+    public function initSubscriptionCheckout(Plan $plan, Subscription $subscription, ?Discount $discount = null, int $quantity = 1): array;
 
     public function initProductCheckout(Order $order, ?Discount $discount = null): array;
 
     public function isRedirectProvider(): bool;
+
+    public function supportsSeatBasedSubscriptions(): bool;
 
     public function isOverlayProvider(): bool;
 

@@ -38,8 +38,13 @@ class SubscriptionManager
         return count($notDeadSubscriptions) === 0;
     }
 
-    public function create(string $planSlug, int $userId, ?PaymentProvider $paymentProvider = null, ?string $paymentProviderSubscriptionId = null): Subscription
-    {
+    public function create(
+        string $planSlug,
+        int $userId,
+        ?PaymentProvider $paymentProvider = null,
+        ?string $paymentProviderSubscriptionId = null,
+        int $quantity = 1,
+    ): Subscription {
         $plan = Plan::where('slug', $planSlug)->where('is_active', true)->firstOrFail();
 
         if (! $this->canCreateSubscription($userId)) {
@@ -47,7 +52,7 @@ class SubscriptionManager
         }
 
         $newSubscription = null;
-        DB::transaction(function () use ($plan, $userId, &$newSubscription, $paymentProvider, $paymentProviderSubscriptionId) {
+        DB::transaction(function () use ($plan, $userId, &$newSubscription, $paymentProvider, $paymentProviderSubscriptionId, $quantity) {
             $this->deleteAllNewSubscriptions($userId);
 
             $planPrice = $this->calculationManager->getPlanPrice($plan);
@@ -61,6 +66,7 @@ class SubscriptionManager
                 'status' => SubscriptionStatus::NEW->value,
                 'interval_id' => $plan->interval_id,
                 'interval_count' => $plan->interval_count,
+                'quantity' => $quantity,
             ];
 
             if ($paymentProvider) {

@@ -56,4 +56,10 @@ class Order extends Model
     {
         return $this->belongsTo(PaymentProvider::class);
     }
+
+    public function tenant()
+    {
+        return $this->belongsTo(Tenant::class);
+    }
+
 }

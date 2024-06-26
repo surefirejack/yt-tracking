@@ -64,6 +64,7 @@ class StripeWebhookHandler
                 'payment_provider_id' => $paymentProvider->id,
                 'trial_ends_at' => $trialEndsAt,
                 'cancelled_at' => $cancelledAt,
+                'quantity' => $event->data->object->quantity,
             ]);
         } elseif ($event->type == 'customer.subscription.trial_will_end') {
             // TODO send email to user

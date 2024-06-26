@@ -2,6 +2,8 @@
 
 namespace App\Filament\Admin\Resources;
 
+use App\Constants\PlanType;
+use App\Mapper\PlanTypeMapper;
 use App\Models\Interval;
 use App\Models\Plan;
 use App\Models\Product;
@@ -55,6 +57,22 @@ class PlanResource extends Resource
                         ->rules(['alpha_dash'])
                         ->unique(ignoreRecord: true)
                         ->disabledOn('edit'),
+                    Forms\Components\Radio::make('type')
+                        ->helperText(__('Flat Rate: Charge a fixed amount for each billing cycle. Seat Based: Charge per seat/user for each billing cycle.'))
+                        ->options([
+                            PlanType::FLAT_RATE->value => __('Flat Rate'),
+                            PlanType::SEAT_BASED->value => __('Seat Based'),
+                        ])
+                        ->default(PlanType::FLAT_RATE->value)
+                        ->disabledOn('edit')
+                        ->required(),
+                    Forms\Components\TextInput::make('max_users_per_tenant')
+                        ->label(__('Max Users Per Tenant'))
+                        ->helperText(__('The maximum number of users that can be added to a tenant (team). Use that to limited the number of users that can use this plan for each tenant. Use "0" for unlimited.'))
+                        ->integer()
+                        ->default(0)
+                        ->minValue(0)
+                        ->required(),
                     Forms\Components\Select::make('product_id')
                         // only products with is_default = false can be selected
                         ->relationship('product', 'name', modifyQueryUsing: fn (Builder $query) => $query->where('is_default', false))
@@ -129,6 +147,9 @@ class PlanResource extends Resource
                 Tables\Columns\TextColumn::make('interval')->formatStateUsing(function (string $state, $record) {
                     return $record->interval_count.' '.$record->interval->name;
                 })->label(__('Interval')),
+                Tables\Columns\TextColumn::make('type')->formatStateUsing(function (string $state, $record, PlanTypeMapper $mapper) {
+                    return $mapper->mapForDisplay($state);
+                })->label(__('Type')),
                 Tables\Columns\TextColumn::make('has_trial')->formatStateUsing(function (string $state, $record) {
                     if ($record->has_trial) {
                         return $record->trial_interval_count.' '.$record->trialInterval->name;

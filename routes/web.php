@@ -23,6 +23,18 @@ Route::get('/', function () {
     return view('home');
 })->name('home')->middleware('sitemapped');
 
+Route::get('/dashboard', function () {
+    $user = Auth::user();
+    $tenant = $user->tenants()->first();
+
+    if ($tenant !== null) {
+        return redirect()->route('filament.dashboard.pages.dashboard', ['tenant' => $tenant]);
+    }
+
+    // todo: redirect to tenant creation page
+
+})->name('dashboard');
+
 Auth::routes();
 
 Route::get('/email/verify', function () {

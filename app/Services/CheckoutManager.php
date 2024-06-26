@@ -14,11 +14,15 @@ class CheckoutManager
 
     }
 
-    public function initSubscriptionCheckout(string $planSlug)
+    public function initSubscriptionCheckout(string $planSlug, int $quantity = 1)
     {
         $subscription = $this->subscriptionManager->findNewByPlanSlugAndUser($planSlug, auth()->id());
         if ($subscription === null) {
-            $subscription = $this->subscriptionManager->create($planSlug, auth()->id());
+            $subscription = $this->subscriptionManager->create(
+                planSlug: $planSlug,
+                userId: auth()->id(),
+                quantity: $quantity
+            );
         }
 
         return $subscription;

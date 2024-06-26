@@ -34,7 +34,7 @@ class LemonSqueezyProvider implements PaymentProviderInterface
 
     }
 
-    public function createSubscriptionCheckoutRedirectLink(Plan $plan, Subscription $subscription, ?Discount $discount = null): string
+    public function createSubscriptionCheckoutRedirectLink(Plan $plan, Subscription $subscription, ?Discount $discount = null, int $quantity = 1): string
     {
         $paymentProvider = $this->assertProviderIsActive();
 
@@ -70,8 +70,8 @@ class LemonSqueezyProvider implements PaymentProviderInterface
                 ],
                 'variant_quantities' => [
                     [
-                        'variant_id' => $variantId,
-                        'quantity' => 1,
+                        'variant_id' => intval($variantId),
+                        'quantity' => $quantity,
                     ],
                 ],
             ],
@@ -124,7 +124,7 @@ class LemonSqueezyProvider implements PaymentProviderInterface
             }
 
             $variantQuantities[] = [
-                'variant_id' => $variantId,
+                'variant_id' => intval($variantId),
                 'quantity' => $item->quantity,
             ];
 
@@ -284,7 +284,7 @@ class LemonSqueezyProvider implements PaymentProviderInterface
         return PaymentProviderConstants::LEMON_SQUEEZY_SLUG;
     }
 
-    public function initSubscriptionCheckout(Plan $plan, Subscription $subscription, ?Discount $discount = null): array
+    public function initSubscriptionCheckout(Plan $plan, Subscription $subscription, ?Discount $discount = null, int $quantity = 1): array
     {
         // lemon squeezy does not need any initialization
 
@@ -363,5 +363,10 @@ class LemonSqueezyProvider implements PaymentProviderInterface
         }
 
         return $paymentProvider;
+    }
+
+    public function supportsSeatBasedSubscriptions(): bool
+    {
+        return true;
     }
 }

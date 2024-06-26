@@ -47,6 +47,7 @@ class SubscriptionCheckoutController extends Controller
             auth()->user(),
             $planSlug,
             $checkoutDto?->discountCode,
+            $checkoutDto->quantity,
         );
 
         return view('checkout.subscription', [
