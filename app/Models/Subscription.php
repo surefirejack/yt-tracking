@@ -30,6 +30,7 @@ class Subscription extends Model
         'cancellation_reason',
         'cancellation_additional_info',
         'quantity',
+        'tenant_id',
     ];
 
     public function user()

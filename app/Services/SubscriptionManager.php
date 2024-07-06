@@ -23,6 +23,7 @@ class SubscriptionManager
     public function __construct(
         private CalculationManager $calculationManager,
         private PlanManager $planManager,
+        private TenantCreationManager $tenantCreationManager,
     ) {
 
     }
@@ -51,8 +52,11 @@ class SubscriptionManager
             throw new SubscriptionCreationNotAllowedException(__('You already have subscription.'));
         }
 
+        $user = User::findOrFail($userId);
+        $tenant = $this->tenantCreationManager->getOrCreateTenantForUserSubscription($user, true);
+
         $newSubscription = null;
-        DB::transaction(function () use ($plan, $userId, &$newSubscription, $paymentProvider, $paymentProviderSubscriptionId, $quantity) {
+        DB::transaction(function () use ($plan, $userId, &$newSubscription, $paymentProvider, $paymentProviderSubscriptionId, $quantity, $tenant) {
             $this->deleteAllNewSubscriptions($userId);
 
             $planPrice = $this->calculationManager->getPlanPrice($plan);
@@ -67,6 +71,7 @@ class SubscriptionManager
                 'interval_id' => $plan->interval_id,
                 'interval_count' => $plan->interval_count,
                 'quantity' => $quantity,
+                'tenant_id' => $tenant->id,
             ];
 
             if ($paymentProvider) {

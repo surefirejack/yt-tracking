@@ -4,8 +4,8 @@ import intersect from '@alpinejs/intersect'
 // plugins have to be imported before Alpine is started
 Alpine.plugin(intersect)
 
-Alpine.start()
 window.Alpine = Alpine
+Alpine.start()
 
 
 document.addEventListener('DOMContentLoaded', function () {

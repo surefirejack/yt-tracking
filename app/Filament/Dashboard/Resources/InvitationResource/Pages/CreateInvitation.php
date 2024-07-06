@@ -1,0 +1,31 @@
+<?php
+
+namespace App\Filament\Dashboard\Resources\InvitationResource\Pages;
+
+use App\Filament\Dashboard\Resources\InvitationResource;
+use App\Models\Invitation;
+use Filament\Actions;
+use Filament\Facades\Filament;
+use Filament\Resources\Pages\CreateRecord;
+use Illuminate\Support\Str;
+
+class CreateInvitation extends CreateRecord
+{
+    protected static string $resource = InvitationResource::class;
+
+    protected function mutateFormDataBeforeCreate(array $data): array
+    {
+        $data['token'] = Str::random(60);
+        $data['tenant_id'] = Filament::getTenant()->id;
+        $data['uuid'] = Str::uuid();
+        $data['expires_at'] = now()->addDays(7);
+        $data['user_id'] = auth()->id();
+
+        return $data;
+    }
+
+    protected function afterCreate(): void
+    {
+        // todo: send an email (and once the user accepts the invitation, increase subscription quantity by 1): $this->getRecord();
+    }
+}

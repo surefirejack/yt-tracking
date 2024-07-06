@@ -170,6 +170,29 @@ class PaddleProvider implements PaymentProviderInterface
         return $url.'?_ptxn='.$txId;
     }
 
+    public function updateSubscriptionQuantity(Subscription $subscription, int $quantity, bool $isProrated = true): bool
+    {
+        $paymentProvider = $this->assertProviderIsActive();
+
+        $plan = $subscription->plan()->firstOrFail();
+
+        $planPrice = $this->calculationManager->getPlanPrice($plan);
+
+        $priceId = $this->planManager->getPaymentProviderPriceId($planPrice, $paymentProvider);
+
+        $isTrialing = $subscription->trial_ends_at !== null && Carbon::parse($subscription->trial_ends_at)->isFuture();
+
+        $response = $this->paddleClient->updateSubscriptionQuantity($subscription->payment_provider_subscription_id, $priceId, $quantity, $isTrialing, $isProrated);
+
+        if ($response->failed()) {
+            logger()->error('Failed to update paddle subscription quantity: '.$subscription->payment_provider_subscription_id.' '.$response->body());
+
+            return false;
+        }
+
+        return true;
+    }
+
     public function initProductCheckout(Order $order, ?Discount $discount = null): array
     {
         $paymentProvider = $this->assertProviderIsActive();

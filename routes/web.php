@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Auth\OAuthController;
 use App\Http\Controllers\PaymentProviders\PaddleController as PaddleController;
+use App\Services\UserDashboardManager;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
@@ -23,17 +24,9 @@ Route::get('/', function () {
     return view('home');
 })->name('home')->middleware('sitemapped');
 
-Route::get('/dashboard', function () {
-    $user = Auth::user();
-    $tenant = $user->tenants()->first();
-
-    if ($tenant !== null) {
-        return redirect()->route('filament.dashboard.pages.dashboard', ['tenant' => $tenant]);
-    }
-
-    // todo: redirect to tenant creation page
-
-})->name('dashboard');
+Route::get('/dashboard', function (UserDashboardManager $dashboardManager) {
+    return redirect($dashboardManager->getUserDashboardUrl(Auth::user()));
+})->name('dashboard')->middleware('auth');
 
 Auth::routes();
 
@@ -166,6 +159,13 @@ Route::get('/roadmap/i/{itemSlug}', [
     App\Http\Controllers\RoadmapController::class,
     'viewItem',
 ])->name('roadmap.viewItem');
+
+// Invitations
+
+Route::get('/invitations', [
+    App\Http\Controllers\InvitationController::class,
+    'index',
+])->name('invitations')->middleware('auth');
 
 // Invoice
 

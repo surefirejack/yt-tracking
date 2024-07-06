@@ -7,6 +7,7 @@ use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
 use Filament\Navigation\MenuItem;
+use Filament\Navigation\NavigationGroup;
 use Filament\Pages;
 use Filament\Panel;
 use Filament\PanelProvider;
@@ -64,6 +65,12 @@ class DashboardPanelProvider extends PanelProvider
             ->renderHook('panels::head.start', function () {
                 return view('components.layouts.partials.analytics');
             })
+            ->navigationGroups([
+                NavigationGroup::make()
+                    ->label('Members')
+                    ->icon('heroicon-s-users')
+                    ->collapsed(),
+            ])
             ->authMiddleware([
                 Authenticate::class,
             ])->plugins([

@@ -30,6 +30,7 @@ class Transaction extends Model
         'subscription_id',
         'error_reason',
         'order_id',
+        'tenant_id',
     ];
 
     protected static function booted(): void

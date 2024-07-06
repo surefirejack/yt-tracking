@@ -318,6 +318,26 @@ class StripeProvider implements PaymentProviderInterface
         return true;
     }
 
+    public function updateSubscriptionQuantity(Subscription $subscription, int $quantity, bool $isProrated = true): bool
+    {
+        $paymentProvider = $this->assertProviderIsActive();
+
+        try {
+            $stripe = $this->getClient();
+
+            $stripe->subscriptions->update($subscription->payment_provider_subscription_id, [
+                'quantity' => $quantity,
+            ]);
+
+        } catch (ApiErrorException $e) {
+            Log::error($e->getMessage());
+
+            return false;
+        }
+
+        return true;
+    }
+
     public function getSlug(): string
     {
         return PaymentProviderConstants::STRIPE_SLUG;

@@ -85,6 +85,35 @@ class PaddleClient
         ])->post($this->getApiUrl('/prices'), $priceObject);
     }
 
+    public function updateSubscriptionQuantity(
+        string $paddleSubscriptionId,
+        string $priceId,
+        int $quantity,
+        bool $isTrialing,
+        bool $isProrated = true
+    ): Response {
+        $subscriptionObject = [
+            'items' => [
+                [
+                    'price_id' => $priceId,
+                    'quantity' => $quantity,
+                ],
+            ],
+            'proration_billing_mode' => $isTrialing ? 'do_not_bill' : ($isProrated ? 'prorated_immediately' : 'full_immediately'),
+        ];
+
+        return Http::withHeaders([
+            'Authorization' => 'Bearer '.config('services.paddle.vendor_auth_code'),
+        ])->patch($this->getApiUrl('/subscriptions/'.$paddleSubscriptionId), $subscriptionObject);
+    }
+
+    public function getSubscription(string $paddleSubscriptionId): Response
+    {
+        return Http::withHeaders([
+            'Authorization' => 'Bearer '.config('services.paddle.vendor_auth_code'),
+        ])->get($this->getApiUrl('/subscriptions/'.$paddleSubscriptionId));
+    }
+
     public function updateSubscription(string $paddleSubscriptionId, string $priceId, bool $withProration, bool $isTrialing = false): Response
     {
         $proration = $isTrialing ? 'do_not_bill' : ($withProration ? 'prorated_immediately' : 'full_immediately');

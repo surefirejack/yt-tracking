@@ -150,6 +150,23 @@ class LemonSqueezyClient
         ])->delete($this->getApiUrl('/v1/subscriptions/'.$subscriptionId));
     }
 
+    public function updateSubscriptionQuantity(string $subscriptionItemId, int $newQuantity): Response
+    {
+        return Http::withHeaders([
+            'Authorization' => 'Bearer '.config('services.lemon-squeezy.api_key'),
+            'Accept' => 'application/vnd.api+json',
+            'Content-Type' => 'application/vnd.api+json',
+        ])->patch($this->getApiUrl('/v1/subscription-items/'.$subscriptionItemId), [
+            'data' => [
+                'type' => 'subscription-items',
+                'id' => $subscriptionItemId,
+                'attributes' => [
+                    'quantity' => $newQuantity,
+                ],
+            ],
+        ]);
+    }
+
     public function discardSubscriptionCancellation(string $subscriptionId): Response
     {
         return Http::withHeaders([

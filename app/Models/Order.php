@@ -19,6 +19,7 @@ class Order extends Model
         'total_discount_amount',
         'payment_provider_order_id',
         'payment_provider_id',
+        'tenant_id',
     ];
 
     public function user()

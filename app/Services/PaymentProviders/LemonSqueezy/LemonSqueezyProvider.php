@@ -212,6 +212,33 @@ class LemonSqueezyProvider implements PaymentProviderInterface
         return true;
     }
 
+    public function updateSubscriptionQuantity(Subscription $subscription, int $quantity, bool $isProrated = true): bool
+    {
+        $paymentProvider = $this->assertProviderIsActive();
+
+        try {
+            $lemonSqueezySubscription = $this->client->getSubscription($subscription->payment_provider_subscription_id)->json('data');
+            $subscriptionItemId = $lemonSqueezySubscription['attributes']['first_subscription_item']['id'] ?? null;
+
+            if ($subscriptionItemId === null) {
+                throw new \Exception('Failed to get lemon-squeezy subscription item ID');
+            }
+
+            $response = $this->client->updateSubscriptionQuantity($subscriptionItemId, $quantity);
+
+            if (! $response->successful()) {
+                throw new \Exception('Failed to update lemon-squeezy subscription quantity');
+            }
+
+        } catch (\Exception $e) {
+            Log::error($e->getMessage());
+
+            return false;
+        }
+
+        return true;
+    }
+
     public function cancelSubscription(Subscription $subscription): bool
     {
         $paymentProvider = $this->assertProviderIsActive();

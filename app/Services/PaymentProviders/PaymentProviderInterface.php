@@ -36,4 +36,6 @@ interface PaymentProviderInterface
     public function getChangePaymentMethodLink(Subscription $subscription): string;
 
     public function addDiscountToSubscription(Subscription $subscription, Discount $discount): bool;
+
+    public function updateSubscriptionQuantity(Subscription $subscription, int $quantity, bool $isProrated = true): bool;
 }
