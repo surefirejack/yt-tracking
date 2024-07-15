@@ -56,12 +56,12 @@ class SubscriptionCheckoutForm extends CheckoutForm
         }
 
         try {
-            $subscription = $checkoutManager->initSubscriptionCheckout($planSlug, $subscriptionCheckoutDto->quantity);
+            $subscription = $checkoutManager->initSubscriptionCheckout($planSlug, $subscriptionCheckoutDto->tenantUuid, $subscriptionCheckoutDto->quantity);
         } catch (SubscriptionCreationNotAllowedException $e) {
             return redirect()->route('checkout.subscription.already-subscribed');
         }
 
-        $initData = $paymentProvider->initSubscriptionCheckout($plan, $subscription, $discount, $subscriptionCheckoutDto->quantity);
+        $initData = $paymentProvider->initSubscriptionCheckout($plan, $subscription, $discount, $subscription->quantity);
 
         $subscriptionCheckoutDto->subscriptionId = $subscription->id;
         $sessionManager->saveSubscriptionCheckoutDto($subscriptionCheckoutDto);
@@ -71,7 +71,7 @@ class SubscriptionCheckoutForm extends CheckoutForm
                 $plan,
                 $subscription,
                 $discount,
-                $subscriptionCheckoutDto->quantity,
+                $subscription->quantity,
             );
 
             return redirect()->away($link);

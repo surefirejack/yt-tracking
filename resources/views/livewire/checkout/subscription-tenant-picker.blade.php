@@ -1,13 +1,16 @@
 <div>
     <div class="my-3 relative">
-        <label class="form-control w-full max-w-xs">
+        <label class="form-control">
             <div class="label">
-                <span class="label-text">{{ __('Number of seats:') }}</span>
+                <span class="label-text">{{ __('Pick an account:') }}</span>
             </div>
-            <input type="number" min="1"
-                  {{ $maxQuantity > 0 ? 'max=' . $maxQuantity : '' }}
-                   wire:model.blur="quantity"
-                   class="input input-bordered md:w-2/3 max-w-xs">
+
+            <select wire:model.blur="tenant" class="select select-bordered">
+                @foreach ($userTenants as $tenant)
+                    <option value="{{ $tenant->uuid }}">{{ $tenant->name }}</option>
+                @endforeach
+                <option value="">{{ __('Create a new account') }}</option>
+            </select>
 
             <div class="absolute top-0 right-0 p-2">
                 <span wire:loading>
@@ -15,7 +18,7 @@
                 </span>
             </div>
 
-            @error('quantity')
+            @error('tenant')
                 <span class="text-xs text-red-500 mt-1" role="alert">
                     {{ $message }}
                 </span>

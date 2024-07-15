@@ -52,9 +52,19 @@
                         </div>
                     </div>
 
-                    @if ($plan->type === \App\Constants\PlanType::SEAT_BASED->value)
-                        <livewire:checkout.subscription-seats :plan="$plan" />
-                    @endif
+                    <div class="flex gap-4">
+
+                        @inject('tenantCreationManager', 'App\Services\TenantCreationManager')
+
+                        @if ($tenantCreationManager->findUserTenantsForNewSubscription(auth()->user())->count() > 0)
+                            <livewire:checkout.subscription-tenant-picker />
+                        @endif
+
+                        @if ($plan->type === \App\Constants\PlanType::SEAT_BASED->value)
+                            <livewire:checkout.subscription-seats :plan="$plan" />
+                        @endif
+
+                    </div>
 
                     <div class="text-primary-900 font-semibold my-4">
                         {{ __('What you get:') }}

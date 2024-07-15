@@ -2,8 +2,10 @@
 
 namespace App\Livewire\Filament\Dashboard;
 
+use App\Constants\TenancyPermissionConstants;
 use App\Models\User;
 use App\Services\TenantManager;
+use App\Services\TenantPermissionManager;
 use Filament\Facades\Filament;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
@@ -36,6 +38,25 @@ class Team extends Component implements HasForms, HasTable
                 Tables\Columns\TextColumn::make('name')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('email')
+                    ->searchable(),
+                Tables\Columns\SelectColumn::make('role')
+                    ->getStateUsing(function (User $user, TenantPermissionManager $tenantPermissionManager) {
+                        return $tenantPermissionManager->getTenantUserRoles(Filament::getTenant(), $user)[0] ?? null;
+                    })
+                    ->options(function (TenantPermissionManager $tenantPermissionManager) {
+                        return TenancyPermissionConstants::getRoles();
+                    })
+                    ->disabled(function (User $user) {
+                        return $user->id === auth()->user()->id;
+                    })
+                    ->updateStateUsing(function (User $user, string $state, TenantPermissionManager $tenantPermissionManager) {
+                        $tenantPermissionManager->assignTenantUserRole(Filament::getTenant(), $user, $state);
+
+                        Notification::make()
+                            ->title(__('User role has been updated.'))
+                            ->success()
+                            ->send();
+                    })
                     ->searchable(),
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
@@ -84,4 +105,5 @@ class Team extends Component implements HasForms, HasTable
     {
         return view('livewire.filament.dashboard.team');
     }
+
 }

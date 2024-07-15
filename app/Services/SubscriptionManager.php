@@ -12,6 +12,7 @@ use App\Models\PaymentProvider;
 use App\Models\Plan;
 use App\Models\Product;
 use App\Models\Subscription;
+use App\Models\Tenant;
 use App\Models\User;
 use App\Services\PaymentProviders\PaymentProviderInterface;
 use Carbon\Carbon;
@@ -23,7 +24,6 @@ class SubscriptionManager
     public function __construct(
         private CalculationManager $calculationManager,
         private PlanManager $planManager,
-        private TenantCreationManager $tenantCreationManager,
     ) {
 
     }
@@ -42,22 +42,20 @@ class SubscriptionManager
     public function create(
         string $planSlug,
         int $userId,
-        ?PaymentProvider $paymentProvider = null,
-        ?string $paymentProviderSubscriptionId = null,
-        int $quantity = 1,
+        ?PaymentProvider $paymentProvider,
+        ?string $paymentProviderSubscriptionId,
+        int $quantity,
+        Tenant $tenant,
     ): Subscription {
         $plan = Plan::where('slug', $planSlug)->where('is_active', true)->firstOrFail();
 
-        if (! $this->canCreateSubscription($userId)) {
+        if (! $this->canCreateSubscription($userId)) {  // todo: remove that out.
             throw new SubscriptionCreationNotAllowedException(__('You already have subscription.'));
         }
 
-        $user = User::findOrFail($userId);
-        $tenant = $this->tenantCreationManager->getOrCreateTenantForUserSubscription($user, true);
-
         $newSubscription = null;
         DB::transaction(function () use ($plan, $userId, &$newSubscription, $paymentProvider, $paymentProviderSubscriptionId, $quantity, $tenant) {
-            $this->deleteAllNewSubscriptions($userId);
+            $this->deleteAllNewSubscriptions($userId, $tenant);
 
             $planPrice = $this->calculationManager->getPlanPrice($plan);
 
@@ -111,10 +109,11 @@ class SubscriptionManager
             ]);
     }
 
-    public function deleteAllNewSubscriptions(int $userId): void
+    public function deleteAllNewSubscriptions(int $userId, Tenant $tenant): void
     {
         Subscription::where('user_id', $userId)
             ->where('status', SubscriptionStatus::NEW->value)
+            ->where('tenant_id', $tenant->id)
             ->delete();
     }
 
@@ -133,11 +132,11 @@ class SubscriptionManager
             ->first();
     }
 
-    public function findNewByPlanSlugAndUser(string $planSlug, int $userId): ?Subscription
+    public function findNewByPlanSlugAndTenant(string $planSlug, Tenant $tenant): ?Subscription
     {
         $plan = Plan::where('slug', $planSlug)->where('is_active', true)->firstOrFail();
 
-        return Subscription::where('user_id', $userId)
+        return Subscription::where('tenant_id', $tenant->id)
             ->where('plan_id', $plan->id)
             ->where('status', SubscriptionStatus::NEW->value)
             ->first();

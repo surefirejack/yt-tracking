@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Constants\TenancyPermissionConstants;
 use Illuminate\Database\Seeder;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
@@ -80,9 +81,43 @@ class RolesAndPermissionsSeeder extends Seeder
 
         Permission::findOrCreate('view stats');
 
-        // this can be done as separate statements
         $role = Role::findOrCreate('admin');
-        $role->givePermissionTo(Permission::all());
 
+        // give all permissions to admin that doesn't start with "tenancy:"
+        $role->givePermissionTo(Permission::all()->filter(function ($permission) {
+            return str_starts_with($permission->name, TenancyPermissionConstants::TENANCY_ROLE_PREFIX) === false;
+        }));
+
+        $this->multiTenancyRolesAndPermissions();
+    }
+
+    private function multiTenancyRolesAndPermissions()
+    {
+        $permissions = [
+            TenancyPermissionConstants::PERMISSION_CREATE_SUBSCRIPTIONS,
+            TenancyPermissionConstants::PERMISSION_UPDATE_SUBSCRIPTIONS,
+            TenancyPermissionConstants::PERMISSION_DELETE_SUBSCRIPTIONS,
+            TenancyPermissionConstants::PERMISSION_VIEW_SUBSCRIPTIONS,
+            TenancyPermissionConstants::PERMISSION_CREATE_ORDERS,
+            TenancyPermissionConstants::PERMISSION_UPDATE_ORDERS,
+            TenancyPermissionConstants::PERMISSION_DELETE_ORDERS,
+            TenancyPermissionConstants::PERMISSION_VIEW_ORDERS,
+            TenancyPermissionConstants::PERMISSION_VIEW_TRANSACTIONS,
+            TenancyPermissionConstants::PERMISSION_INVITE_MEMBERS,
+            TenancyPermissionConstants::PERMISSION_MANAGE_TEAM,
+        ];
+
+        $tenancyPermissions = [];
+
+        foreach ($permissions as $permission) {
+            $tenancyPermissions[] = Permission::findOrCreate($permission);
+        }
+
+        $adminRole = Role::findOrCreate(TenancyPermissionConstants::ROLE_ADMIN);
+        $adminRole->givePermissionTo($tenancyPermissions);
+
+        $userRole = Role::findOrCreate(TenancyPermissionConstants::ROLE_USER);
+
+        // assign any permissions that the user role should have here
     }
 }

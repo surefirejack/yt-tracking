@@ -3,10 +3,12 @@
 namespace App\Filament\Dashboard\Resources;
 
 use App\Constants\InvitationStatus;
+use App\Constants\TenancyPermissionConstants;
 use App\Filament\Dashboard\Resources\InvitationResource\Pages;
 use App\Mapper\InvitationStatusMapper;
 use App\Models\Invitation;
 use App\Services\TenantManager;
+use App\Services\TenantPermissionManager;
 use Filament\Facades\Filament;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -15,12 +17,14 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Str;
+use Spatie\Permission\Models\Role;
 
 class InvitationResource extends Resource
 {
     protected static ?string $model = Invitation::class;
 
-    protected static ?string $navigationGroup = 'Members';
+    protected static ?string $navigationGroup = 'Team';
 
     public static function form(Form $form): Form
     {
@@ -55,6 +59,20 @@ class InvitationResource extends Resource
                         },
                     ])
                     ->maxLength(255),
+                Forms\Components\Select::make('role')
+                    ->options(function () {
+                        // starts with tenancy:
+                        $roles = Role::where('name', 'like', TenancyPermissionConstants::TENANCY_ROLE_PREFIX.'%')->get();
+                        $roles = $roles->mapWithKeys(function ($role) {
+                            $title = Str::of($role->name)->replace(TenancyPermissionConstants::TENANCY_ROLE_PREFIX, '')->replace('-', ' ')->title();
+                            return [$role->name => $title];
+                        });
+
+                        return $roles;
+                    })
+                    ->default(TenancyPermissionConstants::ROLE_USER)
+                    ->required()
+                    ->helperText(__('Choose the role for this user.')),
             ]);
     }
 
@@ -76,6 +94,11 @@ class InvitationResource extends Resource
                     ->formatStateUsing(function ($state, InvitationStatusMapper $invitationStatusMapper) {
                         return $invitationStatusMapper->mapForDisplay($state);
                     }),
+                Tables\Columns\TextColumn::make('role')
+                    ->formatStateUsing(function ($state, $record) {
+                        return Str::of($state)->replace(TenancyPermissionConstants::TENANCY_ROLE_PREFIX, '')->replace('-', ' ')->title();
+                    })
+                    ->sortable(),
                 Tables\Columns\TextColumn::make('expires_at')
                     ->dateTime()
                     ->sortable(),
@@ -88,6 +111,7 @@ class InvitationResource extends Resource
                 //
             ])
             ->actions([
+                Tables\Actions\DeleteAction::make(),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
@@ -108,6 +132,16 @@ class InvitationResource extends Resource
         return false;
     }
 
+    public static function canAccess(): bool
+    {
+        $tenantPermissionManager = app(TenantPermissionManager::class); // a bit ugly, but this is the Filament way :/
+        return $tenantPermissionManager->tenantUserHasPermissionTo(
+            Filament::getTenant(),
+            auth()->user(),
+            'tenancy: invite members'
+        );
+    }
+
     public static function getPages(): array
     {
         return [
@@ -124,6 +158,6 @@ class InvitationResource extends Resource
 
     public static function getEloquentQuery(): Builder
     {
-        return parent::getEloquentQuery()->where('expires_at', '>', now())->where('status', InvitationStatus::PENDING->value);
+        return parent::getEloquentQuery()->where('tenant_id', Filament::getTenant()->id)->where('expires_at', '>', now())->where('status', InvitationStatus::PENDING->value);
     }
 }

@@ -166,7 +166,7 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail, Has
 
     public function tenants(): BelongsToMany
     {
-        return $this->belongsToMany(Tenant::class)->using(TenantUser::class);
+        return $this->belongsToMany(Tenant::class)->using(TenantUser::class)->withPivot('id')->withTimestamps();
     }
 
     public function getTenants(Panel $panel): Collection

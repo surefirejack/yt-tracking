@@ -22,7 +22,7 @@ class Tenant extends Model
 
     public function users()
     {
-        return $this->belongsToMany(User::class)->using(TenantUser::class);
+        return $this->belongsToMany(User::class)->using(TenantUser::class)->withPivot('id')->withTimestamps();
     }
 
     public function subscriptions()

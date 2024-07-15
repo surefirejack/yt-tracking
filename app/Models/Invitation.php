@@ -18,6 +18,7 @@ class Invitation extends Model
         'accepted_at',
         'user_id',
         'status',
+        'role',
     ];
 
     public function tenant()

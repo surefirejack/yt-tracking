@@ -121,11 +121,6 @@ class TransactionResource extends Resource
         return false;
     }
 
-    public static function canViewAny(): bool
-    {
-        return true;  // we want to ignore the default permission check (from the policy) and allow all users to view their own transactions
-    }
-
     public static function canEdit(Model $record): bool
     {
         return false;
@@ -133,7 +128,7 @@ class TransactionResource extends Resource
 
     public static function getEloquentQuery(): Builder
     {
-        return parent::getEloquentQuery()->where('user_id', auth()->user()->id)->where('amount', '>', 0)->where('status', '!=', TransactionStatus::NOT_STARTED->value);
+        return parent::getEloquentQuery()->where('tenant_id', Filament::getTenant()->id)->where('amount', '>', 0)->where('status', '!=', TransactionStatus::NOT_STARTED->value);
     }
 
     public static function getModelLabel(): string

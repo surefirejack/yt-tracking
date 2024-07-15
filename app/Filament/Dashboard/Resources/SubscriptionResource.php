@@ -10,6 +10,7 @@ use App\Filament\Dashboard\Resources\SubscriptionResource\Pages;
 use App\Mapper\SubscriptionStatusMapper;
 use App\Models\Subscription;
 use App\Services\ConfigManager;
+use Filament\Facades\Filament;
 use Filament\Forms\Form;
 use Filament\Infolists\Components\Section;
 use Filament\Infolists\Components\TextEntry;
@@ -110,7 +111,7 @@ class SubscriptionResource extends Resource
 
     public static function getEloquentQuery(): Builder
     {
-        return parent::getEloquentQuery()->where('user_id', auth()->user()->id);
+        return parent::getEloquentQuery()->where('tenant_id', Filament::getTenant()->id);
     }
 
     public static function canCreate(): bool
@@ -141,11 +142,6 @@ class SubscriptionResource extends Resource
     public static function canEdit(Model $record): bool
     {
         return false;
-    }
-
-    public static function canViewAny(): bool
-    {
-        return true;  // we want to ignore the default permission check (from the policy) and allow all users to view their own subscriptions
     }
 
     public static function infolist(Infolist $infolist): Infolist

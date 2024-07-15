@@ -17,6 +17,7 @@ return new class extends Migration
             $table->string('email')->index();
             $table->string('token')->unique();
             $table->timestamp('expires_at');
+            $table->string('role')->nullable();
             $table->timestamp('accepted_at')->nullable();
             $table->string('status')->default(\App\Constants\InvitationStatus::PENDING);
             $table->foreignId('user_id')->constrained('users');

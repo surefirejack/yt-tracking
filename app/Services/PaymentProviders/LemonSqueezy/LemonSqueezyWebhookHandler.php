@@ -224,6 +224,7 @@ class LemonSqueezyWebhookHandler
             $trialEndsAt = $attributes['trial_ends_at'] !== null ? Carbon::parse($attributes['trial_ends_at'])->toDateTimeString() : null;
             $cancelledAt = $attributes['ends_at'] !== null ? Carbon::parse($attributes['ends_at'])->toDateTimeString() : null;
             $isCanceledAtTheEndOfCycle = $attributes['cancelled'] ?? false;
+            $quantity = $attributes['first_subscription_item']['quantity'] ?? 1;
 
             $this->subscriptionManager->updateSubscription($subscription, [
                 'status' => $subscriptionStatus,
@@ -234,6 +235,7 @@ class LemonSqueezyWebhookHandler
                 'trial_ends_at' => $trialEndsAt,
                 'cancelled_at' => $cancelledAt,
                 'is_canceled_at_end_of_cycle' => $isCanceledAtTheEndOfCycle,
+                'quantity' => $quantity,
             ]);
 
         } elseif ($eventName === 'subscription_payment_success' || $eventName === 'subscription_payment_failed') {

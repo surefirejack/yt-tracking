@@ -7,20 +7,18 @@ use App\Constants\PlanType;
 use App\Models\Invitation;
 use App\Models\Tenant;
 use App\Models\User;
-use App\Services\PaymentProviders\PaymentManager;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class TenantManager
 {
     public function __construct(
-        private PaymentManager $paymentManager
+        private TenantPermissionManager $tenantPermissionManager,
+        private TenantSubscriptionManager $tenantSubscriptionManager,
     ) {
 
     }
-    // todo: when an email is invited, user should be able to see it in their dashboard (under invitations)
-    // and be able to accept or reject it.
-    // an email should be sent to the invited user with a link to accept the invitation
 
     public function acceptInvitation(Invitation $invitation, User $user): bool
     {
@@ -33,27 +31,20 @@ class TenantManager
             return false;
         }
 
-        // todo: acquire a lock on the tenant to prevent race conditions: https://laravel.com/docs/11.x/cache#managing-locks
-
         // todo: move that part to subscription service manager
-        $isProrated = config('app.payment.proration_enabled', true);
-        $tenantSubscriptions = $invitation->tenant->subscriptions()->with('plan')->get();
+        $tenantSubscriptions = $this->tenantSubscriptionManager->getTenantSubscriptions($invitation->tenant);
         $tenantUserCount = $invitation->tenant->users->count();
         $tenantLockKey = $this->getTenantLockName($invitation->tenant);
 
         $lock = Cache::lock($tenantLockKey, 30);
 
         try {
-            if ($lock->get()) {  // use a lock to avoid race conditions
+            if ($lock->block(30)) {  // use a lock to avoid race conditions
                 foreach ($tenantSubscriptions as $subscription) {
                     if ($subscription->plan->type === PlanType::SEAT_BASED->value &&
                         $subscription->quantity < $tenantUserCount + 1
                     ) {
-                        $paymentProvider = $this->paymentManager->getPaymentProviderBySlug(
-                            $subscription->paymentProvider->slug
-                        );
-
-                        $result = $paymentProvider->updateSubscriptionQuantity($subscription, $tenantUserCount + 1, $isProrated);
+                        $result = $this->tenantSubscriptionManager->updateSubscriptionQuantity($subscription, $tenantUserCount + 1);
 
                         if ($result === false) {
                             return false;
@@ -70,12 +61,22 @@ class TenantManager
                     // set the default tenant for the user to this tenant
                     $user->tenants()->updateExistingPivot($invitation->tenant->id, ['is_default' => true]);
 
+                    $roleName = $invitation->role;
+
+                    if ($roleName) {
+                        $this->tenantPermissionManager->assignTenantUserRole($invitation->tenant, $user, $roleName);
+                    }
+
                     $invitation->update([
                         'status' => InvitationStatus::ACCEPTED,
                         'accepted_at' => now(),
                     ]);
                 });
             }
+        } catch (\Exception $e) {
+            Log::error($e->getMessage());
+
+            return false;
         } finally {
             $lock?->release();
         }
@@ -130,8 +131,40 @@ class TenantManager
             return false;
         }
 
-        // todo: foreach tenant subscription, decrease the quantity by 1 if the quantity is greater than the number of users in the tenant
-        $tenant->users()->detach($user);
+        $tenantLockKey = $this->getTenantLockName($tenant);
+        $lock = Cache::lock($tenantLockKey, 30);
+        $tenantSubscriptions = $this->tenantSubscriptionManager->getTenantSubscriptions($tenant);
+        $tenantUserCount = $tenant->users->count();
+        $isProrated = config('app.payment.proration_enabled', true);
+
+        try {
+
+            if ($lock->block(30)) {  // use a lock to avoid race conditions
+
+                foreach ($tenantSubscriptions as $subscription) {
+                    if ($subscription->plan->type === PlanType::SEAT_BASED->value &&
+                        $subscription->quantity != $tenantUserCount - 1
+                    ) {
+                        $result = $this->tenantSubscriptionManager->updateSubscriptionQuantity($subscription, $tenantUserCount - 1);
+
+                        if ($result === false) {
+                            return false;
+                        }
+                    }
+                }
+
+                DB::transaction(function () use ($tenant, $user) {
+                    $this->tenantPermissionManager->removeAllTenantUserRoles($tenant, $user);
+                    $tenant->users()->detach($user);
+                });
+            }
+        } catch (\Exception $e) {
+            Log::error($e->getMessage());
+
+            return false;
+        } finally {
+            $lock?->release();
+        }
 
         return true;
     }

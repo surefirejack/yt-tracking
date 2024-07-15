@@ -18,6 +18,7 @@ class OrderManager
 {
     public function __construct(
         private CalculationManager $calculationManager,
+        private TenantCreationManager $tenantCreationManager
     ) {
     }
 

@@ -12,15 +12,15 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('subscriptions', function (Blueprint $table) {
-            $table->foreignId('tenant_id')->nullable()->constrained();
+            $table->foreignId('tenant_id')->constrained();
         });
 
         Schema::table('orders', function (Blueprint $table) {
-            $table->foreignId('tenant_id')->nullable()->constrained();
+            $table->foreignId('tenant_id')->constrained();
         });
 
         Schema::table('transactions', function (Blueprint $table) {
-            $table->foreignId('tenant_id')->nullable()->constrained();
+            $table->foreignId('tenant_id')->constrained();
         });
     }
 
