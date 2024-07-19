@@ -2,9 +2,13 @@
 
 namespace App\Livewire;
 
+use App\Constants\TenancyPermissionConstants;
 use App\Filament\Dashboard\Resources\SubscriptionResource;
 use App\Services\PaymentProviders\PaymentManager;
 use App\Services\SubscriptionManager;
+use App\Services\TenantManager;
+use App\Services\TenantPermissionManager;
+use Filament\Facades\Filament;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Concerns\InteractsWithForms;
@@ -25,12 +29,20 @@ class CancelSubscriptionForm extends Component implements HasForms
 
     private SubscriptionManager $subscriptionManager;
 
+    private TenantPermissionManager $tenantPermissionManager;
+
+    private TenantManager $tenantManager;
+
     public function boot(
         PaymentManager $paymentManager,
         SubscriptionManager $subscriptionManager,
+        TenantPermissionManager $tenantPermissionManager,
+        TenantManager $tenantManager,
     ) {
         $this->paymentManager = $paymentManager;
         $this->subscriptionManager = $subscriptionManager;
+        $this->tenantPermissionManager = $tenantPermissionManager;
+        $this->tenantManager = $tenantManager;
     }
 
     public function mount(string $subscriptionUuid): void
@@ -70,9 +82,22 @@ class CancelSubscriptionForm extends Component implements HasForms
 
         $user = auth()->user();
 
-        $userSubscription = $this->subscriptionManager->findActiveByUserAndSubscriptionUuid($user->id, $this->subscriptionUuid);
+        $tenant = $this->tenantManager->getTenantByUuid(Filament::getTenant()->uuid);
 
-        if (! $userSubscription) {
+        if (! $this->tenantPermissionManager->tenantUserHasPermissionTo($tenant, $user, TenancyPermissionConstants::PERMISSION_UPDATE_SUBSCRIPTIONS)) {
+            Notification::make()
+                ->title(__('You do not have permission to cancel subscriptions.'))
+                ->danger()
+                ->send();
+
+            $this->redirect(SubscriptionResource::getUrl());
+
+            return;
+        }
+
+        $subscription = $this->subscriptionManager->findActiveByTenantAndSubscriptionUuid($tenant, $this->subscriptionUuid);
+
+        if (! $subscription) {
             Notification::make()
                 ->title(__('Error canceling subscription'))
                 ->danger()
@@ -83,14 +108,14 @@ class CancelSubscriptionForm extends Component implements HasForms
             return;
         }
 
-        $paymentProvider = $userSubscription->paymentProvider()->first();
+        $paymentProvider = $subscription->paymentProvider()->first();
 
         $paymentProviderStrategy = $this->paymentManager->getPaymentProviderBySlug(
             $paymentProvider->slug
         );
 
         $this->subscriptionManager->cancelSubscription(
-            $userSubscription,
+            $subscription,
             $paymentProviderStrategy,
             $data['reason'],
             $data['additional_information'] ?? null,

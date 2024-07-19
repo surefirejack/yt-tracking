@@ -84,7 +84,7 @@ class PlanManager
         return Plan::where('is_active', true)->get();
     }
 
-    public function getAllPlansWithPrices(array $productSlugs = [])
+    public function getAllPlansWithPrices(array $productSlugs = [], ?string $planType = null): Collection
     {
         $defaultCurrency = config('app.default_currency');
 
@@ -96,7 +96,7 @@ class PlanManager
 
         if (count($productSlugs) > 0) {
             // only the plans that have default currency prices
-            return Plan::where('is_active', true)
+            $result = Plan::where('is_active', true)
                 ->with(['product' => function ($query) use ($productSlugs) {
                     $query->whereIn('slug', $productSlugs);
                 }])
@@ -108,18 +108,29 @@ class PlanManager
                 })
                 ->with(['prices' => function ($query) use ($defaultCurrencyObject) {
                     $query->where('currency_id', $defaultCurrencyObject->id);
-                }])
-                ->get();
+                }]);
+
+            if ($planType) {
+                $result->where('type', $planType);
+            }
+
+            return $result->get();
+
         }
 
         // only the plans that have default currency prices
-        return Plan::where('is_active', true)
+        $result = Plan::where('is_active', true)
             ->whereHas('prices', function ($query) use ($defaultCurrencyObject) {
                 $query->where('currency_id', $defaultCurrencyObject->id);
             })
             ->with(['prices' => function ($query) use ($defaultCurrencyObject) {
                 $query->where('currency_id', $defaultCurrencyObject->id);
-            }])
-            ->get();
+            }]);
+
+        if ($planType) {
+            $result->where('type', $planType);
+        }
+
+        return $result->get();
     }
 }

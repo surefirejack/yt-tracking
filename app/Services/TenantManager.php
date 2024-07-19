@@ -176,6 +176,11 @@ class TenantManager
         return $this->doTenantSubscriptionsAllowAddingUser($tenant);
     }
 
+    public function getTenantByUuid(string $uuid): Tenant
+    {
+        return Tenant::where('uuid', $uuid)->firstOrFail();
+    }
+
     private function doTenantSubscriptionsAllowAddingUser(Tenant $tenant): bool
     {
         $tenantSubscriptions = $tenant->subscriptions()->with('plan')->get();

@@ -45,9 +45,15 @@ class CheckoutManager
         return $subscription;
     }
 
-    public function initProductCheckout(CartDto $cartDto)
+    public function initProductCheckout(CartDto $cartDto, ?string $tenantUuid)
     {
         $user = auth()->user();
+
+        $tenant = $this->tenantCreationManager->findUserTenantForNewSubscriptionByUuid($user, $tenantUuid);
+
+        if ($tenant === null) {
+            $tenant = $this->tenantCreationManager->createTenant($user);
+        }
 
         $order = null;
         if ($cartDto->orderId !== null) {
@@ -55,7 +61,7 @@ class CheckoutManager
         }
 
         if ($order === null) {
-            $order = $this->orderManager->create($user);
+            $order = $this->orderManager->create($user, $tenant);
         }
 
         $this->orderManager->refreshOrder($cartDto, $order);

@@ -27,7 +27,7 @@ class ProductCheckoutForm extends CheckoutForm
 
         $cartDto = $sessionManager->getCartDto();
 
-        $order = $checkoutManager->initProductCheckout($cartDto);
+        $order = $checkoutManager->initProductCheckout($cartDto, $cartDto->tenantUuid);
 
         $cartDto->orderId = $order->id;
 

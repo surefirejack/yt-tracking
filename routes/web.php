@@ -82,12 +82,12 @@ Route::get('/payment-provider/paddle/payment-link', [
     'paymentLink',
 ])->name('payment-link.paddle');
 
-Route::get('/subscription/{subscriptionUuid}/change-plan/{planSlug}', [
+Route::get('/subscription/{subscriptionUuid}/change-plan/{planSlug}/tenant/{tenantUuid}', [
     App\Http\Controllers\SubscriptionController::class,
     'changePlan',
 ])->name('subscription.change-plan')->middleware('auth');
 
-Route::post('/subscription/{subscriptionUuid}/change-plan/{planSlug}', [
+Route::post('/subscription/{subscriptionUuid}/change-plan/{planSlug}/tenant/{tenantUuid}', [
     App\Http\Controllers\SubscriptionController::class,
     'changePlan',
 ])->name('subscription.change-plan.post')->middleware('auth');

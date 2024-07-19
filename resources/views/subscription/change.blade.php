@@ -70,6 +70,9 @@
                     <div class="flex flex-row justify-between">
                         <div class="text-primary-900">
                             {{ __('New Subscription price') }}
+                            @if ($newPlan->type === \App\Constants\PlanType::SEAT_BASED->value)
+                                ({{ $totals->quantity }} x @money($totals->pricePerSeat, $totals->currencyCode) / {{ __(' seat') }})
+                            @endif
                         </div>
                         <div class="text-primary-900">
                             @money($totals->subtotal, $totals->currencyCode)

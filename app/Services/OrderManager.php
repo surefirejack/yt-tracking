@@ -10,6 +10,7 @@ use App\Models\Currency;
 use App\Models\OneTimeProduct;
 use App\Models\Order;
 use App\Models\PaymentProvider;
+use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -24,6 +25,7 @@ class OrderManager
 
     public function create(
         User $user,
+        Tenant $tenant,
         ?PaymentProvider $paymentProvider = null,
         ?int $totalAmount = null,
         ?int $discountTotal = null,
@@ -37,6 +39,7 @@ class OrderManager
             'user_id' => $user->id,
             'status' => OrderStatus::NEW->value,
             'total_amount' => $totalAmount ?? 0,
+            'tenant_id' => $tenant->id,
         ];
 
         if ($paymentProvider) {

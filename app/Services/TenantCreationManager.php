@@ -16,6 +16,30 @@ class TenantCreationManager
 
     }
 
+    public function findUserTenantsForNewOrder(?User $user)
+    {
+        if ($user === null) {
+            return collect();
+        }
+
+        return $this->tenantPermissionManager->filterTenantsWhereUserHasPermission(
+            $user->tenants()->get(),
+            TenancyPermissionConstants::PERMISSION_CREATE_ORDERS
+        );
+    }
+
+    public function findUserTenantForNewOrderByUuid(User $user, ?string $tenantUuid): ?Tenant
+    {
+        if ($tenantUuid === null) {
+            return null;
+        }
+
+        return $this->tenantPermissionManager->filterTenantsWhereUserHasPermission(
+            $user->tenants()->where('uuid', $tenantUuid)->get(),
+            TenancyPermissionConstants::PERMISSION_CREATE_ORDERS
+        )->first();
+    }
+
     public function findUserTenantsForNewSubscription(?User $user)
     {
         if ($user === null) {

@@ -150,8 +150,18 @@ class LemonSqueezyClient
         ])->delete($this->getApiUrl('/v1/subscriptions/'.$subscriptionId));
     }
 
-    public function updateSubscriptionQuantity(string $subscriptionItemId, int $newQuantity): Response
+    public function updateSubscriptionQuantity(string $subscriptionItemId, int $newQuantity, bool $withProration = true): Response
     {
+        $attributes = [
+            'quantity' => $newQuantity,
+        ];
+
+        if ($withProration) {
+            $attributes['invoice_immediately'] = true;
+        } else {
+            $attributes['disable_prorations'] = true;
+        }
+
         return Http::withHeaders([
             'Authorization' => 'Bearer '.config('services.lemon-squeezy.api_key'),
             'Accept' => 'application/vnd.api+json',
@@ -160,9 +170,7 @@ class LemonSqueezyClient
             'data' => [
                 'type' => 'subscription-items',
                 'id' => $subscriptionItemId,
-                'attributes' => [
-                    'quantity' => $newQuantity,
-                ],
+                'attributes' => $attributes,
             ],
         ]);
     }

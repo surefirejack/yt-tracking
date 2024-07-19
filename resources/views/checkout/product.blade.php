@@ -48,6 +48,16 @@
                         </div>
                     </div>
 
+                    <div class="flex gap-4">
+
+                        @inject('tenantCreationManager', 'App\Services\TenantCreationManager')
+
+                        @if ($tenantCreationManager->findUserTenantsForNewOrder(auth()->user())->count() > 0)
+                            <livewire:checkout.product-tenant-picker />
+                        @endif
+
+                    </div>
+
                     <div class="text-primary-900 my-4">
                         {{ __('What you get:') }}
                     </div>

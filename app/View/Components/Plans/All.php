@@ -12,15 +12,14 @@ use Illuminate\View\Component;
 class All extends Component
 {
     public function __construct(
-        private PlanManager $planManager,
-        private SubscriptionManager $subscriptionManager,
+        protected PlanManager $planManager,
+        protected SubscriptionManager $subscriptionManager,
         public array $products = [],
         public bool $isGrouped = true,
         public string $preselectedInterval = '',
         public bool $calculateSavingRates = false,
         public ?string $currentSubscriptionUuid = null,
     ) {
-
     }
 
     /**
@@ -33,22 +32,17 @@ class All extends Component
 
     protected function calculateViewData()
     {
-        $user = auth()->user();
-
         $plans = $this->planManager->getAllPlansWithPrices(
-            $this->products
+            $this->products,
         );
 
-        $viewData = [
-            'plans' => $plans,
-        ];
+        return $this->enrichViewData([], $plans);
+    }
 
-        $subscription = null;
-        if ($user !== null && $this->currentSubscriptionUuid !== null) {
-            $subscription = $this->subscriptionManager->findActiveByUserAndSubscriptionUuid(auth()->id(), $this->currentSubscriptionUuid);
-        }
+    protected function enrichViewData(array $viewData, Collection $plans)
+    {
+        $viewData['plans'] = $plans;
 
-        $viewData['subscription'] = $subscription;
         $viewData['isGrouped'] = $this->isGrouped;
 
         $groupedPlans = [];

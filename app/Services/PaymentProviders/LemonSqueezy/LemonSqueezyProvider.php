@@ -224,7 +224,7 @@ class LemonSqueezyProvider implements PaymentProviderInterface
                 throw new \Exception('Failed to get lemon-squeezy subscription item ID');
             }
 
-            $response = $this->client->updateSubscriptionQuantity($subscriptionItemId, $quantity);
+            $response = $this->client->updateSubscriptionQuantity($subscriptionItemId, $quantity, $isProrated);
 
             if (! $response->successful()) {
                 throw new \Exception('Failed to update lemon-squeezy subscription quantity');

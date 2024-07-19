@@ -124,6 +124,14 @@ class SubscriptionManager
             ->first();
     }
 
+    public function findActiveByTenantAndSubscriptionUuid(Tenant $tenant, string $subscriptionUuid): ?Subscription
+    {
+        return Subscription::where('tenant_id', $tenant->id)
+            ->where('uuid', $subscriptionUuid)
+            ->where('status', '=', SubscriptionStatus::ACTIVE->value)
+            ->first();
+    }
+
     public function findActiveByUserAndSubscriptionUuid(int $userId, string $subscriptionUuid): ?Subscription
     {
         return Subscription::where('user_id', $userId)

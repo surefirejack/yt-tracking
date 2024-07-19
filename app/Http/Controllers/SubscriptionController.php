@@ -2,10 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Constants\TenancyPermissionConstants;
 use App\Services\CalculationManager;
 use App\Services\PaymentProviders\PaymentManager;
 use App\Services\PlanManager;
 use App\Services\SubscriptionManager;
+use App\Services\TenantManager;
+use App\Services\TenantPermissionManager;
 use Illuminate\Http\Request;
 
 class SubscriptionController extends Controller
@@ -15,25 +18,33 @@ class SubscriptionController extends Controller
         private SubscriptionManager $subscriptionManager,
         private PaymentManager $paymentManager,
         private CalculationManager $calculationManager,
+        private TenantPermissionManager $tenantPermissionManager,
+        private TenantManager $tenantManager,
     ) {
 
     }
 
-    public function changePlan(string $subscriptionUuid, string $newPlanSlug, Request $request)
+    public function changePlan(string $subscriptionUuid, string $newPlanSlug, string $tenantUuid, Request $request)
     {
         $user = auth()->user();
 
-        $userSubscription = $this->subscriptionManager->findActiveByUserAndSubscriptionUuid($user->id, $subscriptionUuid);
+        $tenant = $this->tenantManager->getTenantByUuid($tenantUuid);
 
-        if (! $userSubscription) {
+        if (! $this->tenantPermissionManager->tenantUserHasPermissionTo($tenant, $user, TenancyPermissionConstants::PERMISSION_UPDATE_SUBSCRIPTIONS)) {
+            return redirect()->back()->with('error', __('You do not have permission to change plans.'));
+        }
+
+        $subscription = $this->subscriptionManager->findActiveByTenantAndSubscriptionUuid($tenant, $subscriptionUuid);
+
+        if (! $subscription) {
             return redirect()->back()->with('error', __('You do not have an active subscription.'));
         }
 
-        if ($userSubscription->plan->slug === $newPlanSlug) {
+        if ($subscription->plan->slug === $newPlanSlug) {
             return redirect()->back()->with('error', __('You are already subscribed to this plan.'));
         }
 
-        $paymentProvider = $userSubscription->paymentProvider()->first();
+        $paymentProvider = $subscription->paymentProvider()->first();
 
         if (! $paymentProvider) {
             return redirect()->back()->with('error', __('Error finding payment provider.'));
@@ -50,13 +61,13 @@ class SubscriptionController extends Controller
         $isProrated = config('app.payment.proration_enabled', true);
 
         $totals = $this->calculationManager->calculateNewPlanTotals(
-            $user,
+            $subscription,
             $newPlanSlug,
             $isProrated,
         );
 
         if ($request->isMethod('post')) {
-            $result = $this->subscriptionManager->changePlan($userSubscription, $paymentProviderStrategy, $newPlanSlug, $isProrated);
+            $result = $this->subscriptionManager->changePlan($subscription, $paymentProviderStrategy, $newPlanSlug, $isProrated);
 
             if ($result) {
                 return redirect()->route('subscription.change-plan.thank-you');
@@ -66,7 +77,7 @@ class SubscriptionController extends Controller
         }
 
         return view('subscription.change', [
-            'subscription' => $userSubscription,
+            'subscription' => $subscription,
             'newPlan' => $newPlan,
             'isProrated' => $isProrated,
             'user' => $user,

@@ -327,6 +327,7 @@ class StripeProvider implements PaymentProviderInterface
 
             $stripe->subscriptions->update($subscription->payment_provider_subscription_id, [
                 'quantity' => $quantity,
+                'proration_behavior' => $isProrated ? 'always_invoice' : 'none',
             ]);
 
         } catch (ApiErrorException $e) {
