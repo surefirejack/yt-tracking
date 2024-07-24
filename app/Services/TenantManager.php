@@ -181,6 +181,13 @@ class TenantManager
         return Tenant::where('uuid', $uuid)->firstOrFail();
     }
 
+    public function updateTenantName(Tenant $tenant, string $name): bool
+    {
+        return $tenant->update([
+            'name' => $name,
+        ]);
+    }
+
     private function doTenantSubscriptionsAllowAddingUser(Tenant $tenant): bool
     {
         $tenantSubscriptions = $tenant->subscriptions()->with('plan')->get();

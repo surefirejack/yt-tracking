@@ -14,6 +14,7 @@ use App\Services\OneTimeProductManager;
 use App\Services\OrderManager;
 use App\Services\PlanManager;
 use App\Services\SubscriptionManager;
+use App\Services\TenantCreationManager;
 use App\Services\TransactionManager;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
@@ -29,6 +30,7 @@ class LemonSqueezyWebhookHandler
         private OrderManager $orderManager,
         private PlanManager $planManager,
         private OneTimeProductManager $oneTimeProductManager,
+        private TenantCreationManager $tenantCreationManager,
     ) {
 
     }
@@ -161,9 +163,11 @@ class LemonSqueezyWebhookHandler
             'currency_id' => $currency->id,
         ];
 
+        $tenant = $this->tenantCreationManager->createTenant($user);
+
         $order = $this->orderManager->create(
             $user,
-            // todo: add tenant
+            $tenant,
             $paymentProvider,
             $attributes['subtotal'],
             $attributes['discount_total'] ?? 0,
@@ -304,7 +308,9 @@ class LemonSqueezyWebhookHandler
 
         $quantity = $attributes['first_subscription_item']['quantity'] ?? 1;
 
-        return $this->subscriptionManager->create($plan->slug, $user->id, $paymentProvider, $providerSubscriptionId, $quantity);
+        $tenant = $this->tenantCreationManager->createTenant($user);
+
+        return $this->subscriptionManager->create($plan->slug, $user->id, $paymentProvider, $providerSubscriptionId, $quantity, $tenant);
     }
 
     private function mapOrderStatusToTransactionStatus(string $providerOrderStatus): TransactionStatus

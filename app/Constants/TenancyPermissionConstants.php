@@ -18,6 +18,7 @@ class TenancyPermissionConstants
     public const PERMISSION_VIEW_TRANSACTIONS = 'tenancy: view transactions';
     public const PERMISSION_INVITE_MEMBERS = 'tenancy: invite members';
     public const PERMISSION_MANAGE_TEAM = 'tenancy: manage team';
+    public const PERMISSION_UPDATE_TENANT_SETTINGS = 'tenancy: update tenant settings';
 
     public static function getRoles(): array
     {

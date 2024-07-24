@@ -2,7 +2,11 @@
 
 namespace App\Providers\Filament;
 
+use App\Constants\TenancyPermissionConstants;
+use App\Filament\Dashboard\Pages\TenantSettings;
 use App\Models\Tenant;
+use App\Services\TenantPermissionManager;
+use Filament\Facades\Filament;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
@@ -40,6 +44,21 @@ class DashboardPanelProvider extends PanelProvider
                     )
                     ->url(fn () => route('filament.admin.pages.dashboard'))
                     ->icon('heroicon-s-cog-8-tooth'),
+                MenuItem::make()
+                    ->label(__('Workspace Settings'))
+                    ->visible(
+                        function () {
+                            $tenantPermissionManager = app(TenantPermissionManager::class);
+
+                            return $tenantPermissionManager->tenantUserHasPermissionTo(
+                                Filament::getTenant(),
+                                auth()->user(),
+                                TenancyPermissionConstants::PERMISSION_UPDATE_TENANT_SETTINGS
+                            );
+                        }
+                    )
+                    ->icon('heroicon-s-cog-8-tooth')
+                    ->url(fn () => TenantSettings::getUrl()),
             ])
             ->discoverResources(in: app_path('Filament/Dashboard/Resources'), for: 'App\\Filament\\Dashboard\\Resources')
             ->discoverPages(in: app_path('Filament/Dashboard/Pages'), for: 'App\\Filament\\Dashboard\\Pages')

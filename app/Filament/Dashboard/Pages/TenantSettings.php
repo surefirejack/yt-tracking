@@ -6,16 +6,20 @@ use App\Constants\TenancyPermissionConstants;
 use App\Services\TenantPermissionManager;
 use Filament\Facades\Filament;
 use Filament\Pages\Page;
+use Illuminate\Contracts\Support\Htmlable;
 
-class Team extends Page
+class TenantSettings extends Page
 {
-    protected static ?string $navigationGroup = 'Team';
+    protected static string $view = 'filament.dashboard.pages.tenant-settings';
 
-    protected static string $view = 'filament.dashboard.pages.team';
-
-    public static function getNavigationLabel(): string
+    public function getHeading(): string|Htmlable
     {
-        return __('Team Members');
+        return __('Workspace Settings');
+    }
+
+    public function getTitle(): string|Htmlable
+    {
+        return __('Workspace Settings');
     }
 
     public static function canAccess(): bool
@@ -24,7 +28,13 @@ class Team extends Page
         return $tenantPermissionManager->tenantUserHasPermissionTo(
             Filament::getTenant(),
             auth()->user(),
-            TenancyPermissionConstants::PERMISSION_MANAGE_TEAM
+            TenancyPermissionConstants::PERMISSION_UPDATE_TENANT_SETTINGS
         );
+    }
+
+
+    public static function shouldRegisterNavigation(): bool
+    {
+        return false;
     }
 }

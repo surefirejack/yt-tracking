@@ -105,6 +105,7 @@ class RolesAndPermissionsSeeder extends Seeder
             TenancyPermissionConstants::PERMISSION_VIEW_TRANSACTIONS,
             TenancyPermissionConstants::PERMISSION_INVITE_MEMBERS,
             TenancyPermissionConstants::PERMISSION_MANAGE_TEAM,
+            TenancyPermissionConstants::PERMISSION_UPDATE_TENANT_SETTINGS,
         ];
 
         $tenancyPermissions = [];
