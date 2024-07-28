@@ -21,7 +21,7 @@ class Team extends Page
     public static function canAccess(): bool
     {
         $tenantPermissionManager = app(TenantPermissionManager::class); // a bit ugly, but this is the Filament way :/
-        return $tenantPermissionManager->tenantUserHasPermissionTo(
+        return config('app.allow_tenant_invitations', false) && $tenantPermissionManager->tenantUserHasPermissionTo(
             Filament::getTenant(),
             auth()->user(),
             TenancyPermissionConstants::PERMISSION_MANAGE_TEAM

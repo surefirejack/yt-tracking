@@ -11,12 +11,12 @@ class Invitation extends Model
 
     protected $fillable = [
         'uuid',
-        'email',
+        'email',  // this is the email address of the person being invited
         'token',
         'tenant_id',
         'expires_at',
         'accepted_at',
-        'user_id',
+        'user_id',  // this is the user that created the invitation (the inviter)
         'status',
         'role',
     ];

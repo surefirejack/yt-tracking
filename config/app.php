@@ -190,6 +190,8 @@ return [
 
     'multiple_subscriptions_enabled' => false,
 
+    'allow_tenant_invitations' => true,
+
     /*
     |--------------------------------------------------------------------------
     | Autoloaded Service Providers

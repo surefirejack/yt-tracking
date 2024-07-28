@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Services\SubscriptionManager;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -28,5 +29,18 @@ class Tenant extends Model
     public function subscriptions()
     {
         return $this->hasMany(Subscription::class);
+    }
+
+    public function orders()
+    {
+        return $this->hasMany(Order::class);
+    }
+
+    public function subscriptionProductMetadata()
+    {
+        /** @var SubscriptionManager $subscriptionManager */
+        $subscriptionManager = app(SubscriptionManager::class);
+
+        return $subscriptionManager->getTenantSubscriptionProductMetadata($this);
     }
 }

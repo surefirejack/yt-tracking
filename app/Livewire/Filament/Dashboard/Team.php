@@ -49,7 +49,11 @@ class Team extends Component implements HasForms, HasTable
                     ->disabled(function (User $user) {
                         return $user->id === auth()->user()->id;
                     })
-                    ->updateStateUsing(function (User $user, string $state, TenantPermissionManager $tenantPermissionManager) {
+                    ->updateStateUsing(function (User $user, ?string $state, TenantPermissionManager $tenantPermissionManager) {
+                        if ($state === null) {
+                            return;
+                        }
+
                         $tenantPermissionManager->assignTenantUserRole(Filament::getTenant(), $user, $state);
 
                         Notification::make()

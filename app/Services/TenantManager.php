@@ -4,6 +4,9 @@ namespace App\Services;
 
 use App\Constants\InvitationStatus;
 use App\Constants\PlanType;
+use App\Events\Tenant\UserInvitedToTenant;
+use App\Events\Tenant\UserJoinedTenant;
+use App\Events\Tenant\UserRemovedFromTenant;
 use App\Models\Invitation;
 use App\Models\Tenant;
 use App\Models\User;
@@ -22,16 +25,10 @@ class TenantManager
 
     public function acceptInvitation(Invitation $invitation, User $user): bool
     {
-        // todo: make sure that the max_users limit of subscription is not exceeded (if any)
-        // todo: for each seat-based subscription for this tenant, increase the quantity by 1 if the quantity of subscription is less than the number of users in the tenant
-        // todo: send an email to the inviter that the invitation has been accepted
-        // todo: send an email to the invited user that the invitation has been accepted
-
         if ($this->doTenantSubscriptionsAllowAddingUser($invitation->tenant) === false) {
             return false;
         }
 
-        // todo: move that part to subscription service manager
         $tenantSubscriptions = $this->tenantSubscriptionManager->getTenantSubscriptions($invitation->tenant);
         $tenantUserCount = $invitation->tenant->users->count();
         $tenantLockKey = $this->getTenantLockName($invitation->tenant);
@@ -72,6 +69,8 @@ class TenantManager
                         'accepted_at' => now(),
                     ]);
                 });
+
+                UserJoinedTenant::dispatch($user, $invitation->tenant);
             }
         } catch (\Exception $e) {
             Log::error($e->getMessage());
@@ -81,9 +80,12 @@ class TenantManager
             $lock?->release();
         }
 
-        // todo: fire event UserJoinedTenant
-
         return true;
+    }
+
+    public function handleAfterInvitationCreated(Invitation $invitation): void
+    {
+        UserInvitedToTenant::dispatch($invitation);
     }
 
     public function rejectInvitation(Invitation $invitation, User $user): bool
@@ -135,7 +137,6 @@ class TenantManager
         $lock = Cache::lock($tenantLockKey, 30);
         $tenantSubscriptions = $this->tenantSubscriptionManager->getTenantSubscriptions($tenant);
         $tenantUserCount = $tenant->users->count();
-        $isProrated = config('app.payment.proration_enabled', true);
 
         try {
 
@@ -157,6 +158,8 @@ class TenantManager
                     $this->tenantPermissionManager->removeAllTenantUserRoles($tenant, $user);
                     $tenant->users()->detach($user);
                 });
+
+                UserRemovedFromTenant::dispatch($user, $tenant);
             }
         } catch (\Exception $e) {
             Log::error($e->getMessage());
@@ -171,9 +174,7 @@ class TenantManager
 
     public function canInviteUser(Tenant $tenant, User $user): bool
     {
-        // todo: check if invitations are enabled. If not, return false
-
-        return $this->doTenantSubscriptionsAllowAddingUser($tenant);
+        return config('app.allow_tenant_invitations', false) && $this->doTenantSubscriptionsAllowAddingUser($tenant);
     }
 
     public function getTenantByUuid(string $uuid): Tenant

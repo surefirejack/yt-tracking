@@ -3,8 +3,7 @@
 namespace App\Filament\Dashboard\Resources\InvitationResource\Pages;
 
 use App\Filament\Dashboard\Resources\InvitationResource;
-use App\Models\Invitation;
-use Filament\Actions;
+use App\Services\TenantManager;
 use Filament\Facades\Filament;
 use Filament\Resources\Pages\CreateRecord;
 use Illuminate\Support\Str;
@@ -26,6 +25,7 @@ class CreateInvitation extends CreateRecord
 
     protected function afterCreate(): void
     {
-        // todo: send an email (and once the user accepts the invitation, increase subscription quantity by 1): $this->getRecord();
+        $tenantManager = app(TenantManager::class);
+        $tenantManager->handleAfterInvitationCreated($this->getRecord());
     }
 }

@@ -61,14 +61,12 @@ class InvitationResource extends Resource
                     ->maxLength(255),
                 Forms\Components\Select::make('role')
                     ->options(function () {
-                        // starts with tenancy:
-                        $roles = Role::where('name', 'like', TenancyPermissionConstants::TENANCY_ROLE_PREFIX.'%')->get();
-                        $roles = $roles->mapWithKeys(function ($role) {
-                            $title = Str::of($role->name)->replace(TenancyPermissionConstants::TENANCY_ROLE_PREFIX, '')->replace('-', ' ')->title();
-                            return [$role->name => $title];
-                        });
+                        $rolesMap = TenancyPermissionConstants::getRoles();
+                        $rolesInDatabase = Role::whereIn('name', array_keys(TenancyPermissionConstants::getRoles()))->get();
 
-                        return $roles;
+                        return $rolesInDatabase->mapWithKeys(function ($role) use ($rolesMap) {
+                            return [$role->name => $rolesMap[$role->name]];
+                        });
                     })
                     ->default(TenancyPermissionConstants::ROLE_USER)
                     ->required()
@@ -134,11 +132,13 @@ class InvitationResource extends Resource
 
     public static function canAccess(): bool
     {
+        /** @var TenantPermissionManager $tenantPermissionManager */
         $tenantPermissionManager = app(TenantPermissionManager::class); // a bit ugly, but this is the Filament way :/
-        return $tenantPermissionManager->tenantUserHasPermissionTo(
+
+        return config('app.allow_tenant_invitations', false) && $tenantPermissionManager->tenantUserHasPermissionTo(
             Filament::getTenant(),
             auth()->user(),
-            'tenancy: invite members'
+            TenancyPermissionConstants::PERMISSION_INVITE_MEMBERS,
         );
     }
 

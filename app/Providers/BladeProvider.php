@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Models\Tenant;
 use App\Models\User;
 use App\Services\OrderManager;
 use App\Services\SubscriptionManager;
@@ -23,44 +24,44 @@ class BladeProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        Blade::if('subscribed', function (?string $productSlug = null) {
+        Blade::if('subscribed', function (?string $productSlug = null, ?Tenant $tenant = null) {
             /** @var User $user */
             $user = auth()->user();
 
             /** @var SubscriptionManager $subscriptionManager */
             $subscriptionManager = app(SubscriptionManager::class);
 
-            return $subscriptionManager->isUserSubscribed($user, $productSlug);
+            return $subscriptionManager->isUserSubscribed($user, $productSlug, $tenant);
         });
 
-        Blade::if('notsubscribed', function (?string $productSlug = null) {
+        Blade::if('notsubscribed', function (?string $productSlug = null, ?Tenant $tenant = null) {
             /** @var User $user */
             $user = auth()->user();
 
             /** @var SubscriptionManager $subscriptionManager */
             $subscriptionManager = app(SubscriptionManager::class);
 
-            return ! $subscriptionManager->isUserSubscribed($user, $productSlug);
+            return ! $subscriptionManager->isUserSubscribed($user, $productSlug, $tenant);
         });
 
-        Blade::if('trialing', function (?string $productSlug = null) {
+        Blade::if('trialing', function (?string $productSlug = null, ?Tenant $tenant = null) {
             /** @var User $user */
             $user = auth()->user();
 
             /** @var SubscriptionManager $subscriptionManager */
             $subscriptionManager = app(SubscriptionManager::class);
 
-            return $subscriptionManager->isUserTrialing($user, $productSlug);
+            return $subscriptionManager->isUserTrialing($user, $productSlug, $tenant);
         });
 
-        Blade::if('purchased', function (?string $productSlug = null) {
+        Blade::if('purchased', function (?string $productSlug = null, ?Tenant $tenant = null) {
             /** @var User $user */
             $user = auth()->user();
 
             /** @var OrderManager $orderManager */
             $orderManager = app(OrderManager::class);
 
-            return $orderManager->hasUserOrdered($user, $productSlug);
+            return $orderManager->hasUserOrdered($user, $productSlug, $tenant);
         });
     }
 }

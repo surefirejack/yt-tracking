@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Constants\SubscriptionStatus;
 use App\Constants\TenancyPermissionConstants;
+use App\Constants\TenantConstants;
 use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Support\Str;
@@ -53,10 +54,6 @@ class TenantCreationManager
             })->get(),
             TenancyPermissionConstants::PERMISSION_CREATE_SUBSCRIPTIONS
         );
-//        // get a tenant that doesn't have a subscription and also doesn't have any other users (except the current user)
-//        return $user->tenants()->whereDoesntHave('subscriptions')->whereDoesntHave('users', function ($query) use ($user) {
-//            $query->where('users.id', '!=', $user->id);
-//        })->get();
     }
 
     public function findUserTenantForNewSubscriptionByUuid(User $user, ?string $tenantUuid): ?Tenant
@@ -73,34 +70,6 @@ class TenantCreationManager
         )->first();
     }
 
-//    public function getOrCreateTenantForNewUserSubscription(User $user)
-//    {
-//        // get a tenant that doesn't have a subscription and also doesn't have any other users (except the current user)
-//        $tenant = $user->tenants()->whereDoesntHave('subscriptions')->whereDoesntHave('users', function ($query) use ($user) {
-//            $query->where('users.id', '!=', $user->id);
-//        })->first();
-//
-//        if ($tenant === null) {
-//            $tenant = $this->createTenant($user);
-//        }
-//
-//        return $tenant;
-//    }
-
-//    public function getOrCreateTenantForUserOrder(User $user)
-//    {
-//        // get a tenant that doesn't have an order and also doesn't have any other users (except the current user)
-//        $tenant = $user->tenants()->whereDoesntHave('orders')->whereDoesntHave('users', function ($query) use ($user) {
-//            $query->where('users.id', '!=', $user->id);
-//        })->first();
-//
-//        if ($tenant === null) {
-//            $tenant = $this->createTenant($user);
-//        }
-//
-//        return $tenant;
-//    }
-
     public function createTenant(User $user)
     {
         // add an enumeration to the name to avoid name conflicts
@@ -116,7 +85,7 @@ class TenantCreationManager
             }
         }
 
-        $name = $user->name.' '.__('workspace'); // todo: maybe put this in a config file
+        $name = $user->name.' '.TenantConstants::getAlias();
 
         $name .= ' #'.$number;
 

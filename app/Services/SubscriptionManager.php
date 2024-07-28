@@ -8,6 +8,7 @@ use App\Events\Subscription\InvoicePaymentFailed;
 use App\Events\Subscription\Subscribed;
 use App\Events\Subscription\SubscriptionCancelled;
 use App\Exceptions\SubscriptionCreationNotAllowedException;
+use App\Exceptions\TenantException;
 use App\Models\PaymentProvider;
 use App\Models\Plan;
 use App\Models\Product;
@@ -16,6 +17,7 @@ use App\Models\Tenant;
 use App\Models\User;
 use App\Services\PaymentProviders\PaymentProviderInterface;
 use Carbon\Carbon;
+use Filament\Facades\Filament;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
@@ -305,13 +307,29 @@ class SubscriptionManager
         return $result;
     }
 
-    public function isUserSubscribed(?User $user, ?string $productSlug = null): bool
+    /**
+     * @throws TenantException
+     */
+    public function isUserSubscribed(?User $user, ?string $productSlug = null, ?Tenant $tenant = null): bool
     {
         if (! $user) {
             return false;
         }
 
-        $subscriptions = $user->subscriptions()
+        $tenant = $tenant ?? Filament::getTenant();
+
+        if (! $tenant) {
+            throw new TenantException('Could not resolve tenant: You either need to specify a tenant or be in a tenant context to check if a user is subscribed.');
+        }
+
+        $userTenant = $user->tenants()->where('tenant_id', $tenant->id)->first();
+
+        if (! $userTenant) {
+            return false;
+        }
+
+        $subscriptions = $userTenant
+            ->subscriptions()
             ->where('status', SubscriptionStatus::ACTIVE->value)
             ->where('ends_at', '>', Carbon::now())
             ->get();
@@ -325,13 +343,25 @@ class SubscriptionManager
         return $subscriptions->count() > 0;
     }
 
-    public function isUserTrialing(?User $user, ?string $productSlug = null): bool
+    public function isUserTrialing(?User $user, ?string $productSlug = null, ?Tenant $tenant = null): bool
     {
         if (! $user) {
             return false;
         }
 
-        $subscriptions = $user->subscriptions()
+        $tenant = $tenant ?? Filament::getTenant();
+
+        if (! $tenant) {
+            throw new TenantException('Could not resolve tenant: You either need to specify a tenant or be in a tenant context to check if a user is trialing.');
+        }
+
+        $userTenant = $user->tenants()->where('tenant_id', $tenant->id)->first();
+
+        if (! $userTenant) {
+            return false;
+        }
+
+        $subscriptions = $userTenant->subscriptions()
             ->where('status', SubscriptionStatus::ACTIVE->value)
             ->where('trial_ends_at', '>', Carbon::now())
             ->get();
@@ -345,13 +375,15 @@ class SubscriptionManager
         return $subscriptions->count() > 0;
     }
 
-    public function getUserSubscriptionProductMetadata(?User $user): array
+    public function getTenantSubscriptionProductMetadata(?Tenant $tenant = null): array
     {
-        if (! $user) {
+        $tenant = $tenant ?? Filament::getTenant();
+
+        if (! $tenant) {
             return [];
         }
 
-        $subscriptions = $user->subscriptions()
+        $subscriptions = $tenant->subscriptions()
             ->where('status', SubscriptionStatus::ACTIVE->value)
             ->where('ends_at', '>', Carbon::now())
             ->get();

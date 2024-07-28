@@ -121,37 +121,28 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail, Has
         return $this->hasPermissionTo('impersonate users') && $this->isAdmin();
     }
 
-    public function isSubscribed(?string $productSlug = null): bool
+    public function isSubscribed(?string $productSlug = null, ?Tenant $tenant = null): bool
     {
         /** @var SubscriptionManager $subscriptionManager */
         $subscriptionManager = app(SubscriptionManager::class);
 
-        return $subscriptionManager->isUserSubscribed($this, $productSlug);
+        return $subscriptionManager->isUserSubscribed($this, $productSlug, $tenant);
     }
 
-    public function isTrialing(?string $productSlug = null): bool
+    public function isTrialing(?string $productSlug = null, ?Tenant $tenant = null): bool
     {
         /** @var SubscriptionManager $subscriptionManager */
         $subscriptionManager = app(SubscriptionManager::class);
 
-        return $subscriptionManager->isUserTrialing($this, $productSlug);
+        return $subscriptionManager->isUserTrialing($this, $productSlug, $tenant);
     }
 
-    public function hasPurchased(?string $productSlug = null): bool
+    public function hasPurchased(?string $productSlug = null, ?Tenant $tenant = null): bool
     {
         /** @var OrderManager $orderManager */
         $orderManager = app(OrderManager::class);
 
-        return $orderManager->hasUserOrdered($this, $productSlug);
-    }
-
-    public function subscriptionProductMetadata()
-    {
-        /** @var SubscriptionManager $subscriptionManager */
-        $subscriptionManager = app(SubscriptionManager::class);
-
-        return $subscriptionManager->getUserSubscriptionProductMetadata($this);
-
+        return $orderManager->hasUserOrdered($this, $productSlug, $tenant);
     }
 
     public function sendEmailVerificationNotification()

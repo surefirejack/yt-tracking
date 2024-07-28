@@ -104,5 +104,7 @@ class ConfigConstants
         'invoices.seller.attributes.code',
         'invoices.seller.attributes.vat',
         'invoices.seller.attributes.phone',
+
+        'app.allow_tenant_invitations',
     ];
 }

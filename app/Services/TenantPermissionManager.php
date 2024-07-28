@@ -4,14 +4,33 @@ namespace App\Services;
 
 use App\Models\Tenant;
 use App\Models\User;
+use Filament\Facades\Filament;
 use Illuminate\Support\Collection;
 
 class TenantPermissionManager
 {
+    private static $permissionCache = [];
+
     public function tenantUserHasPermissionTo(Tenant $tenant, User $user, string $permission): bool
     {
+        if ($tenant->id != Filament::getTenant()->id) {
+            return false;
+        }
+
+        // we need some kind of cache because filament calls this method multiple times
+        // you need to find another way to cache this if you want to use FrankenPhp to avoid memory leaks
+        $cacheKey = implode('-', [$tenant->id, $user->id, $permission]);
+
+        if (isset(self::$permissionCache[$cacheKey])) {
+            return self::$permissionCache[$cacheKey];
+        }
+
         // permissions are assigned to the TenantUser pivot table
-        return $user->tenants()->where('tenant_id', $tenant->id)?->first()?->pivot?->hasPermissionTo($permission) ?? false;
+        $result = $user->tenants()->where('tenant_id', $tenant->id)?->first()?->pivot?->hasPermissionTo($permission) ?? false;
+
+        self::$permissionCache[$cacheKey] = $result;
+
+        return $result;
     }
 
     public function filterTenantsWhereUserHasPermission(Collection $tenants, string $permission)
