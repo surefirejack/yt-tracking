@@ -104,6 +104,7 @@ class DashboardPanelProvider extends PanelProvider
                         \App\Livewire\AddressForm::class,
                     ]),
             ])
+            ->tenantMenu()
             ->tenant(Tenant::class, 'uuid');
     }
 }

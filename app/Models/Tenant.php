@@ -14,6 +14,7 @@ class Tenant extends Model
         'name',
         'uuid',
         'is_name_auto_generated',
+        'created_by',
     ];
 
     public function invitations()

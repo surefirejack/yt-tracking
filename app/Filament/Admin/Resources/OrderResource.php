@@ -5,15 +5,13 @@ namespace App\Filament\Admin\Resources;
 use App\Constants\DiscountConstants;
 use App\Constants\OrderStatus;
 use App\Filament\Admin\Resources\OrderResource\Pages;
-use App\Filament\Admin\Resources\UserResource\Pages\EditUser;
+use App\Filament\Admin\Resources\TenantResource\Pages\EditTenant;
 use App\Mapper\OrderStatusMapper;
 use App\Models\Order;
-use Filament\Forms\Components\Builder;
 use Filament\Forms\Form;
 use Filament\Infolists\Components\Section;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Infolists\Infolist;
-use Filament\Resources\Components\Tab;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -36,7 +34,7 @@ class OrderResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('user.name')->label(__('User'))->searchable(),
+                Tables\Columns\TextColumn::make('tenant.name')->label(__('Tenant'))->searchable(),
                 Tables\Columns\TextColumn::make('status')
                     ->badge()
                     ->colors([
@@ -91,10 +89,9 @@ class OrderResource extends Resource
                                     ->description(__('View details about this order.'))
                                     ->schema([
                                         TextEntry::make('uuid')->copyable(),
-                                        // user
-                                        TextEntry::make('user.name')
-                                            ->url(fn (Order $record) => EditUser::getUrl(['record' => $record->user]))
-                                            ->label(__('User')),
+                                        TextEntry::make('tenant.name')
+                                            ->url(fn (Order $record) => EditTenant::getUrl(['record' => $record->tenant]))
+                                            ->label(__('Tenant')),
                                         TextEntry::make('payment_provider_id')
                                             ->formatStateUsing(function (string $state, $record) {
                                                 return $record->paymentProvider->name;

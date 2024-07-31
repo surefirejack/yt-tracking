@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Exceptions\SubscriptionCreationNotAllowedException;
 use App\Models\Plan;
 use App\Services\CalculationManager;
 use App\Services\DiscountManager;
@@ -27,12 +26,6 @@ class SubscriptionCheckoutController extends Controller
     {
         $plan = Plan::where('slug', $planSlug)->where('is_active', true)->firstOrFail();
         $checkoutDto = $this->sessionManager->getSubscriptionCheckoutDto();
-
-        $user = auth()->user();
-
-        if ($user && ! $this->subscriptionManager->canCreateSubscription($user->id)) {
-            throw new SubscriptionCreationNotAllowedException(__('You already have subscription.'));
-        }
 
         if ($checkoutDto->planSlug !== $planSlug) {
             $checkoutDto = $this->sessionManager->resetSubscriptionCheckoutDto();

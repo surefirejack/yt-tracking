@@ -16,6 +16,7 @@ return new class extends Migration
             $table->string('uuid')->unique();
             $table->string('name');
             $table->boolean('is_name_auto_generated')->default(false);
+            $table->foreignId('created_by')->nullable()->constrained('users');
             $table->timestamps();
         });
     }

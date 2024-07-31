@@ -5,7 +5,7 @@ namespace App\Filament\Admin\Resources;
 use App\Constants\DiscountConstants;
 use App\Constants\PlanType;
 use App\Constants\SubscriptionStatus;
-use App\Filament\Admin\Resources\UserResource\Pages\EditUser;
+use App\Filament\Admin\Resources\TenantResource\Pages\EditTenant;
 use App\Mapper\SubscriptionStatusMapper;
 use App\Models\Subscription;
 use Filament\Forms;
@@ -75,7 +75,7 @@ class SubscriptionResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('user.name')->label(__('User'))->searchable(),
+                Tables\Columns\TextColumn::make('tenant.name')->label(__('Tenant'))->searchable(),
                 Tables\Columns\TextColumn::make('plan.name')->label(__('Plan'))->searchable(),
                 Tables\Columns\TextColumn::make('price')->formatStateUsing(function (string $state, $record) {
                     if ($record->plan->type === PlanType::FLAT_RATE->value) {
@@ -263,9 +263,9 @@ class SubscriptionResource extends Resource
                                         TextEntry::make('cancellation_additional_info')
                                             ->label(__('Cancellation Additional Info'))
                                             ->visible(fn (Subscription $record): bool => $record->cancellation_additional_info !== null),
-                                        TextEntry::make('user.name')
-                                            ->url(fn (Subscription $record) => EditUser::getUrl(['record' => $record->user]))
-                                            ->label(__('User')),
+                                        TextEntry::make('tenant.name')
+                                            ->url(fn (Subscription $record) => EditTenant::getUrl(['record' => $record->tenant]))
+                                            ->label(__('Tenant')),
                                     ]),
                                 Section::make(__('Discount Details'))
                                     ->hidden(fn (Subscription $record): bool => $record->discounts->isEmpty() ||

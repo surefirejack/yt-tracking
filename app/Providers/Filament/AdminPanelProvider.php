@@ -70,6 +70,10 @@ class AdminPanelProvider extends PanelProvider
                     ->icon('heroicon-s-rocket-launch')
                     ->collapsed(),
                 NavigationGroup::make()
+                    ->label('Tenancy')
+                    ->icon('heroicon-s-home')
+                    ->collapsed(),
+                NavigationGroup::make()
                     ->label('Product Management')
                     ->icon('heroicon-s-shopping-cart')
                     ->collapsed(),

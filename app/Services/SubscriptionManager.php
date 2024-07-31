@@ -7,7 +7,6 @@ use App\Constants\SubscriptionStatus;
 use App\Events\Subscription\InvoicePaymentFailed;
 use App\Events\Subscription\Subscribed;
 use App\Events\Subscription\SubscriptionCancelled;
-use App\Exceptions\SubscriptionCreationNotAllowedException;
 use App\Exceptions\TenantException;
 use App\Models\PaymentProvider;
 use App\Models\Plan;
@@ -30,17 +29,6 @@ class SubscriptionManager
 
     }
 
-    public function canCreateSubscription(int $userId): bool
-    {
-        if (config('app.multiple_subscriptions_enabled')) {
-            return true;
-        }
-
-        $notDeadSubscriptions = $this->findAllSubscriptionsThatAreNotDead($userId);
-
-        return count($notDeadSubscriptions) === 0;
-    }
-
     public function create(
         string $planSlug,
         int $userId,
@@ -50,10 +38,6 @@ class SubscriptionManager
         Tenant $tenant,
     ): Subscription {
         $plan = Plan::where('slug', $planSlug)->where('is_active', true)->firstOrFail();
-
-        if (! $this->canCreateSubscription($userId)) {  // todo: remove that out.
-            throw new SubscriptionCreationNotAllowedException(__('You already have subscription.'));
-        }
 
         $newSubscription = null;
         DB::transaction(function () use ($plan, $userId, &$newSubscription, $paymentProvider, $paymentProviderSubscriptionId, $quantity, $tenant) {

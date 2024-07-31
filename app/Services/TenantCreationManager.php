@@ -93,6 +93,7 @@ class TenantCreationManager
             'name' => $name,
             'uuid' => (string) Str::uuid(),
             'is_name_auto_generated' => true,
+            'created_by' => $user->id,
         ]);
 
         $tenant->users()->attach($user);

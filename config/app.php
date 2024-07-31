@@ -188,8 +188,6 @@ return [
 
     'recaptcha_enabled' => false,
 
-    'multiple_subscriptions_enabled' => false,
-
     'allow_tenant_invitations' => true,
 
     /*
