@@ -266,6 +266,9 @@ class SubscriptionResource extends Resource
                                         TextEntry::make('tenant.name')
                                             ->url(fn (Subscription $record) => EditTenant::getUrl(['record' => $record->tenant]))
                                             ->label(__('Tenant')),
+                                        TextEntry::make('quantity')
+                                            ->label(__('Quantity'))
+                                            ->visible(fn (Subscription $record): bool => $record->plan->type === PlanType::SEAT_BASED->value),
                                     ]),
                                 Section::make(__('Discount Details'))
                                     ->hidden(fn (Subscription $record): bool => $record->discounts->isEmpty() ||

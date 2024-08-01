@@ -236,6 +236,10 @@ class SubscriptionManager
             return false;
         }
 
+        if ($subscription->plan->type != $newPlan->type) {
+            return false;
+        }
+
         $changeResult = $paymentProviderStrategy->changePlan($subscription, $newPlan, $isProrated);
 
         if ($changeResult) {

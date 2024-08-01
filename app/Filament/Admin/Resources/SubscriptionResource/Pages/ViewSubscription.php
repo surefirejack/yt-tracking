@@ -9,6 +9,7 @@ use App\Services\PaymentProviders\PaymentManager;
 use App\Services\PlanManager;
 use App\Services\SubscriptionDiscountManager;
 use App\Services\SubscriptionManager;
+use App\Services\TenantManager;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ViewRecord;
 
@@ -20,9 +21,14 @@ class ViewSubscription extends ViewRecord
     {
         return [
             \Filament\Actions\ActionGroup::make([
+                \Filament\Actions\Action::make('sync')
+                    ->label(__('Sync Quantity'))
+                    ->icon('heroicon-o-arrow-path')
+                    ->action(function (TenantManager $tenantManager, Subscription $record) {
+                        $tenantManager->syncSubscriptionQuantity($record);
+                    }),
                 \Filament\Actions\Action::make('change-plan')
                     ->label(__('Change Plan'))
-                    ->color('primary')
                     ->icon('heroicon-o-rocket-launch')
                     ->visible(function (Subscription $record): bool {
                         return $record->status === SubscriptionStatus::ACTIVE->value;
@@ -31,8 +37,8 @@ class ViewSubscription extends ViewRecord
                         \Filament\Forms\Components\Select::make('plan_id')
                             ->label(__('Plan'))
                             ->default($this->getRecord()->plan_id)
-                            ->options(function (PlanManager $planManager) {
-                                return $planManager->getAllActivePlans()->mapWithKeys(function ($plan) {
+                            ->options(function (PlanManager $planManager, Subscription $record) {
+                                return $planManager->getAllActivePlans($record->plan->type)->mapWithKeys(function ($plan) {
                                     return [$plan->id => $plan->name];
                                 });
                             })

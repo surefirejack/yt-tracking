@@ -8,6 +8,7 @@ use App\Events\Tenant\UserInvitedToTenant;
 use App\Events\Tenant\UserJoinedTenant;
 use App\Events\Tenant\UserRemovedFromTenant;
 use App\Models\Invitation;
+use App\Models\Subscription;
 use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Support\Facades\Cache;
@@ -71,6 +72,35 @@ class TenantManager
                 });
 
                 UserJoinedTenant::dispatch($user, $invitation->tenant);
+            }
+        } catch (\Exception $e) {
+            Log::error($e->getMessage());
+
+            return false;
+        } finally {
+            $lock?->release();
+        }
+
+        return true;
+    }
+
+    public function syncSubscriptionQuantity(Subscription $subscription)
+    {
+        $tenant = $subscription->tenant;
+        $tenantUserCount = $tenant->users->count();
+
+        $tenantLockKey = $this->getTenantLockName($tenant);
+
+        $lock = Cache::lock($tenantLockKey, 30);
+
+        try {
+            if ($lock->block(30)) {  // use
+
+                if ($subscription->plan->type === PlanType::SEAT_BASED->value &&
+                    $subscription->quantity != $tenantUserCount
+                ) {
+                    return $this->tenantSubscriptionManager->updateSubscriptionQuantity($subscription, $tenantUserCount);
+                }
             }
         } catch (\Exception $e) {
             Log::error($e->getMessage());

@@ -79,8 +79,12 @@ class PlanManager
         return Plan::where('id', $id)->where('is_active', true)->first();
     }
 
-    public function getAllActivePlans()
+    public function getAllActivePlans(?string $planType = null)
     {
+        if ($planType) {
+            return Plan::where('is_active', true)->where('type', $planType)->get();
+        }
+
         return Plan::where('is_active', true)->get();
     }
 

@@ -194,7 +194,7 @@ class StripeProvider implements PaymentProviderInterface
                 'items' => array_merge($itemsToDelete, [
                     [
                         'price' => $stripePriceId,
-                        'quantity' => 1,
+                        'quantity' => $subscription->quantity,
                     ],
                 ]),
             ];
