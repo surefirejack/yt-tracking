@@ -30,10 +30,14 @@ class LemonSqueezyControllerTest extends FeatureTest
 
     public function test_subscription_created_webhook(): void
     {
+        $tenant = $this->createTenant();
+        $user = $this->createUser($tenant);
+
         $uuid = (string) Str::uuid();
         Subscription::create([
             'uuid' => $uuid,
-            'user_id' => 1,
+            'user_id' => $user->id,
+            'tenant_id' => $tenant->id,
             'price' => 10,
             'currency_id' => 1,
             'plan_id' => 1,
@@ -100,10 +104,14 @@ class LemonSqueezyControllerTest extends FeatureTest
 
     public function test_subscription_updated_webhook(): void
     {
+        $tenant = $this->createTenant();
+        $user = $this->createUser($tenant);
+
         $uuid = (string) Str::uuid();
         Subscription::create([
             'uuid' => $uuid,
-            'user_id' => 1,
+            'user_id' => $user->id,
+            'tenant_id' => $tenant->id,
             'price' => 10,
             'currency_id' => 1,
             'plan_id' => 1,
@@ -133,11 +141,15 @@ class LemonSqueezyControllerTest extends FeatureTest
 
     public function test_subscription_canceled_webhook(): void
     {
+        $tenant = $this->createTenant();
+        $user = $this->createUser($tenant);
+
         $uuid = (string) Str::uuid();
         $providerSubscriptionId = '309913';
         Subscription::create([
             'uuid' => $uuid,
-            'user_id' => 1,
+            'user_id' => $user->id,
+            'tenant_id' => $tenant->id,
             'price' => 10,
             'currency_id' => 1,
             'plan_id' => 1,
@@ -168,11 +180,15 @@ class LemonSqueezyControllerTest extends FeatureTest
 
     public function test_subscription_payment_success_webhook(): void
     {
+        $tenant = $this->createTenant();
+        $user = $this->createUser($tenant);
+
         $uuid = (string) Str::uuid();
         $providerSubscriptionId = '309914';
         $subscription = Subscription::create([
             'uuid' => $uuid,
-            'user_id' => 1,
+            'user_id' => $user->id,
+            'tenant_id' => $tenant->id,
             'price' => 10,
             'currency_id' => 1,
             'plan_id' => 1,
@@ -202,11 +218,15 @@ class LemonSqueezyControllerTest extends FeatureTest
 
     public function test_subscription_payment_failed_webhook(): void
     {
+        $tenant = $this->createTenant();
+        $user = $this->createUser($tenant);
+
         $uuid = (string) Str::uuid();
         $providerSubscriptionId = '309916';
         $subscription = Subscription::create([
             'uuid' => $uuid,
-            'user_id' => 1,
+            'user_id' => $user->id,
+            'tenant_id' => $tenant->id,
             'price' => 10,
             'currency_id' => 1,
             'plan_id' => 1,
@@ -236,10 +256,14 @@ class LemonSqueezyControllerTest extends FeatureTest
 
     public function test_order_created_webhook(): void
     {
+        $tenant = $this->createTenant();
+        $user = $this->createUser($tenant);
+
         $uuid = (string) Str::uuid();
         Order::create([
             'uuid' => $uuid,
-            'user_id' => 1,
+            'user_id' => $user->id,
+            'tenant_id' => $tenant->id,
             'total_amount' => 10,
             'currency_id' => 1,
             'status' => OrderStatus::NEW->value,
@@ -316,10 +340,14 @@ class LemonSqueezyControllerTest extends FeatureTest
 
     public function test_order_refunded_webhook(): void
     {
+        $tenant = $this->createTenant();
+        $user = $this->createUser($tenant);
+
         $uuid = (string) Str::uuid();
         Order::create([
             'uuid' => $uuid,
-            'user_id' => 1,
+            'user_id' => $user->id,
+            'tenant_id' => $tenant->id,
             'total_amount' => 10,
             'currency_id' => 1,
             'status' => OrderStatus::SUCCESS->value,

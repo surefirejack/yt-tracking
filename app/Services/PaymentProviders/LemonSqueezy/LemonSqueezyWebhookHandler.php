@@ -310,7 +310,7 @@ class LemonSqueezyWebhookHandler
 
         $tenant = $this->tenantCreationManager->createTenant($user);
 
-        return $this->subscriptionManager->create($plan->slug, $user->id, $paymentProvider, $providerSubscriptionId, $quantity, $tenant);
+        return $this->subscriptionManager->create($plan->slug, $user->id, $quantity, $tenant, $paymentProvider, $providerSubscriptionId);
     }
 
     private function mapOrderStatusToTransactionStatus(string $providerOrderStatus): TransactionStatus

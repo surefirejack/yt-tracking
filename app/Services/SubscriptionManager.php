@@ -7,6 +7,7 @@ use App\Constants\SubscriptionStatus;
 use App\Events\Subscription\InvoicePaymentFailed;
 use App\Events\Subscription\Subscribed;
 use App\Events\Subscription\SubscriptionCancelled;
+use App\Exceptions\SubscriptionCreationNotAllowedException;
 use App\Exceptions\TenantException;
 use App\Models\PaymentProvider;
 use App\Models\Plan;
@@ -32,11 +33,16 @@ class SubscriptionManager
     public function create(
         string $planSlug,
         int $userId,
-        ?PaymentProvider $paymentProvider,
-        ?string $paymentProviderSubscriptionId,
         int $quantity,
         Tenant $tenant,
+        ?PaymentProvider $paymentProvider = null,
+        ?string $paymentProviderSubscriptionId = null
     ): Subscription {
+
+        if (! $this->canCreateSubscription($tenant->id)) {
+            throw new SubscriptionCreationNotAllowedException(sprintf('Subscription creation is not allowed for this tenant: %s', $tenant->uuid));
+        }
+
         $plan = Plan::where('slug', $planSlug)->where('is_active', true)->firstOrFail();
 
         $newSubscription = null;
@@ -72,9 +78,16 @@ class SubscriptionManager
         return $newSubscription;
     }
 
-    public function findAllSubscriptionsThatAreNotDead(int $userId): array
+    public function canCreateSubscription(int $tenantId): bool
     {
-        return Subscription::where('user_id', $userId)
+        $notDeadSubscriptions = $this->findAllSubscriptionsThatAreNotDead($tenantId);
+
+        return count($notDeadSubscriptions) === 0;
+    }
+
+    public function findAllSubscriptionsThatAreNotDead(int $tenantId): array
+    {
+        return Subscription::where('tenant_id', $tenantId)
             ->where(function ($query) {
                 $query->where('status', SubscriptionStatus::ACTIVE->value)
                     ->orWhere('status', SubscriptionStatus::PENDING->value)

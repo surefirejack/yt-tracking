@@ -10,8 +10,12 @@ class TenantPermissionManager
 {
     private static $permissionCache = [];
 
-    public function tenantUserHasPermissionTo(Tenant $tenant, User $user, string $permission): bool
+    public function tenantUserHasPermissionTo(?Tenant $tenant, User $user, string $permission): bool
     {
+        if ($tenant === null) {
+            return false;
+        }
+
         // we need some kind of cache because filament calls this method multiple times
         // filament tenant switcher is inefficient and tried to build the navigation for all tenants, only to display the menu for the current tenant
         // I'm sure this will be solved in the future, but for now, we need to cache the permissions to reduce the number of queries to the database
@@ -40,7 +44,7 @@ class TenantPermissionManager
             self::$permissionCache[$tenant->id][$user->id][$onePermission->name] = true;
         }
 
-        return self::$permissionCache[$tenant->id][$user->id][$onePermission->name] ?? false;
+        return self::$permissionCache[$tenant->id][$user->id][$permission] ?? false;
     }
 
     public function filterTenantsWhereUserHasPermission(Collection $tenants, string $permission)

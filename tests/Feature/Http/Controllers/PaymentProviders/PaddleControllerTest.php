@@ -22,12 +22,17 @@ class PaddleControllerTest extends FeatureTest
 
         $response->assertStatus(400);
     }
+
     public function test_subscription_created_webhook(): void
     {
+        $tenant = $this->createTenant();
+        $user = $this->createUser($tenant);
+
         $uuid = (string) Str::uuid();
         Subscription::create([
             'uuid' => $uuid,
-            'user_id' => 1,
+            'user_id' => $user->id,
+            'tenant_id' => $tenant->id,
             'price' => 10,
             'currency_id' => 1,
             'plan_id' => 1,
@@ -55,10 +60,14 @@ class PaddleControllerTest extends FeatureTest
 
     public function test_subscription_canceled_webhook(): void
     {
+        $tenant = $this->createTenant();
+        $user = $this->createUser($tenant);
+
         $uuid = (string) Str::uuid();
         Subscription::create([
             'uuid' => $uuid,
-            'user_id' => 1,
+            'user_id' => $user->id,
+            'tenant_id' => $tenant->id,
             'price' => 10,
             'currency_id' => 1,
             'plan_id' => 1,
@@ -86,10 +95,14 @@ class PaddleControllerTest extends FeatureTest
 
     public function test_transaction_created_webhook_for_subscription(): void
     {
+        $tenant = $this->createTenant();
+        $user = $this->createUser($tenant);
+
         $uuid = (string) Str::uuid();
         $subscription = Subscription::create([
             'uuid' => $uuid,
-            'user_id' => 1,
+            'user_id' => $user->id,
+            'tenant_id' => $tenant->id,
             'price' => 10,
             'currency_id' => 1,
             'plan_id' => 1,
@@ -120,11 +133,15 @@ class PaddleControllerTest extends FeatureTest
 
     public function test_transaction_created_webhook_for_order(): void
     {
+        $tenant = $this->createTenant();
+        $user = $this->createUser($tenant);
+
         $user = $this->createUser();
         $currency = Currency::where('code', 'USD')->firstOrFail();
         $orderUUID = (string) Str::uuid();
         $order = Order::create([
             'user_id' => $user->id,
+            'tenant_id' => $tenant->id,
             'uuid' => $orderUUID,
             'status' => 'new',
             'currency_id' => $currency->id,
@@ -153,10 +170,14 @@ class PaddleControllerTest extends FeatureTest
 
     public function test_transaction_updated_webhook_for_subscription(): void
     {
+        $tenant = $this->createTenant();
+        $user = $this->createUser($tenant);
+
         $uuid = (string) Str::uuid();
         $subscription = Subscription::create([
             'uuid' => $uuid,
-            'user_id' => 1,
+            'user_id' => $user->id,
+            'tenant_id' => $tenant->id,
             'price' => 10,
             'currency_id' => 1,
             'plan_id' => 1,
@@ -170,6 +191,7 @@ class PaddleControllerTest extends FeatureTest
         $transaction = $subscription->transactions()->create([
             'uuid' => (string) Str::uuid(),
             'user_id' => $subscription->user_id,
+            'tenant_id' => $subscription->tenant_id,
             'currency_id' => $subscription->currency_id,
             'amount' => $subscription->price,
             'status' => TransactionStatus::PENDING->value,
@@ -200,11 +222,14 @@ class PaddleControllerTest extends FeatureTest
 
     public function test_transaction_updated_webhook_for_order(): void
     {
-        $user = $this->createUser();
+        $tenant = $this->createTenant();
+        $user = $this->createUser($tenant);
+
         $currency = Currency::where('code', 'USD')->firstOrFail();
         $orderUUID = (string) Str::uuid();
         $order = Order::create([
             'user_id' => $user->id,
+            'tenant_id' => $tenant->id,
             'uuid' => $orderUUID,
             'status' => 'new',
             'currency_id' => $currency->id,
@@ -216,6 +241,7 @@ class PaddleControllerTest extends FeatureTest
         $transaction = $order->transactions()->create([
             'uuid' => (string) Str::uuid(),
             'user_id' => $order->user_id,
+            'tenant_id' => $order->tenant_id,
             'currency_id' => $order->currency_id,
             'amount' => $order->total_amount,
             'status' => TransactionStatus::PENDING->value,
@@ -251,11 +277,14 @@ class PaddleControllerTest extends FeatureTest
 
     public function test_transaction_payment_failed_webhook_for_order(): void
     {
-        $user = $this->createUser();
+        $tenant = $this->createTenant();
+        $user = $this->createUser($tenant);
+
         $currency = Currency::where('code', 'USD')->firstOrFail();
         $orderUUID = (string) Str::uuid();
         $order = Order::create([
             'user_id' => $user->id,
+            'tenant_id' => $tenant->id,
             'uuid' => $orderUUID,
             'status' => OrderStatus::NEW->value,
             'currency_id' => $currency->id,
@@ -267,6 +296,7 @@ class PaddleControllerTest extends FeatureTest
         $transaction = $order->transactions()->create([
             'uuid' => (string) Str::uuid(),
             'user_id' => $order->user_id,
+            'tenant_id' => $order->tenant_id,
             'currency_id' => $order->currency_id,
             'amount' => $order->total_amount,
             'status' => TransactionStatus::PENDING->value,
@@ -302,11 +332,14 @@ class PaddleControllerTest extends FeatureTest
 
     public function test_transaction_refunded_webhook_for_order(): void
     {
-        $user = $this->createUser();
+        $tenant = $this->createTenant();
+        $user = $this->createUser($tenant);
+
         $currency = Currency::where('code', 'USD')->firstOrFail();
         $orderUUID = (string) Str::uuid();
         $order = Order::create([
             'user_id' => $user->id,
+            'tenant_id' => $tenant->id,
             'uuid' => $orderUUID,
             'status' => OrderStatus::SUCCESS->value,
             'currency_id' => $currency->id,
@@ -318,6 +351,7 @@ class PaddleControllerTest extends FeatureTest
         $transaction = $order->transactions()->create([
             'uuid' => (string) Str::uuid(),
             'user_id' => $order->user_id,
+            'tenant_id' => $order->tenant_id,
             'currency_id' => $order->currency_id,
             'amount' => $order->total_amount,
             'status' => TransactionStatus::SUCCESS->value,
@@ -353,11 +387,14 @@ class PaddleControllerTest extends FeatureTest
 
     public function test_transaction_disputed_webhook_for_order(): void
     {
-        $user = $this->createUser();
+        $tenant = $this->createTenant();
+        $user = $this->createUser($tenant);
+
         $currency = Currency::where('code', 'USD')->firstOrFail();
         $orderUUID = (string) Str::uuid();
         $order = Order::create([
             'user_id' => $user->id,
+            'tenant_id' => $tenant->id,
             'uuid' => $orderUUID,
             'status' => OrderStatus::SUCCESS->value,
             'currency_id' => $currency->id,
@@ -369,6 +406,7 @@ class PaddleControllerTest extends FeatureTest
         $transaction = $order->transactions()->create([
             'uuid' => (string) Str::uuid(),
             'user_id' => $order->user_id,
+            'tenant_id' => $order->tenant_id,
             'currency_id' => $order->currency_id,
             'amount' => $order->total_amount,
             'status' => TransactionStatus::SUCCESS->value,
@@ -404,10 +442,14 @@ class PaddleControllerTest extends FeatureTest
 
     public function test_transaction_payment_failed_webhook_for_subscription(): void
     {
+        $tenant = $this->createTenant();
+        $user = $this->createUser($tenant);
+
         $uuid = (string) Str::uuid();
         $subscription = Subscription::create([
             'uuid' => $uuid,
-            'user_id' => 1,
+            'user_id' => $user->id,
+            'tenant_id' => $tenant->id,
             'price' => 10,
             'currency_id' => 1,
             'plan_id' => 1,
@@ -421,6 +463,7 @@ class PaddleControllerTest extends FeatureTest
         $transaction = $subscription->transactions()->create([
             'uuid' => (string) Str::uuid(),
             'user_id' => $subscription->user_id,
+            'tenant_id' => $subscription->tenant_id,
             'currency_id' => $subscription->currency_id,
             'amount' => $subscription->price,
             'status' => TransactionStatus::PENDING->value,
@@ -454,7 +497,7 @@ class PaddleControllerTest extends FeatureTest
         $time = time();
         $secret = config('services.paddle.webhook_secret');
 
-        return 't=' . $time . ';h1=' . hash_hmac('sha256', $time . ':' . $content, $secret);
+        return 't='.$time.';h1='.hash_hmac('sha256', $time.':'.$content, $secret);
     }
 
     private function getPaddleTransactionForSubscription(

@@ -21,10 +21,12 @@ class MetricManagerTest extends FeatureTest
     {
         Transaction::query()->update(['status' => TransactionStatus::FAILED->value]);
 
-        $user = $this->createUser();
+        $tenant = $this->createTenant();
+        $user = $this->createUser($tenant);
 
         Transaction::create([
             'user_id' => $user->id,
+            'tenant_id' => $tenant->id,
             'uuid' => Str::uuid(),
             'amount' => 1000,
             'currency_id' => Currency::where('code', 'USD')->firstOrFail()->id,
@@ -36,6 +38,7 @@ class MetricManagerTest extends FeatureTest
 
         Transaction::create([
             'user_id' => $user->id,
+            'tenant_id' => $tenant->id,
             'uuid' => Str::uuid(),
             'amount' => 1000,
             'currency_id' => Currency::where('code', 'USD')->firstOrFail()->id,
@@ -47,6 +50,7 @@ class MetricManagerTest extends FeatureTest
 
         Transaction::create([
             'user_id' => $user->id,
+            'tenant_id' => $tenant->id,
             'uuid' => Str::uuid(),
             'amount' => 1000,
             'currency_id' => Currency::where('code', 'USD')->firstOrFail()->id,
@@ -64,6 +68,8 @@ class MetricManagerTest extends FeatureTest
 
     public function test_average_revenue_per_user()
     {
+        $tenant = $this->createTenant();
+
         Transaction::query()->update(['status' => TransactionStatus::FAILED->value]);
 
         $weekAgo = now()->subWeek()->endOfDay();
@@ -72,12 +78,17 @@ class MetricManagerTest extends FeatureTest
             'created_at' => $weekAgo,
         ]);
 
+        $tenant->users()->attach($user1);
+
         $user2 = User::factory()->create([
             'created_at' => $weekAgo,
         ]);
 
+        $tenant->users()->attach($user2);
+
         $transaction = Transaction::create([
             'user_id' => $user1->id,
+            'tenant_id' => $tenant->id,
             'uuid' => Str::uuid(),
             'amount' => 1000,
             'currency_id' => Currency::where('code', 'USD')->firstOrFail()->id,
@@ -92,6 +103,7 @@ class MetricManagerTest extends FeatureTest
 
         $transaction = Transaction::create([
             'user_id' => $user2->id,
+            'tenant_id' => $tenant->id,
             'uuid' => Str::uuid(),
             'amount' => 1000,
             'currency_id' => Currency::where('code', 'USD')->firstOrFail()->id,
@@ -115,6 +127,7 @@ class MetricManagerTest extends FeatureTest
         Transaction::query()->update(['status' => TransactionStatus::FAILED->value]);
         Subscription::query()->update(['status' => SubscriptionStatus::NEW->value]);
 
+        $tenant = $this->createTenant();
         $user = $this->createUser();
 
         $slug = Str::random();
@@ -125,6 +138,7 @@ class MetricManagerTest extends FeatureTest
 
         Subscription::factory()->create([
             'user_id' => $user->id,
+            'tenant_id' => $tenant->id,
             'status' => SubscriptionStatus::ACTIVE,
             'plan_id' => $plan->id,
             'price' => 5000,
@@ -138,6 +152,7 @@ class MetricManagerTest extends FeatureTest
 
         Subscription::factory()->create([
             'user_id' => $user->id,
+            'tenant_id' => $tenant->id,
             'status' => SubscriptionStatus::ACTIVE,
             'plan_id' => $plan->id,
             'price' => 12000,

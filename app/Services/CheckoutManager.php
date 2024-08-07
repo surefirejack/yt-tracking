@@ -29,8 +29,6 @@ class CheckoutManager
             $subscription = $this->subscriptionManager->create(
                 planSlug: $planSlug,
                 userId: auth()->id(),
-                paymentProvider: null,
-                paymentProviderSubscriptionId: null,
                 quantity: $quantity,
                 tenant: $tenant,
             );
