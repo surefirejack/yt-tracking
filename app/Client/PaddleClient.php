@@ -114,7 +114,7 @@ class PaddleClient
         ])->get($this->getApiUrl('/subscriptions/'.$paddleSubscriptionId));
     }
 
-    public function updateSubscription(string $paddleSubscriptionId, string $priceId, bool $withProration, bool $isTrialing = false): Response
+    public function updateSubscription(string $paddleSubscriptionId, string $priceId, bool $withProration, bool $isTrialing = false, int $quantity = 1): Response
     {
         $proration = $isTrialing ? 'do_not_bill' : ($withProration ? 'prorated_immediately' : 'full_immediately');
         $subscriptionObject = [
@@ -122,7 +122,7 @@ class PaddleClient
             'items' => [
                 [
                     'price_id' => $priceId,
-                    'quantity' => 1,
+                    'quantity' => $quantity,
                 ],
             ],
         ];

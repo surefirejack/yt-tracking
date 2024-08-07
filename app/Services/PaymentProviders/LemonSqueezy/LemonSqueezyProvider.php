@@ -5,6 +5,7 @@ namespace App\Services\PaymentProviders\LemonSqueezy;
 use App\Client\LemonSqueezyClient;
 use App\Constants\DiscountConstants;
 use App\Constants\PaymentProviderConstants;
+use App\Constants\PlanType;
 use App\Models\Discount;
 use App\Models\Order;
 use App\Models\PaymentProvider;
@@ -195,7 +196,7 @@ class LemonSqueezyProvider implements PaymentProviderInterface
                 throw new \Exception('Failed to update lemon-squeezy subscription');
             }
 
-            $this->subscriptionManager->updateSubscription($subscription, [
+            $subscription = $this->subscriptionManager->updateSubscription($subscription, [
                 'plan_id' => $newPlan->id,
                 'price' => $planPrice->price,
                 'currency_id' => $planPrice->currency_id,
@@ -203,6 +204,10 @@ class LemonSqueezyProvider implements PaymentProviderInterface
                 'interval_count' => $newPlan->interval_count,
             ]);
 
+            if ($subscription->plan->type === PlanType::SEAT_BASED->value) {
+                // unfortunately, lemon-squeezy resets the quantity to 1 when changing the plan, so we need to update it again
+                $this->updateSubscriptionQuantity($subscription, $subscription->quantity, $withProration);
+            }
         } catch (\Exception $e) {
             Log::error($e->getMessage());
 

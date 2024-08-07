@@ -102,7 +102,8 @@ class PaddleProvider implements PaymentProviderInterface
             $subscription->payment_provider_subscription_id,
             $paddlePrice,
             $withProration,
-            $subscription->trial_ends_at !== null && Carbon::parse($subscription->trial_ends_at)->isFuture()
+            $subscription->trial_ends_at !== null && Carbon::parse($subscription->trial_ends_at)->isFuture(),
+            quantity: $subscription->quantity,
         );
 
         if ($response->failed()) {

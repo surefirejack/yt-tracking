@@ -2,6 +2,7 @@
 
 namespace App\Filament\Admin\Resources\SubscriptionResource\Pages;
 
+use App\Constants\PlanType;
 use App\Constants\SubscriptionStatus;
 use App\Filament\Admin\Resources\SubscriptionResource;
 use App\Models\Subscription;
@@ -24,6 +25,9 @@ class ViewSubscription extends ViewRecord
                 \Filament\Actions\Action::make('sync')
                     ->label(__('Sync Quantity'))
                     ->icon('heroicon-o-arrow-path')
+                    ->visible(function (Subscription $record): bool {
+                        return $record->plan->type === PlanType::SEAT_BASED->value;
+                    })
                     ->action(function (TenantManager $tenantManager, Subscription $record) {
                         $tenantManager->syncSubscriptionQuantity($record);
                     }),
