@@ -71,9 +71,10 @@ class StripeControllerTest extends FeatureTest
             'interval_id' => 2,
             'interval_count' => 1,
             'status' => SubscriptionStatus::INACTIVE->value,
+            'quantity' => 1,
         ]);
 
-        $payload = $this->getStripeSubscription('active', 'customer.subscription.updated', $uuid);
+        $payload = $this->getStripeSubscription('active', 'customer.subscription.updated', $uuid, quantity: 2);
 
         $timestamp = time();
         $payloadString = json_encode($payload);
@@ -89,6 +90,7 @@ class StripeControllerTest extends FeatureTest
         $this->assertDatabaseHas('subscriptions', [
             'uuid' => $uuid,
             'status' => SubscriptionStatus::ACTIVE->value,
+            'quantity' => 2,
         ]);
     }
 
@@ -1356,6 +1358,7 @@ JSON;
         string $stripeSubscriptionStatus,
         string $type,
         string $subscriptionUuid,
+        int $quantity = 1,
     ) {
         $json = <<<JSON
         {
@@ -1435,7 +1438,7 @@ JSON;
                         "unit_amount": 1100,
                         "unit_amount_decimal": "1100"
                       },
-                      "quantity": 1,
+                      "quantity": $quantity,
                       "subscription": "sub_1NnOIdJQC7CL5JsVPmRlNlsR",
                       "tax_rates": [
                       ]
@@ -1483,7 +1486,7 @@ JSON;
                   "trial_period_days": null,
                   "usage_type": "licensed"
                 },
-                "quantity": 1,
+                "quantity": $quantity,
                 "schedule": null,
                 "start_date": 1694016591,
                 "status": "$stripeSubscriptionStatus",

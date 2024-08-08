@@ -25,6 +25,7 @@ class CreateInvitation extends CreateRecord
 
     protected function afterCreate(): void
     {
+        /** @var TenantManager $tenantManager */
         $tenantManager = app(TenantManager::class);
         $tenantManager->handleAfterInvitationCreated($this->getRecord());
     }

@@ -26,6 +26,10 @@ class TenantManager
 
     public function acceptInvitation(Invitation $invitation, User $user): bool
     {
+        if ($invitation->status !== InvitationStatus::PENDING->value) {
+            return false;
+        }
+
         if ($this->doTenantSubscriptionsAllowAddingUser($invitation->tenant) === false) {
             return false;
         }
@@ -120,6 +124,10 @@ class TenantManager
 
     public function rejectInvitation(Invitation $invitation, User $user): bool
     {
+        if ($invitation->status !== InvitationStatus::PENDING->value) {
+            return false;
+        }
+
         $invitation->update([
             'status' => InvitationStatus::REJECTED,
         ]);
@@ -146,7 +154,7 @@ class TenantManager
 
     public function canRemoveUser(Tenant $tenant, User $user): bool
     {
-        if (auth()->user()->is($user)) {
+        if (auth()->user() === null || auth()->user()->is($user)) {
             return false;
         }
 

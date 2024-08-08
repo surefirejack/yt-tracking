@@ -39,6 +39,7 @@
                                 <div>
                                     {{ __('My Invitations') }}
                                     @php
+                                        /** @var \App\Services\TenantManager $tenantManager */
                                         $invitationsCount = $tenantManager->getUserInvitationCount(auth()->user());
                                     @endphp
                                     @if ($invitationsCount > 0)

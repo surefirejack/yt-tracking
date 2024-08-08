@@ -70,7 +70,7 @@ class TenantCreationManager
         )->first();
     }
 
-    public function createTenant(User $user)
+    public function createTenant(User $user): Tenant
     {
         // add an enumeration to the name to avoid name conflicts
 

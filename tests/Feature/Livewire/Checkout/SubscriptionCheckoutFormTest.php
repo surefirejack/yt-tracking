@@ -10,6 +10,7 @@ use App\Models\PaymentProvider;
 use App\Models\Plan;
 use App\Models\PlanPrice;
 use App\Models\Subscription;
+use App\Models\Tenant;
 use App\Models\User;
 use App\Services\PaymentProviders\PaymentManager;
 use App\Services\PaymentProviders\PaymentProviderInterface;
@@ -40,6 +41,7 @@ class SubscriptionCheckoutFormTest extends FeatureTest
 
         // get number of subscriptions before checkout
         $subscriptionsBefore = Subscription::count();
+        $tenantsBefore = Tenant::count();
 
         Livewire::test(SubscriptionCheckoutForm::class)
             ->set('name', 'Name')
@@ -59,6 +61,7 @@ class SubscriptionCheckoutFormTest extends FeatureTest
 
         // assert order has been created
         $this->assertEquals($subscriptionsBefore + 1, Subscription::count());
+        $this->assertEquals($tenantsBefore + 1, Tenant::count());
     }
 
     public function test_can_checkout_existing_user()
@@ -89,6 +92,7 @@ class SubscriptionCheckoutFormTest extends FeatureTest
 
         // get number of subscriptions before checkout
         $subscriptionsBefore = Subscription::count();
+        $tenantsBefore = Tenant::count();
 
         Livewire::test(SubscriptionCheckoutForm::class)
             ->set('name', 'Name')
@@ -108,6 +112,7 @@ class SubscriptionCheckoutFormTest extends FeatureTest
 
         // assert order has been created
         $this->assertEquals($subscriptionsBefore + 1, Subscription::count());
+        $this->assertEquals($tenantsBefore + 1, Tenant::count());
     }
 
     public function test_can_checkout_overlay_payment()
@@ -132,6 +137,7 @@ class SubscriptionCheckoutFormTest extends FeatureTest
 
         // get number of subscriptions before checkout
         $subscriptionsBefore = Subscription::count();
+        $tenantsBefore = Tenant::count();
 
         Livewire::test(SubscriptionCheckoutForm::class)
             ->set('name', 'Name')
@@ -151,6 +157,7 @@ class SubscriptionCheckoutFormTest extends FeatureTest
 
         // assert order has been created
         $this->assertEquals($subscriptionsBefore + 1, Subscription::count());
+        $this->assertEquals($tenantsBefore + 1, Tenant::count());
     }
 
     private function addPaymentProvider(bool $isRedirect = true)
@@ -191,5 +198,7 @@ class SubscriptionCheckoutFormTest extends FeatureTest
         $this->app->bind(PaymentManager::class, function () use ($mock) {
             return new PaymentManager($mock);
         });
+
+        return $mock;
     }
 }

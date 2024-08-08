@@ -8,6 +8,7 @@ use App\Models\OneTimeProduct;
 use App\Models\OneTimeProductPrice;
 use App\Models\Order;
 use App\Models\PaymentProvider;
+use App\Models\Tenant;
 use App\Models\User;
 use App\Services\PaymentProviders\PaymentManager;
 use App\Services\PaymentProviders\PaymentProviderInterface;
@@ -34,6 +35,8 @@ class ProductCheckoutFormTest extends FeatureTest
         // get number of orders before checkout
         $ordersBefore = Order::count();
 
+        $tenantsBefore = Tenant::count();
+
         Livewire::test(ProductCheckoutForm::class)
             ->set('name', 'Name')
             ->set('email', 'something@gmail.com')
@@ -52,6 +55,7 @@ class ProductCheckoutFormTest extends FeatureTest
 
         // assert order has been created
         $this->assertEquals($ordersBefore + 1, Order::count());
+        $this->assertEquals($tenantsBefore + 1, Tenant::count());
     }
 
     public function test_can_checkout_existing_user()
@@ -77,6 +81,7 @@ class ProductCheckoutFormTest extends FeatureTest
 
         // get number of orders before checkout
         $ordersBefore = Order::count();
+        $tenantsBefore = Tenant::count();
 
         Livewire::test(ProductCheckoutForm::class)
             ->set('email', $user->email)
@@ -92,6 +97,47 @@ class ProductCheckoutFormTest extends FeatureTest
 
         // assert order has been created
         $this->assertEquals($ordersBefore + 1, Order::count());
+        $this->assertEquals($tenantsBefore + 1, Tenant::count());
+    }
+
+    public function test_can_checkout_overlay_payment()
+    {
+        $product = OneTimeProduct::factory()->create([
+            'slug' => 'product-slug-8',
+            'is_active' => true,
+        ]);
+
+        OneTimeProductPrice::create([
+            'one_time_product_id' => $product->id,
+            'currency_id' => Currency::where('code', 'USD')->first()->id,
+            'price' => 100,
+        ]);
+
+        $this->addPaymentProvider(false);
+
+        // get number of orders before checkout
+        $ordersBefore = Order::count();
+        $tenantsBefore = Tenant::count();
+
+        Livewire::test(ProductCheckoutForm::class)
+            ->set('name', 'Name')
+            ->set('email', 'something2@gmail.com')
+            ->set('password', 'password')
+            ->set('paymentProvider', 'paymore')
+            ->call('checkout')
+            ->assertDispatched('start-overlay-checkout');
+
+        // assert user has been created
+        $this->assertDatabaseHas('users', [
+            'email' => 'something2@gmail.com',
+        ]);
+
+        // assert user is logged in
+        $this->assertAuthenticated();
+
+        // assert order has been created
+        $this->assertEquals($ordersBefore + 1, Order::count());
+        $this->assertEquals($tenantsBefore + 1, Tenant::count());
     }
 
     private function addPaymentProvider(bool $isRedirect = true)
@@ -132,43 +178,7 @@ class ProductCheckoutFormTest extends FeatureTest
         $this->app->bind(PaymentManager::class, function () use ($mock) {
             return new PaymentManager($mock);
         });
-    }
 
-    public function test_can_checkout_overlay_payment()
-    {
-        $product = OneTimeProduct::factory()->create([
-            'slug' => 'product-slug-8',
-            'is_active' => true,
-        ]);
-
-        OneTimeProductPrice::create([
-            'one_time_product_id' => $product->id,
-            'currency_id' => Currency::where('code', 'USD')->first()->id,
-            'price' => 100,
-        ]);
-
-        $this->addPaymentProvider(false);
-
-        // get number of orders before checkout
-        $ordersBefore = Order::count();
-
-        Livewire::test(ProductCheckoutForm::class)
-            ->set('name', 'Name')
-            ->set('email', 'something2@gmail.com')
-            ->set('password', 'password')
-            ->set('paymentProvider', 'paymore')
-            ->call('checkout')
-            ->assertDispatched('start-overlay-checkout');
-
-        // assert user has been created
-        $this->assertDatabaseHas('users', [
-            'email' => 'something2@gmail.com',
-        ]);
-
-        // assert user is logged in
-        $this->assertAuthenticated();
-
-        // assert order has been created
-        $this->assertEquals($ordersBefore + 1, Order::count());
+        return $mock;
     }
 }

@@ -39,9 +39,10 @@ class PaddleControllerTest extends FeatureTest
             'interval_id' => 2,
             'interval_count' => 2,
             'status' => SubscriptionStatus::NEW->value,
+            'quantity' => 1,
         ]);
 
-        $payload = $this->getPaddleSubscriptionEvent('trialing', 'subscription.created', $uuid);
+        $payload = $this->getPaddleSubscriptionEvent('trialing', 'subscription.created', $uuid, quantity: 2);
 
         $signature = $this->generateSignature(json_encode($payload));
 
@@ -55,6 +56,7 @@ class PaddleControllerTest extends FeatureTest
         $this->assertDatabaseHas('subscriptions', [
             'uuid' => $uuid,
             'status' => SubscriptionStatus::ACTIVE->value,
+            'quantity' => 2,
         ]);
     }
 
@@ -832,6 +834,7 @@ JSON;
         string $status,
         string $type,
         string $subscriptionUuid,
+        int $quantity = 1,
     ) {
         $json = <<<JSON
         {
@@ -862,7 +865,7 @@ JSON;
                   }
                 },
                 "status": "trialing",
-                "quantity": 1,
+                "quantity": $quantity,
                 "recurring": true,
                 "created_at": "2023-09-14T10:13:31.273Z",
                 "updated_at": "2023-09-14T10:13:31.273Z",
