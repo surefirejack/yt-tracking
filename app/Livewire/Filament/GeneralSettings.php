@@ -64,7 +64,6 @@ class GeneralSettings extends Component implements HasForms
             'recaptcha_enabled' => $this->configManager->get('app.recaptcha_enabled', false),
             'recaptcha_api_site_key' => $this->configManager->get('recaptcha.api_site_key', ''),
             'recaptcha_api_secret_key' => $this->configManager->get('recaptcha.api_secret_key', ''),
-            'multiple_subscriptions_enabled' => $this->configManager->get('app.multiple_subscriptions_enabled', false),
         ]);
     }
 
@@ -117,9 +116,6 @@ class GeneralSettings extends Component implements HasForms
                                     },
                                 ])
                                 ->required(),
-                            Toggle::make('multiple_subscriptions_enabled')
-                                ->label(__('Multiple Subscriptions Enabled'))
-                                ->helperText(__('If enabled, customers will be able to have multiple active subscriptions at the same time.')),
                         ]),
                     Tabs\Tab::make(__('Payment'))
                         ->icon('heroicon-o-credit-card')
@@ -269,7 +265,6 @@ class GeneralSettings extends Component implements HasForms
         $this->configManager->set('app.recaptcha_enabled', $data['recaptcha_enabled']);
         $this->configManager->set('recaptcha.api_site_key', $data['recaptcha_api_site_key']);
         $this->configManager->set('recaptcha.api_secret_key', $data['recaptcha_api_secret_key']);
-        $this->configManager->set('app.multiple_subscriptions_enabled', $data['multiple_subscriptions_enabled']);
 
         Notification::make()
             ->title(__('Settings Saved'))

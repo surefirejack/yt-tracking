@@ -37,7 +37,7 @@ class StripeProvider implements PaymentProviderInterface
 
     }
 
-    public function createSubscriptionCheckoutRedirectLink(Plan $plan, Subscription $subscription, ?Discount $discount = null): string
+    public function createSubscriptionCheckoutRedirectLink(Plan $plan, Subscription $subscription, ?Discount $discount = null, int $quantity = 1): string
     {
         $paymentProvider = $this->assertProviderIsActive();
 
@@ -66,7 +66,7 @@ class StripeProvider implements PaymentProviderInterface
                 'mode' => 'subscription',
                 'line_items' => [[
                     'price' => $stripePriceId,
-                    'quantity' => 1,
+                    'quantity' => $quantity,
                 ]],
                 'subscription_data' => [
                     'metadata' => [
@@ -194,7 +194,7 @@ class StripeProvider implements PaymentProviderInterface
                 'items' => array_merge($itemsToDelete, [
                     [
                         'price' => $stripePriceId,
-                        'quantity' => 1,
+                        'quantity' => $subscription->quantity,
                     ],
                 ]),
             ];
@@ -318,12 +318,33 @@ class StripeProvider implements PaymentProviderInterface
         return true;
     }
 
+    public function updateSubscriptionQuantity(Subscription $subscription, int $quantity, bool $isProrated = true): bool
+    {
+        $paymentProvider = $this->assertProviderIsActive();
+
+        try {
+            $stripe = $this->getClient();
+
+            $stripe->subscriptions->update($subscription->payment_provider_subscription_id, [
+                'quantity' => $quantity,
+                'proration_behavior' => $isProrated ? 'always_invoice' : 'none',
+            ]);
+
+        } catch (ApiErrorException $e) {
+            Log::error($e->getMessage());
+
+            return false;
+        }
+
+        return true;
+    }
+
     public function getSlug(): string
     {
         return PaymentProviderConstants::STRIPE_SLUG;
     }
 
-    public function initSubscriptionCheckout(Plan $plan, Subscription $subscription, ?Discount $discount = null): array
+    public function initSubscriptionCheckout(Plan $plan, Subscription $subscription, ?Discount $discount = null, int $quantity = 1): array
     {
         // stripe does not need any initialization
 
@@ -532,5 +553,10 @@ class StripeProvider implements PaymentProviderInterface
         }
 
         return $paymentProvider;
+    }
+
+    public function supportsSeatBasedSubscriptions(): bool
+    {
+        return true;
     }
 }

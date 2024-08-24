@@ -6,11 +6,14 @@ use App\Constants\OrderStatus;
 use App\Dto\CartDto;
 use App\Events\Order\Ordered;
 use App\Events\Order\OrderedRefunded;
+use App\Exceptions\TenantException;
 use App\Models\Currency;
 use App\Models\OneTimeProduct;
 use App\Models\Order;
 use App\Models\PaymentProvider;
+use App\Models\Tenant;
 use App\Models\User;
+use Filament\Facades\Filament;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
@@ -23,6 +26,7 @@ class OrderManager
 
     public function create(
         User $user,
+        Tenant $tenant,
         ?PaymentProvider $paymentProvider = null,
         ?int $totalAmount = null,
         ?int $discountTotal = null,
@@ -36,6 +40,7 @@ class OrderManager
             'user_id' => $user->id,
             'status' => OrderStatus::NEW->value,
             'total_amount' => $totalAmount ?? 0,
+            'tenant_id' => $tenant->id,
         ];
 
         if ($paymentProvider) {
@@ -185,19 +190,31 @@ class OrderManager
             ->exists();
     }
 
-    public function hasUserOrdered(?User $user, ?string $productSlug): bool
+    public function hasUserOrdered(?User $user, ?string $productSlug, ?Tenant $tenant = null): bool
     {
         if (! $user) {
             return false;
         }
 
+        $tenant = $tenant ?? Filament::getTenant();
+
+        if (! $tenant) {
+            throw new TenantException('Could not resolve tenant: You either need to specify a tenant or be in a tenant context to check if a user purchased a product.');
+        }
+
+        $userTenant = $user->tenants()->where('tenant_id', $tenant->id)->first();
+
+        if (! $userTenant) {
+            return false;
+        }
+
         if (! $productSlug) {
-            return $user->orders()
+            return $userTenant->orders()
                 ->where('status', OrderStatus::SUCCESS)
                 ->exists();
         }
 
-        return $user->orders()
+        return $userTenant->orders()
             ->where('status', OrderStatus::SUCCESS)
             ->whereHas('items', function ($query) use ($productSlug) {
                 $query->whereHas('oneTimeProduct', function ($query) use ($productSlug) {

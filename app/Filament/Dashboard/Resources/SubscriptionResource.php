@@ -3,12 +3,14 @@
 namespace App\Filament\Dashboard\Resources;
 
 use App\Constants\DiscountConstants;
+use App\Constants\PlanType;
 use App\Constants\SubscriptionStatus;
 use App\Filament\Dashboard\Resources\SubscriptionResource\ActionHandlers\DiscardSubscriptionCancellationActionHandler;
 use App\Filament\Dashboard\Resources\SubscriptionResource\Pages;
 use App\Mapper\SubscriptionStatusMapper;
 use App\Models\Subscription;
 use App\Services\ConfigManager;
+use Filament\Facades\Filament;
 use Filament\Forms\Form;
 use Filament\Infolists\Components\Section;
 use Filament\Infolists\Components\TextEntry;
@@ -39,7 +41,13 @@ class SubscriptionResource extends Resource
             ->columns([
                 Tables\Columns\TextColumn::make('plan.name')->label(__('Plan')),
                 Tables\Columns\TextColumn::make('price')->formatStateUsing(function (string $state, $record) {
-                    return money($state, $record->currency->code).' / '.$record->interval->name;
+                    if ($record->plan->type === PlanType::FLAT_RATE->value) {
+                        return money($state, $record->currency->code).' / '.$record->interval->name;
+                    } elseif ($record->plan->type === PlanType::SEAT_BASED->value) {
+                        return money($state, $record->currency->code).' / '.$record->interval->name.' / '.__('seat');
+                    }
+
+                    return money($state, $record->currency->code);
                 }),
                 Tables\Columns\TextColumn::make('ends_at')->dateTime(config('app.datetime_format'))->label(__('Next Renewal')),
                 Tables\Columns\TextColumn::make('status')
@@ -103,7 +111,7 @@ class SubscriptionResource extends Resource
 
     public static function getEloquentQuery(): Builder
     {
-        return parent::getEloquentQuery()->where('user_id', auth()->user()->id);
+        return parent::getEloquentQuery()->where('tenant_id', Filament::getTenant()->id);
     }
 
     public static function canCreate(): bool
@@ -136,11 +144,6 @@ class SubscriptionResource extends Resource
         return false;
     }
 
-    public static function canViewAny(): bool
-    {
-        return true;  // we want to ignore the default permission check (from the policy) and allow all users to view their own subscriptions
-    }
-
     public static function infolist(Infolist $infolist): Infolist
     {
         return $infolist
@@ -155,7 +158,13 @@ class SubscriptionResource extends Resource
                             ]),
                         TextEntry::make('plan.name'),
                         TextEntry::make('price')->formatStateUsing(function (string $state, $record) {
-                            return money($state, $record->currency->code).' / '.$record->interval->name;
+                            if ($record->plan->type === PlanType::FLAT_RATE->value) {
+                                return money($state, $record->currency->code).' / '.$record->interval->name;
+                            } elseif ($record->plan->type === PlanType::SEAT_BASED->value) {
+                                return money($state, $record->currency->code).' / '.$record->interval->name.' / '.__('seat');
+                            }
+
+                            return money($state, $record->currency->code);
                         }),
                         TextEntry::make('ends_at')->dateTime(config('app.datetime_format'))->label(__('Next Renewal'))->visible(fn (Subscription $record): bool => ! $record->is_canceled_at_end_of_cycle),
                         TextEntry::make('status')

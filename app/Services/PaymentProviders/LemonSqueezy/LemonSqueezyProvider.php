@@ -5,6 +5,7 @@ namespace App\Services\PaymentProviders\LemonSqueezy;
 use App\Client\LemonSqueezyClient;
 use App\Constants\DiscountConstants;
 use App\Constants\PaymentProviderConstants;
+use App\Constants\PlanType;
 use App\Models\Discount;
 use App\Models\Order;
 use App\Models\PaymentProvider;
@@ -34,7 +35,7 @@ class LemonSqueezyProvider implements PaymentProviderInterface
 
     }
 
-    public function createSubscriptionCheckoutRedirectLink(Plan $plan, Subscription $subscription, ?Discount $discount = null): string
+    public function createSubscriptionCheckoutRedirectLink(Plan $plan, Subscription $subscription, ?Discount $discount = null, int $quantity = 1): string
     {
         $paymentProvider = $this->assertProviderIsActive();
 
@@ -70,8 +71,8 @@ class LemonSqueezyProvider implements PaymentProviderInterface
                 ],
                 'variant_quantities' => [
                     [
-                        'variant_id' => $variantId,
-                        'quantity' => 1,
+                        'variant_id' => intval($variantId),
+                        'quantity' => $quantity,
                     ],
                 ],
             ],
@@ -124,7 +125,7 @@ class LemonSqueezyProvider implements PaymentProviderInterface
             }
 
             $variantQuantities[] = [
-                'variant_id' => $variantId,
+                'variant_id' => intval($variantId),
                 'quantity' => $item->quantity,
             ];
 
@@ -195,7 +196,7 @@ class LemonSqueezyProvider implements PaymentProviderInterface
                 throw new \Exception('Failed to update lemon-squeezy subscription');
             }
 
-            $this->subscriptionManager->updateSubscription($subscription, [
+            $subscription = $this->subscriptionManager->updateSubscription($subscription, [
                 'plan_id' => $newPlan->id,
                 'price' => $planPrice->price,
                 'currency_id' => $planPrice->currency_id,
@@ -203,10 +204,41 @@ class LemonSqueezyProvider implements PaymentProviderInterface
                 'interval_count' => $newPlan->interval_count,
             ]);
 
+            if ($subscription->plan->type === PlanType::SEAT_BASED->value) {
+                // unfortunately, lemon-squeezy resets the quantity to 1 when changing the plan, so we need to update it again
+                $this->updateSubscriptionQuantity($subscription, $subscription->quantity, $withProration);
+            }
         } catch (\Exception $e) {
             Log::error($e->getMessage());
 
             throw $e;
+        }
+
+        return true;
+    }
+
+    public function updateSubscriptionQuantity(Subscription $subscription, int $quantity, bool $isProrated = true): bool
+    {
+        $paymentProvider = $this->assertProviderIsActive();
+
+        try {
+            $lemonSqueezySubscription = $this->client->getSubscription($subscription->payment_provider_subscription_id)->json('data');
+            $subscriptionItemId = $lemonSqueezySubscription['attributes']['first_subscription_item']['id'] ?? null;
+
+            if ($subscriptionItemId === null) {
+                throw new \Exception('Failed to get lemon-squeezy subscription item ID');
+            }
+
+            $response = $this->client->updateSubscriptionQuantity($subscriptionItemId, $quantity, $isProrated);
+
+            if (! $response->successful()) {
+                throw new \Exception('Failed to update lemon-squeezy subscription quantity');
+            }
+
+        } catch (\Exception $e) {
+            Log::error($e->getMessage());
+
+            return false;
         }
 
         return true;
@@ -284,7 +316,7 @@ class LemonSqueezyProvider implements PaymentProviderInterface
         return PaymentProviderConstants::LEMON_SQUEEZY_SLUG;
     }
 
-    public function initSubscriptionCheckout(Plan $plan, Subscription $subscription, ?Discount $discount = null): array
+    public function initSubscriptionCheckout(Plan $plan, Subscription $subscription, ?Discount $discount = null, int $quantity = 1): array
     {
         // lemon squeezy does not need any initialization
 
@@ -363,5 +395,10 @@ class LemonSqueezyProvider implements PaymentProviderInterface
         }
 
         return $paymentProvider;
+    }
+
+    public function supportsSeatBasedSubscriptions(): bool
+    {
+        return true;
     }
 }

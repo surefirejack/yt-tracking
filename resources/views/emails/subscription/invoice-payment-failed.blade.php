@@ -16,7 +16,7 @@
             </p>
 
             <div style="text-align: center;">
-                <a href="{{ route('filament.dashboard.resources.subscriptions.index') }}" style="margin-top: 24px; margin-bottom: 24px; display: inline-block; border-radius: 16px; background-color: {{config('app.email_color_tint')}}; padding: 8px 24px; font-size: 20px; color: #fff; text-decoration-line: none">
+                <a href="{{ route('filament.dashboard.resources.subscriptions.index', ['tenant' => $subscription->tenant]) }}" style="margin-top: 24px; margin-bottom: 24px; display: inline-block; border-radius: 16px; background-color: {{config('app.email_color_tint')}}; padding: 8px 24px; font-size: 20px; color: #fff; text-decoration-line: none">
                     {{ __('Fix Problem') }}
                 </a>
             </div>

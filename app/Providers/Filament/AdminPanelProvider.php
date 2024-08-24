@@ -31,13 +31,14 @@ class AdminPanelProvider extends PanelProvider
             ->colors([
                 'primary' => Color::Amber,
             ])
+            ->navigation()
             ->userMenuItems([
                 MenuItem::make()
                     ->label(__('User Dashboard'))
                     ->visible(
                         fn () => true
                     )
-                    ->url(fn () => route('filament.dashboard.pages.dashboard'))
+                    ->url(fn () => route('dashboard'))
                     ->icon('heroicon-s-face-smile'),
             ])
             ->discoverResources(in: app_path('Filament/Admin/Resources'), for: 'App\\Filament\\Admin\\Resources')
@@ -67,6 +68,10 @@ class AdminPanelProvider extends PanelProvider
                 NavigationGroup::make()
                     ->label('Revenue')
                     ->icon('heroicon-s-rocket-launch')
+                    ->collapsed(),
+                NavigationGroup::make()
+                    ->label('Tenancy')
+                    ->icon('heroicon-s-home')
                     ->collapsed(),
                 NavigationGroup::make()
                     ->label('Product Management')

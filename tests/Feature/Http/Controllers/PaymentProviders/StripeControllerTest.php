@@ -20,10 +20,14 @@ class StripeControllerTest extends FeatureTest
 {
     public function test_subscription_created_webhook(): void
     {
+        $tenant = $this->createTenant();
+        $user = $this->createUser($tenant);
+
         $uuid = (string) Str::uuid();
         Subscription::create([
             'uuid' => $uuid,
-            'user_id' => 1,
+            'user_id' => $user->id,
+            'tenant_id' => $tenant->id,
             'price' => 10,
             'currency_id' => 1,
             'plan_id' => 1,
@@ -53,19 +57,24 @@ class StripeControllerTest extends FeatureTest
 
     public function test_subscription_updated_webhook(): void
     {
+        $tenant = $this->createTenant();
+        $user = $this->createUser($tenant);
+
         $uuid = (string) Str::uuid();
         Subscription::create([
             'uuid' => $uuid,
-            'user_id' => 1,
+            'user_id' => $user->id,
+            'tenant_id' => $tenant->id,
             'price' => 10,
             'currency_id' => 1,
             'plan_id' => 1,
             'interval_id' => 2,
             'interval_count' => 1,
             'status' => SubscriptionStatus::INACTIVE->value,
+            'quantity' => 1,
         ]);
 
-        $payload = $this->getStripeSubscription('active', 'customer.subscription.updated', $uuid);
+        $payload = $this->getStripeSubscription('active', 'customer.subscription.updated', $uuid, quantity: 2);
 
         $timestamp = time();
         $payloadString = json_encode($payload);
@@ -81,15 +90,20 @@ class StripeControllerTest extends FeatureTest
         $this->assertDatabaseHas('subscriptions', [
             'uuid' => $uuid,
             'status' => SubscriptionStatus::ACTIVE->value,
+            'quantity' => 2,
         ]);
     }
 
     public function test_subscription_deleted_webhook(): void
     {
+        $tenant = $this->createTenant();
+        $user = $this->createUser($tenant);
+
         $uuid = (string) Str::uuid();
         Subscription::create([
             'uuid' => $uuid,
-            'user_id' => 1,
+            'user_id' => $user->id,
+            'tenant_id' => $tenant->id,
             'price' => 10,
             'currency_id' => 1,
             'plan_id' => 1,
@@ -119,10 +133,14 @@ class StripeControllerTest extends FeatureTest
 
     public function test_subscription_paused_webhook(): void
     {
+        $tenant = $this->createTenant();
+        $user = $this->createUser($tenant);
+
         $uuid = (string) Str::uuid();
         Subscription::create([
             'uuid' => $uuid,
-            'user_id' => 1,
+            'user_id' => $user->id,
+            'tenant_id' => $tenant->id,
             'price' => 10,
             'currency_id' => 1,
             'plan_id' => 1,
@@ -152,10 +170,14 @@ class StripeControllerTest extends FeatureTest
 
     public function test_subscription_resumed_webhook(): void
     {
+        $tenant = $this->createTenant();
+        $user = $this->createUser($tenant);
+
         $uuid = (string) Str::uuid();
         Subscription::create([
             'uuid' => $uuid,
-            'user_id' => 1,
+            'user_id' => $user->id,
+            'tenant_id' => $tenant->id,
             'price' => 10,
             'currency_id' => 1,
             'plan_id' => 1,
@@ -185,10 +207,14 @@ class StripeControllerTest extends FeatureTest
 
     public function test_invoice_created_webhook(): void
     {
+        $tenant = $this->createTenant();
+        $user = $this->createUser($tenant);
+
         $uuid = (string) Str::uuid();
         $subscription = Subscription::create([
             'uuid' => $uuid,
-            'user_id' => 1,
+            'user_id' => $user->id,
+            'tenant_id' => $tenant->id,
             'price' => 10,
             'currency_id' => 1,
             'plan_id' => 1,
@@ -221,10 +247,14 @@ class StripeControllerTest extends FeatureTest
 
     public function test_invoice_updated_webhook(): void
     {
+        $tenant = $this->createTenant();
+        $user = $this->createUser($tenant);
+
         $uuid = (string) Str::uuid();
         $subscription = Subscription::create([
             'uuid' => $uuid,
-            'user_id' => 1,
+            'user_id' => $user->id,
+            'tenant_id' => $tenant->id,
             'price' => 10,
             'currency_id' => 1,
             'plan_id' => 1,
@@ -238,6 +268,7 @@ class StripeControllerTest extends FeatureTest
         $transaction = $subscription->transactions()->create([
             'uuid' => (string) Str::uuid(),
             'user_id' => $subscription->user_id,
+            'tenant_id' => $subscription->tenant_id,
             'currency_id' => $subscription->currency_id,
             'amount' => $subscription->price,
             'status' => TransactionStatus::NOT_STARTED->value,
@@ -279,10 +310,14 @@ class StripeControllerTest extends FeatureTest
 
     public function test_invoice_paid_webhook(): void
     {
+        $tenant = $this->createTenant();
+        $user = $this->createUser($tenant);
+
         $uuid = (string) Str::uuid();
         $subscription = Subscription::create([
             'uuid' => $uuid,
-            'user_id' => 1,
+            'user_id' => $user->id,
+            'tenant_id' => $tenant->id,
             'price' => 10,
             'currency_id' => 1,
             'plan_id' => 1,
@@ -296,6 +331,7 @@ class StripeControllerTest extends FeatureTest
         $transaction = $subscription->transactions()->create([
             'uuid' => (string) Str::uuid(),
             'user_id' => $subscription->user_id,
+            'tenant_id' => $subscription->tenant_id,
             'currency_id' => $subscription->currency_id,
             'amount' => $subscription->price,
             'status' => TransactionStatus::NOT_STARTED->value,
@@ -337,10 +373,14 @@ class StripeControllerTest extends FeatureTest
 
     public function test_invoice_payment_failed_webhook(): void
     {
+        $tenant = $this->createTenant();
+        $user = $this->createUser($tenant);
+
         $uuid = (string) Str::uuid();
         $subscription = Subscription::create([
             'uuid' => $uuid,
-            'user_id' => 1,
+            'user_id' => $user->id,
+            'tenant_id' => $tenant->id,
             'price' => 10,
             'currency_id' => 1,
             'plan_id' => 1,
@@ -354,6 +394,7 @@ class StripeControllerTest extends FeatureTest
         $transaction = $subscription->transactions()->create([
             'uuid' => (string) Str::uuid(),
             'user_id' => $subscription->user_id,
+            'tenant_id' => $subscription->tenant_id,
             'currency_id' => $subscription->currency_id,
             'amount' => $subscription->price,
             'status' => TransactionStatus::NOT_STARTED->value,
@@ -391,10 +432,14 @@ class StripeControllerTest extends FeatureTest
 
     public function test_invoice_payment_action_required_webhook(): void
     {
+        $tenant = $this->createTenant();
+        $user = $this->createUser($tenant);
+
         $uuid = (string) Str::uuid();
         $subscription = Subscription::create([
             'uuid' => $uuid,
-            'user_id' => 1,
+            'user_id' => $user->id,
+            'tenant_id' => $tenant->id,
             'price' => 10,
             'currency_id' => 1,
             'plan_id' => 1,
@@ -408,6 +453,7 @@ class StripeControllerTest extends FeatureTest
         $transaction = $subscription->transactions()->create([
             'uuid' => (string) Str::uuid(),
             'user_id' => $subscription->user_id,
+            'tenant_id' => $subscription->tenant_id,
             'currency_id' => $subscription->currency_id,
             'amount' => $subscription->price,
             'status' => TransactionStatus::NOT_STARTED->value,
@@ -445,11 +491,15 @@ class StripeControllerTest extends FeatureTest
 
     public function test_payment_intent_success_webhook()
     {
+        $tenant = $this->createTenant();
+        $user = $this->createUser($tenant);
+
         $user = $this->createUser();
         $currency = Currency::where('code', 'USD')->firstOrFail();
         $orderUUID = (string) Str::uuid();
         $order = Order::create([
             'user_id' => $user->id,
+            'tenant_id' => $tenant->id,
             'uuid' => $orderUUID,
             'status' => 'new',
             'currency_id' => $currency->id,
@@ -479,6 +529,7 @@ class StripeControllerTest extends FeatureTest
             'status' => TransactionStatus::SUCCESS->value,
             'payment_provider_transaction_id' => $paymentIntentId,
             'payment_provider_status' => 'succeeded',
+            'tenant_id' => $tenant->id,
         ]);
 
         $this->assertDatabaseHas('orders', [
@@ -490,11 +541,15 @@ class StripeControllerTest extends FeatureTest
 
     public function test_charge_refunded_webhook()
     {
+        $tenant = $this->createTenant();
+        $user = $this->createUser($tenant);
+
         $user = $this->createUser();
         $currency = Currency::where('code', 'USD')->firstOrFail();
         $orderUUID = (string) Str::uuid();
         $order = Order::create([
             'user_id' => $user->id,
+            'tenant_id' => $tenant->id,
             'uuid' => $orderUUID,
             'status' => OrderStatus::SUCCESS,
             'currency_id' => $currency->id,
@@ -506,6 +561,7 @@ class StripeControllerTest extends FeatureTest
         $transaction = $order->transactions()->create([
             'uuid' => (string) Str::uuid(),
             'user_id' => $user->id,
+            'tenant_id' => $tenant->id,
             'currency_id' => $currency->id,
             'amount' => 100,
             'status' => TransactionStatus::SUCCESS->value,
@@ -546,11 +602,14 @@ class StripeControllerTest extends FeatureTest
 
     public function test_payment_intent_payment_failed_webhook()
     {
-        $user = $this->createUser();
+        $tenant = $this->createTenant();
+        $user = $this->createUser($tenant);
+
         $currency = Currency::where('code', 'USD')->firstOrFail();
         $orderUUID = (string) Str::uuid();
         $order = Order::create([
             'user_id' => $user->id,
+            'tenant_id' => $tenant->id,
             'uuid' => $orderUUID,
             'status' => OrderStatus::NEW,
             'currency_id' => $currency->id,
@@ -580,6 +639,7 @@ class StripeControllerTest extends FeatureTest
             'order_id' => $order->id,
             'status' => TransactionStatus::FAILED->value,
             'payment_provider_transaction_id' => $paymentIntentId,
+            'tenant_id' => $tenant->id,
         ]);
 
         $this->assertDatabaseHas('orders', [
@@ -590,11 +650,14 @@ class StripeControllerTest extends FeatureTest
 
     public function test_dispute_created_webhook()
     {
-        $user = $this->createUser();
+        $tenant = $this->createTenant();
+        $user = $this->createUser($tenant);
+
         $currency = Currency::where('code', 'USD')->firstOrFail();
         $orderUUID = (string) Str::uuid();
         $order = Order::create([
             'user_id' => $user->id,
+            'tenant_id' => $tenant->id,
             'uuid' => $orderUUID,
             'status' => OrderStatus::NEW,
             'currency_id' => $currency->id,
@@ -606,6 +669,7 @@ class StripeControllerTest extends FeatureTest
         $transaction = $order->transactions()->create([
             'uuid' => (string) Str::uuid(),
             'user_id' => $user->id,
+            'tenant_id' => $tenant->id,
             'currency_id' => $currency->id,
             'amount' => 100,
             'status' => TransactionStatus::SUCCESS->value,
@@ -634,6 +698,7 @@ class StripeControllerTest extends FeatureTest
             'order_id' => $order->id,
             'status' => TransactionStatus::DISPUTED->value,
             'payment_provider_transaction_id' => $paymentIntentId,
+            'tenant_id' => $tenant->id,
         ]);
 
         $this->assertDatabaseHas('orders', [
@@ -1293,6 +1358,7 @@ JSON;
         string $stripeSubscriptionStatus,
         string $type,
         string $subscriptionUuid,
+        int $quantity = 1,
     ) {
         $json = <<<JSON
         {
@@ -1372,7 +1438,7 @@ JSON;
                         "unit_amount": 1100,
                         "unit_amount_decimal": "1100"
                       },
-                      "quantity": 1,
+                      "quantity": $quantity,
                       "subscription": "sub_1NnOIdJQC7CL5JsVPmRlNlsR",
                       "tax_rates": [
                       ]
@@ -1420,7 +1486,7 @@ JSON;
                   "trial_period_days": null,
                   "usage_type": "licensed"
                 },
-                "quantity": 1,
+                "quantity": $quantity,
                 "schedule": null,
                 "start_date": 1694016591,
                 "status": "$stripeSubscriptionStatus",

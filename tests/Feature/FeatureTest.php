@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\Tenant;
 use App\Models\User;
 use Database\Seeders\Testing\TestingDatabaseSeeder;
 use Tests\TestCase;
@@ -25,9 +26,24 @@ class FeatureTest extends TestCase
         $this->withoutVite();
     }
 
-    protected function createUser()
+    protected function createUser(?Tenant $tenant = null, array $tenantPermissions = [])
     {
-        return User::factory()->create();
+        $user = User::factory()->create();
+
+        if ($tenant !== null) {
+            $tenant->users()->attach($user);
+
+            foreach ($tenantPermissions as $permission) {
+                $user->tenants()->where('tenant_id', $tenant->id)->first()->pivot->givePermissionTo($permission);
+            }
+        }
+
+        return $user;
+    }
+
+    protected function createTenant()
+    {
+        return Tenant::factory()->create();
     }
 
     protected function createAdminUser()

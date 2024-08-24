@@ -8,6 +8,7 @@ use App\Filament\Dashboard\Resources\OrderResource\Pages;
 use App\Mapper\OrderStatusMapper;
 use App\Models\Order;
 use App\Services\ConfigManager;
+use Filament\Facades\Filament;
 use Filament\Forms\Form;
 use Filament\Infolists\Components\Section;
 use Filament\Infolists\Components\TextEntry;
@@ -164,7 +165,7 @@ class OrderResource extends Resource
 
     public static function getEloquentQuery(): Builder
     {
-        return parent::getEloquentQuery()->where('user_id', auth()->user()->id);
+        return parent::getEloquentQuery()->where('tenant_id', Filament::getTenant()->id);
     }
 
     public static function getRelations(): array

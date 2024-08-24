@@ -19,6 +19,7 @@ class Order extends Model
         'total_discount_amount',
         'payment_provider_order_id',
         'payment_provider_id',
+        'tenant_id',
     ];
 
     public function user()
@@ -56,4 +57,10 @@ class Order extends Model
     {
         return $this->belongsTo(PaymentProvider::class);
     }
+
+    public function tenant()
+    {
+        return $this->belongsTo(Tenant::class);
+    }
+
 }

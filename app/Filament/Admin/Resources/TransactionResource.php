@@ -5,9 +5,9 @@ namespace App\Filament\Admin\Resources;
 use App\Constants\TransactionStatus;
 use App\Filament\Admin\Resources\OrderResource\Pages\ViewOrder;
 use App\Filament\Admin\Resources\SubscriptionResource\Pages\ViewSubscription;
+use App\Filament\Admin\Resources\TenantResource\Pages\EditTenant;
 use App\Filament\Admin\Resources\TransactionResource\Pages;
 use App\Filament\Admin\Resources\TransactionResource\Widgets\TransactionOverview;
-use App\Filament\Admin\Resources\UserResource\Pages\EditUser;
 use App\Mapper\TransactionStatusMapper;
 use App\Models\Transaction;
 use App\Services\InvoiceManager;
@@ -39,7 +39,7 @@ class TransactionResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('user.name')->label(__('User'))->searchable(),
+                Tables\Columns\TextColumn::make('tenant.name')->label(__('Tenant'))->searchable(),
                 Tables\Columns\TextColumn::make('amount')->formatStateUsing(function (string $state, $record) {
                     return money($state, $record->currency->code);
                 }),
@@ -135,10 +135,9 @@ class TransactionResource extends Resource
                             ->icon('heroicon-s-currency-dollar')
                             ->schema([
                                 TextEntry::make('uuid')->copyable(),
-                                TextEntry::make('user')->getStateUsing(function (Transaction $record) {
-                                    return $record->user->name;
-                                })->url(fn (Transaction $record) => EditUser::getUrl(['record' => $record->user])),
-                                TextEntry::make('user.email')->label('User email')->copyable(),
+                                TextEntry::make('tenant')->getStateUsing(function (Transaction $record) {
+                                    return $record->tenant->name;
+                                })->url(fn (Transaction $record) => EditTenant::getUrl(['record' => $record->tenant])),
                                 TextEntry::make('subscription_id')
                                     ->label(__('Subscription'))
                                     ->visible(fn (Transaction $record) => $record->subscription_id !== null)

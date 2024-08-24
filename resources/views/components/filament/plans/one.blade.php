@@ -9,9 +9,16 @@
 
     <div class="text-center">
         <div class="text-lg font-semibold">{{ __($plan->product->name) }}</div>
-        <div class="flex items-center justify-center mt-2">
-            <div class="mr-1 text-4xl font-bold">@money($plan->prices[0]->price, $plan->prices[0]->currency->code)</div>
-            <div class="text-sm">/ {{$plan->interval_count > 1 ? $plan->interval_coun : '' }} {{ $plan->interval->name }}</div>
+        <div class="flex items-center justify-center mt-2 flex-col">
+            <div class="mr-1 text-4xl font-bold">
+                @money($plan->prices[0]->price, $plan->prices[0]->currency->code)
+            </div>
+            <div class="text-sm">
+                @if($plan->type === \App\Constants\PlanType::SEAT_BASED->value)
+                    <span class="text-sm">{{__('per seat')}}</span>
+                @endif
+                / {{$plan->interval_count > 1 ? $plan->interval_coun : '' }} {{ $plan->interval->name }}
+            </div>
         </div>
         <div class="mt-3 space-y-3">
             <ul>
@@ -26,7 +33,7 @@
     <div class="w-full">
         <a class="btn btn-block bg-primary-500 dark:bg-primary text-white px-6 mt-6 border-0 hover:bg-primary-500/90"
            {{$subscription !== null && $subscription->plan_id === $plan->id ? 'disabled' : ''}}
-           href="{{ route('subscription.change-plan', ['planSlug' => $plan->slug, 'subscriptionUuid' => $subscription->uuid]) }}">
+           href="{{ route('subscription.change-plan', ['planSlug' => $plan->slug, 'subscriptionUuid' => $subscription->uuid, 'tenantUuid' => \Filament\Facades\Filament::getTenant()->uuid]) }}">
             {{__('Buy')}} {{ $plan->product->name }}
         </a>
         <p class="max-w-xs mt-6 text-xs text-gray-600 sm:text-sm sm:text-center sm:max-w-sm sm:mx-auto dark:text-zinc-400">

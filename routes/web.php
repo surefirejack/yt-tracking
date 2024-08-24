@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Auth\OAuthController;
 use App\Http\Controllers\PaymentProviders\PaddleController as PaddleController;
+use App\Services\UserDashboardManager;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
@@ -22,6 +23,10 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', function () {
     return view('home');
 })->name('home')->middleware('sitemapped');
+
+Route::get('/dashboard', function (UserDashboardManager $dashboardManager) {
+    return redirect($dashboardManager->getUserDashboardUrl(Auth::user()));
+})->name('dashboard')->middleware('auth');
 
 Auth::routes();
 
@@ -77,12 +82,12 @@ Route::get('/payment-provider/paddle/payment-link', [
     'paymentLink',
 ])->name('payment-link.paddle');
 
-Route::get('/subscription/{subscriptionUuid}/change-plan/{planSlug}', [
+Route::get('/subscription/{subscriptionUuid}/change-plan/{planSlug}/tenant/{tenantUuid}', [
     App\Http\Controllers\SubscriptionController::class,
     'changePlan',
 ])->name('subscription.change-plan')->middleware('auth');
 
-Route::post('/subscription/{subscriptionUuid}/change-plan/{planSlug}', [
+Route::post('/subscription/{subscriptionUuid}/change-plan/{planSlug}/tenant/{tenantUuid}', [
     App\Http\Controllers\SubscriptionController::class,
     'changePlan',
 ])->name('subscription.change-plan.post')->middleware('auth');
@@ -154,6 +159,13 @@ Route::get('/roadmap/i/{itemSlug}', [
     App\Http\Controllers\RoadmapController::class,
     'viewItem',
 ])->name('roadmap.viewItem');
+
+// Invitations
+
+Route::get('/invitations', [
+    App\Http\Controllers\InvitationController::class,
+    'index',
+])->name('invitations')->middleware('auth');
 
 // Invoice
 

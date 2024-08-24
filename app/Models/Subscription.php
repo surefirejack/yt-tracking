@@ -29,6 +29,8 @@ class Subscription extends Model
         'is_canceled_at_end_of_cycle',
         'cancellation_reason',
         'cancellation_additional_info',
+        'quantity',
+        'tenant_id',
     ];
 
     public function user()
@@ -70,6 +72,11 @@ class Subscription extends Model
     {
         // used to find a model by its uuid instead of its id
         return 'uuid';
+    }
+
+    public function tenant()
+    {
+        return $this->belongsTo(Tenant::class);
     }
 
 }

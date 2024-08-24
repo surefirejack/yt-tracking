@@ -3,7 +3,9 @@
 namespace App\Services;
 
 use App\Constants\DiscountConstants;
+use App\Constants\PlanType;
 use App\Dto\CartDto;
+use App\Dto\SubscriptionTotalsDto;
 use App\Dto\TotalsDto;
 use App\Models\Currency;
 use App\Models\OneTimeProduct;
@@ -11,6 +13,7 @@ use App\Models\OneTimeProductPrice;
 use App\Models\Order;
 use App\Models\Plan;
 use App\Models\PlanPrice;
+use App\Models\Subscription;
 use App\Models\User;
 
 class CalculationManager
@@ -44,7 +47,7 @@ class CalculationManager
         return $oneTimeProduct->prices()->where('currency_id', $defaultCurrency->id)->firstOrFail();
     }
 
-    public function calculatePlanTotals(?User $user, string $planSlug, ?string $discountCode = null, string $actionType = DiscountConstants::ACTION_TYPE_ANY): TotalsDto
+    public function calculatePlanTotals(?User $user, string $planSlug, ?string $discountCode = null, ?int $quantity = 1, string $actionType = DiscountConstants::ACTION_TYPE_ANY): TotalsDto
     {
         $plan = $this->planManager->getActivePlanBySlug($planSlug);
 
@@ -62,7 +65,11 @@ class CalculationManager
 
         $totalsDto->currencyCode = $currencyCode;
 
-        $totalsDto->subtotal = $planPrice->price;
+        if ($plan->type === PlanType::SEAT_BASED->value) {
+            $totalsDto->subtotal = $planPrice->price * $quantity;
+        } else {
+            $totalsDto->subtotal = $planPrice->price;
+        }
 
         $totalsDto->discountAmount = 0;
         if ($discountCode !== null) {
@@ -74,23 +81,30 @@ class CalculationManager
         return $totalsDto;
     }
 
-    public function calculateNewPlanTotals(User $user, string $planSlug, bool $withProration = false): TotalsDto
+    public function calculateNewPlanTotals(Subscription $subscription, string $planSlug, bool $withProration = false): TotalsDto
     {
-        $plan = $this->planManager->getActivePlanBySlug($planSlug);
+        $newPlan = $this->planManager->getActivePlanBySlug($planSlug);
 
-        if ($plan === null) {
+        if ($newPlan === null) {
             throw new \Exception('Plan not found');
         }
 
-        $planPrice = $this->getPlanPrice($plan);
+        $planPrice = $this->getPlanPrice($newPlan);
         $currencyCode = $planPrice->currency->code;
-        $totalsDto = new TotalsDto();
+        $totalsDto = new SubscriptionTotalsDto();
 
         $totalsDto->currencyCode = $currencyCode;
 
-        $totalsDto->subtotal = $planPrice->price;
-
         $totalsDto->discountAmount = 0;
+
+        if ($newPlan->type === PlanType::SEAT_BASED->value) {
+            $quantity = $subscription->tenant->users->count();
+            $totalsDto->subtotal = $planPrice->price * $quantity;
+            $totalsDto->pricePerSeat = $planPrice->price;
+            $totalsDto->quantity = $quantity;
+        } else {
+            $totalsDto->subtotal = $planPrice->price;
+        }
 
         if (! $withProration) {
             $totalsDto->amountDue = max(0, $totalsDto->subtotal - $totalsDto->discountAmount);

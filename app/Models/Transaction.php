@@ -30,6 +30,7 @@ class Transaction extends Model
         'subscription_id',
         'error_reason',
         'order_id',
+        'tenant_id',
     ];
 
     protected static function booted(): void
@@ -90,6 +91,11 @@ class Transaction extends Model
     public function order()
     {
         return $this->belongsTo(Order::class);
+    }
+
+    public function tenant()
+    {
+        return $this->belongsTo(Tenant::class);
     }
 
 }

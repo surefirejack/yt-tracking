@@ -6,16 +6,20 @@ use App\Notifications\Auth\QueuedVerifyEmail;
 use App\Services\OrderManager;
 use App\Services\SubscriptionManager;
 use Filament\Models\Contracts\FilamentUser;
+use Filament\Models\Contracts\HasTenants;
 use Filament\Panel;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Collection;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
 
-class User extends Authenticatable implements FilamentUser, MustVerifyEmail
+class User extends Authenticatable implements FilamentUser, MustVerifyEmail, HasTenants
 {
     use HasApiTokens, HasFactory, HasRoles, Notifiable;
 
@@ -117,37 +121,28 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail
         return $this->hasPermissionTo('impersonate users') && $this->isAdmin();
     }
 
-    public function isSubscribed(?string $productSlug = null): bool
+    public function isSubscribed(?string $productSlug = null, ?Tenant $tenant = null): bool
     {
         /** @var SubscriptionManager $subscriptionManager */
         $subscriptionManager = app(SubscriptionManager::class);
 
-        return $subscriptionManager->isUserSubscribed($this, $productSlug);
+        return $subscriptionManager->isUserSubscribed($this, $productSlug, $tenant);
     }
 
-    public function isTrialing(?string $productSlug = null): bool
+    public function isTrialing(?string $productSlug = null, ?Tenant $tenant = null): bool
     {
         /** @var SubscriptionManager $subscriptionManager */
         $subscriptionManager = app(SubscriptionManager::class);
 
-        return $subscriptionManager->isUserTrialing($this, $productSlug);
+        return $subscriptionManager->isUserTrialing($this, $productSlug, $tenant);
     }
 
-    public function hasPurchased(?string $productSlug = null): bool
+    public function hasPurchased(?string $productSlug = null, ?Tenant $tenant = null): bool
     {
         /** @var OrderManager $orderManager */
         $orderManager = app(OrderManager::class);
 
-        return $orderManager->hasUserOrdered($this, $productSlug);
-    }
-
-    public function subscriptionProductMetadata()
-    {
-        /** @var SubscriptionManager $subscriptionManager */
-        $subscriptionManager = app(SubscriptionManager::class);
-
-        return $subscriptionManager->getUserSubscriptionProductMetadata($this);
-
+        return $orderManager->hasUserOrdered($this, $productSlug, $tenant);
     }
 
     public function sendEmailVerificationNotification()
@@ -158,5 +153,20 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail
     public function address()
     {
         return $this->hasOne(Address::class);
+    }
+
+    public function tenants(): BelongsToMany
+    {
+        return $this->belongsToMany(Tenant::class)->using(TenantUser::class)->withPivot('id')->withTimestamps();
+    }
+
+    public function getTenants(Panel $panel): Collection
+    {
+        return $this->tenants;
+    }
+
+    public function canAccessTenant(Model $tenant): bool
+    {
+        return $this->tenants()->whereKey($tenant)->exists();
     }
 }

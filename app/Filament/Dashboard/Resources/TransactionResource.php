@@ -12,6 +12,7 @@ use App\Services\AddressManager;
 use App\Services\ConfigManager;
 use App\Services\InvoiceManager;
 use Filament\Actions\Action;
+use Filament\Facades\Filament;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
@@ -58,7 +59,7 @@ class TransactionResource extends Resource
                     ->icon('heroicon-o-document')
                     ->visible(fn (Transaction $record, InvoiceManager $invoiceManager): bool => $invoiceManager->canGenerateInvoices($record))
                     ->modalDescription(function (AddressManager $addressManager) {
-                        if (!$addressManager->userHasAddressInfo(auth()->user())) {
+                        if (! $addressManager->userHasAddressInfo(auth()->user())) {
                             return __('Your address information is not complete. It is recommended to complete your address information before generating an invoice. Are you sure you want to proceed?');
                         }
 
@@ -67,12 +68,12 @@ class TransactionResource extends Resource
                     ->modalCancelAction(
                         Action::make('complete-address-information')
                             ->label(__('Complete Address Info'))
-                        ->url(route('filament.dashboard.pages.my-profile'))
+                            ->url(route('filament.dashboard.pages.my-profile', ['tenant' => Filament::getTenant()]))
                     )
                     ->modalSubmitActionLabel(__('Proceed anyway'))
                     ->action(function (Transaction $record) {
                         return redirect()->route('invoice.generate', ['transactionUuid' => $record->uuid]);
-                    })
+                    }),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
@@ -120,11 +121,6 @@ class TransactionResource extends Resource
         return false;
     }
 
-    public static function canViewAny(): bool
-    {
-        return true;  // we want to ignore the default permission check (from the policy) and allow all users to view their own transactions
-    }
-
     public static function canEdit(Model $record): bool
     {
         return false;
@@ -132,7 +128,7 @@ class TransactionResource extends Resource
 
     public static function getEloquentQuery(): Builder
     {
-        return parent::getEloquentQuery()->where('user_id', auth()->user()->id)->where('amount', '>', 0)->where('status', '!=', TransactionStatus::NOT_STARTED->value);
+        return parent::getEloquentQuery()->where('tenant_id', Filament::getTenant()->id)->where('amount', '>', 0)->where('status', '!=', TransactionStatus::NOT_STARTED->value);
     }
 
     public static function getModelLabel(): string

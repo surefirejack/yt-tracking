@@ -3,8 +3,9 @@
 namespace App\Filament\Admin\Resources;
 
 use App\Constants\DiscountConstants;
+use App\Constants\PlanType;
 use App\Constants\SubscriptionStatus;
-use App\Filament\Admin\Resources\UserResource\Pages\EditUser;
+use App\Filament\Admin\Resources\TenantResource\Pages\EditTenant;
 use App\Mapper\SubscriptionStatusMapper;
 use App\Models\Subscription;
 use Filament\Forms;
@@ -74,10 +75,16 @@ class SubscriptionResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('user.name')->label(__('User'))->searchable(),
+                Tables\Columns\TextColumn::make('tenant.name')->label(__('Tenant'))->searchable(),
                 Tables\Columns\TextColumn::make('plan.name')->label(__('Plan'))->searchable(),
                 Tables\Columns\TextColumn::make('price')->formatStateUsing(function (string $state, $record) {
-                    return money($state, $record->currency->code).' / '.$record->interval->name;
+                    if ($record->plan->type === PlanType::FLAT_RATE->value) {
+                        return money($state, $record->currency->code).' / '.$record->interval->name;
+                    } elseif ($record->plan->type === PlanType::SEAT_BASED->value) {
+                        return money($state, $record->currency->code).' / '.$record->interval->name.' / '.__('seat');
+                    }
+
+                    return money($state, $record->currency->code);
                 }),
                 Tables\Columns\TextColumn::make('payment_provider_id')
                     ->formatStateUsing(function (string $state, $record) {
@@ -217,7 +224,13 @@ class SubscriptionResource extends Resource
                                             ]),
                                         TextEntry::make('plan.name'),
                                         TextEntry::make('price')->formatStateUsing(function (string $state, $record) {
-                                            return money($state, $record->currency->code).' / '.$record->interval->name;
+                                            if ($record->plan->type === PlanType::FLAT_RATE->value) {
+                                                return money($state, $record->currency->code).' / '.$record->interval->name;
+                                            } elseif ($record->plan->type === PlanType::SEAT_BASED->value) {
+                                                return money($state, $record->currency->code).' / '.$record->interval->name.' / '.__('seat');
+                                            }
+
+                                            return money($state, $record->currency->code);
                                         }),
                                         TextEntry::make('payment_provider_id')
                                             ->formatStateUsing(function (string $state, $record) {
@@ -250,9 +263,12 @@ class SubscriptionResource extends Resource
                                         TextEntry::make('cancellation_additional_info')
                                             ->label(__('Cancellation Additional Info'))
                                             ->visible(fn (Subscription $record): bool => $record->cancellation_additional_info !== null),
-                                        TextEntry::make('user.name')
-                                            ->url(fn (Subscription $record) => EditUser::getUrl(['record' => $record->user]))
-                                            ->label(__('User')),
+                                        TextEntry::make('tenant.name')
+                                            ->url(fn (Subscription $record) => EditTenant::getUrl(['record' => $record->tenant]))
+                                            ->label(__('Tenant')),
+                                        TextEntry::make('quantity')
+                                            ->label(__('Quantity'))
+                                            ->visible(fn (Subscription $record): bool => $record->plan->type === PlanType::SEAT_BASED->value),
                                     ]),
                                 Section::make(__('Discount Details'))
                                     ->hidden(fn (Subscription $record): bool => $record->discounts->isEmpty() ||

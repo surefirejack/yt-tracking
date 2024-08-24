@@ -6,6 +6,7 @@ use App\Constants\SubscriptionStatus;
 use App\Exceptions\SubscriptionCreationNotAllowedException;
 use App\Models\Currency;
 use App\Models\Plan;
+use App\Models\PlanPrice;
 use App\Models\Subscription;
 use App\Services\SubscriptionManager;
 use Illuminate\Support\Str;
@@ -19,8 +20,8 @@ class SubscriptionManagerTest extends FeatureTest
      */
     public function test_can_only_create_subscription_if_no_other_non_dead_subscription_exists($status)
     {
-        $user = $this->createUser();
-        $this->actingAs($user);
+        $tenant = $this->createTenant();
+        $user = $this->createUser($tenant);
 
         $slug = Str::random();
         $plan = Plan::factory()->create([
@@ -32,45 +33,15 @@ class SubscriptionManagerTest extends FeatureTest
             'user_id' => $user->id,
             'status' => $status,
             'plan_id' => $plan->id,
+            'tenant_id' => $tenant->id,
         ])->save();
 
+        /** @var SubscriptionManager $manager */
         $manager = app()->make(SubscriptionManager::class);
 
         $this->expectException(SubscriptionCreationNotAllowedException::class);
-        $manager->create($slug, $user->id);
+        $manager->create($slug, $user->id, 1, $tenant);
     }
-
-    public function test_can_create_subscription_multiple_subscriptions_are_enabled()
-    {
-        config()->set('app.multiple_subscriptions_enabled', true);
-        $user = $this->createUser();
-        $this->actingAs($user);
-
-        $slug = Str::random();
-        $plan = Plan::factory()->create([
-            'slug' => $slug,
-            'is_active' => true,
-        ]);
-
-        // add a plan price
-        $plan->prices()->create([
-            'price' => 1000,
-            'currency_id' => Currency::where('code', 'USD')->first()->id,
-        ]);
-
-        Subscription::factory()->create([
-            'user_id' => $user->id,
-            'status' => SubscriptionStatus::ACTIVE,
-            'plan_id' => $plan->id,
-        ])->save();
-
-        $manager = app()->make(SubscriptionManager::class);
-
-        $subscription = $manager->create($slug, $user->id);
-
-        $this->assertNotNull($subscription);
-    }
-
 
     public static function nonDeadSubscriptionProvider()
     {
@@ -90,5 +61,35 @@ class SubscriptionManagerTest extends FeatureTest
         ];
     }
 
+    public function test_create_subscription_in_case_new_subscription_exists()
+    {
+        $tenant = $this->createTenant();
+        $user = $this->createUser($tenant);
 
+        $slug = Str::random();
+        $plan = Plan::factory()->create([
+            'slug' => $slug,
+            'is_active' => true,
+        ]);
+
+        $planPrice = PlanPrice::factory()->create([
+            'plan_id' => $plan->id,
+            'price' => 100,
+            'currency_id' => Currency::where('code', 'USD')->first()->id,
+        ]);
+
+        Subscription::factory()->create([
+            'user_id' => $user->id,
+            'status' => SubscriptionStatus::NEW->value,
+            'plan_id' => $plan->id,
+            'tenant_id' => $tenant->id,
+        ])->save();
+
+        /** @var SubscriptionManager $manager */
+        $manager = app()->make(SubscriptionManager::class);
+
+        $subscription = $manager->create($slug, $user->id, 1, $tenant);
+
+        $this->assertNotNull($subscription);
+    }
 }

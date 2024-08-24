@@ -2,6 +2,7 @@
 
 namespace App\Filament\Admin\Resources;
 
+use App\Constants\TenancyPermissionConstants;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -30,7 +31,13 @@ class RoleResource extends Resource
                         ->maxLength(255),
                     Forms\Components\Select::make('permissions')
                         ->disabled(fn (?Model $record) => $record && $record->name === 'admin')
-                        ->relationship('permissions', 'name')
+                        ->relationship('permissions', 'name', modifyQueryUsing: function ($query, Model $record) {
+                            if (str_starts_with($record->name, TenancyPermissionConstants::TENANCY_ROLE_PREFIX)) {
+                                return $query->where('name', 'like', TenancyPermissionConstants::TENANCY_ROLE_PREFIX.'%');
+                            } else {
+                                return $query->where('name', 'not like', TenancyPermissionConstants::TENANCY_ROLE_PREFIX.'%');
+                            }
+                        })
                         ->multiple()
                         ->preload()
                         ->helperText('Choose the permissions for this role.')
@@ -42,6 +49,7 @@ class RoleResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->description(__('Manage the roles in your application. Roles that start with "tenancy:" are supposed to be used for multi-tenancy users to control user dashboard capabilities.'))
             ->columns([
                 Tables\Columns\TextColumn::make('name')->sortable()->searchable(),
                 Tables\Columns\TextColumn::make('created_at')

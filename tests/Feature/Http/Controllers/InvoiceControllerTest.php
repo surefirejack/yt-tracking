@@ -18,14 +18,18 @@ class InvoiceControllerTest extends FeatureTest
     {
         config(['invoices.enabled' => true]);
 
+        $tenant = $this->createTenant();
+        $user = $this->createUser($tenant);
+
         $product = OneTimeProduct::factory()->create([
-            'slug' => 'product-slug-' . Str::random(20),
+            'slug' => 'product-slug-'.Str::random(20),
             'is_active' => true,
         ]);
 
         $order = Order::create([
             'uuid' => (string) Str::uuid(),
             'user_id' => 1,
+            'tenant_id' => $tenant->id,
             'total_amount' => 10,
             'currency_id' => 1,
             'status' => OrderStatus::SUCCESS->value,
@@ -38,11 +42,10 @@ class InvoiceControllerTest extends FeatureTest
             'currency_id' => Currency::where('code', 'USD')->first()->id,
         ]);
 
-        $user = $this->createUser();
-
         $transaction = Transaction::create([
             'uuid' => (string) Str::uuid(),
             'user_id' => $user->id,
+            'tenant_id' => $tenant->id,
             'amount' => 100,
             'currency_id' => Currency::where('code', 'USD')->first()->id,
             'order_id' => $order->id,
@@ -62,11 +65,13 @@ class InvoiceControllerTest extends FeatureTest
     {
         config(['invoices.enabled' => false]);
 
-        $user = $this->createUser();
+        $tenant = $this->createTenant();
+        $user = $this->createUser($tenant);
 
         $transaction = Transaction::create([
             'uuid' => (string) Str::uuid(),
             'user_id' => $user->id,
+            'tenant_id' => $tenant->id,
             'amount' => 100,
             'currency_id' => Currency::where('code', 'USD')->first()->id,
             'status' => TransactionStatus::SUCCESS->value,

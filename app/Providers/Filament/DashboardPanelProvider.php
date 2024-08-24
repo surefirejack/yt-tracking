@@ -2,10 +2,16 @@
 
 namespace App\Providers\Filament;
 
+use App\Constants\TenancyPermissionConstants;
+use App\Filament\Dashboard\Pages\TenantSettings;
+use App\Models\Tenant;
+use App\Services\TenantPermissionManager;
+use Filament\Facades\Filament;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
 use Filament\Navigation\MenuItem;
+use Filament\Navigation\NavigationGroup;
 use Filament\Pages;
 use Filament\Panel;
 use Filament\PanelProvider;
@@ -38,6 +44,21 @@ class DashboardPanelProvider extends PanelProvider
                     )
                     ->url(fn () => route('filament.admin.pages.dashboard'))
                     ->icon('heroicon-s-cog-8-tooth'),
+                MenuItem::make()
+                    ->label(__('Workspace Settings'))
+                    ->visible(
+                        function () {
+                            $tenantPermissionManager = app(TenantPermissionManager::class);
+
+                            return $tenantPermissionManager->tenantUserHasPermissionTo(
+                                Filament::getTenant(),
+                                auth()->user(),
+                                TenancyPermissionConstants::PERMISSION_UPDATE_TENANT_SETTINGS
+                            );
+                        }
+                    )
+                    ->icon('heroicon-s-cog-8-tooth')
+                    ->url(fn () => TenantSettings::getUrl()),
             ])
             ->discoverResources(in: app_path('Filament/Dashboard/Resources'), for: 'App\\Filament\\Dashboard\\Resources')
             ->discoverPages(in: app_path('Filament/Dashboard/Pages'), for: 'App\\Filament\\Dashboard\\Pages')
@@ -63,6 +84,12 @@ class DashboardPanelProvider extends PanelProvider
             ->renderHook('panels::head.start', function () {
                 return view('components.layouts.partials.analytics');
             })
+            ->navigationGroups([
+                NavigationGroup::make()
+                    ->label('Team')
+                    ->icon('heroicon-s-users')
+                    ->collapsed(),
+            ])
             ->authMiddleware([
                 Authenticate::class,
             ])->plugins([
@@ -73,9 +100,11 @@ class DashboardPanelProvider extends PanelProvider
                         hasAvatars: false, // Enables the avatar upload form component (default = false)
                         slug: 'my-profile' // Sets the slug for the profile page (default = 'my-profile')
                     )
-                ->myProfileComponents([
-                    \App\Livewire\AddressForm::class,
-                ])
-            ]);
+                    ->myProfileComponents([
+                        \App\Livewire\AddressForm::class,
+                    ]),
+            ])
+            ->tenantMenu()
+            ->tenant(Tenant::class, 'uuid');
     }
 }

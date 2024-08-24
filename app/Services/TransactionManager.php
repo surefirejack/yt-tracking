@@ -37,6 +37,7 @@ class TransactionManager
             'payment_provider_id' => $paymentProvider->id,
             'payment_provider_status' => $paymentProviderStatus,
             'payment_provider_transaction_id' => $paymentProviderTransactionId,
+            'tenant_id' => $subscription->tenant_id,
         ]);
     }
 
@@ -119,6 +120,7 @@ class TransactionManager
             'payment_provider_id' => $paymentProvider->id,
             'payment_provider_status' => $paymentProviderStatus,
             'payment_provider_transaction_id' => $paymentProviderTransactionId,
+            'tenant_id' => $order->tenant_id,
         ]);
     }
 }

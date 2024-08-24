@@ -3,11 +3,11 @@
 namespace App\Livewire\Checkout;
 
 use App\Constants\SessionConstants;
-use App\Dto\SubscriptionCheckoutDto;
 use App\Dto\TotalsDto;
 use App\Models\Plan;
 use App\Services\CalculationManager;
 use App\Services\DiscountManager;
+use App\Services\SessionManager;
 use Livewire\Attributes\On;
 use Livewire\Component;
 
@@ -33,10 +33,16 @@ class SubscriptionTotals extends Component
 
     private CalculationManager $calculationManager;
 
-    public function boot(DiscountManager $discountManager, CalculationManager $calculationManager)
-    {
+    private SessionManager $sessionManager;
+
+    public function boot(
+        DiscountManager $discountManager,
+        CalculationManager $calculationManager,
+        SessionManager $sessionManager,
+    ) {
         $this->discountManager = $discountManager;
         $this->calculationManager = $calculationManager;
+        $this->sessionManager = $sessionManager;
     }
 
     public function mount(TotalsDto $totals, Plan $plan, $page)
@@ -52,12 +58,7 @@ class SubscriptionTotals extends Component
 
     public function getCodeFromSession()
     {
-        /** @var SubscriptionCheckoutDto $subscriptionCheckoutDto */
-        $subscriptionCheckoutDto = session()->get(SessionConstants::SUBSCRIPTION_CHECKOUT_DTO);
-
-        if ($subscriptionCheckoutDto === null) {
-            return null;
-        }
+        $subscriptionCheckoutDto = $this->sessionManager->getSubscriptionCheckoutDto();
 
         return $subscriptionCheckoutDto->discountCode;
     }
@@ -82,11 +83,7 @@ class SubscriptionTotals extends Component
             return;
         }
 
-        /** @var SubscriptionCheckoutDto $subscriptionCheckoutDto */
-        $subscriptionCheckoutDto = session()->get(SessionConstants::SUBSCRIPTION_CHECKOUT_DTO);
-        if ($subscriptionCheckoutDto === null) {
-            $subscriptionCheckoutDto = new SubscriptionCheckoutDto();
-        }
+        $subscriptionCheckoutDto = $this->sessionManager->getSubscriptionCheckoutDto();
 
         $subscriptionCheckoutDto->discountCode = $code;
         $subscriptionCheckoutDto->planSlug = $this->planSlug;
@@ -100,16 +97,11 @@ class SubscriptionTotals extends Component
 
     public function remove()
     {
-        /** @var SubscriptionCheckoutDto $subscriptionCheckoutDto */
-        $subscriptionCheckoutDto = session()->get(SessionConstants::SUBSCRIPTION_CHECKOUT_DTO);
-
-        if ($subscriptionCheckoutDto === null) {
-            return;
-        }
+        $subscriptionCheckoutDto = $this->sessionManager->getSubscriptionCheckoutDto();
 
         $subscriptionCheckoutDto->discountCode = null;
 
-        session()->put(SessionConstants::SUBSCRIPTION_CHECKOUT_DTO, $subscriptionCheckoutDto);
+        $this->sessionManager->saveSubscriptionCheckoutDto($subscriptionCheckoutDto);
 
         session()->flash('success', __('The discount code has been removed.'));
 
@@ -119,10 +111,13 @@ class SubscriptionTotals extends Component
     #[On('calculations-updated')]
     public function updateTotals()
     {
+        $subscriptionCheckoutDto = $this->sessionManager->getSubscriptionCheckoutDto();
+
         $totals = $this->calculationManager->calculatePlanTotals(
             auth()->user(),
             $this->planSlug,
-            $this->getCodeFromSession(),
+            $subscriptionCheckoutDto->discountCode,
+            $subscriptionCheckoutDto->quantity,
         );
 
         $this->subtotal = $totals->subtotal;

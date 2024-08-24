@@ -2,9 +2,11 @@
 
 namespace Database\Seeders\Demo;
 
+use App\Constants\PlanType;
 use App\Constants\RoadmapItemStatus;
 use App\Constants\RoadmapItemType;
 use App\Constants\SubscriptionStatus;
+use App\Constants\TenancyPermissionConstants;
 use App\Models\BlogPost;
 use App\Models\Currency;
 use App\Models\Discount;
@@ -14,8 +16,10 @@ use App\Models\OneTimeProduct;
 use App\Models\PaymentProvider;
 use App\Models\Plan;
 use App\Models\Product;
+use App\Models\Tenant;
 use App\Models\User;
 use App\Services\MetricsManager;
+use App\Services\TenantPermissionManager;
 use Carbon\Carbon;
 use Database\Seeders\DatabaseSeeder;
 use Illuminate\Database\Seeder;
@@ -24,7 +28,8 @@ use Illuminate\Support\Str;
 class DemoDatabaseSeeder extends Seeder
 {
     public function __construct(
-        private MetricsManager $metricsManager
+        private MetricsManager $metricsManager,
+        private TenantPermissionManager $tenantPermissionManager,
     ) {
 
     }
@@ -162,7 +167,15 @@ class DemoDatabaseSeeder extends Seeder
         $paymentProviders = PaymentProvider::all();
 
         for ($i = 0; $i < $numberOfOrders; $i++) {
+
             $user = User::factory()->create();
+
+            $tenant = Tenant::factory()->create([
+                'created_by' => $user->id,
+            ]);
+            $tenant->users()->attach($user);
+
+            $this->tenantPermissionManager->assignTenantUserRole($tenant, $user, TenancyPermissionConstants::ROLE_ADMIN);
 
             $order = $user->orders()->create([
                 'uuid' => Str::uuid(),
@@ -171,6 +184,7 @@ class DemoDatabaseSeeder extends Seeder
                 'total_amount' => $product->prices()->first()->price,
                 'total_amount_after_discount' => $product->prices()->first()->price,
                 'created_at' => now()->sub(rand(1, 10), 'days'),
+                'tenant_id' => $tenant->id,
                 // random payment provider
                 'payment_provider_id' => $paymentProviders[rand(0, count($paymentProviders) - 1)]->id,
             ]);
@@ -218,6 +232,7 @@ class DemoDatabaseSeeder extends Seeder
             'trial_interval_count' => 1,
             'is_active' => true,
             'product_id' => $product->id,
+            'type' => PlanType::SEAT_BASED->value,
         ]);
 
         $basicPlan->prices()->create([
@@ -239,6 +254,7 @@ class DemoDatabaseSeeder extends Seeder
             'trial_interval_count' => 1,
             'is_active' => true,
             'product_id' => $product->id,
+            'type' => PlanType::SEAT_BASED->value,
         ]);
 
         $basicPlan->prices()->create([
@@ -278,6 +294,13 @@ class DemoDatabaseSeeder extends Seeder
                 ]
             );
 
+            $tenant = Tenant::factory()->create([
+                'created_by' => $user->id,
+            ]);
+            $tenant->users()->attach($user);
+
+            $this->tenantPermissionManager->assignTenantUserRole($tenant, $user, TenancyPermissionConstants::ROLE_ADMIN);
+
             $status = rand(0, 1) === 1 ? SubscriptionStatus::ACTIVE : SubscriptionStatus::CANCELED;
 
             $paymentProviderId = $paymentProviders[rand(0, count($paymentProviders) - 1)]->id;
@@ -295,6 +318,7 @@ class DemoDatabaseSeeder extends Seeder
                 'interval_id' => $plan->interval->id,
                 'interval_count' => $plan->interval_count,
                 'created_at' => $createdDate,
+                'tenant_id' => $tenant->id,
             ]);
 
             // add transactions
@@ -313,6 +337,7 @@ class DemoDatabaseSeeder extends Seeder
                     'uuid' => Str::uuid(),
                     'created_at' => $transactionCreatedDate,
                     'updated_at' => $transactionCreatedDate,
+                    'tenant_id' => $tenant->id,
                 ]);
 
                 $transactionCreatedDate = $transactionCreatedDate->add(1, $plan->interval->date_identifier);

@@ -14,6 +14,7 @@ use App\Services\OneTimeProductManager;
 use App\Services\OrderManager;
 use App\Services\PlanManager;
 use App\Services\SubscriptionManager;
+use App\Services\TenantCreationManager;
 use App\Services\TransactionManager;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
@@ -29,6 +30,7 @@ class LemonSqueezyWebhookHandler
         private OrderManager $orderManager,
         private PlanManager $planManager,
         private OneTimeProductManager $oneTimeProductManager,
+        private TenantCreationManager $tenantCreationManager,
     ) {
 
     }
@@ -161,8 +163,11 @@ class LemonSqueezyWebhookHandler
             'currency_id' => $currency->id,
         ];
 
+        $tenant = $this->tenantCreationManager->createTenant($user);
+
         $order = $this->orderManager->create(
             $user,
+            $tenant,
             $paymentProvider,
             $attributes['subtotal'],
             $attributes['discount_total'] ?? 0,
@@ -224,6 +229,7 @@ class LemonSqueezyWebhookHandler
             $trialEndsAt = $attributes['trial_ends_at'] !== null ? Carbon::parse($attributes['trial_ends_at'])->toDateTimeString() : null;
             $cancelledAt = $attributes['ends_at'] !== null ? Carbon::parse($attributes['ends_at'])->toDateTimeString() : null;
             $isCanceledAtTheEndOfCycle = $attributes['cancelled'] ?? false;
+            $quantity = $attributes['first_subscription_item']['quantity'] ?? 1;
 
             $this->subscriptionManager->updateSubscription($subscription, [
                 'status' => $subscriptionStatus,
@@ -234,6 +240,7 @@ class LemonSqueezyWebhookHandler
                 'trial_ends_at' => $trialEndsAt,
                 'cancelled_at' => $cancelledAt,
                 'is_canceled_at_end_of_cycle' => $isCanceledAtTheEndOfCycle,
+                'quantity' => $quantity,
             ]);
 
         } elseif ($eventName === 'subscription_payment_success' || $eventName === 'subscription_payment_failed') {
@@ -299,7 +306,11 @@ class LemonSqueezyWebhookHandler
             return null;
         }
 
-        return $this->subscriptionManager->create($plan->slug, $user->id, $paymentProvider, $providerSubscriptionId);
+        $quantity = $attributes['first_subscription_item']['quantity'] ?? 1;
+
+        $tenant = $this->tenantCreationManager->createTenant($user);
+
+        return $this->subscriptionManager->create($plan->slug, $user->id, $quantity, $tenant, $paymentProvider, $providerSubscriptionId);
     }
 
     private function mapOrderStatusToTransactionStatus(string $providerOrderStatus): TransactionStatus

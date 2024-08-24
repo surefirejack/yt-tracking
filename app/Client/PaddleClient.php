@@ -27,6 +27,7 @@ class PaddleClient
         string $currencyCode,
         ?string $trialInterval = null,
         ?int $trialFrequency = null,
+        int $maxQuantity = 1,
     ): Response {
 
         $priceObject = [
@@ -42,7 +43,7 @@ class PaddleClient
             ],
             'quantity' => [
                 'minimum' => 1,
-                'maximum' => 1,
+                'maximum' => $maxQuantity,
             ],
         ];
 
@@ -84,7 +85,36 @@ class PaddleClient
         ])->post($this->getApiUrl('/prices'), $priceObject);
     }
 
-    public function updateSubscription(string $paddleSubscriptionId, string $priceId, bool $withProration, bool $isTrialing = false): Response
+    public function updateSubscriptionQuantity(
+        string $paddleSubscriptionId,
+        string $priceId,
+        int $quantity,
+        bool $isTrialing,
+        bool $isProrated = true
+    ): Response {
+        $subscriptionObject = [
+            'items' => [
+                [
+                    'price_id' => $priceId,
+                    'quantity' => $quantity,
+                ],
+            ],
+            'proration_billing_mode' => $isTrialing ? 'do_not_bill' : ($isProrated ? 'prorated_immediately' : 'full_immediately'),
+        ];
+
+        return Http::withHeaders([
+            'Authorization' => 'Bearer '.config('services.paddle.vendor_auth_code'),
+        ])->patch($this->getApiUrl('/subscriptions/'.$paddleSubscriptionId), $subscriptionObject);
+    }
+
+    public function getSubscription(string $paddleSubscriptionId): Response
+    {
+        return Http::withHeaders([
+            'Authorization' => 'Bearer '.config('services.paddle.vendor_auth_code'),
+        ])->get($this->getApiUrl('/subscriptions/'.$paddleSubscriptionId));
+    }
+
+    public function updateSubscription(string $paddleSubscriptionId, string $priceId, bool $withProration, bool $isTrialing = false, int $quantity = 1): Response
     {
         $proration = $isTrialing ? 'do_not_bill' : ($withProration ? 'prorated_immediately' : 'full_immediately');
         $subscriptionObject = [
@@ -92,7 +122,7 @@ class PaddleClient
             'items' => [
                 [
                     'price_id' => $priceId,
-                    'quantity' => 1,
+                    'quantity' => $quantity,
                 ],
             ],
         ];

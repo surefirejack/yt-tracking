@@ -69,7 +69,6 @@ class ConfigConstants
         'app.recaptcha_enabled',
         'recaptcha.api_site_key',
         'recaptcha.api_secret_key',
-        'app.multiple_subscriptions_enabled',
 
         // Open Graphy
         'open-graphy.enabled',
@@ -104,5 +103,7 @@ class ConfigConstants
         'invoices.seller.attributes.code',
         'invoices.seller.attributes.vat',
         'invoices.seller.attributes.phone',
+
+        'app.allow_tenant_invitations',
     ];
 }

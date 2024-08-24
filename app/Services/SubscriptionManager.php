@@ -8,13 +8,16 @@ use App\Events\Subscription\InvoicePaymentFailed;
 use App\Events\Subscription\Subscribed;
 use App\Events\Subscription\SubscriptionCancelled;
 use App\Exceptions\SubscriptionCreationNotAllowedException;
+use App\Exceptions\TenantException;
 use App\Models\PaymentProvider;
 use App\Models\Plan;
 use App\Models\Product;
 use App\Models\Subscription;
+use App\Models\Tenant;
 use App\Models\User;
 use App\Services\PaymentProviders\PaymentProviderInterface;
 use Carbon\Carbon;
+use Filament\Facades\Filament;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
@@ -27,28 +30,24 @@ class SubscriptionManager
 
     }
 
-    public function canCreateSubscription(int $userId): bool
-    {
-        if (config('app.multiple_subscriptions_enabled')) {
-            return true;
+    public function create(
+        string $planSlug,
+        int $userId,
+        int $quantity,
+        Tenant $tenant,
+        ?PaymentProvider $paymentProvider = null,
+        ?string $paymentProviderSubscriptionId = null
+    ): Subscription {
+
+        if (! $this->canCreateSubscription($tenant->id)) {
+            throw new SubscriptionCreationNotAllowedException(sprintf('Subscription creation is not allowed for this tenant: %s', $tenant->uuid));
         }
 
-        $notDeadSubscriptions = $this->findAllSubscriptionsThatAreNotDead($userId);
-
-        return count($notDeadSubscriptions) === 0;
-    }
-
-    public function create(string $planSlug, int $userId, ?PaymentProvider $paymentProvider = null, ?string $paymentProviderSubscriptionId = null): Subscription
-    {
         $plan = Plan::where('slug', $planSlug)->where('is_active', true)->firstOrFail();
 
-        if (! $this->canCreateSubscription($userId)) {
-            throw new SubscriptionCreationNotAllowedException(__('You already have subscription.'));
-        }
-
         $newSubscription = null;
-        DB::transaction(function () use ($plan, $userId, &$newSubscription, $paymentProvider, $paymentProviderSubscriptionId) {
-            $this->deleteAllNewSubscriptions($userId);
+        DB::transaction(function () use ($plan, $userId, &$newSubscription, $paymentProvider, $paymentProviderSubscriptionId, $quantity, $tenant) {
+            $this->deleteAllNewSubscriptions($userId, $tenant);
 
             $planPrice = $this->calculationManager->getPlanPrice($plan);
 
@@ -61,6 +60,8 @@ class SubscriptionManager
                 'status' => SubscriptionStatus::NEW->value,
                 'interval_id' => $plan->interval_id,
                 'interval_count' => $plan->interval_count,
+                'quantity' => $quantity,
+                'tenant_id' => $tenant->id,
             ];
 
             if ($paymentProvider) {
@@ -77,9 +78,16 @@ class SubscriptionManager
         return $newSubscription;
     }
 
-    public function findAllSubscriptionsThatAreNotDead(int $userId): array
+    public function canCreateSubscription(int $tenantId): bool
     {
-        return Subscription::where('user_id', $userId)
+        $notDeadSubscriptions = $this->findAllSubscriptionsThatAreNotDead($tenantId);
+
+        return count($notDeadSubscriptions) === 0;
+    }
+
+    public function findAllSubscriptionsThatAreNotDead(int $tenantId): array
+    {
+        return Subscription::where('tenant_id', $tenantId)
             ->where(function ($query) {
                 $query->where('status', SubscriptionStatus::ACTIVE->value)
                     ->orWhere('status', SubscriptionStatus::PENDING->value)
@@ -100,16 +108,25 @@ class SubscriptionManager
             ]);
     }
 
-    public function deleteAllNewSubscriptions(int $userId): void
+    public function deleteAllNewSubscriptions(int $userId, Tenant $tenant): void
     {
         Subscription::where('user_id', $userId)
             ->where('status', SubscriptionStatus::NEW->value)
+            ->where('tenant_id', $tenant->id)
             ->delete();
     }
 
     public function findActiveUserSubscription(int $userId): ?Subscription
     {
         return Subscription::where('user_id', $userId)
+            ->where('status', '=', SubscriptionStatus::ACTIVE->value)
+            ->first();
+    }
+
+    public function findActiveByTenantAndSubscriptionUuid(Tenant $tenant, string $subscriptionUuid): ?Subscription
+    {
+        return Subscription::where('tenant_id', $tenant->id)
+            ->where('uuid', $subscriptionUuid)
             ->where('status', '=', SubscriptionStatus::ACTIVE->value)
             ->first();
     }
@@ -122,11 +139,11 @@ class SubscriptionManager
             ->first();
     }
 
-    public function findNewByPlanSlugAndUser(string $planSlug, int $userId): ?Subscription
+    public function findNewByPlanSlugAndTenant(string $planSlug, Tenant $tenant): ?Subscription
     {
         $plan = Plan::where('slug', $planSlug)->where('is_active', true)->firstOrFail();
 
-        return Subscription::where('user_id', $userId)
+        return Subscription::where('tenant_id', $tenant->id)
             ->where('plan_id', $plan->id)
             ->where('status', SubscriptionStatus::NEW->value)
             ->first();
@@ -232,6 +249,10 @@ class SubscriptionManager
             return false;
         }
 
+        if ($subscription->plan->type != $newPlan->type) {
+            return false;
+        }
+
         $changeResult = $paymentProviderStrategy->changePlan($subscription, $newPlan, $isProrated);
 
         if ($changeResult) {
@@ -287,13 +308,29 @@ class SubscriptionManager
         return $result;
     }
 
-    public function isUserSubscribed(?User $user, ?string $productSlug = null): bool
+    /**
+     * @throws TenantException
+     */
+    public function isUserSubscribed(?User $user, ?string $productSlug = null, ?Tenant $tenant = null): bool
     {
         if (! $user) {
             return false;
         }
 
-        $subscriptions = $user->subscriptions()
+        $tenant = $tenant ?? Filament::getTenant();
+
+        if (! $tenant) {
+            throw new TenantException('Could not resolve tenant: You either need to specify a tenant or be in a tenant context to check if a user is subscribed.');
+        }
+
+        $userTenant = $user->tenants()->where('tenant_id', $tenant->id)->first();
+
+        if (! $userTenant) {
+            return false;
+        }
+
+        $subscriptions = $userTenant
+            ->subscriptions()
             ->where('status', SubscriptionStatus::ACTIVE->value)
             ->where('ends_at', '>', Carbon::now())
             ->get();
@@ -307,13 +344,25 @@ class SubscriptionManager
         return $subscriptions->count() > 0;
     }
 
-    public function isUserTrialing(?User $user, ?string $productSlug = null): bool
+    public function isUserTrialing(?User $user, ?string $productSlug = null, ?Tenant $tenant = null): bool
     {
         if (! $user) {
             return false;
         }
 
-        $subscriptions = $user->subscriptions()
+        $tenant = $tenant ?? Filament::getTenant();
+
+        if (! $tenant) {
+            throw new TenantException('Could not resolve tenant: You either need to specify a tenant or be in a tenant context to check if a user is trialing.');
+        }
+
+        $userTenant = $user->tenants()->where('tenant_id', $tenant->id)->first();
+
+        if (! $userTenant) {
+            return false;
+        }
+
+        $subscriptions = $userTenant->subscriptions()
             ->where('status', SubscriptionStatus::ACTIVE->value)
             ->where('trial_ends_at', '>', Carbon::now())
             ->get();
@@ -327,13 +376,15 @@ class SubscriptionManager
         return $subscriptions->count() > 0;
     }
 
-    public function getUserSubscriptionProductMetadata(?User $user): array
+    public function getTenantSubscriptionProductMetadata(?Tenant $tenant = null): array
     {
-        if (! $user) {
+        $tenant = $tenant ?? Filament::getTenant();
+
+        if (! $tenant) {
             return [];
         }
 
-        $subscriptions = $user->subscriptions()
+        $subscriptions = $tenant->subscriptions()
             ->where('status', SubscriptionStatus::ACTIVE->value)
             ->where('ends_at', '>', Carbon::now())
             ->get();
