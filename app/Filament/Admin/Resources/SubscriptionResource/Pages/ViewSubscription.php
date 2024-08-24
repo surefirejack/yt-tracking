@@ -26,7 +26,7 @@ class ViewSubscription extends ViewRecord
                     ->label(__('Sync Quantity'))
                     ->icon('heroicon-o-arrow-path')
                     ->visible(function (Subscription $record): bool {
-                        return $record->plan->type === PlanType::SEAT_BASED->value;
+                        return $record->plan->type === PlanType::SEAT_BASED->value && $record->status === SubscriptionStatus::ACTIVE->value;
                     })
                     ->action(function (TenantManager $tenantManager, Subscription $record) {
                         $tenantManager->syncSubscriptionQuantity($record);
