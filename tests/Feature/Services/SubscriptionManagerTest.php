@@ -93,24 +93,6 @@ class SubscriptionManagerTest extends FeatureTest
         $this->assertContains($manager->calculateSubscriptionTrialDays($plan), [365, 366]);
     }
 
-    public function test_can_create_subscription_multiple_subscriptions_are_enabled()
-    {
-        return [
-            'pending' => [
-                'pending',
-            ],
-            'active' => [
-                'active',
-            ],
-            'paused' => [
-                'paused',
-            ],
-            'past_due' => [
-                'past_due',
-            ],
-        ];
-    }
-
     public function test_create_subscription_in_case_new_subscription_exists()
     {
         $tenant = $this->createTenant();
