@@ -5,6 +5,7 @@ namespace Tests\Feature\Services;
 use App\Constants\SubscriptionStatus;
 use App\Exceptions\SubscriptionCreationNotAllowedException;
 use App\Models\Currency;
+use App\Models\Interval;
 use App\Models\Plan;
 use App\Models\PlanPrice;
 use App\Models\Subscription;
@@ -14,7 +15,6 @@ use Tests\Feature\FeatureTest;
 
 class SubscriptionManagerTest extends FeatureTest
 {
-
     /**
      * @dataProvider nonDeadSubscriptionProvider
      */
@@ -43,7 +43,57 @@ class SubscriptionManagerTest extends FeatureTest
         $manager->create($slug, $user->id, 1, $tenant);
     }
 
-    public static function nonDeadSubscriptionProvider()
+    public function test_calculate_subscription_trial_days()
+    {
+        $manager = app()->make(SubscriptionManager::class);
+
+        $plan = Plan::factory()->create([
+            'slug' => Str::random(),
+            'has_trial' => true,
+            'trial_interval_count' => 1,
+            'trial_interval_id' => Interval::where('slug', 'day')->first()->id,
+        ]);
+
+        $this->assertEquals(1, $manager->calculateSubscriptionTrialDays($plan));
+
+        $plan = Plan::factory()->create([
+            'slug' => Str::random(),
+            'has_trial' => true,
+            'trial_interval_count' => 1,
+            'trial_interval_id' => Interval::where('slug', 'week')->first()->id,
+        ]);
+
+        $this->assertEquals(7, $manager->calculateSubscriptionTrialDays($plan));
+
+        $plan = Plan::factory()->create([
+            'slug' => Str::random(),
+            'has_trial' => true,
+            'trial_interval_count' => 2,
+            'trial_interval_id' => Interval::where('slug', 'week')->first()->id,
+        ]);
+
+        $this->assertEquals(14, $manager->calculateSubscriptionTrialDays($plan));
+
+        $plan = Plan::factory()->create([
+            'slug' => Str::random(),
+            'has_trial' => true,
+            'trial_interval_count' => 1,
+            'trial_interval_id' => Interval::where('slug', 'month')->first()->id,
+        ]);
+
+        $this->assertContains($manager->calculateSubscriptionTrialDays($plan), [28, 29, 30, 31]);
+
+        $plan = Plan::factory()->create([
+            'slug' => Str::random(),
+            'has_trial' => true,
+            'trial_interval_count' => 1,
+            'trial_interval_id' => Interval::where('slug', 'year')->first()->id,
+        ]);
+
+        $this->assertContains($manager->calculateSubscriptionTrialDays($plan), [365, 366]);
+    }
+
+    public function test_can_create_subscription_multiple_subscriptions_are_enabled()
     {
         return [
             'pending' => [
@@ -91,5 +141,23 @@ class SubscriptionManagerTest extends FeatureTest
         $subscription = $manager->create($slug, $user->id, 1, $tenant);
 
         $this->assertNotNull($subscription);
+    }
+
+    public static function nonDeadSubscriptionProvider()
+    {
+        return [
+            'pending' => [
+                'pending',
+            ],
+            'active' => [
+                'active',
+            ],
+            'paused' => [
+                'paused',
+            ],
+            'past_due' => [
+                'past_due',
+            ],
+        ];
     }
 }

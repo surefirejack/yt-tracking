@@ -179,7 +179,7 @@ class SubscriptionResource extends Resource
                                 })
                             ->formatStateUsing(
                                 function ($state) {
-                                    return boolval($state) ? __('Yes') : __('No');
+                                    return boolval($state) ? __('No') : __('Yes');
                                 }),
                     ]),
                 Section::make(__('Discount Details'))

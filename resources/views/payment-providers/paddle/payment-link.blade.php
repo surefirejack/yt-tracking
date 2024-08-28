@@ -1,4 +1,4 @@
-@extends('layouts.app')
+<x-layouts.app>
 
 @push('head')
     <script src="https://cdn.paddle.com/paddle/v2/paddle.js"></script>
@@ -22,16 +22,4 @@
     </script>
 @endpush
 
-@section('content')
-    <div class="container">
-        <div class="row justify-content-center">
-            <div class="col-md-8">
-
-
-            </div>
-        </div>
-    </div>
-@endsection
-
-
-
+</x-layouts.app>

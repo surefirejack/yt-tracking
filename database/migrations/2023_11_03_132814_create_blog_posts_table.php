@@ -21,7 +21,12 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained();
             $table->foreignId('author_id')->nullable()->constrained('users');
             $table->foreignId('blog_post_category_id')->nullable()->constrained();
-            $table->fullText(['title', 'body']);
+
+            // only if the database is not sqlite (which doesn't support fulltext)
+            if (config('database.default') !== 'sqlite') {
+                $table->fullText(['title', 'body']);
+            }
+
             $table->text('description')->nullable();
             $table->timestamps();
         });

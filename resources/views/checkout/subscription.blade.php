@@ -1,6 +1,6 @@
 <x-layouts.focus-center>
 
-    <div class="text-center my-4">
+    <div class="text-center my-4 mx-4">
         <x-heading.h6 class="text-primary-500">
             {{ __('Pay securely, cancel any time.') }}
         </x-heading.h6>
@@ -25,7 +25,7 @@
                 <div class="rounded-2xl border border-natural-300 mt-4 overflow-hidden p-6">
 
                     <div class="flex flex-row gap-3">
-                        <div class="rounded-2xl text-5xl bg-primary-50 p-2 text-center w-24 h-24 text-primary-500 justify-self-center self-center">
+                        <div class="rounded-2xl text-5xl bg-primary-50 p-2 text-center w-24 h-24 text-primary-500 justify-self-center self-center min-w-[5rem]">
                             {{ substr($plan->name, 0, 1) }}
                         </div>
                         <div class="flex flex-col gap-1">

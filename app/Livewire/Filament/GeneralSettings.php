@@ -55,7 +55,7 @@ class GeneralSettings extends Component implements HasForms
             'show_transactions' => $this->configManager->get('app.customer_dashboard.show_transactions', true),
             'social_links_facebook' => $this->configManager->get('app.social_links.facebook') ?? '',
             'social_links_x' => $this->configManager->get('app.social_links.x') ?? '',
-            'social_links_linkedin' => $this->configManager->get('app.social_links.linkedin') ?? '',
+            'social_links_linkedin' => $this->configManager->get('app.social_links.linkedin-openid') ?? '',
             'social_links_instagram' => $this->configManager->get('app.social_links.instagram') ?? '',
             'social_links_youtube' => $this->configManager->get('app.social_links.youtube') ?? '',
             'social_links_github' => $this->configManager->get('app.social_links.github') ?? '',
@@ -256,7 +256,7 @@ class GeneralSettings extends Component implements HasForms
         $this->configManager->set('app.customer_dashboard.show_transactions', $data['show_transactions']);
         $this->configManager->set('app.social_links.facebook', $data['social_links_facebook']);
         $this->configManager->set('app.social_links.x', $data['social_links_x']);
-        $this->configManager->set('app.social_links.linkedin', $data['social_links_linkedin']);
+        $this->configManager->set('app.social_links.linkedin-openid', $data['social_links_linkedin']);
         $this->configManager->set('app.social_links.instagram', $data['social_links_instagram']);
         $this->configManager->set('app.social_links.youtube', $data['social_links_youtube']);
         $this->configManager->set('app.social_links.github', $data['social_links_github']);

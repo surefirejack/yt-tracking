@@ -80,7 +80,7 @@ class OauthLoginProviderResource extends Resource
             'github-settings' => \App\Filament\Admin\Resources\OauthLoginProviderResource\Pages\GithubSettings::route('/github-settings'),
             'gitlab-settings' => \App\Filament\Admin\Resources\OauthLoginProviderResource\Pages\GitlabSettings::route('/gitlab-settings'),
             'twitter-oauth-2-settings' => \App\Filament\Admin\Resources\OauthLoginProviderResource\Pages\TwitterSettings::route('/twitter-settings'),
-            'linkedin-settings' => \App\Filament\Admin\Resources\OauthLoginProviderResource\Pages\LinkedinSettings::route('/linkedin-settings'),
+            'linkedin-openid-settings' => \App\Filament\Admin\Resources\OauthLoginProviderResource\Pages\LinkedinSettings::route('/linkedin-settings'),
             'facebook-settings' => \App\Filament\Admin\Resources\OauthLoginProviderResource\Pages\FacebookSettings::route('/facebook-settings'),
             'bitbucket-settings' => \App\Filament\Admin\Resources\OauthLoginProviderResource\Pages\BitbucketSettings::route('/bitbucket-settings'),
         ];

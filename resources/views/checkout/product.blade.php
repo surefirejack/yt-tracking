@@ -1,6 +1,6 @@
 <x-layouts.focus-center>
 
-    <div class="text-center">
+    <div class="text-center mx-4">
         <x-heading.h6 class="text-primary-500">
             {{ __('Pay securely.') }}
         </x-heading.h6>
@@ -27,7 +27,7 @@
                     @endphp
 
                     <div class="flex flex-row gap-3">
-                        <div class="rounded-2xl text-5xl bg-primary-50 p-2 text-center w-24 h-24 text-primary-500 justify-self-center self-center">
+                        <div class="rounded-2xl text-5xl bg-primary-50 p-2 text-center w-24 h-24 text-primary-500 justify-self-center self-center min-w-[5rem]">
                             {{ substr($product->name, 0, 1) }}
                         </div>
                         <div class="flex flex-col gap-1">
