@@ -30,6 +30,11 @@ class GenerateSitemap extends Command implements Isolatable
      */
     public function handle(BlogManager $blogManager)
     {
+        if (app()->environment('local')) {
+            $this->warn('Not generating sitemap in local environment');
+
+            return;
+        }
 
         $routes = collect(Route::getRoutes()->getRoutes())->filter(function (\Illuminate\Routing\Route $route) {
 

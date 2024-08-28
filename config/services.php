@@ -59,10 +59,10 @@ return [
         'redirect' => '/auth/twitter-oauth-2/callback',
     ],
 
-    'linkedin' => [
+    'linkedin-openid' => [
         'client_id' => env('LINKEDIN_CLIENT_ID'),
         'client_secret' => env('LINKEDIN_CLIENT_SECRET'),
-        'redirect' => '/auth/linkedin/callback',
+        'redirect' => '/auth/linkedin-openid/callback',
     ],
 
     'bitbucket' => [

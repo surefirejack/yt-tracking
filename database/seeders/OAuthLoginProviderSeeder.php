@@ -41,7 +41,7 @@ class OAuthLoginProviderSeeder extends Seeder
         );
 
         OauthLoginProvider::updateOrCreate(
-            ['provider_name' => 'linkedin'],
+            ['provider_name' => 'linkedin-openid'],
             [
                 'name' => 'LinkedIn',
             ]
@@ -60,5 +60,8 @@ class OAuthLoginProviderSeeder extends Seeder
                 'name' => 'Gitlab',
             ]
         );
+
+        // older legacy linkedin provider
+        OauthLoginProvider::where('provider_name', 'linkedin')->delete();
     }
 }

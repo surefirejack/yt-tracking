@@ -56,11 +56,11 @@ Route::get('/registration/thank-you', function () {
 })->middleware('auth')->name('registration.thank-you');
 
 Route::get('/auth/{provider}/redirect', [OAuthController::class, 'redirect'])
-    ->where('provider', 'google|github|facebook|twitter-oauth-2|linkedin|bitbucket|gitlab')
+    ->where('provider', 'google|github|facebook|twitter-oauth-2|linkedin-openid|bitbucket|gitlab')
     ->name('auth.oauth.redirect');
 
 Route::get('/auth/{provider}/callback', [OAuthController::class, 'callback'])
-    ->where('provider', 'google|github|facebook|twitter-oauth-2|linkedin|bitbucket|gitlab')
+    ->where('provider', 'google|github|facebook|twitter-oauth-2|linkedin-openid|bitbucket|gitlab')
     ->name('auth.oauth.callback');
 
 Route::get('/checkout/plan/{planSlug}', [
