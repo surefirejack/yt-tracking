@@ -22,6 +22,18 @@
                         </span>
                     @enderror
 
+                    @if (config('app.recaptcha_enabled'))
+                        <div class="my-4">
+                            {!! htmlFormSnippet() !!} <!-- reCAPTCHA widget -->
+                        </div>
+
+                        @error('g-recaptcha-response')
+                            <span class="text-xs text-red-500" role="alert">
+                                {{ $message }}
+                            </span>
+                        @enderror
+                    @endif
+
                     <x-button-link.primary class="inline-block !w-full my-2" elementType="button" type="submit">
                         {{ __('Send Password Reset Link') }}
                     </x-button-link.primary>
@@ -43,5 +55,11 @@
             </p>
         </div>
     </x-slot>
+
+    @if (config('app.recaptcha_enabled'))
+        @push('tail')
+            {!! htmlScriptTagJsApi() !!} <!-- Include reCAPTCHA script -->
+        @endpush
+    @endif
 
 </x-layouts.focus>
