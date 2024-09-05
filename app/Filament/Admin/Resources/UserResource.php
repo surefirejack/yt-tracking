@@ -49,7 +49,7 @@ class UserResource extends Resource
                         ->maxLength(255),
                     Forms\Components\Select::make('roles')
                         ->multiple()
-                        ->relationship('roles', 'name', modifyQueryUsing: function ($query, Model $record) {
+                        ->relationship('roles', 'name', modifyQueryUsing: function ($query) {
                             return $query->where('name', 'not like', TenancyPermissionConstants::TENANCY_ROLE_PREFIX.'%');
                         })
                         ->preload(),
