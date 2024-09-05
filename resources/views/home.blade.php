@@ -47,7 +47,7 @@
         </div>
     </x-section.hero>
 
-    <x-section.columns class="max-w-none md:max-w-6xl" id="features">
+    <x-section.columns class="max-w-none md:max-w-6xl pt-16" id="features">
         <x-section.column>
             <div x-intersect="$el.classList.add('slide-in-top')">
                 <x-heading.h6 class="text-primary-500">
@@ -751,6 +751,5 @@
             </x-accordion.item>
         </x-accordion>
     </div>
-
 
 </x-layouts.app>
