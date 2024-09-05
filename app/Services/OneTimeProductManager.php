@@ -8,6 +8,7 @@ use App\Models\OneTimeProductPaymentProviderData;
 use App\Models\OneTimeProductPrice;
 use App\Models\OneTimeProductPricePaymentProviderData;
 use App\Models\PaymentProvider;
+use Illuminate\Support\Collection;
 
 class OneTimeProductManager
 {
@@ -40,6 +41,7 @@ class OneTimeProductManager
         }
 
         return OneTimeProduct::where('slug', $slug)
+            ->where('is_active', true)
             ->whereHas('prices', function ($query) use ($defaultCurrencyObject) {
                 $query->where('currency_id', $defaultCurrencyObject->id);
             })
@@ -47,6 +49,36 @@ class OneTimeProductManager
                 $query->where('currency_id', $defaultCurrencyObject->id);
             }])
             ->first();
+    }
+
+    public function getAllProductsWithPrices(string $sortBy = 'name', string $sortDirection = 'asc'): Collection
+    {
+        $sortBy = in_array($sortBy, ['id', 'price', 'name', 'created_at', 'updated_at']) ? $sortBy : 'id';
+        $sortDirection = in_array($sortDirection, ['asc', 'desc']) ? $sortDirection : 'asc';
+
+        $defaultCurrency = config('app.default_currency');
+
+        $defaultCurrencyObject = Currency::where('code', $defaultCurrency)->first();
+
+        if (! $defaultCurrencyObject) {
+            return collect();
+        }
+
+        $query = OneTimeProduct::where('is_active', true)
+            ->whereHas('prices', function ($query) use ($defaultCurrencyObject) {
+                $query->where('currency_id', $defaultCurrencyObject->id);
+            });
+
+        if ($sortBy === 'price') {
+            $query->join('one_time_product_prices', 'one_time_products.id', '=', 'one_time_product_prices.one_time_product_id')
+                ->where('one_time_product_prices.currency_id', $defaultCurrencyObject->id)
+                ->orderBy('one_time_product_prices.price', $sortDirection)
+                ->select('one_time_products.*');
+        } else {
+            $query->orderBy($sortBy, $sortDirection);
+        }
+
+        return $query->get();
     }
 
     public function getPaymentProviderProductId(OneTimeProduct $oneTimeProduct, PaymentProvider $paymentProvider): ?string
