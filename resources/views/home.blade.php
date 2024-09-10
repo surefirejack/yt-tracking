@@ -607,6 +607,20 @@
         </div>
     </div>
 
+    <div class="mx-4 mt=16">
+        <x-heading.h6 class="text-center mt-20 text-primary-500" id="pricing">
+            {{ __('We worked for Months, So You Can Ship in Days') }}
+        </x-heading.h6>
+        <x-heading.h2 class="text-primary-900 text-center">
+            {{ __('Launch your SaaS Today') }}
+        </x-heading.h2>
+    </div>
+
+    <div class="pricing">
+        <x-plans.all calculate-saving-rates="true"/>
+        <x-products.all />
+    </div>
+
     <div class="text-center mt-24 mx-4" id="faq">
         <x-heading.h6 class="text-primary-500">
             {{ __('FAQ') }}

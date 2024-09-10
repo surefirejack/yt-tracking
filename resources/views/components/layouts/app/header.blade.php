@@ -23,7 +23,7 @@
                 <x-layouts.app.user-menu></x-layouts.app.user-menu>
             @else
                 <x-link class="hidden md:block text-primary-50" href="{{route('login')}}">{{ __('Login') }}</x-link>
-                <x-button-link.secondary elementType="a" href="#plans">{{ __('Get started') }}</x-button-link.secondary>
+                <x-button-link.secondary elementType="a" href="#pricing">{{ __('Get started') }}</x-button-link.secondary>
             @endauth
         </div>
     </div>
