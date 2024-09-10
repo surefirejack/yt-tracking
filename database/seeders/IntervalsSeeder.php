@@ -13,6 +13,21 @@ class IntervalsSeeder extends Seeder
      */
     public function run(): void
     {
+        // state the intervals and adverbs to be picked up by translation generator
+        $intervals = [
+            'day' => __('day'),
+            'week' => __('week'),
+            'month' => __('month'),
+            'year' => __('year'),
+        ];
+
+        $adverbs = [
+            'daily' => __('daily'),
+            'weekly' => __('weekly'),
+            'monthly' => __('monthly'),
+            'yearly' => __('yearly'),
+        ];
+
         DB::table('intervals')->upsert([
             [
                 'name' => 'day',

@@ -87,6 +87,9 @@ class PlanResource extends Resource
                             ->helperText(__('The number of intervals (weeks, months, etc) between each billing cycle.')),
                         Forms\Components\Select::make('interval_id')
                             ->relationship('interval', 'name')
+                            ->options(function () {
+                                return Interval::all()->mapWithKeys(fn ($interval) => [$interval->id => __($interval->name)]);
+                            })
                             ->helperText(__('The interval (week, month, etc) between each billing cycle.'))
                             ->required()
                             ->preload(),
@@ -115,6 +118,9 @@ class PlanResource extends Resource
                             ),
                         Forms\Components\Select::make('trial_interval_id')
                             ->relationship('trialInterval', 'name')
+                            ->options(function () {
+                                return Interval::all()->mapWithKeys(fn ($interval) => [$interval->id => __($interval->name)]);
+                            })
                             ->requiredWith('has_trial')
                             ->preload()
                             ->required(
