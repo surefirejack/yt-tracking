@@ -17,7 +17,7 @@
                 @if($plan->type === \App\Constants\PlanType::SEAT_BASED->value)
                     <span class="text-sm">{{__('per seat')}}</span>
                 @endif
-                / {{$plan->interval_count > 1 ? $plan->interval_coun : '' }} {{ $plan->interval->name }}
+                / {{$plan->interval_count > 1 ? $plan->interval_count : '' }} {{ __($plan->interval->name) }}
             </div>
         </div>
         <div class="mt-3 space-y-3">

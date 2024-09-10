@@ -13,36 +13,51 @@ class IntervalsSeeder extends Seeder
      */
     public function run(): void
     {
+        // state the intervals and adverbs to be picked up by translation generator
+        $intervals = [
+            'day' => __('day'),
+            'week' => __('week'),
+            'month' => __('month'),
+            'year' => __('year'),
+        ];
+
+        $adverbs = [
+            'daily' => __('daily'),
+            'weekly' => __('weekly'),
+            'monthly' => __('monthly'),
+            'yearly' => __('yearly'),
+        ];
+
         DB::table('intervals')->upsert([
             [
-                'name' => __('day'),
+                'name' => 'day',
                 'slug' => 'day',
                 'date_identifier' => 'day',
-                'adverb' => __('daily'),
+                'adverb' => 'daily',
                 'created_at' => Carbon::now()->format('Y-m-d H:i:s'),
                 'updated_at' => Carbon::now()->format('Y-m-d H:i:s'),
             ],
             [
-                'name' => __('week'),
+                'name' => 'week',
                 'slug' => 'week',
                 'date_identifier' => 'week',
-                'adverb' => __('weekly'),
+                'adverb' => 'weekly',
                 'created_at' => Carbon::now()->format('Y-m-d H:i:s'),
                 'updated_at' => Carbon::now()->format('Y-m-d H:i:s'),
             ],
             [
-                'name' => __('month'),
+                'name' => 'month',
                 'slug' => 'month',
                 'date_identifier' => 'month',
-                'adverb' => __('monthly'),
+                'adverb' => 'monthly',
                 'created_at' => Carbon::now()->format('Y-m-d H:i:s'),
                 'updated_at' => Carbon::now()->format('Y-m-d H:i:s'),
             ],
             [
-                'name' => __('year'),
+                'name' => 'year',
                 'slug' => 'year',
                 'date_identifier' => 'year',
-                'adverb' => __('yearly'),
+                'adverb' => 'yearly',
                 'created_at' => Carbon::now()->format('Y-m-d H:i:s'),
                 'updated_at' => Carbon::now()->format('Y-m-d H:i:s'),
             ],
