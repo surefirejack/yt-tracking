@@ -88,6 +88,60 @@ class TenantManager
         return true;
     }
 
+    public function addUserToTenant(Tenant $tenant, User $user, ?string $roleName = null): bool
+    {
+        if ($this->doTenantSubscriptionsAllowAddingUser($tenant) === false) {
+            return false;
+        }
+
+        $tenantSubscriptions = $this->tenantSubscriptionManager->getTenantSubscriptions($tenant);
+        $tenantUserCount = $tenant->users->count();
+        $tenantLockKey = $this->getTenantLockName($tenant);
+
+        $lock = Cache::lock($tenantLockKey, 30);
+
+        try {
+            if ($lock->block(30)) {  // use a lock to avoid race conditions
+                foreach ($tenantSubscriptions as $subscription) {
+                    if ($subscription->plan->type === PlanType::SEAT_BASED->value &&
+                        $subscription->quantity < $tenantUserCount + 1
+                    ) {
+                        $result = $this->tenantSubscriptionManager->updateSubscriptionQuantity($subscription, $tenantUserCount + 1);
+
+                        if ($result === false) {
+                            return false;
+                        }
+                    }
+                }
+
+                DB::transaction(function () use ($tenant, $user, $roleName) {
+                    // add the user to the tenant
+                    $tenant->users()->attach($user);
+
+                    $user->tenants()->update(['is_default' => false]);
+
+                    // set the default tenant for the user to this tenant
+                    $user->tenants()->updateExistingPivot($tenant->id, ['is_default' => true]);
+
+                    if ($roleName) {
+                        $this->tenantPermissionManager->assignTenantUserRole($tenant, $user, $roleName);
+                    }
+                });
+
+                UserJoinedTenant::dispatch($user, $tenant);
+            }
+        } catch (\Exception $e) {
+            Log::error($e->getMessage());
+
+            return false;
+        } finally {
+            $lock?->release();
+        }
+
+        return true;
+
+    }
+
     public function syncSubscriptionQuantity(Subscription $subscription)
     {
         $tenant = $subscription->tenant;
