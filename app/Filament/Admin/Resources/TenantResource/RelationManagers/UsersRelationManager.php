@@ -5,14 +5,16 @@ namespace App\Filament\Admin\Resources\TenantResource\RelationManagers;
 use App\Constants\TenancyPermissionConstants;
 use App\Filament\Admin\Resources\UserResource\Pages\EditUser;
 use App\Models\User;
+use App\Services\TenantManager;
 use App\Services\TenantPermissionManager;
 use Filament\Forms\Form;
 use Filament\Notifications\Notification;
 use Filament\Resources\RelationManagers\RelationManager;
+use Filament\Support\Services\RelationshipJoiner;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\Relation;
 
 class UsersRelationManager extends RelationManager
 {
@@ -61,8 +63,59 @@ class UsersRelationManager extends RelationManager
                 //
             ])
             ->headerActions([
+                Tables\Actions\AttachAction::make()
+                    ->action(function (array $arguments, array $data, Form $form, Table $table, TenantManager $tenantManager): void {
+                        // overwritten from the parent action definition from AttachAction
+
+                        /** @var BelongsToMany $relationship */
+                        $relationship = Relation::noConstraints(fn () => $table->getRelationship());
+
+                        $relationshipQuery = app(RelationshipJoiner::class)->prepareQueryForNoConstraints($relationship);
+
+                        $isMultiple = is_array($data['recordId']);
+
+                        $record = $relationshipQuery
+                            ->{$isMultiple ? 'whereIn' : 'where'}($relationship->getQualifiedRelatedKeyName(), $data['recordId'])
+                            ->{$isMultiple ? 'get' : 'first'}();
+
+                        $result = $tenantManager->addUserToTenant($this->ownerRecord, $record, TenancyPermissionConstants::ROLE_USER);
+
+                        if ($result === false) {
+                            Notification::make()
+                                ->title(__('User could not be added to tenant.'))
+                                ->danger()
+                                ->send();
+                        } else {
+                            Notification::make()
+                                ->title(__('User has been added to tenant.'))
+                                ->success()
+                                ->send();
+                        }
+                    })
+                    ->label(__('Add User'))
+                    ->modalHeading(__('Add User')),
             ])
             ->actions([
+                Tables\Actions\DetachAction::make()
+                    ->action(function (User $record, TenantManager $tenantManager): void {
+                        $result = $tenantManager->removeUser($this->ownerRecord, $record);
+
+                        if ($result === false) {
+                            Notification::make()
+                                ->title(__('User could not be removed from tenant.'))
+                                ->danger()
+                                ->send();
+                        } else {
+                            Notification::make()
+                                ->title(__('User has been removed from tenant.'))
+                                ->success()
+                                ->send();
+                        }
+                    })
+                    ->disabled(function () {
+                        return $this->ownerRecord->users->count() <= 1;
+                    })
+                    ->label(__('Remove')),
                 Tables\Actions\Action::make('edit')
                     ->url(fn ($record) => EditUser::getUrl(['record' => $record]))
                     ->label(__('Edit'))

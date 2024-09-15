@@ -218,6 +218,62 @@ class TenantManagerTest extends FeatureTest
         Event::assertNotDispatched(UserJoinedTenant::class);
     }
 
+    public function test_add_user_to_tenant()
+    {
+        $tenant = $this->createTenant();
+
+        $plan = Plan::factory()->create([
+            'slug' => 'plan-slug-'.uniqid(),
+            'is_active' => true,
+            'type' => PlanType::SEAT_BASED->value,
+        ]);
+
+        PlanPrice::create([
+            'plan_id' => $plan->id,
+            'currency_id' => Currency::where('code', 'USD')->first()->id,
+            'price' => 100,
+        ]);
+
+        /** @var PaymentProviderInterface|MockInterface $paymentProvider */
+        $paymentProvider = $this->addPaymentProvider();
+
+        $subscription = Subscription::factory()->create([
+            'tenant_id' => $tenant->id,
+            'status' => SubscriptionStatus::ACTIVE->value,
+            'plan_id' => $plan->id,
+            'quantity' => 1,
+            'payment_provider_id' => PaymentProvider::where('slug', 'paymore')->first()->id,
+        ]);
+
+        $user = $this->createUser();
+
+        $paymentProvider->shouldReceive('updateSubscriptionQuantity');
+
+        // get from the container
+        $paymentManager = app(PaymentManager::class);
+
+        $permissionManager = new TenantPermissionManager();
+        $tenantManager = new TenantManager(
+            $permissionManager,
+            new TenantSubscriptionManager($paymentManager),
+        );
+
+        Event::fake();
+
+        $result = $tenantManager->addUserToTenant($tenant, $user, TenancyPermissionConstants::ROLE_ADMIN);
+
+        $this->assertTrue($result);
+
+        $tenantUsers = $tenant->users()->get();
+        $this->assertEquals(1, $tenantUsers->count());
+
+        $userRoles = $permissionManager->getTenantUserRoles($tenant, $user);
+        $this->assertContains(TenancyPermissionConstants::ROLE_ADMIN, $userRoles);
+
+        // make sure that the UserJoinedTenant event was dispatched
+        Event::assertDispatched(UserJoinedTenant::class);
+    }
+
     public function test_remove_user()
     {
         $tenant = $this->createTenant();

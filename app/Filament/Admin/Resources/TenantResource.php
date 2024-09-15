@@ -5,6 +5,7 @@ namespace App\Filament\Admin\Resources;
 use App\Filament\Admin\Resources\TenantResource\Pages;
 use App\Filament\Admin\Resources\TenantResource\RelationManagers;
 use App\Models\Tenant;
+use App\Models\User;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -27,6 +28,11 @@ class TenantResource extends Resource
                 Forms\Components\TextInput::make('name')
                     ->required()
                     ->maxLength(255),
+                Forms\Components\Select::make('created_by')
+                    ->getSearchResultsUsing(fn (string $search): array => User::where('name', 'like', "%{$search}%")->limit(20)->pluck('name', 'id')->toArray())
+                    ->getOptionLabelUsing(fn ($value): ?string => User::find($value)?->name)
+                    ->default(auth()->id())
+                    ->searchable(),
             ]);
     }
 
@@ -67,6 +73,7 @@ class TenantResource extends Resource
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
+            ->defaultSort('updated_at', 'desc')
             ->filters([
                 //
             ])
@@ -101,10 +108,4 @@ class TenantResource extends Resource
     {
         return false;
     }
-
-    public static function canCreate(): bool
-    {
-        return false;
-    }
-
 }
