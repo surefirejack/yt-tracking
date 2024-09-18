@@ -9,6 +9,7 @@ use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Model;
+use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 
 class RoleResource extends Resource
@@ -26,21 +27,51 @@ class RoleResource extends Resource
                 Forms\Components\Section::make()->schema([
                     Forms\Components\TextInput::make('name')
                         ->required()
-                        ->helperText('The name of the role.')
+                        ->helperText(__('The name of the role. Tenancy roles should start with ":prefix", and only tenancy permissions can be assigned to tenancy roles.', [
+                            'prefix' => TenancyPermissionConstants::TENANCY_ROLE_PREFIX,
+                        ]))
                         ->disabled(fn (?Model $record) => $record && $record->name === 'admin')
                         ->maxLength(255),
                     Forms\Components\Select::make('permissions')
                         ->disabled(fn (?Model $record) => $record && $record->name === 'admin')
-                        ->relationship('permissions', 'name', modifyQueryUsing: function ($query, Model $record) {
-                            if (str_starts_with($record->name, TenancyPermissionConstants::TENANCY_ROLE_PREFIX)) {
-                                return $query->where('name', 'like', TenancyPermissionConstants::TENANCY_ROLE_PREFIX.'%');
-                            } else {
-                                return $query->where('name', 'not like', TenancyPermissionConstants::TENANCY_ROLE_PREFIX.'%');
-                            }
-                        })
+                        ->relationship('permissions', 'name')
+                        ->rules([
+                            fn (Forms\Get $get): \Closure => function (string $attribute, $value, \Closure $fail) use ($get) {
+                                $roleName = $get('name');
+                                if (str_starts_with($roleName, TenancyPermissionConstants::TENANCY_ROLE_PREFIX)) {
+                                    $failedPermissions = [];
+                                    Permission::whereIn('id', $value)->get()->each(function ($permission) use (&$failedPermissions) {
+                                        if (! str_starts_with($permission->name, TenancyPermissionConstants::TENANCY_PERMISSION_PREFIX)) {
+                                            $failedPermissions[] = $permission->name;
+                                        }
+                                    });
+
+                                    if (count($failedPermissions) > 0) {
+                                        $fail(__('The following permissions are not allowed for tenancy roles -> :permissions', [
+                                            'prefix' => TenancyPermissionConstants::TENANCY_ROLE_PREFIX,
+                                            'permissions' => implode(', ', $failedPermissions),
+                                        ]));
+                                    }
+                                } else {
+                                    $failedPermissions = [];
+                                    Permission::whereIn('id', $value)->get()->each(function ($permission) use (&$failedPermissions) {
+                                        if (str_starts_with($permission->name, TenancyPermissionConstants::TENANCY_PERMISSION_PREFIX)) {
+                                            $failedPermissions[] = $permission->name;
+                                        }
+                                    });
+
+                                    if (count($failedPermissions) > 0) {
+                                        $fail(__('The following permissions are not allowed for admin roles -> :permissions', [
+                                            'prefix' => TenancyPermissionConstants::TENANCY_ROLE_PREFIX,
+                                            'permissions' => implode(', ', $failedPermissions),
+                                        ]));
+                                    }
+                                }
+                            },
+                        ])
                         ->multiple()
                         ->preload()
-                        ->helperText('Choose the permissions for this role.')
+                        ->helperText(__('Choose the permissions for this role. Tenancy permissions can only be assigned to tenancy roles.'))
                         ->placeholder(__('Select permissions...')),
                 ]),
             ]);
