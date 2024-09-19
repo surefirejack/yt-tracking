@@ -38,7 +38,7 @@ class UsersRelationManager extends RelationManager
                         return $tenantPermissionManager->getTenantUserRoles($this->ownerRecord, $user)[0] ?? null;
                     })
                     ->options(function (TenantPermissionManager $tenantPermissionManager) {
-                        return TenancyPermissionConstants::getRoles();
+                        return $tenantPermissionManager->getAllAvailableTenantRolesForDisplay();
                     })
                     ->updateStateUsing(function (User $user, ?string $state, TenantPermissionManager $tenantPermissionManager) {
                         if ($state === null) {

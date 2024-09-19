@@ -2,9 +2,12 @@
 
 namespace App\Services;
 
+use App\Constants\TenancyPermissionConstants;
 use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Str;
+use Spatie\Permission\Models\Role;
 
 class TenantPermissionManager
 {
@@ -68,5 +71,17 @@ class TenantPermissionManager
     public function removeAllTenantUserRoles(Tenant $tenant, User $user): void
     {
         $user->tenants()->where('tenant_id', $tenant->id)->first()->pivot->syncRoles([]);
+    }
+
+    public function getAllAvailableTenantRolesForDisplay()
+    {
+        $roles = Role::where('name', 'like', TenancyPermissionConstants::TENANCY_ROLE_PREFIX.'%')->get()->pluck('name');
+
+        $result = [];
+        foreach ($roles as $role) {
+            $result[$role] = Str::of($role)->replace(TenancyPermissionConstants::TENANCY_ROLE_PREFIX, '')->replace('-', ' ')->title();
+        }
+
+        return $result;
     }
 }
