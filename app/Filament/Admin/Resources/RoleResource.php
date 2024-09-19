@@ -31,6 +31,7 @@ class RoleResource extends Resource
                             'prefix' => TenancyPermissionConstants::TENANCY_ROLE_PREFIX,
                         ]))
                         ->disabled(fn (?Model $record) => $record && $record->name === 'admin')
+                        ->unique()
                         ->maxLength(255),
                     Forms\Components\Select::make('permissions')
                         ->disabled(fn (?Model $record) => $record && $record->name === 'admin')

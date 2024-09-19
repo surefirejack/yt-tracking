@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Constants;
+
 class TenancyPermissionConstants
 {
     public const TENANCY_ROLE_PREFIX = 'tenancy:';
@@ -20,12 +21,4 @@ class TenancyPermissionConstants
     public const PERMISSION_INVITE_MEMBERS = 'tenancy: invite members';
     public const PERMISSION_MANAGE_TEAM = 'tenancy: manage team';
     public const PERMISSION_UPDATE_TENANT_SETTINGS = 'tenancy: update tenant settings';
-
-    public static function getRoles(): array
-    {
-        return [
-            self::ROLE_ADMIN => __('Admin'),
-            self::ROLE_USER => __('User'),
-        ];
-    }
 }
