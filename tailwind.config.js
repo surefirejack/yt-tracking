@@ -10,6 +10,7 @@ export default {
         "./resources/**/*.blade.php",
         './app/Filament/**/*.php',
         './resources/views/filament/**/*.blade.php',
+        './resources/views/vendor/**/*.blade.php',
         './vendor/filament/**/*.blade.php',
         "./resources/**/*.js",
         "./resources/**/*.vue",
