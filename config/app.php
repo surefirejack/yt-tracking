@@ -156,7 +156,7 @@ return [
     'email_color_tint' => '#6f27e5',  // used to add brand color to email templates (since it's not possible to use tailwind vars in emails)
 
     'google_tracking_id' => env('GOOGLE_TRACKING_ID'),
-    'posthog_html_snippet' => env('POSTHOG_HTML_SNIPPET'),
+    'tracking_scripts' => env('TRACKING_SCRIPTS'),
 
     'payment' => [
         'proration_enabled' => env('PAYMENT_PRORATION_ENABLED', true),

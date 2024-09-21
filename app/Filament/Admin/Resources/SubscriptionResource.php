@@ -78,13 +78,16 @@ class SubscriptionResource extends Resource
                 Tables\Columns\TextColumn::make('tenant.name')->label(__('Tenant'))->searchable(),
                 Tables\Columns\TextColumn::make('plan.name')->label(__('Plan'))->searchable(),
                 Tables\Columns\TextColumn::make('price')->formatStateUsing(function (string $state, $record) {
-                    if ($record->plan->type === PlanType::FLAT_RATE->value) {
-                        return money($state, $record->currency->code).' / '.$record->interval->name;
-                    } elseif ($record->plan->type === PlanType::SEAT_BASED->value) {
-                        return money($state, $record->currency->code).' / '.$record->interval->name.' / '.__('seat');
+                    $interval = $record->interval->name;
+                    if ($record->interval_count > 1) {
+                        $interval = $record->interval_count.' '.__(str()->of($record->interval->name)->plural()->toString());
                     }
 
-                    return money($state, $record->currency->code);
+                    if ($record->plan->type === PlanType::SEAT_BASED->value) {
+                        $interval .= ' / '.__('seat');
+                    }
+
+                    return money($state, $record->currency->code).' / '.$interval;
                 }),
                 Tables\Columns\TextColumn::make('payment_provider_id')
                     ->formatStateUsing(function (string $state, $record) {
@@ -224,13 +227,16 @@ class SubscriptionResource extends Resource
                                             ]),
                                         TextEntry::make('plan.name'),
                                         TextEntry::make('price')->formatStateUsing(function (string $state, $record) {
-                                            if ($record->plan->type === PlanType::FLAT_RATE->value) {
-                                                return money($state, $record->currency->code).' / '.$record->interval->name;
-                                            } elseif ($record->plan->type === PlanType::SEAT_BASED->value) {
-                                                return money($state, $record->currency->code).' / '.$record->interval->name.' / '.__('seat');
+                                            $interval = $record->interval->name;
+                                            if ($record->interval_count > 1) {
+                                                $interval = $record->interval_count.' '.__(str()->of($record->interval->name)->plural()->toString());
                                             }
 
-                                            return money($state, $record->currency->code);
+                                            if ($record->plan->type === PlanType::SEAT_BASED->value) {
+                                                $interval .= ' / '.__('seat');
+                                            }
+
+                                            return money($state, $record->currency->code).' / '.$interval;
                                         }),
                                         TextEntry::make('payment_provider_id')
                                             ->formatStateUsing(function (string $state, $record) {

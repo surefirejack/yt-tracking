@@ -45,7 +45,7 @@ class GeneralSettings extends Component implements HasForms
             'datetime_format' => $this->configManager->get('app.datetime_format'),
             'default_currency' => $this->configManager->get('app.default_currency'),
             'google_tracking_id' => $this->configManager->get('app.google_tracking_id'),
-            'posthog_html_snippet' => $this->configManager->get('app.posthog_html_snippet'),
+            'tracking_scripts' => $this->configManager->get('app.tracking_scripts'),
             'payment_proration_enabled' => $this->configManager->get('app.payment.proration_enabled'),
             'default_email_provider' => $this->configManager->get('mail.default'),
             'default_email_from_name' => $this->configManager->get('mail.from.name'),
@@ -64,6 +64,7 @@ class GeneralSettings extends Component implements HasForms
             'recaptcha_enabled' => $this->configManager->get('app.recaptcha_enabled', false),
             'recaptcha_api_site_key' => $this->configManager->get('recaptcha.api_site_key', ''),
             'recaptcha_api_secret_key' => $this->configManager->get('recaptcha.api_secret_key', ''),
+            'cookie_consent_enabled' => $this->configManager->get('cookie-consent.enabled', false),
         ]);
     }
 
@@ -166,14 +167,18 @@ class GeneralSettings extends Component implements HasForms
                                 ->required()
                                 ->email(),
                         ]),
-                    Tabs\Tab::make(__('Analytics'))
+                    Tabs\Tab::make(__('Analytics & Cookies'))
                         ->icon('heroicon-o-squares-2x2')
                         ->schema([
+                            Toggle::make('cookie_consent_enabled')
+                                ->label(__('Cookie Consent Bar Enabled'))
+                                ->helperText(__('If enabled, the cookie consent bar will be shown to users.')),
                             TextInput::make('google_tracking_id')
+                                ->helperText(__('Google analytics will only be inserted if either "Cookie Consent Bar" is disabled or in case user has consented to cookies.'))
                                 ->label(__('Google Tracking ID')),
-                            Textarea::make('posthog_html_snippet')
-                                ->helperText(__('Paste your Posthog HTML snippet here.'))
-                                ->label(__('Posthog HTML Snippet')),
+                            Textarea::make('tracking_scripts')
+                                ->helperText(__('Paste in any other analytics or tracking scripts here. Those scripts will only be inserted if either "Cookie Consent Bar" is disabled or in case user has consented to cookies.'))
+                                ->label(__('Other Tracking Scripts')),
                         ]),
                     Tabs\Tab::make(__('Customer Dashboard'))
                         ->icon('heroicon-o-squares-2x2')
@@ -246,7 +251,7 @@ class GeneralSettings extends Component implements HasForms
         $this->configManager->set('app.datetime_format', $data['datetime_format']);
         $this->configManager->set('app.default_currency', $data['default_currency']);
         $this->configManager->set('app.google_tracking_id', $data['google_tracking_id'] ?? '');
-        $this->configManager->set('app.posthog_html_snippet', $data['posthog_html_snippet'] ?? '');
+        $this->configManager->set('app.tracking_scripts', $data['tracking_scripts'] ?? '');
         $this->configManager->set('app.payment.proration_enabled', $data['payment_proration_enabled']);
         $this->configManager->set('mail.default', $data['default_email_provider']);
         $this->configManager->set('mail.from.name', $data['default_email_from_name']);
@@ -265,6 +270,7 @@ class GeneralSettings extends Component implements HasForms
         $this->configManager->set('app.recaptcha_enabled', $data['recaptcha_enabled']);
         $this->configManager->set('recaptcha.api_site_key', $data['recaptcha_api_site_key']);
         $this->configManager->set('recaptcha.api_secret_key', $data['recaptcha_api_secret_key']);
+        $this->configManager->set('cookie-consent.enabled', $data['cookie_consent_enabled']);
 
         Notification::make()
             ->title(__('Settings Saved'))
