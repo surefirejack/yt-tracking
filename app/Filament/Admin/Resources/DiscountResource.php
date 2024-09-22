@@ -9,6 +9,7 @@ use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 
 class DiscountResource extends Resource
 {
@@ -47,13 +48,17 @@ class DiscountResource extends Resource
                     ]),
                     Forms\Components\Select::make('plans')
                         ->multiple()
-                        ->relationship('plans', 'name')
+                        ->relationship('plans', 'name', modifyQueryUsing: function (Builder $query) {
+                            return $query->select('plans.id', 'plans.name')->distinct();
+                        })
                         ->preload()
                         ->helperText(__('Select the plans that this discount will be applied to. If you leave empty, discount will be applied to all plans.')),
                     Forms\Components\Select::make('oneTimeProducts')
                         ->label(__('One-time purchase products'))
                         ->multiple()
-                        ->relationship('oneTimeProducts', 'name')
+                        ->relationship('oneTimeProducts', 'name', modifyQueryUsing: function (Builder $query) {
+                            return $query->select('one_time_products.id', 'one_time_products.name')->distinct();
+                        })
                         ->preload()
                         ->helperText(__('Select the one-time products that this discount will be applied to. If you leave empty, discount will be applied to all one-time products.')),
                     //                    Forms\Components\Select::make('action_type')  // TODO: implement this in the future
