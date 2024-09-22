@@ -25,7 +25,7 @@
         "laravel/socialite": "^5.6",
         "laravel/tinker": "^2.8",
         "laravel/ui": "^4.2",
-        "livewire/livewire": "^3.2",
+        "livewire/livewire": "v3.5.6",
         "mews/purifier": "^3.4",
         "mpociot/versionable": "^4.4",
         "resend/resend-php": "^0.12.0",
