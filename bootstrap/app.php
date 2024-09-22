@@ -16,7 +16,6 @@ return Illuminate\Foundation\Application::configure(basePath: dirname(__DIR__))
         ]);
 
         $middleware->alias([
-            'redirected-auth' => \App\Http\Middleware\RedirectedAuth::class,
             'sitemapped' => \App\Http\Middleware\Sitemapped::class,
             'role' => \Spatie\Permission\Middleware\RoleMiddleware::class,
             'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,
