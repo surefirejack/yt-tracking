@@ -13,6 +13,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Collection;
@@ -57,12 +58,12 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail, Has
         'password' => 'hashed',
     ];
 
-    public function roadmapItems()
+    public function roadmapItems(): HasMany
     {
         return $this->hasMany(RoadmapItem::class);
     }
 
-    public function roadmapItemUpvotes()
+    public function roadmapItemUpvotes(): BelongsToMany
     {
         return $this->belongsToMany(RoadmapItem::class, 'roadmap_item_user_upvotes');
     }
@@ -82,7 +83,7 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail, Has
         return $this->hasMany(Subscription::class);
     }
 
-    public function orders()
+    public function orders(): HasMany
     {
         return $this->hasMany(Order::class);
     }
@@ -150,7 +151,7 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail, Has
         $this->notify(new QueuedVerifyEmail());
     }
 
-    public function address()
+    public function address(): HasOne
     {
         return $this->hasOne(Address::class);
     }

@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class PlanPaymentProviderData extends Model
 {
@@ -15,12 +16,12 @@ class PlanPaymentProviderData extends Model
         'payment_provider_product_id',
     ];
 
-    public function plan()
+    public function plan(): BelongsTo
     {
         return $this->belongsTo(Plan::class);
     }
 
-    public function paymentProvider()
+    public function paymentProvider(): BelongsTo
     {
         return $this->belongsTo(PaymentProvider::class);
     }

@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class DiscountCodeRedemption extends Model
 {
@@ -16,22 +17,22 @@ class DiscountCodeRedemption extends Model
         'order_id',
     ];
 
-    public function discountCode()
+    public function discountCode(): BelongsTo
     {
         return $this->belongsTo(DiscountCode::class);
     }
 
-    public function subscription()
+    public function subscription(): BelongsTo
     {
         return $this->belongsTo(Subscription::class);
     }
 
-    public function user()
+    public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
-    public function order()
+    public function order(): BelongsTo
     {
         return $this->belongsTo(Order::class);
     }

@@ -234,7 +234,7 @@ class SubscriptionManager
 
         $now = Carbon::now();
 
-        return round(abs(now()->add($interval->date_identifier, $intervalCount)->diffInDays($now)));
+        return intval(round(abs(now()->add($interval->date_identifier, $intervalCount)->diffInDays($now))));
     }
 
     public function changePlan(Subscription $subscription, PaymentProviderInterface $paymentProviderStrategy, string $newPlanSlug, bool $isProrated = false): bool

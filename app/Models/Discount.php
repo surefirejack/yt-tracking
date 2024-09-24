@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Discount extends Model
 {
@@ -38,27 +40,27 @@ class Discount extends Model
         });
     }
 
-    public function discountPaymentProviderData()
+    public function discountPaymentProviderData(): HasMany
     {
         return $this->hasMany(DiscountPaymentProviderData::class);
     }
 
-    public function plans()
+    public function plans(): BelongsToMany
     {
         return $this->belongsToMany(Plan::class);
     }
 
-    public function oneTimeProducts()
+    public function oneTimeProducts(): BelongsToMany
     {
         return $this->belongsToMany(OneTimeProduct::class);
     }
 
-    public function subscriptions()
+    public function subscriptions(): BelongsToMany
     {
         return $this->belongsToMany(Subscription::class);
     }
 
-    public function codes()
+    public function codes(): HasMany
     {
         return $this->hasMany(DiscountCode::class);
     }

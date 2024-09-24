@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class RoadmapItem extends Model
 {
@@ -20,12 +22,12 @@ class RoadmapItem extends Model
         'user_id',
     ];
 
-    public function user()
+    public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
-    public function upvotes()
+    public function upvotes(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'roadmap_item_user_upvotes')->withTimestamps();
     }

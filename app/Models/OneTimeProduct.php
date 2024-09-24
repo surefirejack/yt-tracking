@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class OneTimeProduct extends Model
 {
@@ -24,7 +25,7 @@ class OneTimeProduct extends Model
         'metadata' => 'array',
     ];
 
-    public function prices()
+    public function prices(): HasMany
     {
         return $this->hasMany(OneTimeProductPrice::class);
     }
@@ -44,7 +45,7 @@ class OneTimeProduct extends Model
         });
 
         static::deleting(function (OneTimeProduct $oneTimeProduct) {
-            if (!$oneTimeProduct->isDeletable()) {
+            if (! $oneTimeProduct->isDeletable()) {
                 throw new \Exception('Cannot delete a one-time product that has been ordered.');
             }
 
@@ -59,15 +60,15 @@ class OneTimeProduct extends Model
 
     public function isDeletable()
     {
-        return !$this->orderItems()->exists();
+        return ! $this->orderItems()->exists();
     }
 
-    public function paymentProviderData()
+    public function paymentProviderData(): HasMany
     {
         return $this->hasMany(OneTimeProductPaymentProviderData::class);
     }
 
-    public function orderItems()
+    public function orderItems(): HasMany
     {
         return $this->hasMany(OrderItem::class);
     }
