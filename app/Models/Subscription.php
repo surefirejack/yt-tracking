@@ -76,7 +76,7 @@ class Subscription extends Model
         return 'uuid';
     }
 
-    public function tenant()
+    public function tenant(): BelongsTo
     {
         return $this->belongsTo(Tenant::class);
     }
