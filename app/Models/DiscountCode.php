@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class DiscountCode extends Model
 {
@@ -15,12 +17,12 @@ class DiscountCode extends Model
     ];
 
 
-    public function discount()
+    public function discount(): BelongsTo
     {
         return $this->belongsTo(Discount::class);
     }
 
-    public function redemptions()
+    public function redemptions(): HasMany
     {
         return $this->hasMany(DiscountCodeRedemption::class);
     }

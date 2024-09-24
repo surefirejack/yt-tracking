@@ -105,7 +105,7 @@ class DiscountResource extends Resource
                         return $state.'%';
                     }
 
-                    return $state / 100;
+                    return intval($state) / 100;
                 }),
                 Tables\Columns\IconColumn::make('is_active')
                     ->boolean(),

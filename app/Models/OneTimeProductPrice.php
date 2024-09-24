@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class OneTimeProductPrice extends Model
 {
@@ -15,7 +17,7 @@ class OneTimeProductPrice extends Model
         'price',
     ];
 
-    public function currency()
+    public function currency(): BelongsTo
     {
         return $this->belongsTo(Currency::class);
     }
@@ -35,7 +37,7 @@ class OneTimeProductPrice extends Model
         });
     }
 
-    public function pricePaymentProviderData()
+    public function pricePaymentProviderData(): HasMany
     {
         return $this->hasMany(OneTimeProductPricePaymentProviderData::class);
     }

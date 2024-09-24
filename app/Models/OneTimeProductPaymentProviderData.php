@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class OneTimeProductPaymentProviderData extends Model
 {
@@ -15,12 +16,12 @@ class OneTimeProductPaymentProviderData extends Model
         'payment_provider_product_id',
     ];
 
-    public function oneTimeProduct()
+    public function oneTimeProduct(): BelongsTo
     {
         return $this->belongsTo(OneTimeProduct::class);
     }
 
-    public function paymentProvider()
+    public function paymentProvider(): BelongsTo
     {
         return $this->belongsTo(PaymentProvider::class);
     }

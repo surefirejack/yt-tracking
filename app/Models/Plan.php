@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Plan extends Model
 {
@@ -24,32 +26,32 @@ class Plan extends Model
         'max_users_per_tenant',
     ];
 
-    public function product()
+    public function product(): BelongsTo
     {
         return $this->belongsTo(Product::class);
     }
 
-    public function interval()
+    public function interval(): BelongsTo
     {
         return $this->belongsTo(Interval::class, 'interval_id');
     }
 
-    public function trialInterval()
+    public function trialInterval(): BelongsTo
     {
         return $this->belongsTo(Interval::class, 'trial_interval_id');
     }
 
-    public function prices()
+    public function prices(): HasMany
     {
         return $this->hasMany(PlanPrice::class);
     }
 
-    public function paymentProviderData()
+    public function paymentProviderData(): HasMany
     {
         return $this->hasMany(PlanPaymentProviderData::class);
     }
 
-    public function subscriptions()
+    public function subscriptions(): HasMany
     {
         return $this->hasMany(Subscription::class);
     }

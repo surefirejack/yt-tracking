@@ -129,6 +129,6 @@ class All extends Component
         $currentIntervalInWeeks = $intervalConversion[$currentInterval];
         $imaginaryIntervalInWeeks = $intervalConversion[$imaginaryInterval];
 
-        return ceil($currentPrice * $imaginaryIntervalInWeeks / $currentIntervalInWeeks);
+        return intval(ceil($currentPrice * $imaginaryIntervalInWeeks / $currentIntervalInWeeks));
     }
 }
