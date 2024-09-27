@@ -131,7 +131,8 @@ class SubscriptionManagerTest extends FeatureTest
 
     public function test_update_subscription_dispatches_subscribed_event()
     {
-        $user = $this->createUser();
+        $tenant = $this->createTenant();
+        $user = $this->createUser($tenant);
         $this->actingAs($user);
 
         $slug = Str::random();
@@ -144,6 +145,7 @@ class SubscriptionManagerTest extends FeatureTest
             'user_id' => $user->id,
             'status' => SubscriptionStatus::PENDING->value,
             'plan_id' => $plan->id,
+            'tenant_id' => $tenant->id,
         ]);
 
         /** @var SubscriptionManager $manager */
@@ -160,7 +162,8 @@ class SubscriptionManagerTest extends FeatureTest
 
     public function test_update_subscription_dispatches_canceled_event()
     {
-        $user = $this->createUser();
+        $tenant = $this->createTenant();
+        $user = $this->createUser($tenant);
         $this->actingAs($user);
 
         $slug = Str::random();
@@ -173,6 +176,7 @@ class SubscriptionManagerTest extends FeatureTest
             'user_id' => $user->id,
             'status' => SubscriptionStatus::ACTIVE->value,
             'plan_id' => $plan->id,
+            'tenant_id' => $tenant->id,
         ]);
 
         /** @var SubscriptionManager $manager */
@@ -189,7 +193,8 @@ class SubscriptionManagerTest extends FeatureTest
 
     public function test_update_subscription_dispatches_renewed_event()
     {
-        $user = $this->createUser();
+        $tenant = $this->createTenant();
+        $user = $this->createUser($tenant);
         $this->actingAs($user);
 
         $slug = Str::random();
@@ -203,6 +208,7 @@ class SubscriptionManagerTest extends FeatureTest
             'status' => SubscriptionStatus::ACTIVE->value,
             'plan_id' => $plan->id,
             'ends_at' => now(),
+            'tenant_id' => $tenant->id,
         ]);
 
         /** @var SubscriptionManager $manager */
