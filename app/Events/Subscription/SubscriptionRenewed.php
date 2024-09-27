@@ -3,11 +3,8 @@
 namespace App\Events\Subscription;
 
 use App\Models\Subscription;
-use Illuminate\Broadcasting\Channel;
+use Carbon\Carbon;
 use Illuminate\Broadcasting\InteractsWithSockets;
-use Illuminate\Broadcasting\PresenceChannel;
-use Illuminate\Broadcasting\PrivateChannel;
-use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
@@ -20,6 +17,8 @@ class SubscriptionRenewed
      */
     public function __construct(
         public Subscription $subscription,
+        public Carbon $oldEndsAt,  // date the subscription was supposed to end
+        public Carbon $newEndsAt   // new date the subscription will end
     ) {
         //
     }
