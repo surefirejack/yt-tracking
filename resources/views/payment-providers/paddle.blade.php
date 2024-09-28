@@ -54,6 +54,9 @@
                             }, 2000);
 
                             break;
+                        case "checkout.closed":
+                            window.location.reload();
+
                     }
                 }
             });
