@@ -109,6 +109,10 @@ class MetricsManager
 
     private function aggregateData(array $data, string $aggregate = 'average')
     {
+        $data = array_map(function ($item) {
+            return floatval($item);
+        }, $data);
+
         if ($aggregate === 'sum') {
             return array_sum($data);
         } elseif ($aggregate === 'last_value') {

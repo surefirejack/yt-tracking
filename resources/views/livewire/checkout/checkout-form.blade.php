@@ -89,9 +89,8 @@
 
                 @if (config('app.recaptcha_enabled'))
 
-                    <input type="text" wire:model="recaptcha" x-on:captcha-success.window="$wire.recaptcha = $event.detail.token" hidden>
-
                     <div wire:ignore>
+                        <input type="text" wire:model="recaptcha" x-on:captcha-success.window="$wire.recaptcha = $event.detail.token" hidden>
                         <div class="my-4">
                             {!! htmlFormSnippet([
                                 "callback" => "onRecaptchaSuccess"
