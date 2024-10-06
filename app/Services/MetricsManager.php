@@ -330,7 +330,7 @@ class MetricsManager
         $cases = [];
         foreach ($intervals as $interval) {
             $calculationDays = $intervalsInDays[$interval->name];
-            $cases[] = "WHEN interval_id = $interval->id THEN subscriptions.price * subscriptions.interval_count / ".$calculationDays.' * 30';
+            $cases[] = "WHEN interval_id = $interval->id THEN 1.0 * subscriptions.price * subscriptions.interval_count / ".$calculationDays.' * 30';
         }
 
         $results = DB::table('subscriptions')

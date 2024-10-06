@@ -17,7 +17,7 @@ class PlansSeeder extends Seeder
             return;
         }
 
-        DB::table('plans')->upsert([
+        DB::table('plans')->insert([
             [
                 'name' => 'Basic',
                 'slug' => 'basic',
@@ -45,9 +45,9 @@ class PlansSeeder extends Seeder
                 'updated_at' => now()->format('Y-m-d H:i:s'),
             ],
 
-        ], ['slug'], ['name']);
+        ]);
 
-        DB::table('plan_prices')->upsert([
+        DB::table('plan_prices')->insert([
             [
                 'plan_id' => 1,
                 'currency_id' => 1,
@@ -76,7 +76,7 @@ class PlansSeeder extends Seeder
                 'created_at' => now()->format('Y-m-d H:i:s'),
                 'updated_at' => now()->format('Y-m-d H:i:s'),
             ],
-        ], ['plan_id', 'currency_id']);
+        ]);
 
     }
 }
