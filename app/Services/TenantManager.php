@@ -58,7 +58,8 @@ class TenantManager
                     // add the user to the tenant
                     $invitation->tenant->users()->attach($user);
 
-                    $user->tenants()->update(['is_default' => false]);
+                    $allUserTenantIds = $user->tenants->pluck('id');
+                    $user->tenants()->updateExistingPivot($allUserTenantIds, ['is_default' => false]);
 
                     // set the default tenant for the user to this tenant
                     $user->tenants()->updateExistingPivot($invitation->tenant->id, ['is_default' => true]);
@@ -118,7 +119,8 @@ class TenantManager
                     // add the user to the tenant
                     $tenant->users()->attach($user);
 
-                    $user->tenants()->update(['is_default' => false]);
+                    $allUserTenantIds = $user->tenants->pluck('id');
+                    $user->tenants()->updateExistingPivot($allUserTenantIds, ['is_default' => false]);
 
                     // set the default tenant for the user to this tenant
                     $user->tenants()->updateExistingPivot($tenant->id, ['is_default' => true]);
