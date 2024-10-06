@@ -79,7 +79,6 @@ class TenantManager
                 UserJoinedTenant::dispatch($user, $invitation->tenant);
             }
         } catch (\Exception $e) {
-            dd($e->getMessage());
             Log::error($e->getMessage());
 
             return false;
