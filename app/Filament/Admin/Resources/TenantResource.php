@@ -46,17 +46,14 @@ class TenantResource extends Resource
                 Tables\Columns\TextColumn::make('subscriptions_count')
                     ->counts('subscriptions')
                     ->label(__('Subscriptions'))
-                    ->searchable()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('orders_count')
                     ->counts('orders')
                     ->label(__('Orders'))
-                    ->searchable()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('users_count')
                     ->counts('users')
                     ->label(__('Users'))
-                    ->searchable()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('uuid')
                     ->label(__('UUID'))

@@ -93,7 +93,7 @@
                     @endif
                 </ul>
 
-                <x-button-link.primary href="{{route('register')}}" class="mt-6 !px-6 !py-3">
+                <x-button-link.primary href="{{route('plan.start')}}" class="mt-6 !px-6 !py-3">
                     {{ __('Start Now') }}
                 </x-button-link.primary>
             </div>

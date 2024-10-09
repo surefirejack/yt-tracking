@@ -41,4 +41,19 @@ class SessionManager
 
         return new CartDto();
     }
+
+    public function setCreateTenantForFreePlanUser(bool $shouldCreateTenantAfterRegistration): void
+    {
+        session()->put(SessionConstants::SHOULD_CREATE_TENANT_FOR_FREE_PLAN_USER, $shouldCreateTenantAfterRegistration);
+    }
+
+    public function shouldCreateTenantForFreePlanUser(): bool
+    {
+        return session()->get(SessionConstants::SHOULD_CREATE_TENANT_FOR_FREE_PLAN_USER, false);
+    }
+
+    public function resetCreateTenantForFreePlanUser()
+    {
+        session()->forget(SessionConstants::SHOULD_CREATE_TENANT_FOR_FREE_PLAN_USER);
+    }
 }
