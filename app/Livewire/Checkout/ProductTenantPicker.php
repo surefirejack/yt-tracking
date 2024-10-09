@@ -30,6 +30,9 @@ class ProductTenantPicker extends Component
         } else {
             $this->tenant = $this->tenantCreationManager->findUserTenantsForNewOrder(auth()->user())->first()?->uuid;
         }
+
+        $cartDto->tenantUuid = $this->tenant;
+        $this->sessionManager->saveCartDto($cartDto);
     }
 
     public function updatedTenant(string $value)

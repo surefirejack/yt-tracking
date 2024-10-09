@@ -30,6 +30,9 @@ class SubscriptionTenantPicker extends Component
         } else {
             $this->tenant = $this->tenantCreationManager->findUserTenantsForNewSubscription(auth()->user())->first()?->uuid;
         }
+
+        $subscriptionCheckoutDto->tenantUuid = $this->tenant;
+        $this->sessionManager->saveSubscriptionCheckoutDto($subscriptionCheckoutDto);
     }
 
     public function updatedTenant(string $value)

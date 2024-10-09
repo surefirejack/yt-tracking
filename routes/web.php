@@ -3,9 +3,12 @@
 use App\Http\Controllers\Auth\OAuthController;
 use App\Http\Controllers\PaymentProviders\PaddleController as PaddleController;
 use App\Services\UserDashboardManager;
+use App\Services\SessionManager;
+use App\Services\TenantCreationManager;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
+
 
 /*
 |--------------------------------------------------------------------------
@@ -29,6 +32,19 @@ Route::get('/dashboard', function (UserDashboardManager $dashboardManager) {
 })->name('dashboard')->middleware('auth');
 
 Auth::routes();
+
+Route::get('/plan/start', function (
+    TenantCreationManager $tenantCreationManager,
+    SessionManager $sessionManager
+) {
+    if (! auth()->check()) {
+        $sessionManager->setCreateTenantForFreePlanUser(true);
+    } else {
+        $tenantCreationManager->createTenantForFreePlanUser(auth()->user());
+    }
+
+    return redirect()->route('register');
+})->name('plan.start');
 
 Route::get('/email/verify', function () {
     return view('auth.verify');
