@@ -75,7 +75,7 @@ class RoadmapManager
         ]);
 
         // add upvote for the user who created the item
-        $roadMapItem->upvotes()->attach($currentUser->id, [
+        $roadMapItem->userUpvotes()->attach($currentUser->id, [
             'ip_address' => request()->ip(),
         ]);
 
@@ -128,13 +128,13 @@ class RoadmapManager
         DB::transaction(function () use ($item) {
 
             // if user has already upvoted, do nothing
-            if ($item->upvotes()->where('user_id', auth()->id())->exists()) {
+            if ($item->userUpvotes()->where('user_id', auth()->id())->exists()) {
                 return;
             }
 
             $item->increment('upvotes');
 
-            $item->upvotes()->attach(auth()->id(), [
+            $item->userUpvotes()->attach(auth()->id(), [
                 'ip_address' => request()->ip(),
             ]);
         });
@@ -149,14 +149,14 @@ class RoadmapManager
         $item = RoadmapItem::where('id', $id)->firstOrFail();
 
         // if user has not upvoted, do nothing
-        if (! $item->upvotes()->where('user_id', auth()->id())->exists()) {
+        if (! $item->userUpvotes()->where('user_id', auth()->id())->exists()) {
             return;
         }
 
         DB::transaction(function () use ($item) {
             $item->decrement('upvotes');
 
-            $item->upvotes()->detach(auth()->id());
+            $item->userUpvotes()->detach(auth()->id());
         });
     }
 
@@ -166,6 +166,6 @@ class RoadmapManager
             return false;
         }
 
-        return $item->upvotes()->where('user_id', auth()->id())->exists();
+        return $item->userUpvotes()->where('user_id', auth()->id())->exists();
     }
 }
