@@ -86,7 +86,7 @@ class RoadmapManagerTest extends FeatureTest
             'roadmap_item_id' => $roadmapItem->id,
         ]);
 
-        $this->assertEquals(2, $roadmapItem->upvotes()->count());
+        $this->assertEquals(2, $roadmapItem->userUpvotes()->count());
 
         $this->assertDatabaseHas('roadmap_items', [
             'id' => $roadmapItem->id,
@@ -97,7 +97,7 @@ class RoadmapManagerTest extends FeatureTest
 
         $roadmapManager->upvote($roadmapItem->id);
 
-        $this->assertEquals(2, $roadmapItem->upvotes()->count());
+        $this->assertEquals(2, $roadmapItem->userUpvotes()->count());
     }
 
     public function test_upvote_unauthenticated()
@@ -181,7 +181,7 @@ class RoadmapManagerTest extends FeatureTest
             'roadmap_item_id' => $roadmapItem->id,
         ]);
 
-        $this->assertEquals(2, $roadmapItem->upvotes()->count());
+        $this->assertEquals(2, $roadmapItem->userUpvotes()->count());
 
         $this->assertDatabaseHas('roadmap_items', [
             'id' => $roadmapItem->id,
@@ -190,7 +190,7 @@ class RoadmapManagerTest extends FeatureTest
 
         $roadmapManager->removeUpvote($roadmapItem->id);
 
-        $this->assertEquals(1, $roadmapItem->upvotes()->count());
+        $this->assertEquals(1, $roadmapItem->userUpvotes()->count());
 
         $this->assertDatabaseMissing('roadmap_item_user_upvotes', [
             'user_id' => $user2->id,

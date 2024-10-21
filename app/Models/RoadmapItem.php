@@ -27,7 +27,7 @@ class RoadmapItem extends Model
         return $this->belongsTo(User::class);
     }
 
-    public function upvotes(): BelongsToMany
+    public function userUpvotes(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'roadmap_item_user_upvotes')->withTimestamps();
     }
