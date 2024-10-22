@@ -6,7 +6,7 @@
     /* Blog Post Styles */
     article.blog-post {
         @apply font-light;
-        @apply text-lg	;
+        @apply text-lg;
     }
 
     article.blog-post p {
@@ -54,6 +54,18 @@
         @apply list-disc;
         @apply pl-6;
         @apply mt-6;
+    }
+
+    article.blog-post li {
+        @apply my-2;
+    }
+
+    article.blog-post code{
+        @apply mt-4;
+    }
+
+    article.blog-post a {
+        @apply font-semibold;
     }
 
     article.blog-post ol {
