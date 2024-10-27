@@ -237,7 +237,7 @@ class MetricsManager
             return;
         }
 
-        $metricData = new MetricData();
+        $metricData = new MetricData;
         $metricData->metric_id = $metric->id;
         $metricData->value = $value;
         $metricData->created_at = $date;

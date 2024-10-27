@@ -13,6 +13,7 @@ use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\HtmlString;
 use Illuminate\Support\Str;
 
 class PlanResource extends Resource
@@ -58,13 +59,19 @@ class PlanResource extends Resource
                         ->unique(ignoreRecord: true)
                         ->disabledOn('edit'),
                     Forms\Components\Radio::make('type')
-                        ->helperText(__('Flat Rate: Charge a fixed amount for each billing cycle. Seat Based: Charge per seat/user for each billing cycle.'))
+                        ->helperText(
+                            new HtmlString(
+                                __('Flat Rate: Fixed price per billing cycle. Seat Based: Charge per seat/user for each billing cycle. Usage Based: Price per unit with optional tiers.').'<br><strong>'.__('Important').'</strong>: '.__('Usage-based pricing is not supported for Paddle.')
+                            )
+                        )
                         ->options([
                             PlanType::FLAT_RATE->value => __('Flat Rate'),
-                            PlanType::SEAT_BASED->value => __('Seat Based'),
+                            PlanType::SEAT_BASED->value => __('Seat-Based'),
+                            PlanType::USAGE_BASED->value => __('Usage-based'),
                         ])
                         ->default(PlanType::FLAT_RATE->value)
                         ->disabledOn('edit')
+                        ->live()
                         ->required(),
                     Forms\Components\TextInput::make('max_users_per_tenant')
                         ->label(__('Max Users Per Tenant'))
@@ -73,6 +80,22 @@ class PlanResource extends Resource
                         ->default(0)
                         ->minValue(0)
                         ->required(),
+                    Forms\Components\Select::make('meter_id')
+                        ->relationship('meter', 'name')
+                        ->searchable()
+                        ->preload()
+                        ->createOptionForm([
+                            Forms\Components\TextInput::make('name')
+                                ->helperText(__('The name of the meter. Please use singular form, for example: "Token" instead of "Tokens".'))
+                                ->required()
+                                ->maxLength(255),
+                        ])
+                        ->visible(function (\Filament\Forms\Get $get) {
+                            return $get('type') === PlanType::USAGE_BASED->value;
+                        })
+                        ->required(function (\Filament\Forms\Get $get) {
+                            return $get('type') === PlanType::USAGE_BASED->value;
+                        }),
                     Forms\Components\Select::make('product_id')
                         // only products with is_default = false can be selected
                         ->relationship('product', 'name', modifyQueryUsing: fn (Builder $query) => $query->where('is_default', false))

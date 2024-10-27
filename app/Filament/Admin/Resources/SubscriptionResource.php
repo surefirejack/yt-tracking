@@ -4,6 +4,8 @@ namespace App\Filament\Admin\Resources;
 
 use App\Constants\DiscountConstants;
 use App\Constants\PlanType;
+use App\Constants\PlanPriceTierConstants;
+use App\Constants\PlanPriceType;
 use App\Constants\SubscriptionStatus;
 use App\Filament\Admin\Resources\TenantResource\Pages\EditTenant;
 use App\Mapper\SubscriptionStatusMapper;
@@ -18,6 +20,7 @@ use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\HtmlString;
 
 class SubscriptionResource extends Resource
 {
@@ -127,7 +130,7 @@ class SubscriptionResource extends Resource
     public static function getRelations(): array
     {
         return [
-            //
+            'usages' => \App\Filament\Admin\Resources\SubscriptionResource\RelationManagers\UsagesRelationManager::class,
         ];
     }
 
@@ -238,6 +241,34 @@ class SubscriptionResource extends Resource
 
                                             return money($state, $record->currency->code).' / '.$interval;
                                         }),
+                                        TextEntry::make('price_per_unit')
+                                            ->visible(fn (Subscription $record): bool => $record->price_type === PlanPriceType::USAGE_BASED_PER_UNIT->value && $record->price_per_unit !== null)
+                                            ->formatStateUsing(function (string $state, $record) {
+                                                return money($state, $record->currency->code).' / '.__($record->plan->meter->name);
+                                            }),
+                                        TextEntry::make('price_tiers')
+                                            ->visible(fn (Subscription $record): bool => in_array($record->price_type, [PlanPriceType::USAGE_BASED_TIERED_VOLUME->value, PlanPriceType::USAGE_BASED_TIERED_GRADUATED->value]) && $record->price_tiers !== null)
+                                            ->getStateUsing(function (Subscription $record) {
+                                                $start = 0;
+                                                $unitMeterName = $record->plan->meter->name;
+                                                $currencyCode = $record->currency->code;
+                                                $output = '';
+                                                $startingPhrase = __('From');
+                                                foreach ($record->price_tiers as $tier) {
+                                                    $output .= $startingPhrase.' '.$start.' - '.$tier[PlanPriceTierConstants::UNTIL_UNIT].' '.__(str()->plural($unitMeterName)).' → '.money($tier[PlanPriceTierConstants::PER_UNIT], $currencyCode).' / '.__($unitMeterName);
+                                                    if ($tier[PlanPriceTierConstants::FLAT_FEE] > 0) {
+                                                        $output .= ' + '.money($tier[PlanPriceTierConstants::FLAT_FEE], $currencyCode);
+                                                    }
+                                                    $start = intval($tier[PlanPriceTierConstants::UNTIL_UNIT]) + 1;
+                                                    $output .= '<br>';
+
+                                                    if ($record->price_type === PlanPriceType::USAGE_BASED_TIERED_GRADUATED->value) {
+                                                        $startingPhrase = __('Next');
+                                                    }
+                                                }
+
+                                                return new HtmlString($output);
+                                            }),
                                         TextEntry::make('payment_provider_id')
                                             ->formatStateUsing(function (string $state, $record) {
                                                 return $record->paymentProvider->name;

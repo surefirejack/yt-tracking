@@ -2,6 +2,8 @@
 
 namespace Tests\Feature\Livewire\Checkout;
 
+use App\Constants\PlanPriceType;
+use App\Constants\PlanType;
 use App\Constants\SessionConstants;
 use App\Dto\SubscriptionCheckoutDto;
 use App\Livewire\Checkout\SubscriptionCheckoutForm;
@@ -14,6 +16,7 @@ use App\Models\Tenant;
 use App\Models\User;
 use App\Services\PaymentProviders\PaymentManager;
 use App\Services\PaymentProviders\PaymentProviderInterface;
+use Illuminate\View\ViewException;
 use Livewire\Livewire;
 use Tests\Feature\FeatureTest;
 
@@ -21,7 +24,7 @@ class SubscriptionCheckoutFormTest extends FeatureTest
 {
     public function test_can_checkout_new_user()
     {
-        $sessionDto = new SubscriptionCheckoutDto();
+        $sessionDto = new SubscriptionCheckoutDto;
         $sessionDto->planSlug = 'plan-slug-5';
 
         $this->withSession([SessionConstants::SUBSCRIPTION_CHECKOUT_DTO => $sessionDto]);
@@ -37,7 +40,17 @@ class SubscriptionCheckoutFormTest extends FeatureTest
             'price' => 100,
         ]);
 
-        $this->addPaymentProvider();
+        $paymentProvider = $this->addPaymentProvider();
+
+        $paymentProvider->shouldReceive('getSupportedPlanTypes')
+            ->andReturn([
+                PlanType::USAGE_BASED->value,
+                PlanType::FLAT_RATE->value,
+            ]);
+
+        $paymentProvider->shouldReceive('initSubscriptionCheckout')
+            ->once()
+            ->andReturn([]);
 
         // get number of subscriptions before checkout
         $subscriptionsBefore = Subscription::count();
@@ -66,7 +79,7 @@ class SubscriptionCheckoutFormTest extends FeatureTest
 
     public function test_can_checkout_existing_user()
     {
-        $sessionDto = new SubscriptionCheckoutDto();
+        $sessionDto = new SubscriptionCheckoutDto;
         $sessionDto->planSlug = 'plan-slug-6';
 
         $this->withSession([SessionConstants::SUBSCRIPTION_CHECKOUT_DTO => $sessionDto]);
@@ -88,7 +101,17 @@ class SubscriptionCheckoutFormTest extends FeatureTest
             'name' => 'Name',
         ]);
 
-        $this->addPaymentProvider();
+        $paymentProvider = $this->addPaymentProvider();
+
+        $paymentProvider->shouldReceive('getSupportedPlanTypes')
+            ->andReturn([
+                PlanType::USAGE_BASED->value,
+                PlanType::FLAT_RATE->value,
+            ]);
+
+        $paymentProvider->shouldReceive('initSubscriptionCheckout')
+            ->once()
+            ->andReturn([]);
 
         // get number of subscriptions before checkout
         $subscriptionsBefore = Subscription::count();
@@ -115,9 +138,104 @@ class SubscriptionCheckoutFormTest extends FeatureTest
         $this->assertEquals($tenantsBefore + 1, Tenant::count());
     }
 
+    public function test_can_not_checkout_if_payment_does_not_support_plan_type()
+    {
+        $sessionDto = new SubscriptionCheckoutDto;
+        $sessionDto->planSlug = 'plan-slug-9';
+
+        $this->withSession([SessionConstants::SUBSCRIPTION_CHECKOUT_DTO => $sessionDto]);
+
+        $plan = Plan::factory()->create([
+            'slug' => 'plan-slug-9',
+            'is_active' => true,
+            'type' => PlanType::USAGE_BASED->value,
+        ]);
+
+        PlanPrice::create([
+            'plan_id' => $plan->id,
+            'currency_id' => Currency::where('code', 'USD')->first()->id,
+            'price' => 100,
+            'price_per_unit' => 20,
+            'type' => PlanPriceType::USAGE_BASED_PER_UNIT->value,
+        ]);
+
+        $paymentProvider = $this->addPaymentProvider();
+
+        $paymentProvider->shouldReceive('getSupportedPlanTypes')
+            ->andReturn([
+                PlanType::FLAT_RATE->value,
+            ]);
+
+        $paymentProvider->shouldNotReceive('initSubscriptionCheckout');
+
+        $this->expectException(ViewException::class);
+
+        Livewire::test(SubscriptionCheckoutForm::class)
+            ->set('name', 'Name')
+            ->set('email', 'existing+sub2@gmail.com')
+            ->set('password', 'password')
+            ->set('paymentProvider', 'paymore')
+            ->call('checkout');
+    }
+
+    public function test_checkout_success_if_plan_type_is_usage_based()
+    {
+        $sessionDto = new SubscriptionCheckoutDto;
+        $sessionDto->planSlug = 'plan-slug-10';
+
+        $this->withSession([SessionConstants::SUBSCRIPTION_CHECKOUT_DTO => $sessionDto]);
+
+        $plan = Plan::factory()->create([
+            'slug' => 'plan-slug-10',
+            'is_active' => true,
+            'type' => PlanType::USAGE_BASED->value,
+        ]);
+
+        PlanPrice::create([
+            'plan_id' => $plan->id,
+            'currency_id' => Currency::where('code', 'USD')->first()->id,
+            'price' => 100,
+            'price_per_unit' => 20,
+            'type' => PlanPriceType::USAGE_BASED_PER_UNIT->value,
+        ]);
+
+        $paymentProvider = $this->addPaymentProvider();
+
+        $paymentProvider->shouldReceive('getSupportedPlanTypes')
+            ->andReturn([
+                PlanType::USAGE_BASED->value,
+            ]);
+
+        $paymentProvider->shouldReceive('initSubscriptionCheckout')
+            ->once()
+            ->andReturn([]);
+
+        // get number of subscriptions before checkout
+        $subscriptionsBefore = Subscription::count();
+
+        Livewire::test(SubscriptionCheckoutForm::class)
+            ->set('name', 'Name')
+            ->set('email', 'existing+sub3@gmail.com')
+            ->set('password', 'password')
+            ->set('paymentProvider', 'paymore')
+            ->call('checkout')
+            ->assertRedirect('http://paymore.com/checkout');
+
+        // assert user has been created
+        $this->assertDatabaseHas('users', [
+            'email' => 'existing+sub3@gmail.com',
+        ]);
+
+        // assert user is logged in
+        $this->assertAuthenticated();
+
+        // assert order has been created
+        $this->assertEquals($subscriptionsBefore + 1, Subscription::count());
+    }
+
     public function test_can_checkout_overlay_payment()
     {
-        $sessionDto = new SubscriptionCheckoutDto();
+        $sessionDto = new SubscriptionCheckoutDto;
         $sessionDto->planSlug = 'plan-slug-7';
 
         $this->withSession([SessionConstants::SUBSCRIPTION_CHECKOUT_DTO => $sessionDto]);
@@ -133,7 +251,17 @@ class SubscriptionCheckoutFormTest extends FeatureTest
             'price' => 100,
         ]);
 
-        $this->addPaymentProvider(false);
+        $paymentProvider = $this->addPaymentProvider(false);
+
+        $paymentProvider->shouldReceive('getSupportedPlanTypes')
+            ->andReturn([
+                PlanType::USAGE_BASED->value,
+                PlanType::FLAT_RATE->value,
+            ]);
+
+        $paymentProvider->shouldReceive('initSubscriptionCheckout')
+            ->once()
+            ->andReturn([]);
 
         // get number of subscriptions before checkout
         $subscriptionsBefore = Subscription::count();
@@ -172,9 +300,6 @@ class SubscriptionCheckoutFormTest extends FeatureTest
         ]);
 
         $mock = \Mockery::mock(PaymentProviderInterface::class);
-        $mock->shouldReceive('initSubscriptionCheckout')
-            ->once()
-            ->andReturn([]);
 
         $mock->shouldReceive('isRedirectProvider')
             ->andReturn($isRedirect);

@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Constants\PaymentProviderConstants;
+use App\Constants\PlanType;
 use App\Constants\SubscriptionStatus;
 use App\Events\Subscription\InvoicePaymentFailed;
 use App\Events\Subscription\Subscribed;
@@ -63,6 +64,9 @@ class SubscriptionManager
                 'interval_count' => $plan->interval_count,
                 'quantity' => $quantity,
                 'tenant_id' => $tenant->id,
+                'price_type' => $planPrice->type,
+                'price_tiers' => $planPrice->tiers,
+                'price_per_unit' => $planPrice->price_per_unit,
             ];
 
             if ($paymentProvider) {
@@ -131,6 +135,16 @@ class SubscriptionManager
             ->where('status', '=', SubscriptionStatus::ACTIVE->value)
             ->first();
     }
+
+    public function findActiveUserSubscriptionWithPlanType(int $userId, PlanType $planType): ?Subscription
+    {
+        return Subscription::where('user_id', $userId)
+            ->where('status', '=', SubscriptionStatus::ACTIVE->value)
+            ->whereHas('plan', function ($query) use ($planType) {
+                $query->where('type', $planType->value);
+            })->first();
+    }
+
 
     public function findActiveByUserAndSubscriptionUuid(int $userId, string $subscriptionUuid): ?Subscription
     {
@@ -241,6 +255,10 @@ class SubscriptionManager
     public function changePlan(Subscription $subscription, PaymentProviderInterface $paymentProviderStrategy, string $newPlanSlug, bool $isProrated = false): bool
     {
         if ($subscription->plan->slug === $newPlanSlug) {
+            return false;
+        }
+
+        if (! $this->planManager->isPlanChangeable($subscription->plan)) {
             return false;
         }
 

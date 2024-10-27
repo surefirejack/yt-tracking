@@ -19,22 +19,20 @@ class InvoiceManager
 {
     public function __construct(
         private CountryResolver $countryResolver,
-    ) {
-
-    }
+    ) {}
 
     public function generate(Transaction $transaction, bool $regenerate = false)
     {
-        if (!$this->canGenerateInvoices($transaction)) {
+        if (! $this->canGenerateInvoices($transaction)) {
             return null;
         }
 
         $invoiceEntity = $this->findOrCreateInvoiceForTransaction($transaction);
 
-        if (!$regenerate && $invoiceEntity->status === InvoiceStatus::RENDERED->value) {
+        if (! $regenerate && $invoiceEntity->status === InvoiceStatus::RENDERED->value) {
             $storage = Storage::disk(config('invoices.disk'));
 
-            if (!$storage->exists($invoiceEntity->filename)) {
+            if (! $storage->exists($invoiceEntity->filename)) {
                 throw new \Exception(sprintf('Invoice file not found for transaction %s', $transaction->id));
             }
 
@@ -66,7 +64,7 @@ class InvoiceManager
             $itemName = $subscription->plan->name;
 
             if ($subscription->plan->has_trial) {
-                $itemName .= ' - ' . $subscription->plan->trial_interval_count . ' ' . $subscription->plan->trialInterval()->firstOrFail()->name . ' ' . __('free trial included');
+                $itemName .= ' - '.$subscription->plan->trial_interval_count.' '.$subscription->plan->trialInterval()->firstOrFail()->name.' '.__('free trial included');
             }
 
             $orderItems[] = InvoiceItem::make($itemName)
@@ -117,7 +115,7 @@ class InvoiceManager
 
         $invoiceEntity->update([
             'status' => InvoiceStatus::RENDERED->value,
-            'filename' => $filename . '.pdf',
+            'filename' => $filename.'.pdf',
         ]);
 
         return $invoice->stream();
@@ -127,41 +125,41 @@ class InvoiceManager
     {
         $address = $user->address()->first();
 
-        if (!$address) {
+        if (! $address) {
             return $customFields;
         }
 
         $addressPieces = [];
 
-        if (!empty($address->address_line_1)) {
+        if (! empty($address->address_line_1)) {
             $addressPieces[] = $address->address_line_1;
         }
 
-        if (!empty($address->address_line_2)) {
+        if (! empty($address->address_line_2)) {
             $addressPieces[] = $address->address_line_2;
         }
 
-        if (!empty($address->city)) {
+        if (! empty($address->city)) {
             $addressPieces[] = $address->city;
         }
 
-        if (!empty($address->state)) {
+        if (! empty($address->state)) {
             $addressPieces[] = $address->state;
         }
 
-        if (!empty($address->zip)) {
+        if (! empty($address->zip)) {
             $addressPieces[] = $address->zip;
         }
 
-        if (!empty($address->country_code)) {
+        if (! empty($address->country_code)) {
             $addressPieces[] = $this->countryResolver->resolveCountryFromCode($address->country_code);
         }
 
         if (count($addressPieces) > 0) {
-            $customFields[__('address')] = implode(", ", $addressPieces);
+            $customFields[__('address')] = implode(', ', $addressPieces);
         }
 
-        if (!empty($address->tax_number)) {
+        if (! empty($address->tax_number)) {
             $customFields[__('tax number')] = $address->tax_number;
         }
 

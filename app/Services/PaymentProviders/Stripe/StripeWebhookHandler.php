@@ -23,9 +23,7 @@ class StripeWebhookHandler
         private SubscriptionManager $subscriptionManager,
         private TransactionManager $transactionManager,
         private OrderManager $orderManager,
-    ) {
-
-    }
+    ) {}
 
     public function handleWebhook(Request $request): JsonResponse
     {

@@ -78,6 +78,10 @@ class CalculationManager
 
         $totalsDto->amountDue = max(0, $totalsDto->subtotal - $totalsDto->discountAmount);
 
+        $totalsDto->planPriceType = $planPrice->type;
+        $totalsDto->pricePerUnit = $planPrice->price_per_unit;
+        $totalsDto->tiers = $planPrice->tiers;
+
         return $totalsDto;
     }
 

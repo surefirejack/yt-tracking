@@ -442,4 +442,16 @@ class PaddleProvider implements PaymentProviderInterface
     {
         return false;
     }
+
+    public function getSupportedPlanTypes(): array
+    {
+        return [
+            PlanType::FLAT_RATE->value,
+        ];
+    }
+
+    public function reportUsage(Subscription $subscription, int $unitCount): bool
+    {
+        throw new \Exception('Padddle does not support usage based billing');
+    }
 }

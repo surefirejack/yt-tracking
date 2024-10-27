@@ -118,7 +118,7 @@ class All extends Component
 
             $imaginaryPrice = $this->calculatePriceForImaginaryInterval($firstPrice, $firstInterval, $currentInterval);
 
-            $intervalSavingPercentage[$currentInterval] = (($imaginaryPrice - $currentPrice) / ($imaginaryPrice)) * 100;
+            $intervalSavingPercentage[$currentInterval] = $imaginaryPrice == 0 ? 0 : (($imaginaryPrice - $currentPrice) / ($imaginaryPrice)) * 100;
         }
 
         return array_map(function ($saving) {

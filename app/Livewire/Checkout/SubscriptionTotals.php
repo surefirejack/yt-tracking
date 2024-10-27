@@ -29,6 +29,11 @@ class SubscriptionTotals extends Component
 
     public $code;
 
+    public ?string $unitMeterName;
+    public ?string $planPriceType = null;
+    public ?string $pricePerUnit = null;
+    public ?array $tiers = null;
+
     private DiscountManager $discountManager;
 
     private CalculationManager $calculationManager;
@@ -54,6 +59,10 @@ class SubscriptionTotals extends Component
         $this->discountAmount = $totals->discountAmount;
         $this->amountDue = $totals->amountDue;
         $this->currencyCode = $totals->currencyCode;
+        $this->unitMeterName = $plan->meter?->name;
+        $this->planPriceType = $totals->planPriceType;
+        $this->pricePerUnit = $totals->pricePerUnit;
+        $this->tiers = $totals->tiers;
     }
 
     public function getCodeFromSession()
