@@ -408,6 +408,7 @@ class LemonSqueezyProvider implements PaymentProviderInterface
         return [
             PlanType::FLAT_RATE->value,
             PlanType::USAGE_BASED->value,
+            PlanType::SEAT_BASED->value,
         ];
     }
 
@@ -436,11 +437,6 @@ class LemonSqueezyProvider implements PaymentProviderInterface
             return false;
         }
 
-        return true;
-    }
-
-    public function supportsSeatBasedSubscriptions(): bool
-    {
         return true;
     }
 }

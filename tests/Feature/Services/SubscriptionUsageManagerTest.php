@@ -21,6 +21,9 @@ class SubscriptionUsageManagerTest extends FeatureTest
 {
     public function test_report_usage()
     {
+        $tenant = $this->createTenant();
+        $user = $this->createUser($tenant);
+
         $paymentManager = $this->createMock(PaymentManager::class);
         $subscriptionManager = $this->createMock(SubscriptionManager::class);
         $subscriptionUsageManager = new SubscriptionUsageManager($paymentManager, $subscriptionManager);
@@ -59,6 +62,8 @@ class SubscriptionUsageManagerTest extends FeatureTest
             'plan_id' => $plan->id,
             'status' => SubscriptionStatus::ACTIVE->value,
             'payment_provider_id' => $paymentProviderModel->id,
+            'tenant_id' => $tenant->id,
+            'user_id' => $user->id,
         ]);
 
         $paymentProvider->expects('reportUsage')

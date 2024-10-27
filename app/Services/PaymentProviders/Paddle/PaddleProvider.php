@@ -34,9 +34,7 @@ class PaddleProvider implements PaymentProviderInterface
         private CalculationManager $calculationManager,
         private DiscountManager $discountManager,
         private OneTimeProductManager $oneTimeProductManager,
-    ) {
-
-    }
+    ) {}
 
     public function initSubscriptionCheckout(Plan $plan, Subscription $subscription, ?Discount $discount = null, int $quantity = 1): array
     {
@@ -438,15 +436,11 @@ class PaddleProvider implements PaymentProviderInterface
         return true;
     }
 
-    public function supportsSeatBasedSubscriptions(): bool
-    {
-        return false;
-    }
-
     public function getSupportedPlanTypes(): array
     {
         return [
             PlanType::FLAT_RATE->value,
+            PlanType::SEAT_BASED->value,
         ];
     }
 

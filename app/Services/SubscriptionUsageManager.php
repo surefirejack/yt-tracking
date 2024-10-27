@@ -6,6 +6,7 @@ use App\Constants\PlanType;
 use App\Models\Subscription;
 use App\Models\SubscriptionUsage;
 use App\Services\PaymentProviders\PaymentManager;
+use Filament\Facades\Filament;
 
 class SubscriptionUsageManager
 {
@@ -16,7 +17,7 @@ class SubscriptionUsageManager
 
     public function reportUsage(int $unitCount, ?Subscription $subscription = null): bool
     {
-        $subscription = $subscription ?? $this->subscriptionManager->findActiveUserSubscriptionWithPlanType(auth()->id(), PlanType::USAGE_BASED);
+        $subscription = $subscription ?? $this->subscriptionManager->findActiveTenantSubscriptionWithPlanType(PlanType::USAGE_BASED, Filament::getTenant());
 
         if (! $subscription) {
             return false;

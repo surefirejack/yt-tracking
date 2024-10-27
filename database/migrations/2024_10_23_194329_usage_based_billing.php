@@ -18,7 +18,6 @@ return new class extends Migration
         });
 
         Schema::table('plans', function (Blueprint $table) {
-            $table->string('type')->default(\App\Constants\PlanType::FLAT_RATE->value);
             $table->foreignId('meter_id')->nullable()->constrained('plan_meters');
         });
 
@@ -56,6 +55,10 @@ return new class extends Migration
             $table->integer('unit_count');
             $table->timestamps();
         });
+
+        Schema::table('user_stripe_data', function (Blueprint $table) {
+            $table->foreignId('tenant_id')->nullable()->constrained();
+        });
     }
 
     /**
@@ -63,6 +66,11 @@ return new class extends Migration
      */
     public function down(): void
     {
+        Schema::table('user_stripe_data', function (Blueprint $table) {
+            $table->dropForeign(['tenant_id']);
+            $table->dropColumn('tenant_id');
+        });
+
         Schema::dropIfExists('subscription_usages');
 
         Schema::table('subscriptions', function (Blueprint $table) {
@@ -81,7 +89,6 @@ return new class extends Migration
         });
 
         Schema::table('plans', function (Blueprint $table) {
-            $table->dropColumn('type');
             $table->dropForeign(['meter_id']);
             $table->dropColumn('meter_id');
         });

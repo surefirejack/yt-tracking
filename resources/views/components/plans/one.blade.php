@@ -17,6 +17,9 @@
                 @money($plan->prices[0]->price, $plan->prices[0]->currency->code)
             </div>
             <div class="text-neutral-400 text-sm">
+                @if($plan->type === \App\Constants\PlanType::SEAT_BASED->value)
+                    <span class="text-sm">{{__('Per seat')}}</span>
+                @endif
                 / {{$plan->interval_count > 1 ? $plan->interval_count : '' }} {{ __($plan->interval->name) }}
             </div>
         @endif

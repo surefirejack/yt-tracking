@@ -16,6 +16,7 @@ use App\Models\Order;
 use App\Models\PaymentProvider;
 use App\Models\Plan;
 use App\Models\Subscription;
+use App\Models\Tenant;
 use App\Models\User;
 use App\Services\CalculationManager;
 use App\Services\DiscountManager;
@@ -49,7 +50,7 @@ class StripeProvider implements PaymentProviderInterface
 
         try {
 
-            $stripeCustomerId = $this->findOrCreateStripeCustomer($user);
+            $stripeCustomerId = $this->findOrCreateStripeCustomer($user, $subscription->tenant);
             $stripeProductId = $this->findOrCreateStripeSubscriptionProduct($plan, $paymentProvider);
             $stripePrices = $this->findOrCreateStripeSubscriptionProductPrices($plan, $paymentProvider, $stripeProductId);
 
@@ -116,7 +117,7 @@ class StripeProvider implements PaymentProviderInterface
         try {
             $stripe = $this->getClient();
 
-            $stripeCustomerId = $this->findOrCreateStripeCustomer($order->user);
+            $stripeCustomerId = $this->findOrCreateStripeCustomer($order->user, $order->tenant);
 
             $sessionCreationObject = [
                 'customer' => $stripeCustomerId,
@@ -281,7 +282,7 @@ class StripeProvider implements PaymentProviderInterface
             });
 
             $portal = $stripe->billingPortal->sessions->create([
-                'customer' => $subscription->user->stripeData()->firstOrFail()->stripe_customer_id,
+                'customer' => $subscription->tenant->stripeData()->firstOrFail()->stripe_customer_id,
                 'return_url' => SubscriptionResource::getUrl(),
             ]);
 
@@ -406,12 +407,12 @@ class StripeProvider implements PaymentProviderInterface
         return $stripeProductId;
     }
 
-    private function findOrCreateStripeCustomer(User $user): string
+    private function findOrCreateStripeCustomer(User $user, Tenant $tenant): string
     {
         $stripe = $this->getClient();
 
         $stripeCustomerId = null;
-        $stripeData = $user->stripeData();
+        $stripeData = $tenant->stripeData();
         if ($stripeData->count() > 0) {
             $stripeData = $stripeData->first();
             $stripeCustomerId = $stripeData->stripe_customer_id;
@@ -431,8 +432,9 @@ class StripeProvider implements PaymentProviderInterface
                 $stripeData->stripe_customer_id = $stripeCustomerId;
                 $stripeData->save();
             } else {
-                $user->stripeData()->create([
+                $tenant->stripeData()->create([
                     'stripe_customer_id' => $stripeCustomerId,
+                    'user_id' => $user->id,
                 ]);
             }
         }
@@ -709,6 +711,7 @@ class StripeProvider implements PaymentProviderInterface
         return [
             PlanType::FLAT_RATE->value,
             PlanType::USAGE_BASED->value,
+            PlanType::SEAT_BASED->value,
         ];
     }
 
@@ -752,11 +755,6 @@ class StripeProvider implements PaymentProviderInterface
             return false;
         }
 
-        return true;
-    }
-
-    public function supportsSeatBasedSubscriptions(): bool
-    {
         return true;
     }
 }

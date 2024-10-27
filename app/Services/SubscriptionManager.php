@@ -28,9 +28,7 @@ class SubscriptionManager
     public function __construct(
         private CalculationManager $calculationManager,
         private PlanManager $planManager,
-    ) {
-
-    }
+    ) {}
 
     public function create(
         string $planSlug,
@@ -136,22 +134,17 @@ class SubscriptionManager
             ->first();
     }
 
-    public function findActiveUserSubscriptionWithPlanType(int $userId, PlanType $planType): ?Subscription
+    public function findActiveTenantSubscriptionWithPlanType(PlanType $planType, ?Tenant $tenant): ?Subscription
     {
-        return Subscription::where('user_id', $userId)
+        if (! $tenant) {
+            return null;
+        }
+
+        return Subscription::where('tenant_id', $tenant->id)
             ->where('status', '=', SubscriptionStatus::ACTIVE->value)
             ->whereHas('plan', function ($query) use ($planType) {
                 $query->where('type', $planType->value);
             })->first();
-    }
-
-
-    public function findActiveByUserAndSubscriptionUuid(int $userId, string $subscriptionUuid): ?Subscription
-    {
-        return Subscription::where('user_id', $userId)
-            ->where('uuid', $subscriptionUuid)
-            ->where('status', '=', SubscriptionStatus::ACTIVE->value)
-            ->first();
     }
 
     public function findNewByPlanSlugAndTenant(string $planSlug, Tenant $tenant): ?Subscription

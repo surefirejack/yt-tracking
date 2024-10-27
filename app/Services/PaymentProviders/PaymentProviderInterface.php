@@ -23,8 +23,6 @@ interface PaymentProviderInterface
 
     public function isRedirectProvider(): bool;
 
-    public function supportsSeatBasedSubscriptions(): bool;
-
     public function isOverlayProvider(): bool;
 
     public function changePlan(Subscription $subscription, Plan $newPlan, bool $withProration = false): bool;
