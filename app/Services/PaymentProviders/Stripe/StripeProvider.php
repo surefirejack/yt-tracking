@@ -4,6 +4,11 @@ namespace App\Services\PaymentProviders\Stripe;
 
 use App\Constants\DiscountConstants;
 use App\Constants\PaymentProviderConstants;
+use App\Constants\PaymentProviderPlanPriceType;
+use App\Constants\PlanMeterConstants;
+use App\Constants\PlanPriceTierConstants;
+use App\Constants\PlanPriceType;
+use App\Constants\PlanType;
 use App\Filament\Dashboard\Resources\SubscriptionResource;
 use App\Models\Discount;
 use App\Models\OneTimeProduct;
@@ -11,6 +16,7 @@ use App\Models\Order;
 use App\Models\PaymentProvider;
 use App\Models\Plan;
 use App\Models\Subscription;
+use App\Models\Tenant;
 use App\Models\User;
 use App\Services\CalculationManager;
 use App\Services\DiscountManager;
@@ -33,9 +39,7 @@ class StripeProvider implements PaymentProviderInterface
         private PlanManager $planManager,
         private DiscountManager $discountManager,
         private OneTimeProductManager $oneTimeProductManager,
-    ) {
-
-    }
+    ) {}
 
     public function createSubscriptionCheckoutRedirectLink(Plan $plan, Subscription $subscription, ?Discount $discount = null, int $quantity = 1): string
     {
@@ -46,9 +50,11 @@ class StripeProvider implements PaymentProviderInterface
 
         try {
 
-            $stripeCustomerId = $this->findOrCreateStripeCustomer($user);
+            $stripeCustomerId = $this->findOrCreateStripeCustomer($user, $subscription->tenant);
             $stripeProductId = $this->findOrCreateStripeSubscriptionProduct($plan, $paymentProvider);
-            $stripePriceId = $this->findOrCreateStripeSubscriptionProductPrice($plan, $paymentProvider, $stripeProductId);
+            $stripePrices = $this->findOrCreateStripeSubscriptionProductPrices($plan, $paymentProvider, $stripeProductId);
+
+            $lineItems = $this->buildLineItems($stripePrices, $plan, $quantity);
 
             $stripe = $this->getClient();
 
@@ -64,10 +70,7 @@ class StripeProvider implements PaymentProviderInterface
                 'success_url' => route('checkout.subscription.success'),
                 'cancel_url' => route('checkout.subscription', ['planSlug' => $plan->slug]),
                 'mode' => 'subscription',
-                'line_items' => [[
-                    'price' => $stripePriceId,
-                    'quantity' => $quantity,
-                ]],
+                'line_items' => $lineItems,
                 'subscription_data' => [
                     'metadata' => [
                         'subscription_uuid' => $subscription->uuid,
@@ -114,7 +117,7 @@ class StripeProvider implements PaymentProviderInterface
         try {
             $stripe = $this->getClient();
 
-            $stripeCustomerId = $this->findOrCreateStripeCustomer($order->user);
+            $stripeCustomerId = $this->findOrCreateStripeCustomer($order->user, $order->tenant);
 
             $sessionCreationObject = [
                 'customer' => $stripeCustomerId,
@@ -171,7 +174,8 @@ class StripeProvider implements PaymentProviderInterface
         try {
 
             $stripeProductId = $this->findOrCreateStripeSubscriptionProduct($newPlan, $paymentProvider);
-            $stripePriceId = $this->findOrCreateStripeSubscriptionProductPrice($newPlan, $paymentProvider, $stripeProductId);
+            $stripePrices = $this->findOrCreateStripeSubscriptionProductPrices($newPlan, $paymentProvider, $stripeProductId);
+            $lineItems = $this->buildLineItems($stripePrices, $newPlan, $subscription->quantity);
 
             $stripe = $this->getClient();
 
@@ -191,12 +195,7 @@ class StripeProvider implements PaymentProviderInterface
             }
 
             $subscriptionUpdateObject = [
-                'items' => array_merge($itemsToDelete, [
-                    [
-                        'price' => $stripePriceId,
-                        'quantity' => $subscription->quantity,
-                    ],
-                ]),
+                'items' => array_merge($itemsToDelete, $lineItems),
             ];
 
             if ($withProration) {
@@ -283,7 +282,7 @@ class StripeProvider implements PaymentProviderInterface
             });
 
             $portal = $stripe->billingPortal->sessions->create([
-                'customer' => $subscription->user->stripeData()->firstOrFail()->stripe_customer_id,
+                'customer' => $subscription->tenant->stripeData()->firstOrFail()->stripe_customer_id,
                 'return_url' => SubscriptionResource::getUrl(),
             ]);
 
@@ -408,12 +407,12 @@ class StripeProvider implements PaymentProviderInterface
         return $stripeProductId;
     }
 
-    private function findOrCreateStripeCustomer(User $user): string
+    private function findOrCreateStripeCustomer(User $user, Tenant $tenant): string
     {
         $stripe = $this->getClient();
 
         $stripeCustomerId = null;
-        $stripeData = $user->stripeData();
+        $stripeData = $tenant->stripeData();
         if ($stripeData->count() > 0) {
             $stripeData = $stripeData->first();
             $stripeCustomerId = $stripeData->stripe_customer_id;
@@ -433,8 +432,9 @@ class StripeProvider implements PaymentProviderInterface
                 $stripeData->stripe_customer_id = $stripeCustomerId;
                 $stripeData->save();
             } else {
-                $user->stripeData()->create([
+                $tenant->stripeData()->create([
                     'stripe_customer_id' => $stripeCustomerId,
+                    'user_id' => $user->id,
                 ]);
             }
         }
@@ -489,31 +489,182 @@ class StripeProvider implements PaymentProviderInterface
         return $stripeDiscountId;
     }
 
-    private function findOrCreateStripeSubscriptionProductPrice(Plan $plan, PaymentProvider $paymentProvider, string $stripeProductId): string
+    private function findOrCreateStripeSubscriptionProductPrices(Plan $plan, PaymentProvider $paymentProvider, string $stripeProductId): array
     {
         $planPrice = $this->calculationManager->getPlanPrice($plan);
 
-        $stripeProductPriceId = $this->planManager->getPaymentProviderPriceId($planPrice, $paymentProvider);
+        $stripeProductPrices = $this->planManager->getPaymentProviderPrices($planPrice, $paymentProvider);
 
-        if ($stripeProductPriceId !== null) {
-            return $stripeProductPriceId;
+        if (count($stripeProductPrices) > 0) {
+            $result = [];
+            foreach ($stripeProductPrices as $stripeProductPriceId) {
+                $result[$stripeProductPriceId->type] = $stripeProductPriceId->payment_provider_price_id;
+            }
+
+            return $result;
+        }
+
+        $currencyCode = $planPrice->currency()->firstOrFail()->code;
+
+        $stripe = $this->getClient();
+
+        $results = [];
+
+        if ($plan->type === PlanType::FLAT_RATE->value) {
+            $stripeProductPriceId = $stripe->prices->create([
+                'product' => $stripeProductId,
+                'unit_amount' => $planPrice->price,
+                'currency' => $planPrice->currency()->firstOrFail()->code,
+                'recurring' => [
+                    'interval' => $plan->interval()->firstOrFail()->date_identifier,
+                    'interval_count' => $plan->interval_count,
+                ],
+            ])->id;
+
+            $this->planManager->addPaymentProviderPriceId($planPrice, $paymentProvider, $stripeProductPriceId, PaymentProviderPlanPriceType::MAIN_PRICE);
+
+            $results[PaymentProviderPlanPriceType::MAIN_PRICE->value] = $stripeProductPriceId;
+
+        } elseif ($plan->type === PlanType::USAGE_BASED->value) {
+
+            $stripeMeterId = $this->findOrCreateStripeMeter($plan, $paymentProvider);
+
+            if ($planPrice->price > 0) {  // fixed fee
+                $stripeFixedFeeProductPriceId = $stripe->prices->create([
+                    'product' => $stripeProductId,
+                    'unit_amount' => $planPrice->price,
+                    'currency' => $planPrice->currency()->firstOrFail()->code,
+                    'billing_scheme' => 'per_unit',
+                    'recurring' => [
+                        'usage_type' => 'licensed',
+                        'interval' => $plan->interval()->firstOrFail()->date_identifier,
+                        'interval_count' => $plan->interval_count,
+                    ],
+                ])->id;
+
+                $this->planManager->addPaymentProviderPriceId($planPrice, $paymentProvider, $stripeFixedFeeProductPriceId, PaymentProviderPlanPriceType::USAGE_BASED_FIXED_FEE_PRICE);
+
+                $results[PaymentProviderPlanPriceType::USAGE_BASED_FIXED_FEE_PRICE->value] = $stripeFixedFeeProductPriceId;
+            }
+
+            if ($planPrice->type === PlanPriceType::USAGE_BASED_PER_UNIT->value) {
+                $stripeProductPriceId = $stripe->prices->create([
+                    'product' => $stripeProductId,
+                    'currency' => $currencyCode,
+                    'unit_amount' => $planPrice->price_per_unit,
+                    'billing_scheme' => 'per_unit',
+                    'recurring' => [
+                        'usage_type' => 'metered',
+                        'interval' => $plan->interval()->firstOrFail()->date_identifier,
+                        'interval_count' => $plan->interval_count,
+                        'meter' => $stripeMeterId,
+                    ],
+                ])->id;
+
+                $this->planManager->addPaymentProviderPriceId($planPrice, $paymentProvider, $stripeProductPriceId, PaymentProviderPlanPriceType::USAGE_BASED_PRICE);
+
+                $results[PaymentProviderPlanPriceType::USAGE_BASED_PRICE->value] = $stripeProductPriceId;
+
+            } else {
+
+                $tiersMode = 'graduated';
+                if ($planPrice->type === PlanPriceType::USAGE_BASED_TIERED_VOLUME->value) {
+                    $tiersMode = 'volume';
+                }
+
+                $tiers = [];
+                foreach ($planPrice->tiers as $tier) {
+                    $tiers[] = [
+                        'up_to' => $tier[PlanPriceTierConstants::UNTIL_UNIT] === '∞' ? 'inf' : $tier[PlanPriceTierConstants::UNTIL_UNIT],
+                        'unit_amount_decimal' => $tier[PlanPriceTierConstants::PER_UNIT],
+                        'flat_amount_decimal' => $tier[PlanPriceTierConstants::FLAT_FEE],
+                    ];
+                }
+
+                $tierPriceId = $stripe->prices->create([
+                    'product' => $stripeProductId,
+                    'currency' => $planPrice->currency()->firstOrFail()->code,
+                    'billing_scheme' => 'tiered',
+                    'recurring' => [
+                        'usage_type' => 'metered',
+                        'interval' => $plan->interval()->firstOrFail()->date_identifier,
+                        'interval_count' => $plan->interval_count,
+                        'meter' => $stripeMeterId,
+                    ],
+                    'tiers_mode' => $tiersMode,
+                    'tiers' => $tiers,
+                ])->id;
+
+                $this->planManager->addPaymentProviderPriceId($planPrice, $paymentProvider, $tierPriceId, PaymentProviderPlanPriceType::USAGE_BASED_PRICE);
+
+                $results[PaymentProviderPlanPriceType::USAGE_BASED_PRICE->value] = $tierPriceId;
+            }
+        }
+
+        return $results;
+    }
+
+    private function buildLineItems(array $stripePrices, Plan $plan, int $quantity = 1): array
+    {
+        $lineItems = [];
+        if ($plan->type === PlanType::FLAT_RATE->value) {
+            $lineItems = [
+                [
+                    'price' => $stripePrices[PaymentProviderPlanPriceType::MAIN_PRICE->value],
+                    'quantity' => 1,
+                ],
+            ];
+        } elseif ($plan->type === PlanType::USAGE_BASED->value) {
+
+            if (isset($stripePrices[PaymentProviderPlanPriceType::USAGE_BASED_FIXED_FEE_PRICE->value])) {
+                $lineItems[] = [
+                    'price' => $stripePrices[PaymentProviderPlanPriceType::USAGE_BASED_FIXED_FEE_PRICE->value],
+                    'quantity' => 1,
+                ];
+
+            }
+
+            $lineItems[] = [
+                'price' => $stripePrices[PaymentProviderPlanPriceType::USAGE_BASED_PRICE->value],
+            ];
+
+        } elseif ($plan->type === PlanType::SEAT_BASED->value) {
+            $lineItems = [
+                [
+                    'price' => $stripePrices[PaymentProviderPlanPriceType::MAIN_PRICE->value],
+                    'quantity' => $quantity,
+                ],
+            ];
+        }
+
+        return $lineItems;
+    }
+
+    private function findOrCreateStripeMeter(Plan $plan, PaymentProvider $paymentProvider): string
+    {
+        $meter = $plan->meter()->firstOrFail();
+
+        $stripeMeter = $this->planManager->getPaymentProviderMeterId($meter, $paymentProvider);
+
+        if ($stripeMeter !== null) {
+            return $stripeMeter;
         }
 
         $stripe = $this->getClient();
 
-        $stripeProductPriceId = $stripe->prices->create([
-            'product' => $stripeProductId,
-            'unit_amount' => $planPrice->price,
-            'currency' => $planPrice->currency()->firstOrFail()->code,
-            'recurring' => [
-                'interval' => $plan->interval()->firstOrFail()->date_identifier,
-                'interval_count' => $plan->interval_count,
-            ],
-        ])->id;
+        $eventName = Str()->slug($meter->name).'-'.Str::random(5);
 
-        $this->planManager->addPaymentProviderPriceId($planPrice, $paymentProvider, $stripeProductPriceId);
+        $stripeMeter = $stripe->billing->meters->create([
+            'display_name' => $meter->name,
+            'event_name' => $eventName,
+            'default_aggregation' => ['formula' => 'sum'],
+        ]);
 
-        return $stripeProductPriceId;
+        $this->planManager->addPaymentProviderMeterId($meter, $paymentProvider, $stripeMeter->id, [
+            PlanMeterConstants::STRIPE_METER_EVENT_NAME => $eventName,
+        ]);
+
+        return $stripeMeter->id;
     }
 
     private function findOrCreateStripeOneTimeProductPrice(OneTimeProduct $oneTimeProduct, PaymentProvider $paymentProvider, string $stripeProductId): string
@@ -555,8 +706,55 @@ class StripeProvider implements PaymentProviderInterface
         return $paymentProvider;
     }
 
-    public function supportsSeatBasedSubscriptions(): bool
+    public function getSupportedPlanTypes(): array
     {
+        return [
+            PlanType::FLAT_RATE->value,
+            PlanType::USAGE_BASED->value,
+            PlanType::SEAT_BASED->value,
+        ];
+    }
+
+    public function reportUsage(Subscription $subscription, int $unitCount): bool
+    {
+        $this->assertProviderIsActive();
+
+        $stripe = $this->getClient();
+
+        $stripeCustomerId = $subscription->user->stripeData()->firstOrFail()->stripe_customer_id;
+
+        $plan = $subscription->plan;
+
+        $paymentProviderMeter = $this->planManager->getPaymentProviderMeter($plan->meter, $subscription->paymentProvider);
+
+        if (! $paymentProviderMeter) {
+            Log::error('Payment provider meter not found for meter: '.$plan->meter->name);
+
+            return false;
+        }
+
+        $stripeEventName = $paymentProviderMeter->data[PlanMeterConstants::STRIPE_METER_EVENT_NAME] ?? null;
+
+        if (! $stripeEventName) {
+            Log::error('Stripe event name not found for meter: '.$plan->meter->name);
+
+            return false;
+        }
+
+        try {
+            $stripe->billing->meterEvents->create([
+                'event_name' => $stripeEventName,
+                'payload' => [
+                    'value' => $unitCount,
+                    'stripe_customer_id' => $stripeCustomerId,
+                ],
+            ]);
+        } catch (ApiErrorException $e) {
+            Log::error($e->getMessage());
+
+            return false;
+        }
+
         return true;
     }
 }

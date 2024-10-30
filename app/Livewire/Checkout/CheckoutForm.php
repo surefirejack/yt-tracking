@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Checkout;
 
+use App\Exceptions\NoPaymentProvidersAvailableException;
 use App\Models\User;
 use App\Services\PaymentProviders\PaymentManager;
 use App\Services\UserManager;
@@ -24,7 +25,7 @@ class CheckoutForm extends Component
 
     public $recaptcha;
 
-    private $paymentProviders = [];
+    protected $paymentProviders = [];
 
     public function mount(string $intro = '')
     {
@@ -144,7 +145,13 @@ class CheckoutForm extends Component
 
         $this->paymentProviders = $paymentManager->getActivePaymentProviders();
 
-        if (count($this->paymentProviders) > 0 && $this->paymentProvider === null) {
+        if (empty($this->paymentProviders)) {
+            logger()->error('No payment providers available');
+
+            throw new NoPaymentProvidersAvailableException('No payment providers available');
+        }
+
+        if ($this->paymentProvider === null) {
             $this->paymentProvider = $this->paymentProviders[0]->getSlug();
         }
 

@@ -2,6 +2,7 @@
 
 namespace App\Services\PaymentProviders\LemonSqueezy;
 
+use App\Constants\LemonSqueezyConstants;
 use App\Constants\OrderStatus;
 use App\Constants\PaymentProviderConstants;
 use App\Constants\SubscriptionStatus;
@@ -206,6 +207,11 @@ class LemonSqueezyWebhookHandler
             $trialEndsAt = $attributes['trial_ends_at'] !== null ? Carbon::parse($attributes['trial_ends_at'])->toDateTimeString() : null;
             $cancelledAt = $attributes['ends_at'] ? Carbon::parse($attributes['ends_at'])->toDateTimeString() : null;
 
+            $extraPaymentProviderData = [];
+            if (isset($attributes['first_subscription_item']) && isset($attributes['first_subscription_item']['id'])) {
+                $extraPaymentProviderData[LemonSqueezyConstants::SUBSCRIPTION_ITEM_ID] = $attributes['first_subscription_item']['id'];
+            }
+
             $this->subscriptionManager->updateSubscription($subscription, [
                 'status' => $subscriptionStatus,
                 'ends_at' => $endsAt,
@@ -214,6 +220,7 @@ class LemonSqueezyWebhookHandler
                 'payment_provider_id' => $paymentProvider->id,
                 'trial_ends_at' => $trialEndsAt,
                 'cancelled_at' => $cancelledAt,
+                'extra_payment_provider_data' => $extraPaymentProviderData,
             ]);
         } elseif ($eventName === 'subscription_updated' ||
             $eventName === 'subscription_cancelled' ||
@@ -230,6 +237,10 @@ class LemonSqueezyWebhookHandler
             $cancelledAt = $attributes['ends_at'] !== null ? Carbon::parse($attributes['ends_at'])->toDateTimeString() : null;
             $isCanceledAtTheEndOfCycle = $attributes['cancelled'] ?? false;
             $quantity = $attributes['first_subscription_item']['quantity'] ?? 1;
+            $extraPaymentProviderData = [];
+            if (isset($attributes['first_subscription_item']) && isset($attributes['first_subscription_item']['id'])) {
+                $extraPaymentProviderData[LemonSqueezyConstants::SUBSCRIPTION_ITEM_ID] = $attributes['first_subscription_item']['id'];
+            }
 
             $this->subscriptionManager->updateSubscription($subscription, [
                 'status' => $subscriptionStatus,
@@ -241,6 +252,7 @@ class LemonSqueezyWebhookHandler
                 'cancelled_at' => $cancelledAt,
                 'is_canceled_at_end_of_cycle' => $isCanceledAtTheEndOfCycle,
                 'quantity' => $quantity,
+                'extra_payment_provider_data' => $extraPaymentProviderData,
             ]);
 
         } elseif ($eventName === 'subscription_payment_success' || $eventName === 'subscription_payment_failed') {

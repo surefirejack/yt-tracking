@@ -5,14 +5,18 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class PlanPricePaymentProviderData extends Model
+class PlanMeterPaymentProviderData extends Model
 {
     use HasFactory;
 
     protected $fillable = [
-        'plan_price_id',
+        'plan_meter_id',
         'payment_provider_id',
-        'payment_provider_price_id',
-        'type',
+        'payment_provider_plan_meter_id',
+        'data',
+    ];
+
+    protected $casts = [
+        'data' => 'array',
     ];
 }

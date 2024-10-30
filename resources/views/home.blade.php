@@ -617,7 +617,7 @@
     </div>
 
     <div class="pricing">
-        <x-plans.all calculate-saving-rates="true"/>
+        <x-plans.all calculate-saving-rates="true" show-default-product="1"/>
         <x-products.all />
     </div>
 

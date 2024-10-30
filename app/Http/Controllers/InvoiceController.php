@@ -14,9 +14,8 @@ class InvoiceController extends Controller
 {
     public function __construct(
         private InvoiceManager $invoiceManager
-    ) {
+    ) {}
 
-    }
     public function generate(string $transactionUuid)
     {
         $transaction = Transaction::where('uuid', $transactionUuid)->firstOrFail();
@@ -37,12 +36,12 @@ class InvoiceController extends Controller
      */
     public function preview(Request $request)
     {
-        if (!auth()->user()->isAdmin()) {
+        if (! auth()->user()->isAdmin()) {
             abort(403);
         }
 
         $customer = new Buyer([
-            'name'          => 'John Doe',
+            'name' => 'John Doe',
             'custom_fields' => [
                 'email' => 'test@example.com',
                 'order number' => '1234',
@@ -51,7 +50,7 @@ class InvoiceController extends Controller
 
         $item = InvoiceItem::make('Product 1')->formattedPricePerUnit('$10');
 
-        $seller = new Seller();
+        $seller = new Seller;
         $seller->name = $request->get('seller_name', '');
         $seller->address = $request->get('seller_address', '');
         $seller->code = $request->get('seller_code', '');

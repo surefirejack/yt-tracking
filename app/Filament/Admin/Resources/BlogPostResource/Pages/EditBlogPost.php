@@ -13,6 +13,8 @@ class EditBlogPost extends EditRecord
     //    use CrudDefaults;
     protected static string $resource = BlogPostResource::class;
 
+    public static bool $formActionsAreSticky = true;
+
     protected function getHeaderActions(): array
     {
         return [
@@ -29,5 +31,19 @@ class EditBlogPost extends EditRecord
                 Actions\DeleteAction::make(),
             ]),
         ];
+    }
+
+    protected function getFormActions(): array
+    {
+        return array_merge(parent::getFormActions(), [
+            Actions\Action::make('view')
+                ->label(__('View Post'))
+                ->color('success')
+                ->url(
+                    fn (BlogPost $resource) => route('blog.view', $resource->slug),
+                    true
+                )
+                ->icon('heroicon-o-eye'),
+        ]);
     }
 }

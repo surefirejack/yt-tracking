@@ -76,6 +76,15 @@ class LemonSqueezyClient
         ])->get($this->getApiUrl('/v1/variants/'.$variantId));
     }
 
+    public function getVariantPriceModel(string $variantId): Response
+    {
+        return Http::withHeaders([
+            'Authorization' => 'Bearer '.config('services.lemon-squeezy.api_key'),
+            'Accept' => 'application/vnd.api+json',
+            'Content-Type' => 'application/vnd.api+json',
+        ])->get($this->getApiUrl('/v1/variants/'.$variantId.'/price-model'));
+    }
+
     public function createDiscount(
         string $name,
         string $couponCode,
@@ -187,6 +196,31 @@ class LemonSqueezyClient
                 'id' => $subscriptionId,
                 'attributes' => [
                     'cancelled' => false,
+                ],
+            ],
+        ]);
+    }
+
+    public function reportUsage(string $subscriptionItemId, int $unitCount): Response
+    {
+        return Http::withHeaders([
+            'Authorization' => 'Bearer '.config('services.lemon-squeezy.api_key'),
+            'Accept' => 'application/vnd.api+json',
+            'Content-Type' => 'application/vnd.api+json',
+        ])->post($this->getApiUrl('/v1/usage-records'), [
+            'data' => [
+                'type' => 'usage-records',
+                'attributes' => [
+                    'quantity' => $unitCount,
+                    'action' => 'increment',
+                ],
+                'relationships' => [
+                    'subscription-item' => [
+                        'data' => [
+                            'type' => 'subscription-items',
+                            'id' => $subscriptionItemId,
+                        ],
+                    ],
                 ],
             ],
         ]);

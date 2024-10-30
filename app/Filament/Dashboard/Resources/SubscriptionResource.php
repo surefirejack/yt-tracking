@@ -4,13 +4,17 @@ namespace App\Filament\Dashboard\Resources;
 
 use App\Constants\DiscountConstants;
 use App\Constants\PlanType;
+use App\Constants\PlanPriceTierConstants;
+use App\Constants\PlanPriceType;
 use App\Constants\SubscriptionStatus;
 use App\Filament\Dashboard\Resources\SubscriptionResource\ActionHandlers\DiscardSubscriptionCancellationActionHandler;
 use App\Filament\Dashboard\Resources\SubscriptionResource\Pages;
+use App\Filament\Dashboard\Resources\SubscriptionResource\RelationManagers\UsagesRelationManager;
 use App\Mapper\SubscriptionStatusMapper;
 use App\Models\Subscription;
 use App\Services\ConfigManager;
 use Filament\Facades\Filament;
+use App\Services\PlanManager;
 use Filament\Forms\Form;
 use Filament\Infolists\Components\Section;
 use Filament\Infolists\Components\TextEntry;
@@ -21,6 +25,7 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\HtmlString;
 
 class SubscriptionResource extends Resource
 {
@@ -74,7 +79,7 @@ class SubscriptionResource extends Resource
                         ->label(__('Change Plan'))
                         ->icon('heroicon-o-rocket-launch')
                         ->url(fn (Subscription $record): string => SubscriptionResource::getUrl('change-plan', ['record' => $record->uuid]))
-                        ->visible(fn (Subscription $record): bool => $record->status === SubscriptionStatus::ACTIVE->value),
+                        ->visible(fn (Subscription $record, PlanManager $planManager): bool => $record->status === SubscriptionStatus::ACTIVE->value && $planManager->isPlanChangeable($record->plan)),
                     Tables\Actions\Action::make('cancel')
                         ->label(__('Cancel Subscription'))
                         ->icon('heroicon-m-x-circle')
@@ -95,7 +100,7 @@ class SubscriptionResource extends Resource
     public static function getRelations(): array
     {
         return [
-            //
+            'usages' => UsagesRelationManager::class,
         ];
     }
 
@@ -172,6 +177,34 @@ class SubscriptionResource extends Resource
 
                             return money($state, $record->currency->code).' / '.$interval;
                         }),
+                        TextEntry::make('price_per_unit')
+                            ->visible(fn (Subscription $record): bool => $record->price_type === PlanPriceType::USAGE_BASED_PER_UNIT->value && $record->price_per_unit !== null)
+                            ->formatStateUsing(function (string $state, $record) {
+                                return money($state, $record->currency->code).' / '.__($record->plan->meter->name);
+                            }),
+                        TextEntry::make('price_tiers')
+                            ->visible(fn (Subscription $record): bool => in_array($record->price_type, [PlanPriceType::USAGE_BASED_TIERED_VOLUME->value, PlanPriceType::USAGE_BASED_TIERED_GRADUATED->value]) && $record->price_tiers !== null)
+                            ->getStateUsing(function (Subscription $record) {
+                                $start = 0;
+                                $unitMeterName = $record->plan->meter->name;
+                                $currencyCode = $record->currency->code;
+                                $output = '';
+                                $startingPhrase = __('From');
+                                foreach ($record->price_tiers as $tier) {
+                                    $output .= $startingPhrase.' '.$start.' - '.$tier[PlanPriceTierConstants::UNTIL_UNIT].' '.__(str()->plural($unitMeterName)).' → '.money($tier[PlanPriceTierConstants::PER_UNIT], $currencyCode).' / '.__($unitMeterName);
+                                    if ($tier[PlanPriceTierConstants::FLAT_FEE] > 0) {
+                                        $output .= ' + '.money($tier[PlanPriceTierConstants::FLAT_FEE], $currencyCode);
+                                    }
+                                    $start = intval($tier[PlanPriceTierConstants::UNTIL_UNIT]) + 1;
+                                    $output .= '<br>';
+
+                                    if ($record->price_type === PlanPriceType::USAGE_BASED_TIERED_GRADUATED->value) {
+                                        $startingPhrase = __('Next');
+                                    }
+                                }
+
+                                return new HtmlString($output);
+                            }),
                         TextEntry::make('ends_at')->dateTime(config('app.datetime_format'))->label(__('Next Renewal'))->visible(fn (Subscription $record): bool => ! $record->is_canceled_at_end_of_cycle),
                         TextEntry::make('status')
                             ->formatStateUsing(fn (string $state, SubscriptionStatusMapper $mapper): string => $mapper->mapForDisplay($state)),
@@ -194,15 +227,20 @@ class SubscriptionResource extends Resource
                     )
                     ->description(__('View details about your discount.'))
                     ->schema([
-                        TextEntry::make('discounts.amount')->formatStateUsing(function (string $state, $record) {
-                            if ($record->discounts[0]->type === DiscountConstants::TYPE_PERCENTAGE) {
-                                return $state.'%';
-                            }
+                        TextEntry::make('discounts.amount')
+                            ->label(__('Discount Amount'))
+                            ->formatStateUsing(function (string $state, $record) {
+                                if ($record->discounts[0]->type === DiscountConstants::TYPE_PERCENTAGE) {
+                                    return $state.'%';
+                                }
 
-                            return money($state, $record->discounts[0]->code);
-                        }),
+                                return money($state, $record->discounts[0]->code);
+                            }),
 
-                        TextEntry::make('discounts.valid_until')->dateTime(config('app.datetime_format'))->label(__('Valid Until')),
+                        TextEntry::make('discounts.valid_until')
+                            ->dateTime(config('app.datetime_format'))
+                            ->visible(fn (Subscription $record): bool => $record->discounts[0]->valid_until !== null)
+                            ->label(__('Valid Until')),
                     ]),
 
             ]);

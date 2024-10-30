@@ -15,13 +15,24 @@ class PlanPrice extends Model
         'plan_id',
         'price',
         'currency_id',
+        'price_per_unit',
+        'type',
+        'tiers',
+    ];
+
+    protected $casts = [
+        'tiers' => 'array',
     ];
 
     protected static function booted(): void
     {
         static::updating(function (PlanPrice $planPrice) {
             // delete plan_price_payment_provider_data when plan price is updated to recreate provider prices when plan price is updated
-            if ($planPrice->getOriginal('price') !== $planPrice->price) {
+            if ($planPrice->getOriginal('price') !== $planPrice->price ||
+                $planPrice->getOriginal('price_per_unit') !== $planPrice->price_per_unit ||
+                $planPrice->getOriginal('type') !== $planPrice->type ||
+                $planPrice->getOriginal('tiers') !== $planPrice->tiers
+            ) {
                 $planPrice->planPricePaymentProviderData()->delete();
             }
         });

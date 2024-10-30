@@ -19,10 +19,16 @@ class UserStripeData extends Model
         'stripe_customer_id',
         'stripe_payment_method_id',
         'user_id',
+        'tenant_id',
     ];
 
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function tenant(): BelongsTo
+    {
+        return $this->belongsTo(Tenant::class);
     }
 }

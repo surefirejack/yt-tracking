@@ -3,6 +3,7 @@
 namespace App\Services\PaymentProviders;
 
 use App\Models\PaymentProvider;
+use App\Models\Plan;
 
 class PaymentManager
 {
@@ -15,14 +16,7 @@ class PaymentManager
 
     public function getActivePaymentProviders(): array
     {
-        $paymentProviders = [];
-        $activePaymentProviders = PaymentProvider::where('is_active', true)->get();
-
-        $activePaymentProvidersMap = [];
-
-        foreach ($activePaymentProviders as $activePaymentProvider) {
-            $activePaymentProvidersMap[$activePaymentProvider->slug] = $activePaymentProvider;
-        }
+        $activePaymentProvidersMap = $this->getActivePaymentProvidersMap();
 
         foreach ($this->paymentProviders as $paymentProvider) {
             if (isset($activePaymentProvidersMap[$paymentProvider->getSlug()])) {
@@ -33,15 +27,25 @@ class PaymentManager
         return $paymentProviders;
     }
 
+    public function getActivePaymentProvidersForPlan(Plan $plan): array
+    {
+        $activePaymentProvidersMap = $this->getActivePaymentProvidersMap();
+
+        $paymentProviders = [];
+        foreach ($this->paymentProviders as $paymentProvider) {
+            if (isset($activePaymentProvidersMap[$paymentProvider->getSlug()]) &&
+                in_array($plan->type, $paymentProvider->getSupportedPlanTypes())
+            ) {
+                $paymentProviders[] = $paymentProvider;
+            }
+        }
+
+        return $paymentProviders;
+    }
+
     public function getPaymentProviderBySlug(string $slug): PaymentProviderInterface
     {
-        $activePaymentProviders = PaymentProvider::where('is_active', true)->get();
-
-        $activePaymentProvidersMap = [];
-
-        foreach ($activePaymentProviders as $activePaymentProvider) {
-            $activePaymentProvidersMap[$activePaymentProvider->slug] = $activePaymentProvider;
-        }
+        $activePaymentProvidersMap = $this->getActivePaymentProvidersMap();
 
         foreach ($this->paymentProviders as $paymentProvider) {
             if (isset($activePaymentProvidersMap[$paymentProvider->getSlug()])) {
@@ -52,5 +56,18 @@ class PaymentManager
         }
 
         throw new \Exception('Payment provider not found: '.$slug);
+    }
+
+    private function getActivePaymentProvidersMap(): array
+    {
+        $activePaymentProviders = PaymentProvider::where('is_active', true)->get();
+
+        $activePaymentProvidersMap = [];
+
+        foreach ($activePaymentProviders as $activePaymentProvider) {
+            $activePaymentProvidersMap[$activePaymentProvider->slug] = $activePaymentProvider;
+        }
+
+        return $activePaymentProvidersMap;
     }
 }

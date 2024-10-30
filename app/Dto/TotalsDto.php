@@ -15,4 +15,8 @@ class TotalsDto
      */
     public int $amountDue = 0;
     public string $currencyCode;
+
+    public ?string $planPriceType = null;
+    public ?string $pricePerUnit = null;
+    public ?array $tiers = null;
 }

@@ -23,8 +23,6 @@ interface PaymentProviderInterface
 
     public function isRedirectProvider(): bool;
 
-    public function supportsSeatBasedSubscriptions(): bool;
-
     public function isOverlayProvider(): bool;
 
     public function changePlan(Subscription $subscription, Plan $newPlan, bool $withProration = false): bool;
@@ -38,4 +36,8 @@ interface PaymentProviderInterface
     public function addDiscountToSubscription(Subscription $subscription, Discount $discount): bool;
 
     public function updateSubscriptionQuantity(Subscription $subscription, int $quantity, bool $isProrated = true): bool;
+
+    public function getSupportedPlanTypes(): array;
+
+    public function reportUsage(Subscription $subscription, int $unitCount): bool;
 }
