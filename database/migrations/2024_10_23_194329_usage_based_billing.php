@@ -29,8 +29,14 @@ return new class extends Migration
 
         Schema::table('plan_price_payment_provider_data', function (Blueprint $table) {
             $table->string('type')->default(\App\Constants\PaymentProviderPlanPriceType::MAIN_PRICE->value);
-            $table->unique(['plan_price_id', 'payment_provider_id', 'type'], 'plan_price_payment_provider_type_data_unq');
-            $table->dropIndex('plan_price_payment_provider_data_unq');
+
+            if (config('database.default') === 'mysql') { // apparently the order of operations is important here since mysql differs from pgsql & sqlite
+                $table->unique(['plan_price_id', 'payment_provider_id', 'type'], 'plan_price_payment_provider_type_data_unq');
+                $table->dropIndex('plan_price_payment_provider_data_unq');
+            } else {
+                $table->dropUnique('plan_price_payment_provider_data_unq');
+                $table->unique(['plan_price_id', 'payment_provider_id', 'type'], 'plan_price_payment_provider_type_data_unq');
+            }
         });
 
         Schema::create('plan_meter_payment_provider_data', function (Blueprint $table) {
@@ -84,8 +90,14 @@ return new class extends Migration
 
         Schema::table('plan_price_payment_provider_data', function (Blueprint $table) {
             $table->unique(['plan_price_id', 'payment_provider_id'], 'plan_price_payment_provider_data_unq');
-            $table->dropColumn('type');
-            $table->dropUnique('plan_price_payment_provider_type_data_unq');
+
+            if (config('database.default') === 'mysql') {
+                $table->dropColumn('type');
+                $table->dropUnique('plan_price_payment_provider_type_data_unq');
+            } else {
+                $table->dropUnique('plan_price_payment_provider_type_data_unq');
+                $table->dropColumn('type');
+            }
         });
 
         Schema::table('plans', function (Blueprint $table) {
