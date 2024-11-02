@@ -42,7 +42,7 @@ class PaymentProviderResource extends Resource
                     ->getStateUsing(function (PaymentProvider $record) {
                         return new HtmlString(
                             '<div class="flex gap-2">'.
-                            ' <img src="'.asset('images/payment-providers/'.$record->slug.'.png').'" alt="{{ $paymentProvider->getName() }}" class="h-6"> '
+                            ' <img src="'.asset('images/payment-providers/'.$record->slug.'.png').'" alt="'.$record->name.'" class="h-6"> '
                             .'</div>'
                         );
                     }),
