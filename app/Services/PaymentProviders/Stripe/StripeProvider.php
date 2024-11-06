@@ -510,7 +510,7 @@ class StripeProvider implements PaymentProviderInterface
 
         $results = [];
 
-        if ($plan->type === PlanType::FLAT_RATE->value) {
+        if ($plan->type === PlanType::FLAT_RATE->value || $plan->type === PlanType::SEAT_BASED->value) {
             $stripeProductPriceId = $stripe->prices->create([
                 'product' => $stripeProductId,
                 'unit_amount' => $planPrice->price,
