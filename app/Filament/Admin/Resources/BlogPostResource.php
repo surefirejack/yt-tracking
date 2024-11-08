@@ -69,7 +69,7 @@ class BlogPostResource extends Resource
                         ),
                     Forms\Components\SpatieMediaLibraryFileUpload::make('image')
                         ->collection('blog-images')
-                        ->image(),
+                        ->acceptedFileTypes(['image/webp', 'image/jpeg', 'image/png']),
                     Forms\Components\Toggle::make('is_published')
                         ->required(),
                     Forms\Components\DateTimePicker::make('published_at')
