@@ -356,6 +356,32 @@ class SubscriptionManager
         return $subscriptions->count() > 0;
     }
 
+    public function isUserSubscribedViaAnyTenant(?User $user, ?string $productSlug = null): bool
+    {
+        if (! $user) {
+            return false;
+        }
+
+        $tenantIds = $user->tenants()->pluck('tenant_id')->toArray();
+
+        if (empty($tenantIds)) {
+            return false;
+        }
+
+        $subscriptions = Subscription::whereIn('tenant_id', $tenantIds)
+            ->where('status', SubscriptionStatus::ACTIVE->value)
+            ->where('ends_at', '>', Carbon::now())
+            ->get();
+
+        if ($productSlug) {
+            $subscriptions = $subscriptions->filter(function (Subscription $subscription) use ($productSlug) {
+                return $subscription->plan->product->slug === $productSlug;
+            });
+        }
+
+        return $subscriptions->count() > 0;
+    }
+
     public function isUserTrialing(?User $user, ?string $productSlug = null, ?Tenant $tenant = null): bool
     {
         if (! $user) {

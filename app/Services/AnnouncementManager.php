@@ -26,7 +26,7 @@ class AnnouncementManager
             $query->where('show_on_frontend', true);
         }
 
-        if ($user && ($this->subscriptionManager->isUserSubscribed($user) || $this->orderManager->hasUserOrdered($user))) {
+        if ($user && ($this->subscriptionManager->isUserSubscribedViaAnyTenant($user) || $this->orderManager->hasUserOrderedViaAnyTenant($user))) {
             $query->where('show_for_customers', true);
         }
 

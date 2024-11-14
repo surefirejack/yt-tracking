@@ -223,4 +223,28 @@ class OrderManager
             })
             ->exists();
     }
+
+    public function hasUserOrderedViaAnyTenant(User $user, ?string $productSlug = null): bool
+    {
+        $tenantIds = $user->tenants()->pluck('tenant_id')->toArray();
+
+        if (empty($tenantIds)) {
+            return false;
+        }
+
+        if (! $productSlug) {
+            return Order::whereIn('tenant_id', $tenantIds)
+                ->where('status', OrderStatus::SUCCESS)
+                ->exists();
+        }
+
+        return Order::whereIn('tenant_id', $tenantIds)
+            ->where('status', OrderStatus::SUCCESS)
+            ->whereHas('items', function ($query) use ($productSlug) {
+                $query->whereHas('oneTimeProduct', function ($query) use ($productSlug) {
+                    $query->where('slug', $productSlug);
+                });
+            })
+            ->exists();
+    }
 }
