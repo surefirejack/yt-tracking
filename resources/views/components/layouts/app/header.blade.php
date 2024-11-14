@@ -1,4 +1,5 @@
 <nav class="relative bg-primary-500 text-white border-gray-200 dark:bg-gray-900">
+    <livewire:announcement.view />
     <div class="navbar max-w-screen-xl items-center mx-auto">
         <div class="navbar-start">
             <div class="dropdown">
