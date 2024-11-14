@@ -75,6 +75,11 @@ class RolesAndPermissionsSeeder extends Seeder
         Permission::findOrCreate('delete roadmap items');
         Permission::findOrCreate('view roadmap items');
 
+        Permission::findOrCreate('create announcements');
+        Permission::findOrCreate('update announcements');
+        Permission::findOrCreate('delete announcements');
+        Permission::findOrCreate('view announcements');
+
         Permission::findOrCreate('view transactions');
 
         Permission::findOrCreate('update settings');

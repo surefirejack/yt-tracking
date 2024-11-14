@@ -7,6 +7,7 @@ use App\Filament\Dashboard\Pages\TenantSettings;
 use App\Models\Tenant;
 use App\Services\TenantPermissionManager;
 use Filament\Facades\Filament;
+use App\Constants\AnnouncementPlacement;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
@@ -16,6 +17,7 @@ use Filament\Pages;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
+use Filament\View\PanelsRenderHook;
 use Filament\Widgets;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
@@ -23,6 +25,7 @@ use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\AuthenticateSession;
 use Illuminate\Session\Middleware\StartSession;
+use Illuminate\Support\Facades\Blade;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 use Jeffgreco13\FilamentBreezy\BreezyCore;
 
@@ -90,6 +93,9 @@ class DashboardPanelProvider extends PanelProvider
                     ->icon('heroicon-s-users')
                     ->collapsed(),
             ])
+            ->renderHook(PanelsRenderHook::BODY_START,
+                fn (): string => Blade::render("@livewire('announcement.view', ['placement' => '".AnnouncementPlacement::USER_DASHBOARD->value."'])")
+            )
             ->authMiddleware([
                 Authenticate::class,
             ])->plugins([

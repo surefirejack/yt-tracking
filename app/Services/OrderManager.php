@@ -190,7 +190,7 @@ class OrderManager
             ->exists();
     }
 
-    public function hasUserOrdered(?User $user, ?string $productSlug, ?Tenant $tenant = null): bool
+    public function hasUserOrdered(?User $user, ?string $productSlug = null, ?Tenant $tenant = null): bool
     {
         if (! $user) {
             return false;
