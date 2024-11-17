@@ -1,6 +1,6 @@
 <?php
 
-namespace Feature\Services;
+namespace Tests\Feature\Services;
 
 use App\Constants\AnnouncementPlacement;
 use App\Models\Announcement;
