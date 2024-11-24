@@ -46,11 +46,12 @@ class PaymentProviderResource extends Resource
                             .'</div>'
                         );
                     }),
-                Tables\Columns\TextColumn::make('name'),
+                Tables\Columns\TextColumn::make('name')->label(__('Name')),
                 Tables\Columns\TextColumn::make('slug')
+                    ->label(__('Slug'))
                     ->searchable(),
-                Tables\Columns\IconColumn::make('is_active')
-                    ->boolean(),
+                Tables\Columns\ToggleColumn::make('is_active')
+                    ->label(__('Active')),
             ])
             ->filters([
                 //

@@ -40,7 +40,7 @@ class OauthLoginProviderResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('name')
+                Tables\Columns\TextColumn::make('name')->label(__('Name'))
                     ->getStateUsing(function (OauthLoginProvider $record) {
                         return new HtmlString(
                             '<div class="flex gap-2">'.
@@ -49,9 +49,8 @@ class OauthLoginProviderResource extends Resource
                             .'</div>'
                         );
                     }),
-                Tables\Columns\TextColumn::make('provider_name'),
-                Tables\Columns\IconColumn::make('enabled')
-                    ->boolean(),
+                Tables\Columns\TextColumn::make('provider_name')->label(__('Provider Name')),
+                Tables\Columns\ToggleColumn::make('enabled')->label(__('Enabled')),
             ])
             ->filters([
                 //

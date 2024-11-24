@@ -40,9 +40,9 @@
                                 @endif
                             </span>
                             @if ($plan->interval_count > 1)
-                                <span class="text-xs">{{ $plan->interval_count }} {{ ucfirst($plan->interval->name) }}</span>
+                                <span class="text-xs">{{ $plan->interval_count }} {{ mb_convert_case($plan->interval->name, MB_CASE_TITLE, 'UTF-8') }}</span>
                             @else
-                                <span class="text-xs">{{ ucfirst($plan->interval->adverb) }} {{ __('subscription.') }}</span>
+                                <span class="text-xs">{{ mb_convert_case($plan->interval->adverb, MB_CASE_TITLE, 'UTF-8') }} {{ __('subscription.') }}</span>
                             @endif
 
                             <span class="text-xs">
