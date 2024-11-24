@@ -97,20 +97,20 @@ class DiscountResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('name')
+                    ->label(__('Name'))
                     ->searchable()
                     ->sortable(),
-                Tables\Columns\TextColumn::make('type'),
-                Tables\Columns\TextColumn::make('amount')->formatStateUsing(function (string $state, $record) {
+                Tables\Columns\TextColumn::make('type')->label(__('Type')),
+                Tables\Columns\TextColumn::make('amount')->label(__('Amount'))->formatStateUsing(function (string $state, $record) {
                     if ($record->type === DiscountConstants::TYPE_PERCENTAGE) {
                         return $state.'%';
                     }
 
                     return intval($state) / 100;
                 }),
-                Tables\Columns\IconColumn::make('is_active')
-                    ->boolean(),
-                Tables\Columns\TextColumn::make('redemptions'),
-                Tables\Columns\TextColumn::make('updated_at')
+                Tables\Columns\ToggleColumn::make('is_active')->label(__('Active')),
+                Tables\Columns\TextColumn::make('redemptions')->label(__('Redemptions')),
+                Tables\Columns\TextColumn::make('updated_at')->label(__('Updated at'))
                     ->dateTime(config('app.datetime_format')),
             ])
             ->filters([

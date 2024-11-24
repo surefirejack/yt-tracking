@@ -93,7 +93,7 @@ class AnnouncementResource extends Resource
                     ->dateTime()
                     ->sortable(),
                 Tables\Columns\ToggleColumn::make('is_active')
-                    ->label(__('Is Active')),
+                    ->label(__('Active')),
                 Tables\Columns\TextColumn::make('created_at')
                     ->label(__('Created At'))
                     ->dateTime(config('app.datetime_format'))
