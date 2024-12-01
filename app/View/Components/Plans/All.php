@@ -130,6 +130,7 @@ class All extends Component
     {
         // per week (approximate)
         $intervalConversion = [
+            'day' => 1 / 7,
             'week' => 1,
             'month' => 4,
             'year' => 48,
