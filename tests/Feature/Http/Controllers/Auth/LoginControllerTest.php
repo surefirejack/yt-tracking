@@ -32,7 +32,7 @@ class LoginControllerTest extends FeatureTest
     {
         config(['app.two_factor_auth_enabled' => true]);
 
-        $user = $this->createUser([
+        $user = $this->createUser(null, [], [
             'email' => 'test@example.com',
             'password' => bcrypt('password123'),
         ]);
@@ -52,7 +52,7 @@ class LoginControllerTest extends FeatureTest
         $email = $this->faker->email;
 
         /** @var User $user */
-        $user = $this->createUser([
+        $user = $this->createUser(null, [], [
             'email' => $email,
             'password' => bcrypt('password123'),
         ]);
@@ -75,7 +75,7 @@ class LoginControllerTest extends FeatureTest
         $email = $this->faker->email;
 
         /** @var User $user */
-        $user = $this->createUser([
+        $user = $this->createUser(null, [], [
             'email' => $email,
             'password' => bcrypt('password123'),
         ]);
