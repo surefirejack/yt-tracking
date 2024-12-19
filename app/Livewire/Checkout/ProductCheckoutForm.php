@@ -2,8 +2,10 @@
 
 namespace App\Livewire\Checkout;
 
+use App\Exceptions\LoginException;
 use App\Services\CheckoutManager;
 use App\Services\DiscountManager;
+use App\Services\LoginManager;
 use App\Services\OneTimeProductManager;
 use App\Services\PaymentProviders\PaymentManager;
 use App\Services\SessionManager;
@@ -22,8 +24,13 @@ class ProductCheckoutForm extends CheckoutForm
         UserManager $userManager,
         OneTimeProductManager $oneTimeProductManager,
         SessionManager $sessionManager,
+        LoginManager $loginManager,
     ) {
-        parent::handleLoginOrRegistration($loginValidator, $registerValidator, $userManager);
+        try {
+            parent::handleLoginOrRegistration($loginValidator, $registerValidator, $userManager, $loginManager);
+        } catch (LoginException $exception) { // 2fa is enabled, user has to go through typical login flow to enter 2fa code
+            return redirect()->route('login');
+        }
 
         $cartDto = $sessionManager->getCartDto();
 

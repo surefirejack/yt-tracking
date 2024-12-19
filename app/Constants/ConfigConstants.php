@@ -108,5 +108,8 @@ class ConfigConstants
 
         // Cookie Consent
         'cookie-consent.enabled',
+
+        // Two Factor Auth
+        'app.two_factor_auth_enabled',
     ];
 }

@@ -12,7 +12,7 @@ class OpenGraphImageSettings extends Page
 
     public static function canAccess(): bool
     {
-        return auth()->user()->hasPermissionTo('update settings');
+        return auth()->user() && auth()->user()->hasPermissionTo('update settings');
     }
 
     public static function getNavigationLabel(): string

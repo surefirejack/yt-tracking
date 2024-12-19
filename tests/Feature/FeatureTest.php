@@ -26,9 +26,9 @@ class FeatureTest extends TestCase
         $this->withoutVite();
     }
 
-    protected function createUser(?Tenant $tenant = null, array $tenantPermissions = [])
+    protected function createUser(?Tenant $tenant = null, array $tenantPermissions = [], array $attributes = [])
     {
-        $user = User::factory()->create();
+        $user = User::factory()->create($attributes);
 
         if ($tenant !== null) {
             $tenant->users()->attach($user);

@@ -7,23 +7,29 @@ use Illuminate\Support\Facades\Validator;
 
 class LoginValidator
 {
-
     public function validateRequest(Request $request)
     {
-        $request->validate($this->getValidationRules());
+        return $request->validate(
+            $this->getValidationRules(
+                $request->all()
+            ));
     }
 
     public function validate(array $fields)
     {
-        return Validator::make($fields, $this->getValidationRules());
+        return Validator::make($fields, $this->getValidationRules($fields));
     }
 
-    private function getValidationRules(): array
+    private function getValidationRules(array $fields): array
     {
-        $rules = [
-            'email' => 'required|string',
-            'password' => 'required|string',
-        ];
+        $rules = [];
+
+        if (! config('app.two_factor_auth_enabled') || ! isset($fields['2fa_code'])) {
+            $rules = [
+                'email' => 'required|string',
+                'password' => 'required|string',
+            ];
+        }
 
         if (config('app.recaptcha_enabled')) {
             $rules[recaptchaFieldName()] = recaptchaRuleName();

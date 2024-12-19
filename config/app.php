@@ -183,9 +183,13 @@ return [
         'dark' => 'images/logo-dark.png',
     ],
 
-    'roadmap_enabled' => true,
+    'roadmap_enabled' => env('ROADMAP_ENABLED', true),
 
-    'recaptcha_enabled' => false,
+    'recaptcha_enabled' => env('RECAPTCHA_ENABLED', false),
+
+    'multiple_subscriptions_enabled' => env('MULTIPLE_SUBSCRIPTIONS_ENABLED', false),
+
+    'two_factor_auth_enabled' => env('TWO_FACTOR_AUTH_ENABLED', true),
 
     'allow_tenant_invitations' => true,
 
