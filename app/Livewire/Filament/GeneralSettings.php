@@ -65,6 +65,7 @@ class GeneralSettings extends Component implements HasForms
             'recaptcha_api_site_key' => $this->configManager->get('recaptcha.api_site_key', ''),
             'recaptcha_api_secret_key' => $this->configManager->get('recaptcha.api_secret_key', ''),
             'cookie_consent_enabled' => $this->configManager->get('cookie-consent.enabled', false),
+            'two_factor_auth_enabled' => $this->configManager->get('app.two_factor_auth_enabled', false),
         ]);
     }
 
@@ -181,7 +182,7 @@ class GeneralSettings extends Component implements HasForms
                                 ->label(__('Other Tracking Scripts')),
                         ]),
                     Tabs\Tab::make(__('Customer Dashboard'))
-                        ->icon('heroicon-o-squares-2x2')
+                        ->icon('heroicon-s-user')
                         ->schema([
                             Toggle::make('show_subscriptions')
                                 ->label(__('Show Subscriptions'))
@@ -215,6 +216,14 @@ class GeneralSettings extends Component implements HasForms
                                 ->label(__('Recaptcha Site Key')),
                             TextInput::make('recaptcha_api_secret_key')
                                 ->label(__('Recaptcha Secret Key')),
+                        ]),
+                    Tabs\Tab::make(__('Two Factor Authentication'))
+                        ->icon('heroicon-c-shield-check')
+                        ->schema([
+                            Toggle::make('two_factor_auth_enabled')
+                                ->label(__('Two Factor Authentication Enabled'))
+                                ->helperText(__('If enabled, users will be able to enable two factor authentication on their account. If disabled, the 2FA field will not be shown on the login form even for users who have it enabled.'))
+                                ->required(),
                         ]),
                     Tabs\Tab::make(__('Social Links'))
                         ->icon('heroicon-o-heart')
@@ -271,6 +280,7 @@ class GeneralSettings extends Component implements HasForms
         $this->configManager->set('recaptcha.api_site_key', $data['recaptcha_api_site_key']);
         $this->configManager->set('recaptcha.api_secret_key', $data['recaptcha_api_secret_key']);
         $this->configManager->set('cookie-consent.enabled', $data['cookie_consent_enabled']);
+        $this->configManager->set('app.two_factor_auth_enabled', $data['two_factor_auth_enabled']);
 
         Notification::make()
             ->title(__('Settings Saved'))

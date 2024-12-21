@@ -8,6 +8,7 @@ use App\Models\Tenant;
 use App\Services\TenantPermissionManager;
 use Filament\Facades\Filament;
 use App\Constants\AnnouncementPlacement;
+use App\Filament\Dashboard\Pages\TwoFactorAuth\TwoFactorAuth;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
@@ -62,6 +63,13 @@ class DashboardPanelProvider extends PanelProvider
                     )
                     ->icon('heroicon-s-cog-8-tooth')
                     ->url(fn () => TenantSettings::getUrl()),
+                MenuItem::make()
+                    ->label(__('2-Factor Authentication'))
+                    ->visible(
+                        fn () => config('app.two_factor_auth_enabled')
+                    )
+                    ->url(fn () => TwoFactorAuth::getUrl())
+                    ->icon('heroicon-s-cog-8-tooth'),
             ])
             ->discoverResources(in: app_path('Filament/Dashboard/Resources'), for: 'App\\Filament\\Dashboard\\Resources')
             ->discoverPages(in: app_path('Filament/Dashboard/Pages'), for: 'App\\Filament\\Dashboard\\Pages')

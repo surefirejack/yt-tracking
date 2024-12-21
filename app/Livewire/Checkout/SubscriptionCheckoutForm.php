@@ -2,10 +2,12 @@
 
 namespace App\Livewire\Checkout;
 
+use App\Exceptions\LoginException;
 use App\Exceptions\NoPaymentProvidersAvailableException;
 use App\Exceptions\SubscriptionCreationNotAllowedException;
 use App\Services\CheckoutManager;
 use App\Services\DiscountManager;
+use App\Services\LoginManager;
 use App\Services\PaymentProviders\PaymentManager;
 use App\Services\PlanManager;
 use App\Services\SessionManager;
@@ -31,8 +33,13 @@ class SubscriptionCheckoutForm extends CheckoutForm
         PaymentManager $paymentManager,
         DiscountManager $discountManager,
         UserManager $userManager,
+        LoginManager $loginManager,
     ) {
-        parent::handleLoginOrRegistration($loginValidator, $registerValidator, $userManager);
+        try {
+            parent::handleLoginOrRegistration($loginValidator, $registerValidator, $userManager, $loginManager);
+        } catch (LoginException $exception) { // 2fa is enabled, user has to go through typical login flow to enter 2fa code
+            return redirect()->route('login');
+        }
 
         $subscriptionCheckoutDto = $this->sessionManager->getSubscriptionCheckoutDto();
         $planSlug = $subscriptionCheckoutDto->planSlug;

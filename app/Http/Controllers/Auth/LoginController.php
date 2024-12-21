@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
-use App\Providers\RouteServiceProvider;
+use App\Services\LoginManager;
 use App\Validator\LoginValidator;
 use Illuminate\Foundation\Auth\AuthenticatesUsers;
 use Illuminate\Http\Request;
@@ -32,7 +32,8 @@ class LoginController extends Controller
     //    protected $redirectTo = RouteServiceProvider::HOME;
 
     public function __construct(
-        private LoginValidator $loginValidator
+        private LoginValidator $loginValidator,
+        private LoginManager $loginManager,
     ) {
         $this->middleware('guest')->except('logout');
     }
@@ -65,5 +66,10 @@ class LoginController extends Controller
     protected function validateLogin(Request $request)
     {
         $this->loginValidator->validateRequest($request);
+    }
+
+    protected function attemptLogin(Request $request)
+    {
+        return $this->loginManager->attempt($this->credentials($request), $request->boolean('remember'));
     }
 }

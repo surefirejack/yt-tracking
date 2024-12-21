@@ -3,8 +3,6 @@
 namespace App\Filament\Admin\Pages;
 
 use Filament\Pages\Page;
-use Illuminate\Auth\Access\AuthorizationException;
-use Illuminate\Contracts\View\View;
 
 class GeneralSettings extends Page
 {
@@ -14,6 +12,6 @@ class GeneralSettings extends Page
 
     public static function canAccess(): bool
     {
-        return auth()->user()->hasPermissionTo('update settings');
+        return auth()->user() && auth()->user()->hasPermissionTo('update settings');
     }
 }

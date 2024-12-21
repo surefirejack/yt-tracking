@@ -2,8 +2,10 @@
 
 namespace App\Livewire\Checkout;
 
+use App\Exceptions\LoginException;
 use App\Exceptions\NoPaymentProvidersAvailableException;
 use App\Models\User;
+use App\Services\LoginManager;
 use App\Services\PaymentProviders\PaymentManager;
 use App\Services\UserManager;
 use App\Validator\LoginValidator;
@@ -44,10 +46,11 @@ class CheckoutForm extends Component
         LoginValidator $loginValidator,
         RegisterValidator $registerValidator,
         UserManager $userManager,
+        LoginManager $loginManager,
     ) {
         if (! auth()->check()) {
             if ($this->userExists($this->email)) {
-                $this->loginUser($loginValidator);
+                $this->loginUser($loginValidator, $loginManager);
             } else {
                 $this->registerUser($registerValidator, $userManager);
             }
@@ -67,7 +70,7 @@ class CheckoutForm extends Component
 
     }
 
-    protected function loginUser(LoginValidator $loginValidator)
+    protected function loginUser(LoginValidator $loginValidator, LoginManager $loginManager)
     {
         $fields = [
             'email' => $this->email,
@@ -85,10 +88,14 @@ class CheckoutForm extends Component
             throw new ValidationException($validator);
         }
 
-        $result = auth()->attempt([
-            'email' => $this->email,
-            'password' => $this->password,
-        ], true);
+        try {
+            $result = $loginManager->attempt([
+                'email' => $this->email,
+                'password' => $this->password,
+            ],  true);
+        } catch (\Throwable $e) {  // usually thrown when 2FA is enabled so user need to be redirected to login page to enter 2FA code
+            throw new LoginException;
+        }
 
         if (! $result) {
             $this->resetReCaptcha();
