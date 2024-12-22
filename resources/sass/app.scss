@@ -60,7 +60,7 @@
         @apply my-2;
     }
 
-    article.blog-post code{
+    article.blog-post pre{
         @apply mt-4;
     }
 
@@ -78,7 +78,7 @@
         @apply font-semibold;
     }
 
-    code {
+    pre {
         @apply font-mono;
         @apply bg-gray-100 #{!important};
         @apply rounded-md;
@@ -92,9 +92,16 @@
         @apply max-w-full;
     }
 
-    code:hover .copy-button {
+    pre:hover .copy-button {
         @apply block;
         @apply visible;
+    }
+
+    code {
+        @apply font-mono;
+        @apply bg-gray-100;
+        @apply rounded-md;
+        @apply p-1;
     }
 
     /* For Webkit-based browsers (Chrome, Safari and Opera) */
