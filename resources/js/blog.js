@@ -3,7 +3,7 @@ import 'highlight.js/styles/github.css';
 import ClipboardJS from "clipboard";
 
 document.addEventListener("DOMContentLoaded", function() {
-    let codeBlocks = document.querySelectorAll("code");
+    let codeBlocks = document.querySelectorAll("pre");
     codeBlocks.forEach((codeBlock) => {
         // add the plain text as an attribute to the code block
         codeBlock.setAttribute("data-clipboard-text", codeBlock.textContent);
@@ -14,7 +14,7 @@ document.addEventListener("DOMContentLoaded", function() {
 });
 
 function addCopyToClipboardButton() {
-    let codeBlocks = document.querySelectorAll("code");
+    let codeBlocks = document.querySelectorAll("pre");
     codeBlocks.forEach((codeBlock) => {
         let copyButton = document.createElement("button");
         copyButton.innerHTML = "Copy";
