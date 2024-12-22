@@ -31,7 +31,7 @@ class LoginValidator
             ];
         }
 
-        if (config('app.recaptcha_enabled')) {
+        if (config('app.recaptcha_enabled') && ! isset($fields['2fa_code'])) { // we want to avoid recaptcha validation when 2fa_code is present
             $rules[recaptchaFieldName()] = recaptchaRuleName();
         }
 
