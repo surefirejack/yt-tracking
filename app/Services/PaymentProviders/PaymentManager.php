@@ -16,11 +16,15 @@ class PaymentManager
 
     public function getActivePaymentProviders(): array
     {
-        $activePaymentProvidersMap = $this->getActivePaymentProvidersMap();
+        $paymentProviderInterfaceMap = $this->getPaymentProviderInterfaceMap();
 
-        foreach ($this->paymentProviders as $paymentProvider) {
-            if (isset($activePaymentProvidersMap[$paymentProvider->getSlug()])) {
-                $paymentProviders[] = $paymentProvider;
+        $activePaymentProviders = $this->getActivePaymentProvidersFromDatabase();
+
+        $paymentProviders = [];
+
+        foreach ($activePaymentProviders as $activePaymentProvider) {
+            if (isset($paymentProviderInterfaceMap[$activePaymentProvider->slug])) {
+                $paymentProviders[] = $paymentProviderInterfaceMap[$activePaymentProvider->slug];
             }
         }
 
@@ -29,14 +33,16 @@ class PaymentManager
 
     public function getActivePaymentProvidersForPlan(Plan $plan): array
     {
-        $activePaymentProvidersMap = $this->getActivePaymentProvidersMap();
+        $paymentProviderInterfaceMap = $this->getPaymentProviderInterfaceMap();
+
+        $activePaymentProviders = $this->getActivePaymentProvidersFromDatabase();
 
         $paymentProviders = [];
-        foreach ($this->paymentProviders as $paymentProvider) {
-            if (isset($activePaymentProvidersMap[$paymentProvider->getSlug()]) &&
-                in_array($plan->type, $paymentProvider->getSupportedPlanTypes())
+        foreach ($activePaymentProviders as $paymentProvider) {
+            if (isset($paymentProviderInterfaceMap[$paymentProvider->slug]) &&
+                in_array($plan->type, $paymentProviderInterfaceMap[$paymentProvider->slug]->getSupportedPlanTypes())
             ) {
-                $paymentProviders[] = $paymentProvider;
+                $paymentProviders[] = $paymentProviderInterfaceMap[$paymentProvider->slug];
             }
         }
 
@@ -45,29 +51,28 @@ class PaymentManager
 
     public function getPaymentProviderBySlug(string $slug): PaymentProviderInterface
     {
-        $activePaymentProvidersMap = $this->getActivePaymentProvidersMap();
+        $paymentProviderInterfaceMap = $this->getPaymentProviderInterfaceMap();
 
-        foreach ($this->paymentProviders as $paymentProvider) {
-            if (isset($activePaymentProvidersMap[$paymentProvider->getSlug()])) {
-                if ($paymentProvider->getSlug() === $slug) {
-                    return $paymentProvider;
-                }
-            }
+        if (isset($paymentProviderInterfaceMap[$slug])) {
+            return $paymentProviderInterfaceMap[$slug];
         }
 
         throw new \Exception('Payment provider not found: '.$slug);
     }
 
-    private function getActivePaymentProvidersMap(): array
+    private function getPaymentProviderInterfaceMap(): array
     {
-        $activePaymentProviders = PaymentProvider::where('is_active', true)->get();
+        $paymentProviderInterfaceMap = [];
 
-        $activePaymentProvidersMap = [];
-
-        foreach ($activePaymentProviders as $activePaymentProvider) {
-            $activePaymentProvidersMap[$activePaymentProvider->slug] = $activePaymentProvider;
+        foreach ($this->paymentProviders as $paymentProvider) {
+            $paymentProviderInterfaceMap[$paymentProvider->getSlug()] = $paymentProvider;
         }
 
-        return $activePaymentProvidersMap;
+        return $paymentProviderInterfaceMap;
+    }
+
+    private function getActivePaymentProvidersFromDatabase()
+    {
+        return PaymentProvider::where('is_active', true)->orderBy('sort', 'asc')->get();
     }
 }
