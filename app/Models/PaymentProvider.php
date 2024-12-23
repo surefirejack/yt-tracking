@@ -14,5 +14,6 @@ class PaymentProvider extends Model
         'is_active',
         'type',
         'slug',
+        'sort',
     ];
 }
