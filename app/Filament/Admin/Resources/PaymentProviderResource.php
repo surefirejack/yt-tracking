@@ -37,6 +37,7 @@ class PaymentProviderResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->reorderable('sort')
             ->columns([
                 Tables\Columns\TextColumn::make('icon')
                     ->getStateUsing(function (PaymentProvider $record) {
@@ -60,7 +61,9 @@ class PaymentProviderResource extends Resource
                 Tables\Actions\EditAction::make(),
             ])
             ->bulkActions([
-            ]);
+            ])
+            ->defaultSort('sort', 'asc')
+            ;
     }
 
     public static function getRelations(): array
