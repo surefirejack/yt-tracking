@@ -12,7 +12,7 @@ use App\Filament\Dashboard\Resources\SubscriptionResource\RelationManagers\Usage
 use App\Mapper\SubscriptionStatusMapper;
 use App\Models\Subscription;
 use App\Services\ConfigManager;
-use App\Services\PlanManager;
+use App\Services\SubscriptionManager;
 use Filament\Forms\Form;
 use Filament\Infolists\Components\Section;
 use Filament\Infolists\Components\TextEntry;
@@ -53,6 +53,8 @@ class SubscriptionResource extends Resource
                 }),
                 Tables\Columns\TextColumn::make('ends_at')->dateTime(config('app.datetime_format'))->label(__('Next Renewal')),
                 Tables\Columns\TextColumn::make('status')
+                    ->color(fn (Subscription $record, SubscriptionStatusMapper $mapper): string => $mapper->mapColor($record->status))
+                    ->badge()
                     ->formatStateUsing(fn (string $state, SubscriptionStatusMapper $mapper): string => $mapper->mapForDisplay($state)),
                 Tables\Columns\IconColumn::make('is_canceled_at_end_of_cycle')
                     ->label(__('Renews automatically'))
@@ -66,25 +68,32 @@ class SubscriptionResource extends Resource
                 //
             ])
             ->actions([
+                Tables\Actions\Action::make('complete-subscription')
+                    ->button()
+                    ->color('primary')
+                    ->icon('heroicon-s-wallet')
+                    ->visible(fn (Subscription $record, SubscriptionManager $subscriptionManager): bool => $subscriptionManager->isLocalSubscription($record))
+                    ->url(fn (Subscription $record): string => route('checkout.convert-local-subscription', ['subscriptionUuid' => $record->uuid]))
+                    ->label(__('Complete Subscription')),
+                Tables\Actions\ViewAction::make()
+                    ->label(__('View Details')),
                 Tables\Actions\ActionGroup::make([
-                    Tables\Actions\ViewAction::make()
-                        ->label(__('View Details')),
                     Tables\Actions\Action::make('change-plan')
                         ->label(__('Change Plan'))
                         ->icon('heroicon-o-rocket-launch')
                         ->url(fn (Subscription $record): string => SubscriptionResource::getUrl('change-plan', ['record' => $record->uuid]))
-                        ->visible(fn (Subscription $record, PlanManager $planManager): bool => $record->status === SubscriptionStatus::ACTIVE->value && $planManager->isPlanChangeable($record->plan)),
+                        ->visible(fn (Subscription $record, SubscriptionManager $subscriptionManager): bool => $subscriptionManager->canChangeSubscriptionPlan($record)),
                     Tables\Actions\Action::make('cancel')
                         ->label(__('Cancel Subscription'))
                         ->icon('heroicon-m-x-circle')
-                        ->visible(fn (Subscription $record): bool => ! $record->is_canceled_at_end_of_cycle && $record->status === SubscriptionStatus::ACTIVE->value)
+                        ->visible(fn (Subscription $record, SubscriptionManager $subscriptionManager): bool => $subscriptionManager->canCancelSubscription($record))
                         ->url(fn (Subscription $record): string => SubscriptionResource::getUrl('cancel', ['record' => $record->uuid])),
                     Tables\Actions\Action::make('discard-cancellation')
                         ->label(__('Discard Cancellation'))
                         ->icon('heroicon-m-x-circle')
                         ->action(function ($record, DiscardSubscriptionCancellationActionHandler $handler) {
                             $handler->handle($record);
-                        })->visible(fn (Subscription $record): bool => $record->is_canceled_at_end_of_cycle && $record->status === SubscriptionStatus::ACTIVE->value),
+                        })->visible(fn (Subscription $record, SubscriptionManager $subscriptionManager): bool => $subscriptionManager->canDiscardSubscriptionCancellation($record)),
                 ]),
             ])
             ->bulkActions([
@@ -202,9 +211,12 @@ class SubscriptionResource extends Resource
                             }),
                         TextEntry::make('ends_at')->dateTime(config('app.datetime_format'))->label(__('Next Renewal'))->visible(fn (Subscription $record): bool => ! $record->is_canceled_at_end_of_cycle),
                         TextEntry::make('status')
+                            ->color(fn (Subscription $record, SubscriptionStatusMapper $mapper): string => $mapper->mapColor($record->status))
+                            ->badge()
                             ->formatStateUsing(fn (string $state, SubscriptionStatusMapper $mapper): string => $mapper->mapForDisplay($state)),
                         TextEntry::make('is_canceled_at_end_of_cycle')
                             ->label(__('Renews automatically'))
+                            ->visible(fn (Subscription $record, SubscriptionManager $subscriptionManager): bool => $subscriptionManager->canCancelSubscription($record))
                             ->icon(
                                 function ($state) {
                                     $state = boolval($state);

@@ -17,4 +17,12 @@ class SubscriptionStatusMapper
             default => __('Pending'),
         };
     }
+
+    public function mapColor(string $status)
+    {
+        return match ($status) {
+            SubscriptionStatus::ACTIVE->value => 'success',
+            default => 'warning',
+        };
+    }
 }

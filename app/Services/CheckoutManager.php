@@ -10,15 +10,23 @@ class CheckoutManager
     public function __construct(
         private SubscriptionManager $subscriptionManager,
         private OrderManager $orderManager,
-    ) {
-
-    }
+    ) {}
 
     public function initSubscriptionCheckout(string $planSlug)
     {
         $subscription = $this->subscriptionManager->findNewByPlanSlugAndUser($planSlug, auth()->id());
         if ($subscription === null) {
             $subscription = $this->subscriptionManager->create($planSlug, auth()->id());
+        }
+
+        return $subscription;
+    }
+
+    public function initLocalSubscriptionCheckout(string $planSlug)
+    {
+        $subscription = $this->subscriptionManager->findNewByPlanSlugAndUser($planSlug, auth()->id());
+        if ($subscription === null) {
+            $subscription = $this->subscriptionManager->create($planSlug, auth()->id(), localSubscription: true);
         }
 
         return $subscription;

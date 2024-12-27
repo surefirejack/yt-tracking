@@ -38,4 +38,6 @@ interface PaymentProviderInterface
     public function getSupportedPlanTypes(): array;
 
     public function reportUsage(Subscription $subscription, int $unitCount): bool;
+
+    public function supportsSkippingTrial(): bool;
 }

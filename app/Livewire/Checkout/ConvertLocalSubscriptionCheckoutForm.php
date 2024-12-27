@@ -4,19 +4,18 @@ namespace App\Livewire\Checkout;
 
 use App\Exceptions\LoginException;
 use App\Exceptions\NoPaymentProvidersAvailableException;
-use App\Exceptions\SubscriptionCreationNotAllowedException;
 use App\Services\CalculationManager;
-use App\Services\CheckoutManager;
 use App\Services\DiscountManager;
 use App\Services\LoginManager;
 use App\Services\PaymentProviders\PaymentManager;
 use App\Services\PlanManager;
 use App\Services\SessionManager;
+use App\Services\SubscriptionManager;
 use App\Services\UserManager;
 use App\Validator\LoginValidator;
 use App\Validator\RegisterValidator;
 
-class SubscriptionCheckoutForm extends CheckoutForm
+class ConvertLocalSubscriptionCheckoutForm extends CheckoutForm
 {
     private PlanManager $planManager;
 
@@ -24,14 +23,18 @@ class SubscriptionCheckoutForm extends CheckoutForm
 
     private CalculationManager $calculationManager;
 
+    private SubscriptionManager $subscriptionManager;
+
     public function boot(
         PlanManager $planManager,
         SessionManager $sessionManager,
         CalculationManager $calculationManager,
+        SubscriptionManager $subscriptionManager,
     ) {
         $this->planManager = $planManager;
         $this->sessionManager = $sessionManager;
         $this->calculationManager = $calculationManager;
+        $this->subscriptionManager = $subscriptionManager;
     }
 
     public function render(PaymentManager $paymentManager)
@@ -47,18 +50,17 @@ class SubscriptionCheckoutForm extends CheckoutForm
             $subscriptionCheckoutDto?->discountCode,
         );
 
-        return view('livewire.checkout.subscription-checkout-form', [
-            'userExists' => $this->userExists($this->email),
-            'paymentProviders' => $this->getPaymentProviders($paymentManager),
+        return view('livewire.checkout.convert-local-subscription-checkout-form', [
             'plan' => $plan,
             'totals' => $totals,
+            'userExists' => $this->userExists($this->email),
+            'paymentProviders' => $this->getPaymentProviders($paymentManager),
         ]);
     }
 
     public function checkout(
         LoginValidator $loginValidator,
         RegisterValidator $registerValidator,
-        CheckoutManager $checkoutManager,
         PaymentManager $paymentManager,
         DiscountManager $discountManager,
         UserManager $userManager,
@@ -98,15 +100,18 @@ class SubscriptionCheckoutForm extends CheckoutForm
             }
         }
 
-        try {
-            $subscription = $checkoutManager->initSubscriptionCheckout($planSlug);
-        } catch (SubscriptionCreationNotAllowedException $e) {
-            return redirect()->route('checkout.subscription.already-subscribed');
+        $subscription = $this->subscriptionManager->findById($subscriptionCheckoutDto->subscriptionId);
+
+        if (! $subscription) {
+            return redirect()->route('home');
+        }
+
+        if ($subscription->user_id !== $user->id) {
+            return redirect()->route('home');
         }
 
         $initData = $paymentProvider->initSubscriptionCheckout($plan, $subscription, $discount);
 
-        $subscriptionCheckoutDto->subscriptionId = $subscription->id;
         $this->sessionManager->saveSubscriptionCheckoutDto($subscriptionCheckoutDto);
 
         if ($paymentProvider->isRedirectProvider()) {
@@ -139,7 +144,7 @@ class SubscriptionCheckoutForm extends CheckoutForm
 
         $plan = $this->planManager->getActivePlanBySlug($planSlug);
 
-        $this->paymentProviders = $paymentManager->getActivePaymentProvidersForPlan($plan);
+        $this->paymentProviders = $paymentManager->getActivePaymentProvidersForPlan($plan, true);
 
         if (empty($this->paymentProviders)) {
             logger()->error('No payment providers available for plan', [

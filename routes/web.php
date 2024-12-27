@@ -63,6 +63,11 @@ Route::get('/checkout/plan/{planSlug}', [
     'subscriptionCheckout',
 ])->name('checkout.subscription');
 
+Route::get('/checkout/convert-subscription/{subscriptionUuid}', [
+    App\Http\Controllers\SubscriptionCheckoutController::class,
+    'convertLocalSubscriptionCheckout',
+])->name('checkout.convert-local-subscription');
+
 Route::get('/already-subscribed', function () {
     return view('checkout.already-subscribed');
 })->name('checkout.subscription.already-subscribed');
@@ -71,6 +76,11 @@ Route::get('/checkout/subscription/success', [
     App\Http\Controllers\SubscriptionCheckoutController::class,
     'subscriptionCheckoutSuccess',
 ])->name('checkout.subscription.success')->middleware('auth');
+
+Route::get('/checkout/convert-subscription/success', [
+    App\Http\Controllers\SubscriptionCheckoutController::class,
+    'convertLocalSubscriptionCheckoutSuccess',
+])->name('checkout.convert-local-subscription.success')->middleware('auth');
 
 Route::get('/payment-provider/paddle/payment-link', [
     PaddleController::class,

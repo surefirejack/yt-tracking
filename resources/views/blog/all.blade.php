@@ -1,4 +1,8 @@
 <x-layouts.app>
+    <x-slot name="title">
+        {{ __('Blog') }}
+    </x-slot>
+
     <div class="text-center pt-4 pb-0 md:pt-16 md:mb-10">
         <x-heading.h1 class="font-semibold">
             {{ __('From our blog') }}

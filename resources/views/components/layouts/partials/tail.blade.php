@@ -4,4 +4,9 @@
 
 @include('components.layouts.partials.analytics')
 
-@include('cookie-consent::index')
+@php($skipCookieContentBar = $skipCookieContentBar ?? false)
+
+@if (!$skipCookieContentBar)
+    @include('cookie-consent::index')
+@endif
+

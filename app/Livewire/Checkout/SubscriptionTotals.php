@@ -19,6 +19,8 @@ class SubscriptionTotals extends Component
 
     public $planHasTrial = false;
 
+    public $isTrailSkipped = false;
+
     public $subtotal;
 
     public $discountAmount;
@@ -33,6 +35,7 @@ class SubscriptionTotals extends Component
     public ?string $planPriceType = null;
     public ?string $pricePerUnit = null;
     public ?array $tiers = null;
+    public bool $canAddDiscount = true;
 
     private DiscountManager $discountManager;
 
@@ -44,11 +47,12 @@ class SubscriptionTotals extends Component
         $this->calculationManager = $calculationManager;
     }
 
-    public function mount(TotalsDto $totals, Plan $plan, $page)
+    public function mount(TotalsDto $totals, Plan $plan, $page, bool $canAddDiscount = true, bool $isTrailSkipped = false)
     {
         $this->page = $page;
         $this->planSlug = $plan->slug;
         $this->planHasTrial = $plan->has_trial;
+        $this->isTrailSkipped = $isTrailSkipped;
         $this->subtotal = $totals->subtotal;
         $this->discountAmount = $totals->discountAmount;
         $this->amountDue = $totals->amountDue;
@@ -57,6 +61,7 @@ class SubscriptionTotals extends Component
         $this->planPriceType = $totals->planPriceType;
         $this->pricePerUnit = $totals->pricePerUnit;
         $this->tiers = $totals->tiers;
+        $this->canAddDiscount = $canAddDiscount;
     }
 
     public function getCodeFromSession()

@@ -1,5 +1,9 @@
 <x-layouts.focus-center>
 
+    <x-slot name="title">
+        {{ __('Already Subscribed') }}
+    </x-slot>
+
     <div class="mx-4">
         <div class="card max-w-3xl bg-base-100 shadow-xl mx-auto text-center">
             <div class="card-body">

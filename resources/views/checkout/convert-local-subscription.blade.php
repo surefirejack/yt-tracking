@@ -13,6 +13,6 @@
         </x-heading.h2>
     </div>
 
-    <livewire:checkout.subscription-checkout-form />
+    <livewire:checkout.convert-local-subscription-checkout-form />
 
 </x-layouts.focus-center>

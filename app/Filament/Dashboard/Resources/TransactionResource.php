@@ -39,6 +39,8 @@ class TransactionResource extends Resource
                     return money($state, $record->currency->code);
                 }),
                 Tables\Columns\TextColumn::make('status')
+                    ->color(fn (Transaction $record, TransactionStatusMapper $mapper): string => $mapper->mapColor($record->status))
+                    ->badge()
                     ->formatStateUsing(fn (string $state, TransactionStatusMapper $mapper): string => $mapper->mapForDisplay($state)),
                 Tables\Columns\TextColumn::make('owner')
                     ->label(__('Owner'))

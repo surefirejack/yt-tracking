@@ -7,6 +7,7 @@ use App\Constants\DiscountConstants;
 use App\Constants\LemonSqueezyConstants;
 use App\Constants\PaymentProviderConstants;
 use App\Constants\PlanType;
+use App\Constants\SubscriptionType;
 use App\Models\Discount;
 use App\Models\Order;
 use App\Models\PaymentProvider;
@@ -54,7 +55,7 @@ class LemonSqueezyProvider implements PaymentProviderInterface
             'custom_price' => $price->price,
             'product_options' => [
                 'description' => $plan->description ?? $plan->name,
-                'redirect_url' => route('checkout.subscription.success'),
+                'redirect_url' => $this->getSubscriptionCheckoutSuccessUrl($subscription),
                 'enabled_variants' => [
                     $variantId,
                 ],
@@ -76,6 +77,12 @@ class LemonSqueezyProvider implements PaymentProviderInterface
                 ],
             ],
         ];
+
+        $shouldSkipTrial = $this->subscriptionManager->shouldSkipTrial($subscription);
+
+        if ($shouldSkipTrial) {
+            $object['checkout_options']['skip_trial'] = true;
+        }
 
         if ($discount) {
             $object['checkout_data']['discount_code'] = $this->findOrCreateLemonSqueezyDiscount($discount, $paymentProvider);
@@ -406,5 +413,19 @@ class LemonSqueezyProvider implements PaymentProviderInterface
         }
 
         return true;
+    }
+
+    public function supportsSkippingTrial(): bool
+    {
+        return true;
+    }
+
+    private function getSubscriptionCheckoutSuccessUrl(Subscription $subscription)
+    {
+        if ($subscription->type === SubscriptionType::LOCALLY_MANAGED) {
+            return route('checkout.convert-local-subscription.success');
+        }
+
+        return route('checkout.subscription.success');
     }
 }

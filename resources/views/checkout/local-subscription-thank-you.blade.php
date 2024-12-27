@@ -9,11 +9,10 @@
             <div class="card-body">
                 @svg('party', 'w-24 h-24 mx-auto text-primary-500 stroke-primary-500')
                 <x-heading.h3 class="text-primary-900">
-                    {{ __('Thank you for your purchase!') }}
+                    {{ __('We are thrilled to have you on board!') }}
                 </x-heading.h3>
                 <p>
-                    {{ __('Your order is being processed and you will receive an email with your order details shortly.') }}
-                    {{ __('It might take a few moments for your subscription to be activated.') }}
+                    {{ __('Thanks for joining us! It might take a few moments for your subscription to be activated.') }}
                 </p>
 
                 <x-button-link.primary href="{{ route('home') }}" class="mt-4 mx-auto">
