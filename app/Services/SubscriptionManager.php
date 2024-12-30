@@ -10,6 +10,7 @@ use App\Events\Subscription\InvoicePaymentFailed;
 use App\Events\Subscription\Subscribed;
 use App\Events\Subscription\SubscriptionCancelled;
 use App\Events\Subscription\SubscriptionRenewed;
+use App\Exceptions\CouldNotCreateLocalSubscriptionException;
 use App\Exceptions\SubscriptionCreationNotAllowedException;
 use App\Models\PaymentProvider;
 use App\Models\Plan;
@@ -45,7 +46,7 @@ class SubscriptionManager
         ?PaymentProvider $paymentProvider = null,
         ?string $paymentProviderSubscriptionId = null,
         bool $localSubscription = false,
-        ?Carbon $trialEndsAt = null,
+        ?Carbon $endsAt = null,
     ): Subscription {
         $plan = Plan::where('slug', $planSlug)->where('is_active', true)->firstOrFail();
 
@@ -54,7 +55,7 @@ class SubscriptionManager
         }
 
         $newSubscription = null;
-        DB::transaction(function () use ($plan, $userId, &$newSubscription, $paymentProvider, $paymentProviderSubscriptionId, $localSubscription, $trialEndsAt) {
+        DB::transaction(function () use ($plan, $userId, &$newSubscription, $paymentProvider, $paymentProviderSubscriptionId, $localSubscription, $endsAt) {
             $this->deleteAllNewSubscriptions($userId);
 
             $planPrice = $this->calculationManager->getPlanPrice($plan);
@@ -82,11 +83,20 @@ class SubscriptionManager
                 $subscriptionAttributes['payment_provider_subscription_id'] = $paymentProviderSubscriptionId;
             }
 
-            if ($localSubscription && $plan->has_trial) {
+            if ($localSubscription) {
                 $subscriptionAttributes['type'] = SubscriptionType::LOCALLY_MANAGED;
-                $endDate = $trialEndsAt ?? now()->addDays($this->calculateSubscriptionTrialDays($plan));
-                $subscriptionAttributes['trial_ends_at'] = $endDate;
-                $subscriptionAttributes['ends_at'] = $subscriptionAttributes['trial_ends_at'];
+
+                $endDate = $endsAt ?? ($plan->has_trial ? now()->addDays($this->calculateSubscriptionTrialDays($plan)) : null);
+                if ($endDate === null) {
+                    throw new CouldNotCreateLocalSubscriptionException('Could not determine local subscription end date');
+                }
+
+                $subscriptionAttributes['ends_at'] = $endDate;
+
+                if ($plan->has_trial) {
+                    $subscriptionAttributes['trial_ends_at'] = $endDate;
+                }
+
                 $subscriptionAttributes['status'] = SubscriptionStatus::ACTIVE->value;
             }
 

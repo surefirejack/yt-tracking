@@ -52,7 +52,7 @@ class LocalSubscriptionCheckoutForm extends CheckoutForm
         ]);
     }
 
-    public function checkoutLocalTrialSubscription(
+    public function checkout(
         LoginValidator $loginValidator,
         RegisterValidator $registerValidator,
         CheckoutManager $checkoutManager,

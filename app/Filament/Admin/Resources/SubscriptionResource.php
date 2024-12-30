@@ -161,7 +161,7 @@ class SubscriptionResource extends Resource
                                 $plan->slug,
                                 $user->id,
                                 localSubscription: true,
-                                trialEndsAt: Carbon::parse($data['ends_at'])
+                                endsAt: Carbon::parse($data['ends_at'])
                             );
                         } catch (SubscriptionCreationNotAllowedException $e) {
                             Notification::make()

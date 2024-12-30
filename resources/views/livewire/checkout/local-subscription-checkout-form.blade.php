@@ -1,5 +1,5 @@
 <div>
-    <form action="" method="post" wire:submit="checkoutLocalTrialSubscription" class="mb-32">
+    <form action="" method="post" wire:submit="checkout" class="mb-32">
         @csrf
 
         <x-section.columns class="max-w-none md:max-w-6xl flex-wrap-reverse">

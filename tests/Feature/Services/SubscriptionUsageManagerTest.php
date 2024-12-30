@@ -5,6 +5,7 @@ namespace Tests\Feature\Services;
 use App\Constants\PlanPriceType;
 use App\Constants\PlanType;
 use App\Constants\SubscriptionStatus;
+use App\Constants\SubscriptionType;
 use App\Models\Currency;
 use App\Models\PaymentProvider;
 use App\Models\Plan;
@@ -59,6 +60,7 @@ class SubscriptionUsageManagerTest extends FeatureTest
             'plan_id' => $plan->id,
             'status' => SubscriptionStatus::ACTIVE->value,
             'payment_provider_id' => $paymentProviderModel->id,
+            'type' => SubscriptionType::PAYMENT_PROVIDER_MANAGED,
         ]);
 
         $paymentProvider->expects('reportUsage')
