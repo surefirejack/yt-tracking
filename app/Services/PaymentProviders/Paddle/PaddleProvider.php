@@ -448,4 +448,9 @@ class PaddleProvider implements PaymentProviderInterface
     {
         throw new \Exception('Padddle does not support usage based billing');
     }
+
+    public function supportsSkippingTrial(): bool
+    {
+        return false;
+    }
 }

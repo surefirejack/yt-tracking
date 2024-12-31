@@ -193,6 +193,12 @@ return [
 
     'allow_tenant_invitations' => true,
 
+    'trial_without_payment' => [
+        'enabled' => env('TRIAL_WITHOUT_PAYMENT_ENABLED', false),
+        'first_reminder_days' => env('TRIAL_WITHOUT_PAYMENT_FIRST_REMINDER_DAYS', 3),
+        'second_reminder_days' => env('TRIAL_WITHOUT_PAYMENT_SECOND_REMINDER_DAYS', 1),
+    ],
+
     /*
     |--------------------------------------------------------------------------
     | Class Aliases

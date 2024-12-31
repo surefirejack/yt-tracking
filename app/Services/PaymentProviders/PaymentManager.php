@@ -31,7 +31,7 @@ class PaymentManager
         return $paymentProviders;
     }
 
-    public function getActivePaymentProvidersForPlan(Plan $plan): array
+    public function getActivePaymentProvidersForPlan(Plan $plan, bool $shouldSupportSkippingTrial = false): array
     {
         $paymentProviderInterfaceMap = $this->getPaymentProviderInterfaceMap();
 
@@ -42,7 +42,14 @@ class PaymentManager
             if (isset($paymentProviderInterfaceMap[$paymentProvider->slug]) &&
                 in_array($plan->type, $paymentProviderInterfaceMap[$paymentProvider->slug]->getSupportedPlanTypes())
             ) {
-                $paymentProviders[] = $paymentProviderInterfaceMap[$paymentProvider->slug];
+                $currentPaymentProvider = $paymentProviderInterfaceMap[$paymentProvider->slug];
+                if ($plan->has_trial && $shouldSupportSkippingTrial) {
+                    if ($currentPaymentProvider->supportsSkippingTrial()) {
+                        $paymentProviders[] = $currentPaymentProvider;
+                    }
+                } else {
+                    $paymentProviders[] = $currentPaymentProvider;
+                }
             }
         }
 

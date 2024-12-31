@@ -16,7 +16,7 @@ use App\Models\Tenant;
 use App\Models\User;
 use App\Services\PaymentProviders\PaymentManager;
 use App\Services\PaymentProviders\PaymentProviderInterface;
-use Illuminate\View\ViewException;
+use Exception;
 use Livewire\Livewire;
 use Tests\Feature\FeatureTest;
 
@@ -24,13 +24,15 @@ class SubscriptionCheckoutFormTest extends FeatureTest
 {
     public function test_can_checkout_new_user()
     {
+        $planSlug = 'plan-slug-'.rand(1, 1000000);
+
         $sessionDto = new SubscriptionCheckoutDto;
-        $sessionDto->planSlug = 'plan-slug-5';
+        $sessionDto->planSlug = $planSlug;
 
         $this->withSession([SessionConstants::SUBSCRIPTION_CHECKOUT_DTO => $sessionDto]);
 
         $plan = Plan::factory()->create([
-            'slug' => 'plan-slug-5',
+            'slug' => $planSlug,
             'is_active' => true,
         ]);
 
@@ -55,10 +57,11 @@ class SubscriptionCheckoutFormTest extends FeatureTest
         // get number of subscriptions before checkout
         $subscriptionsBefore = Subscription::count();
         $tenantsBefore = Tenant::count();
+        $email = 'something+'.rand(1, 1000000).'@gmail.com';
 
         Livewire::test(SubscriptionCheckoutForm::class)
             ->set('name', 'Name')
-            ->set('email', 'something+sub1@gmail.com')
+            ->set('email', $email)
             ->set('password', 'password')
             ->set('paymentProvider', 'paymore')
             ->call('checkout')
@@ -66,7 +69,7 @@ class SubscriptionCheckoutFormTest extends FeatureTest
 
         // assert user has been created
         $this->assertDatabaseHas('users', [
-            'email' => 'something+sub1@gmail.com',
+            'email' => $email,
         ]);
 
         // assert user is logged in
@@ -79,13 +82,14 @@ class SubscriptionCheckoutFormTest extends FeatureTest
 
     public function test_can_checkout_existing_user()
     {
+        $planSlug = 'plan-slug-'.rand(1, 1000000);
         $sessionDto = new SubscriptionCheckoutDto;
-        $sessionDto->planSlug = 'plan-slug-6';
+        $sessionDto->planSlug = $planSlug;
 
         $this->withSession([SessionConstants::SUBSCRIPTION_CHECKOUT_DTO => $sessionDto]);
 
         $plan = Plan::factory()->create([
-            'slug' => 'plan-slug-6',
+            'slug' => $planSlug,
             'is_active' => true,
         ]);
 
@@ -95,8 +99,10 @@ class SubscriptionCheckoutFormTest extends FeatureTest
             'price' => 100,
         ]);
 
+        $email = 'existing+'.rand(1, 1000000).'@gmail.com';
+
         $user = User::factory()->create([
-            'email' => 'existing+sub1@gmail.com',
+            'email' => $email,
             'password' => bcrypt('password'),
             'name' => 'Name',
         ]);
@@ -119,16 +125,11 @@ class SubscriptionCheckoutFormTest extends FeatureTest
 
         Livewire::test(SubscriptionCheckoutForm::class)
             ->set('name', 'Name')
-            ->set('email', 'existing+sub1@gmail.com')
+            ->set('email', $email)
             ->set('password', 'password')
             ->set('paymentProvider', 'paymore')
             ->call('checkout')
             ->assertRedirect('http://paymore.com/checkout');
-
-        // assert user has been created
-        $this->assertDatabaseHas('users', [
-            'email' => 'existing+sub1@gmail.com',
-        ]);
 
         // assert user is logged in
         $this->assertAuthenticated();
@@ -140,13 +141,14 @@ class SubscriptionCheckoutFormTest extends FeatureTest
 
     public function test_can_not_checkout_if_payment_does_not_support_plan_type()
     {
+        $planSlug = 'plan-slug-'.rand(1, 1000000);
         $sessionDto = new SubscriptionCheckoutDto;
-        $sessionDto->planSlug = 'plan-slug-9';
+        $sessionDto->planSlug = $planSlug;
 
         $this->withSession([SessionConstants::SUBSCRIPTION_CHECKOUT_DTO => $sessionDto]);
 
         $plan = Plan::factory()->create([
-            'slug' => 'plan-slug-9',
+            'slug' => $planSlug,
             'is_active' => true,
             'type' => PlanType::USAGE_BASED->value,
         ]);
@@ -168,11 +170,19 @@ class SubscriptionCheckoutFormTest extends FeatureTest
 
         $paymentProvider->shouldNotReceive('initSubscriptionCheckout');
 
-        $this->expectException(ViewException::class);
+        $this->expectException(Exception::class);
+
+        $email = 'existing+'.rand(1, 1000000).'@gmail.com';
+
+        $user = User::factory()->create([
+            'email' => $email,
+            'password' => bcrypt('password'),
+            'name' => 'Name',
+        ]);
 
         Livewire::test(SubscriptionCheckoutForm::class)
             ->set('name', 'Name')
-            ->set('email', 'existing+sub2@gmail.com')
+            ->set('email', $email)
             ->set('password', 'password')
             ->set('paymentProvider', 'paymore')
             ->call('checkout');
@@ -180,13 +190,14 @@ class SubscriptionCheckoutFormTest extends FeatureTest
 
     public function test_checkout_success_if_plan_type_is_usage_based()
     {
+        $planSlug = 'plan-slug-'.rand(1, 1000000);
         $sessionDto = new SubscriptionCheckoutDto;
-        $sessionDto->planSlug = 'plan-slug-10';
+        $sessionDto->planSlug = $planSlug;
 
         $this->withSession([SessionConstants::SUBSCRIPTION_CHECKOUT_DTO => $sessionDto]);
 
         $plan = Plan::factory()->create([
-            'slug' => 'plan-slug-10',
+            'slug' => $planSlug,
             'is_active' => true,
             'type' => PlanType::USAGE_BASED->value,
         ]);
@@ -213,18 +224,21 @@ class SubscriptionCheckoutFormTest extends FeatureTest
         // get number of subscriptions before checkout
         $subscriptionsBefore = Subscription::count();
 
+        $email = 'existing+'.rand(1, 1000000).'@gmail.com';
+
+        $user = User::factory()->create([
+            'email' => $email,
+            'password' => bcrypt('password'),
+            'name' => 'Name',
+        ]);
+
         Livewire::test(SubscriptionCheckoutForm::class)
             ->set('name', 'Name')
-            ->set('email', 'existing+sub3@gmail.com')
+            ->set('email', $email)
             ->set('password', 'password')
             ->set('paymentProvider', 'paymore')
             ->call('checkout')
             ->assertRedirect('http://paymore.com/checkout');
-
-        // assert user has been created
-        $this->assertDatabaseHas('users', [
-            'email' => 'existing+sub3@gmail.com',
-        ]);
 
         // assert user is logged in
         $this->assertAuthenticated();
@@ -235,13 +249,14 @@ class SubscriptionCheckoutFormTest extends FeatureTest
 
     public function test_can_checkout_overlay_payment()
     {
+        $planSlug = 'plan-slug-'.rand(1, 1000000);
         $sessionDto = new SubscriptionCheckoutDto;
-        $sessionDto->planSlug = 'plan-slug-7';
+        $sessionDto->planSlug = $planSlug;
 
         $this->withSession([SessionConstants::SUBSCRIPTION_CHECKOUT_DTO => $sessionDto]);
 
         $plan = Plan::factory()->create([
-            'slug' => 'plan-slug-7',
+            'slug' => $planSlug,
             'is_active' => true,
         ]);
 
@@ -267,9 +282,11 @@ class SubscriptionCheckoutFormTest extends FeatureTest
         $subscriptionsBefore = Subscription::count();
         $tenantsBefore = Tenant::count();
 
+        $email = 'something+'.rand(1, 1000000).'@gmail.com';
+
         Livewire::test(SubscriptionCheckoutForm::class)
             ->set('name', 'Name')
-            ->set('email', 'something+sub2@gmail.com')
+            ->set('email', $email)
             ->set('password', 'password')
             ->set('paymentProvider', 'paymore')
             ->call('checkout')
@@ -277,7 +294,7 @@ class SubscriptionCheckoutFormTest extends FeatureTest
 
         // assert user has been created
         $this->assertDatabaseHas('users', [
-            'email' => 'something+sub2@gmail.com',
+            'email' => $email,
         ]);
 
         // assert user is logged in

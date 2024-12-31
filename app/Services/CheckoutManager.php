@@ -43,6 +43,16 @@ class CheckoutManager
         return $subscription;
     }
 
+    public function initLocalSubscriptionCheckout(string $planSlug)
+    {
+        $subscription = $this->subscriptionManager->findNewByPlanSlugAndUser($planSlug, auth()->id());
+        if ($subscription === null) {
+            $subscription = $this->subscriptionManager->create($planSlug, auth()->id(), localSubscription: true);
+        }
+
+        return $subscription;
+    }
+
     public function initProductCheckout(CartDto $cartDto, ?string $tenantUuid)
     {
         $user = auth()->user();

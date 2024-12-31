@@ -3,23 +3,17 @@
 namespace App\Http\Controllers;
 
 use App\Dto\CartItemDto;
-use App\Services\CalculationManager;
 use App\Services\DiscountManager;
 use App\Services\OneTimeProductManager;
-use App\Services\PaymentProviders\PaymentManager;
 use App\Services\SessionManager;
 
 class ProductCheckoutController extends Controller
 {
     public function __construct(
-        private PaymentManager $paymentManager,
         private DiscountManager $discountManager,
         private OneTimeProductManager $productManager,
-        private CalculationManager $calculationManager,
         private SessionManager $sessionManager,
-    ) {
-
-    }
+    ) {}
 
     public function productCheckout()
     {
@@ -29,21 +23,7 @@ class ProductCheckoutController extends Controller
             return redirect()->route('home');
         }
 
-        $product = $this->productManager->getOneTimeProductById($cartDto->items[0]->productId);
-
-        $totals = $this->calculationManager->calculateCartTotals($cartDto, auth()->user());
-
-        $this->sessionManager->saveCartDto($cartDto);
-
-        $paymentProviders = $this->paymentManager->getActivePaymentProviders();
-
-        return view('checkout.product', [
-            'product' => $product,
-            'paymentProviders' => $paymentProviders,
-            'totals' => $totals,
-            'cartDto' => $cartDto,
-            'successUrl' => route('checkout.product.success'),
-        ]);
+        return view('checkout.product');
     }
 
     public function addToCart(string $productSlug, int $quantity = 1)
@@ -79,7 +59,7 @@ class ProductCheckoutController extends Controller
             }
         }
 
-        $cartItem = new CartItemDto();
+        $cartItem = new CartItemDto;
         $cartItem->productId = $product->id;
         $cartItem->quantity = $quantity;
 

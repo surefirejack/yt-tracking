@@ -4,6 +4,7 @@ namespace Tests\Feature\Http\Controllers\PaymentProviders;
 
 use App\Constants\OrderStatus;
 use App\Constants\SubscriptionStatus;
+use App\Constants\SubscriptionType;
 use App\Constants\TransactionStatus;
 use App\Models\Currency;
 use App\Models\Order;
@@ -58,6 +59,40 @@ class PaddleControllerTest extends FeatureTest
             'status' => SubscriptionStatus::ACTIVE->value,
             'quantity' => 2,
         ]);
+    }
+
+    public function test_local_subscription_created_webhook(): void
+    {
+        $uuid = (string) Str::uuid();
+        Subscription::create([
+            'uuid' => $uuid,
+            'user_id' => 1,
+            'price' => 10,
+            'currency_id' => 1,
+            'plan_id' => 1,
+            'interval_id' => 2,
+            'interval_count' => 2,
+            'status' => SubscriptionStatus::NEW->value,
+            'type' => SubscriptionType::LOCALLY_MANAGED,
+        ]);
+
+        $payload = $this->getPaddleSubscriptionEvent('trialing', 'subscription.created', $uuid);
+
+        $signature = $this->generateSignature(json_encode($payload));
+
+        $response = $this->postJson(route('payments-providers.paddle.webhook'), $payload, [
+            'Paddle-Signature' => $signature,
+            'Content-Type' => 'application/json',
+        ]);
+
+        $response->assertStatus(200);
+
+        $this->assertDatabaseHas('subscriptions', [
+            'uuid' => $uuid,
+            'status' => SubscriptionStatus::ACTIVE->value,
+        ]);
+
+        $this->assertEquals(Subscription::where('uuid', $uuid)->firstOrFail()->type, SubscriptionType::PAYMENT_PROVIDER_MANAGED);
     }
 
     public function test_subscription_canceled_webhook(): void

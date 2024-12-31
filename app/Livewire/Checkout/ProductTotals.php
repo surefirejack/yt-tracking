@@ -2,12 +2,12 @@
 
 namespace App\Livewire\Checkout;
 
-use App\Constants\SessionConstants;
 use App\Dto\CartDto;
 use App\Dto\TotalsDto;
 use App\Models\OneTimeProduct;
 use App\Services\CalculationManager;
 use App\Services\DiscountManager;
+use App\Services\SessionManager;
 use Livewire\Attributes\On;
 use Livewire\Component;
 
@@ -30,11 +30,13 @@ class ProductTotals extends Component
     private DiscountManager $discountManager;
 
     private CalculationManager $calculationManager;
+    private SessionManager $sessionManager;
 
-    public function boot(DiscountManager $discountManager, CalculationManager $calculationManager)
+    public function boot(DiscountManager $discountManager, CalculationManager $calculationManager, SessionManager $sessionManager)
     {
         $this->discountManager = $discountManager;
         $this->calculationManager = $calculationManager;
+        $this->sessionManager = $sessionManager;
     }
 
     public function mount(TotalsDto $totals, OneTimeProduct $product, $page)
@@ -49,12 +51,12 @@ class ProductTotals extends Component
 
     private function getCartDto(): ?CartDto
     {
-        return session()->get(SessionConstants::CART_DTO);
+        return $this->sessionManager->getCartDto();
     }
 
     private function saveCartDto(CartDto $cartDto): void
     {
-        session()->put(SessionConstants::CART_DTO, $cartDto);
+        $this->sessionManager->saveCartDto($cartDto);
     }
 
     public function add()
