@@ -17,7 +17,7 @@ class TenantPermissionManagerTest extends FeatureTest
 
         $this->actingAs($user);
 
-        $tenantPermissionManager = new TenantPermissionManager();
+        $tenantPermissionManager = new TenantPermissionManager;
 
         $this->assertTrue($tenantPermissionManager->tenantUserHasPermissionTo($tenant, $user, TenancyPermissionConstants::PERMISSION_UPDATE_SUBSCRIPTIONS));
         $this->assertFalse($tenantPermissionManager->tenantUserHasPermissionTo($tenant, $user, TenancyPermissionConstants::PERMISSION_VIEW_SUBSCRIPTIONS));
@@ -32,7 +32,7 @@ class TenantPermissionManagerTest extends FeatureTest
         $tenant = $this->createTenant();
         $user = $this->createUser($tenant);
 
-        $tenantPermissionManager = new TenantPermissionManager();
+        $tenantPermissionManager = new TenantPermissionManager;
 
         $tenantPermissionManager->assignTenantUserRole($tenant, $user, $role->name);
 
@@ -51,7 +51,7 @@ class TenantPermissionManagerTest extends FeatureTest
         $tenant = $this->createTenant();
         $user = $this->createUser($tenant);
 
-        $tenantPermissionManager = new TenantPermissionManager();
+        $tenantPermissionManager = new TenantPermissionManager;
 
         $tenantPermissionManager->assignTenantUserRole($tenant, $user, $role->name);
 

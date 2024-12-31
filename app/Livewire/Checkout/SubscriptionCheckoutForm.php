@@ -45,6 +45,7 @@ class SubscriptionCheckoutForm extends CheckoutForm
             auth()->user(),
             $planSlug,
             $subscriptionCheckoutDto?->discountCode,
+            $subscriptionCheckoutDto->quantity,
         );
 
         return view('livewire.checkout.subscription-checkout-form', [

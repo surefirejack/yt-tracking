@@ -43,6 +43,7 @@ class LocalSubscriptionCheckoutForm extends CheckoutForm
             auth()->user(),
             $planSlug,
             $subscriptionCheckoutDto?->discountCode,
+            $subscriptionCheckoutDto->quantity,
         );
 
         return view('livewire.checkout.local-subscription-checkout-form', [
@@ -79,7 +80,7 @@ class LocalSubscriptionCheckoutForm extends CheckoutForm
         }
 
         try {
-            $subscription = $checkoutManager->initLocalSubscriptionCheckout($planSlug);
+            $subscription = $checkoutManager->initLocalSubscriptionCheckout($planSlug, $subscriptionCheckoutDto->tenantUuid, $subscriptionCheckoutDto->quantity);
         } catch (SubscriptionCreationNotAllowedException $e) {
             return redirect()->route('checkout.subscription.already-subscribed');
         }

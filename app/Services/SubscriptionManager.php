@@ -51,7 +51,7 @@ class SubscriptionManager
 
         $newSubscription = null;
         DB::transaction(function () use ($plan, $userId, &$newSubscription, $paymentProvider, $paymentProviderSubscriptionId, $quantity, $tenant, $localSubscription, $endsAt) {
-            $this->deleteAllNewSubscriptions($userId);
+            $this->deleteAllNewSubscriptions($userId, $tenant);
 
             $planPrice = $this->calculationManager->getPlanPrice($plan);
 

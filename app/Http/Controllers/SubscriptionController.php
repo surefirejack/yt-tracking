@@ -20,9 +20,7 @@ class SubscriptionController extends Controller
         private CalculationManager $calculationManager,
         private TenantPermissionManager $tenantPermissionManager,
         private TenantManager $tenantManager,
-    ) {
-
-    }
+    ) {}
 
     public function changePlan(string $subscriptionUuid, string $newPlanSlug, string $tenantUuid, Request $request)
     {

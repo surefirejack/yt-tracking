@@ -2,7 +2,6 @@
 
 namespace App\Livewire\Checkout;
 
-use App\Constants\SessionConstants;
 use App\Dto\SubscriptionCheckoutDto;
 use App\Dto\TotalsDto;
 use App\Models\Plan;
@@ -33,14 +32,19 @@ class SubscriptionTotals extends Component
     public $code;
 
     public ?string $unitMeterName;
+
     public ?string $planPriceType = null;
+
     public ?string $pricePerUnit = null;
+
     public ?array $tiers = null;
+
     public bool $canAddDiscount = true;
 
     private DiscountManager $discountManager;
 
     private CalculationManager $calculationManager;
+
     private SessionManager $sessionManager;
 
     public function boot(

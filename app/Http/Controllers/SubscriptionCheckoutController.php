@@ -3,12 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Constants\SubscriptionType;
-use App\Exceptions\SubscriptionCreationNotAllowedException;
 use App\Models\Plan;
 use App\Services\CalculationManager;
 use App\Services\DiscountManager;
 use App\Services\SessionManager;
 use App\Services\SubscriptionManager;
+use App\Services\TenantSubscriptionManager;
 
 class SubscriptionCheckoutController extends Controller
 {
@@ -17,6 +17,7 @@ class SubscriptionCheckoutController extends Controller
         private CalculationManager $calculationManager,
         private SubscriptionManager $subscriptionManager,
         private SessionManager $sessionManager,
+        private TenantSubscriptionManager $tenantSubscriptionManager,
     ) {}
 
     public function subscriptionCheckout(string $planSlug)
@@ -52,16 +53,11 @@ class SubscriptionCheckoutController extends Controller
 
         $checkoutDto = $this->sessionManager->getSubscriptionCheckoutDto();
 
-        $user = auth()->user();
-
-        if ($user && ! $this->subscriptionManager->canCreateSubscription($user->id)) {
-            throw new SubscriptionCreationNotAllowedException(__('You already have subscription.'));
-        }
-
         if ($checkoutDto->planSlug !== $planSlug) {
             $checkoutDto = $this->sessionManager->resetSubscriptionCheckoutDto();
         }
 
+        $checkoutDto->quantity = max($checkoutDto->quantity, $this->tenantSubscriptionManager->calculateCurrentSubscriptionQuantity($subscription));
         $checkoutDto->planSlug = $planSlug;
         $checkoutDto->subscriptionId = $subscription->id;
 

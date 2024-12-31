@@ -5,6 +5,8 @@ namespace App\Livewire\Checkout;
 use App\Models\Plan;
 use App\Services\PlanManager;
 use App\Services\SessionManager;
+use App\Services\SubscriptionManager;
+use App\Services\TenantSubscriptionManager;
 use Livewire\Component;
 
 class SubscriptionSeats extends Component
@@ -20,10 +22,20 @@ class SubscriptionSeats extends Component
 
     private PlanManager $planManager;
 
-    public function boot(SessionManager $sessionManager, PlanManager $planManager)
-    {
+    private SubscriptionManager $subscriptionManager;
+
+    private TenantSubscriptionManager $tenantSubscriptionManager;
+
+    public function boot(
+        SessionManager $sessionManager,
+        PlanManager $planManager,
+        SubscriptionManager $subscriptionManager,
+        TenantSubscriptionManager $tenantSubscriptionManager
+    ) {
         $this->sessionManager = $sessionManager;
         $this->planManager = $planManager;
+        $this->subscriptionManager = $subscriptionManager;
+        $this->tenantSubscriptionManager = $tenantSubscriptionManager;
     }
 
     public function mount(Plan $plan)
@@ -43,11 +55,19 @@ class SubscriptionSeats extends Component
             $maxRule = '|max:'.$plan->max_users_per_tenant;
         }
 
+        $subscriptionCheckoutDto = $this->sessionManager->getSubscriptionCheckoutDto();
+
+        $min = 1;
+
+        if ($subscriptionCheckoutDto->subscriptionId !== null) {
+            $subscription = $this->subscriptionManager->findById($subscriptionCheckoutDto->subscriptionId);
+            $min = $this->tenantSubscriptionManager->calculateCurrentSubscriptionQuantity($subscription);
+        }
+
         $this->validate([
-            'quantity' => 'required|integer|min:1'.$maxRule,
+            'quantity' => 'required|integer|min:'.$min.$maxRule,
         ]);
 
-        $subscriptionCheckoutDto = $this->sessionManager->getSubscriptionCheckoutDto();
         $subscriptionCheckoutDto->quantity = $value;
         $this->sessionManager->saveSubscriptionCheckoutDto($subscriptionCheckoutDto);
 

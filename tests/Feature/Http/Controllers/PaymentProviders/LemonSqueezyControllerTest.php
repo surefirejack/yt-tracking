@@ -8,12 +8,14 @@ use App\Constants\SubscriptionStatus;
 use App\Constants\SubscriptionType;
 use App\Constants\TransactionStatus;
 use App\Models\Currency;
+use App\Models\Interval;
 use App\Models\OneTimeProduct;
 use App\Models\OneTimeProductPaymentProviderData;
 use App\Models\Order;
 use App\Models\PaymentProvider;
 use App\Models\Plan;
 use App\Models\PlanPaymentProviderData;
+use App\Models\PlanPrice;
 use App\Models\Subscription;
 use Illuminate\Support\Str;
 use Tests\Feature\FeatureTest;
@@ -34,16 +36,29 @@ class LemonSqueezyControllerTest extends FeatureTest
         $tenant = $this->createTenant();
         $user = $this->createUser($tenant);
 
+        $planSlug = 'plan-slug-'.rand(1, 1000000);
+
+        $plan = Plan::factory()->create([
+            'slug' => $planSlug,
+            'is_active' => true,
+        ]);
+
+        PlanPrice::create([
+            'plan_id' => $plan->id,
+            'currency_id' => Currency::where('code', 'USD')->first()->id,
+            'price' => 100,
+        ]);
+
         $uuid = (string) Str::uuid();
         Subscription::create([
             'uuid' => $uuid,
             'user_id' => $user->id,
             'tenant_id' => $tenant->id,
             'price' => 10,
-            'currency_id' => 1,
-            'plan_id' => 1,
-            'interval_id' => 2,
-            'interval_count' => 2,
+            'currency_id' => Currency::where('code', 'USD')->firstOrFail()->id,
+            'plan_id' => $plan->id,
+            'interval_id' => Interval::where('slug', 'day')->first()->id,
+            'interval_count' => 7,
             'status' => SubscriptionStatus::NEW->value,
         ]);
 
@@ -71,15 +86,32 @@ class LemonSqueezyControllerTest extends FeatureTest
 
     public function test_local_subscription_created_webhook(): void
     {
+        $tenant = $this->createTenant();
+        $user = $this->createUser($tenant);
+
+        $planSlug = 'plan-slug-'.rand(1, 1000000);
+
+        $plan = Plan::factory()->create([
+            'slug' => $planSlug,
+            'is_active' => true,
+        ]);
+
+        PlanPrice::create([
+            'plan_id' => $plan->id,
+            'currency_id' => Currency::where('code', 'USD')->first()->id,
+            'price' => 100,
+        ]);
+
         $uuid = (string) Str::uuid();
         Subscription::create([
             'uuid' => $uuid,
-            'user_id' => 1,
+            'user_id' => $user->id,
+            'tenant_id' => $tenant->id,
             'price' => 10,
-            'currency_id' => 1,
-            'plan_id' => 1,
-            'interval_id' => 2,
-            'interval_count' => 2,
+            'currency_id' => Currency::where('code', 'USD')->firstOrFail()->id,
+            'plan_id' => $plan->id,
+            'interval_id' => Interval::where('slug', 'day')->first()->id,
+            'interval_count' => 7,
             'status' => SubscriptionStatus::NEW->value,
             'type' => SubscriptionType::LOCALLY_MANAGED,
         ]);
@@ -152,16 +184,29 @@ class LemonSqueezyControllerTest extends FeatureTest
         $tenant = $this->createTenant();
         $user = $this->createUser($tenant);
 
+        $planSlug = 'plan-slug-'.rand(1, 1000000);
+
+        $plan = Plan::factory()->create([
+            'slug' => $planSlug,
+            'is_active' => true,
+        ]);
+
+        PlanPrice::create([
+            'plan_id' => $plan->id,
+            'currency_id' => Currency::where('code', 'USD')->first()->id,
+            'price' => 100,
+        ]);
+
         $uuid = (string) Str::uuid();
         Subscription::create([
             'uuid' => $uuid,
             'user_id' => $user->id,
             'tenant_id' => $tenant->id,
             'price' => 10,
-            'currency_id' => 1,
-            'plan_id' => 1,
-            'interval_id' => 2,
-            'interval_count' => 2,
+            'currency_id' => Currency::where('code', 'USD')->firstOrFail()->id,
+            'plan_id' => $plan->id,
+            'interval_id' => Interval::where('slug', 'day')->first()->id,
+            'interval_count' => 7,
             'payment_provider_id' => PaymentProvider::where('slug', PaymentProviderConstants::LEMON_SQUEEZY_SLUG)->firstOrFail()->id,
             'payment_provider_subscription_id' => '309912',
             'status' => SubscriptionStatus::ACTIVE->value,
@@ -196,6 +241,18 @@ class LemonSqueezyControllerTest extends FeatureTest
         $tenant = $this->createTenant();
         $user = $this->createUser($tenant);
 
+        $planSlug = 'plan-slug-'.rand(1, 1000000);
+        $plan = Plan::factory()->create([
+            'slug' => $planSlug,
+            'is_active' => true,
+        ]);
+
+        PlanPrice::create([
+            'plan_id' => $plan->id,
+            'currency_id' => Currency::where('code', 'USD')->first()->id,
+            'price' => 100,
+        ]);
+
         $uuid = (string) Str::uuid();
         $providerSubscriptionId = '309913';
         Subscription::create([
@@ -203,10 +260,10 @@ class LemonSqueezyControllerTest extends FeatureTest
             'user_id' => $user->id,
             'tenant_id' => $tenant->id,
             'price' => 10,
-            'currency_id' => 1,
-            'plan_id' => 1,
-            'interval_id' => 2,
-            'interval_count' => 2,
+            'currency_id' => Currency::where('code', 'USD')->firstOrFail()->id,
+            'plan_id' => $plan->id,
+            'interval_id' => Interval::where('slug', 'day')->first()->id,
+            'interval_count' => 7,
             'payment_provider_id' => PaymentProvider::where('slug', PaymentProviderConstants::LEMON_SQUEEZY_SLUG)->firstOrFail()->id,
             'payment_provider_subscription_id' => $providerSubscriptionId,
             'status' => SubscriptionStatus::ACTIVE->value,
@@ -235,6 +292,18 @@ class LemonSqueezyControllerTest extends FeatureTest
         $tenant = $this->createTenant();
         $user = $this->createUser($tenant);
 
+        $planSlug = 'plan-slug-'.rand(1, 1000000);
+        $plan = Plan::factory()->create([
+            'slug' => $planSlug,
+            'is_active' => true,
+        ]);
+
+        PlanPrice::create([
+            'plan_id' => $plan->id,
+            'currency_id' => Currency::where('code', 'USD')->first()->id,
+            'price' => 100,
+        ]);
+
         $uuid = (string) Str::uuid();
         $providerSubscriptionId = '309914';
         $subscription = Subscription::create([
@@ -242,10 +311,10 @@ class LemonSqueezyControllerTest extends FeatureTest
             'user_id' => $user->id,
             'tenant_id' => $tenant->id,
             'price' => 10,
-            'currency_id' => 1,
-            'plan_id' => 1,
-            'interval_id' => 2,
-            'interval_count' => 2,
+            'currency_id' => Currency::where('code', 'USD')->firstOrFail()->id,
+            'plan_id' => $plan->id,
+            'interval_id' => Interval::where('slug', 'day')->first()->id,
+            'interval_count' => 7,
             'payment_provider_id' => PaymentProvider::where('slug', PaymentProviderConstants::LEMON_SQUEEZY_SLUG)->firstOrFail()->id,
             'payment_provider_subscription_id' => $providerSubscriptionId,
             'status' => SubscriptionStatus::ACTIVE->value,
@@ -273,6 +342,18 @@ class LemonSqueezyControllerTest extends FeatureTest
         $tenant = $this->createTenant();
         $user = $this->createUser($tenant);
 
+        $planSlug = 'plan-slug-'.rand(1, 1000000);
+        $plan = Plan::factory()->create([
+            'slug' => $planSlug,
+            'is_active' => true,
+        ]);
+
+        PlanPrice::create([
+            'plan_id' => $plan->id,
+            'currency_id' => Currency::where('code', 'USD')->first()->id,
+            'price' => 100,
+        ]);
+
         $uuid = (string) Str::uuid();
         $providerSubscriptionId = '309916';
         $subscription = Subscription::create([
@@ -280,10 +361,10 @@ class LemonSqueezyControllerTest extends FeatureTest
             'user_id' => $user->id,
             'tenant_id' => $tenant->id,
             'price' => 10,
-            'currency_id' => 1,
-            'plan_id' => 1,
-            'interval_id' => 2,
-            'interval_count' => 2,
+            'currency_id' => Currency::where('code', 'USD')->firstOrFail()->id,
+            'plan_id' => $plan->id,
+            'interval_id' => Interval::where('slug', 'day')->first()->id,
+            'interval_count' => 7,
             'payment_provider_id' => PaymentProvider::where('slug', PaymentProviderConstants::LEMON_SQUEEZY_SLUG)->firstOrFail()->id,
             'payment_provider_subscription_id' => $providerSubscriptionId,
             'status' => SubscriptionStatus::ACTIVE->value,

@@ -14,6 +14,7 @@ use App\Models\Interval;
 use App\Models\Plan;
 use App\Models\PlanPrice;
 use App\Models\Subscription;
+use App\Models\Tenant;
 use App\Models\User;
 use Livewire\Livewire;
 use Tests\Feature\FeatureTest;
@@ -47,6 +48,7 @@ class LocalSubscriptionCheckoutFormTest extends FeatureTest
 
         // get number of subscriptions before checkout
         $subscriptionsBefore = Subscription::count();
+        $tenantsBefore = Tenant::count();
 
         $email = 'something+'.rand(1, 1000000).'@gmail.com';
         Livewire::test(LocalSubscriptionCheckoutForm::class)
@@ -68,6 +70,7 @@ class LocalSubscriptionCheckoutFormTest extends FeatureTest
 
         $latestSubscription = Subscription::latest()->first();
         $this->assertEquals($latestSubscription->type, SubscriptionType::LOCALLY_MANAGED);
+        $this->assertEquals($tenantsBefore + 1, Tenant::count());
     }
 
     public function test_can_checkout_existing_user()
@@ -106,6 +109,7 @@ class LocalSubscriptionCheckoutFormTest extends FeatureTest
 
         // get number of subscriptions before checkout
         $subscriptionsBefore = Subscription::count();
+        $tenantsBefore = Tenant::count();
 
         Livewire::test(LocalSubscriptionCheckoutForm::class)
             ->set('name', 'Name')
@@ -121,6 +125,7 @@ class LocalSubscriptionCheckoutFormTest extends FeatureTest
 
         $latestSubscription = Subscription::latest()->first();
         $this->assertEquals($latestSubscription->type, SubscriptionType::LOCALLY_MANAGED);
+        $this->assertEquals($tenantsBefore + 1, Tenant::count());
     }
 
     public function test_can_not_checkout_when_plan_has_no_trial()
@@ -186,6 +191,7 @@ class LocalSubscriptionCheckoutFormTest extends FeatureTest
 
         // get number of subscriptions before checkout
         $subscriptionsBefore = Subscription::count();
+        $tenantsBefore = Tenant::count();
 
         $email = 'something+'.rand(1, 1000000).'@gmail.com';
 
@@ -208,6 +214,7 @@ class LocalSubscriptionCheckoutFormTest extends FeatureTest
 
         $latestSubscription = Subscription::latest()->first();
         $this->assertEquals($latestSubscription->type, SubscriptionType::LOCALLY_MANAGED);
+        $this->assertEquals($tenantsBefore + 1, Tenant::count());
     }
 
     public function test_can_not_checkout_if_trial_without_payment_is_disabled()

@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Constants\PlanType;
 use App\Constants\SubscriptionStatus;
+use App\Constants\SubscriptionType;
 use App\Models\Subscription;
 use App\Models\Tenant;
 use App\Services\PaymentProviders\PaymentManager;
@@ -12,9 +13,7 @@ class TenantSubscriptionManager
 {
     public function __construct(
         private PaymentManager $paymentManager,
-    ) {
-
-    }
+    ) {}
 
     public function getTenantSubscriptions(Tenant $tenant)
     {
@@ -31,6 +30,13 @@ class TenantSubscriptionManager
             return true;
         }
 
+        if ($subscription->type === SubscriptionType::LOCALLY_MANAGED) {
+            $subscription->quantity = $quantity;
+            $subscription->save();
+
+            return true;
+        }
+
         $isProrated = config('app.payment.proration_enabled', true);
 
         $paymentProvider = $this->paymentManager->getPaymentProviderBySlug(
@@ -38,5 +44,16 @@ class TenantSubscriptionManager
         );
 
         return $paymentProvider->updateSubscriptionQuantity($subscription, $quantity, $isProrated);
+    }
+
+    public function calculateCurrentSubscriptionQuantity(Subscription $subscription): int
+    {
+        $plan = $subscription->plan;
+
+        if ($plan->type === PlanType::SEAT_BASED->value) {
+            return $subscription->tenant->users()->count();
+        }
+
+        return 1;
     }
 }

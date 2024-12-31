@@ -12,9 +12,7 @@ class CheckoutManager
         private SubscriptionManager $subscriptionManager,
         private OrderManager $orderManager,
         private TenantCreationManager $tenantCreationManager,
-    ) {
-
-    }
+    ) {}
 
     public function initSubscriptionCheckout(string $planSlug, ?string $tenantUuid, int $quantity = 1)
     {
@@ -43,11 +41,28 @@ class CheckoutManager
         return $subscription;
     }
 
-    public function initLocalSubscriptionCheckout(string $planSlug)
+    public function initLocalSubscriptionCheckout(string $planSlug, ?string $tenantUuid, int $quantity = 1)
     {
-        $subscription = $this->subscriptionManager->findNewByPlanSlugAndUser($planSlug, auth()->id());
+        $tenant = $this->tenantCreationManager->findUserTenantForNewSubscriptionByUuid(auth()->user(), $tenantUuid);
+
+        if ($tenant === null) {
+            $tenant = $this->tenantCreationManager->createTenant(auth()->user());
+        }
+
+        $subscription = $this->subscriptionManager->findNewByPlanSlugAndTenant($planSlug, $tenant);
         if ($subscription === null) {
-            $subscription = $this->subscriptionManager->create($planSlug, auth()->id(), localSubscription: true);
+            $subscription = $this->subscriptionManager->create(
+                $planSlug,
+                auth()->id(),
+                quantity: $quantity,
+                tenant: $tenant,
+                localSubscription: true);
+        }
+
+        $plan = $subscription->plan;
+
+        if ($plan->type === PlanType::SEAT_BASED->value) { // in case tenant already had users inside
+            $subscription->update(['quantity' => max($tenant->users->count(), $quantity)]);
         }
 
         return $subscription;

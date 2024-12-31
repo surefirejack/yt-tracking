@@ -15,11 +15,11 @@ use App\Models\PaymentProvider;
 use App\Models\Plan;
 use App\Models\PlanPrice;
 use App\Models\Subscription;
-use App\Models\User;
 use App\Services\PaymentProviders\PaymentManager;
 use App\Services\PaymentProviders\PaymentProviderInterface;
 use Exception;
 use Livewire\Livewire;
+use Mockery;
 use Tests\Feature\FeatureTest;
 
 class ConvertLocalSubscriptionCheckoutFormTest extends FeatureTest
@@ -42,7 +42,8 @@ class ConvertLocalSubscriptionCheckoutFormTest extends FeatureTest
 
         $email = 'existing+'.rand(1, 1000000).'@gmail.com';
 
-        $user = User::factory()->create([
+        $tenant = $this->createTenant();
+        $user = $this->createUser($tenant, [], [
             'email' => $email,
             'password' => bcrypt('password'),
             'name' => 'Name',
@@ -53,6 +54,7 @@ class ConvertLocalSubscriptionCheckoutFormTest extends FeatureTest
             'status' => SubscriptionStatus::ACTIVE->value,
             'plan_id' => $plan->id,
             'type' => SubscriptionType::LOCALLY_MANAGED,
+            'tenant_id' => $tenant->id,
         ]);
 
         $sessionDto->subscriptionId = $subscription->id;
@@ -74,6 +76,76 @@ class ConvertLocalSubscriptionCheckoutFormTest extends FeatureTest
         Livewire::test(ConvertLocalSubscriptionCheckoutForm::class)
             ->set('name', 'Name')
             ->set('email', $email)
+            ->set('password', 'password')
+            ->set('paymentProvider', 'paymore')
+            ->call('checkout')
+            ->assertRedirect('http://paymore.com/checkout');
+
+        // assert user is logged in
+        $this->assertAuthenticated();
+    }
+
+    public function test_can_checkout_adjust_quantity_to_current_number_of_users_in_tenant()
+    {
+        $sessionDto = new SubscriptionCheckoutDto;
+
+        $planSlug = 'plan-slug-'.rand(1, 1000000);
+        $plan = Plan::factory()->create([
+            'slug' => $planSlug,
+            'is_active' => true,
+            'type' => PlanType::SEAT_BASED->value,
+        ]);
+
+        PlanPrice::create([
+            'plan_id' => $plan->id,
+            'currency_id' => Currency::where('code', 'USD')->first()->id,
+            'price' => 100,
+        ]);
+
+        $email1 = 'existing+'.rand(1, 1000000).'@gmail.com';
+
+        $tenant = $this->createTenant();
+        $user1 = $this->createUser($tenant, [], [
+            'email' => $email1,
+            'password' => bcrypt('password'),
+            'name' => 'Name',
+        ]);
+
+        $email2 = 'existing+'.rand(1, 1000000).'@gmail.com';
+        $user2 = $this->createUser($tenant, [], [
+            'email' => $email2,
+            'password' => bcrypt('password'),
+            'name' => 'Name',
+        ]);
+
+        $subscription = Subscription::factory()->create([
+            'user_id' => $user1->id,
+            'status' => SubscriptionStatus::ACTIVE->value,
+            'plan_id' => $plan->id,
+            'type' => SubscriptionType::LOCALLY_MANAGED,
+            'tenant_id' => $tenant->id,
+            'quantity' => 1,  // 1 user
+        ]);
+
+        $sessionDto->subscriptionId = $subscription->id;
+        $sessionDto->planSlug = $planSlug;
+        $this->withSession([SessionConstants::SUBSCRIPTION_CHECKOUT_DTO => $sessionDto]);
+
+        $paymentProvider = $this->addPaymentProvider();
+
+        $paymentProvider->shouldReceive('getSupportedPlanTypes')
+            ->andReturn([
+                PlanType::SEAT_BASED->value,
+            ]);
+
+        $paymentProvider->shouldReceive('initSubscriptionCheckout')
+            ->once()
+            ->withArgs([Mockery::any(), Mockery::any(), Mockery::any(), 2])  // 2 users
+            ->andReturn([]);
+
+        Livewire::test(ConvertLocalSubscriptionCheckoutForm::class)
+            ->set('name', 'Name')
+            ->set('email', $email1)
             ->set('password', 'password')
             ->set('paymentProvider', 'paymore')
             ->call('checkout')
@@ -105,7 +177,8 @@ class ConvertLocalSubscriptionCheckoutFormTest extends FeatureTest
 
         $email = 'existing+'.rand(1, 1000000).'@gmail.com';
 
-        $user = User::factory()->create([
+        $tenant = $this->createTenant();
+        $user = $this->createUser($tenant, [], [
             'email' => $email,
             'password' => bcrypt('password'),
             'name' => 'Name',
@@ -116,6 +189,7 @@ class ConvertLocalSubscriptionCheckoutFormTest extends FeatureTest
             'status' => SubscriptionStatus::ACTIVE->value,
             'plan_id' => $plan->id,
             'type' => SubscriptionType::LOCALLY_MANAGED,
+            'tenant_id' => $tenant->id,
         ]);
 
         $sessionDto->subscriptionId = $subscription->id;
@@ -166,15 +240,15 @@ class ConvertLocalSubscriptionCheckoutFormTest extends FeatureTest
 
         $email1 = 'existing+'.rand(1, 1000000).'@gmail.com';
 
-        $user1 = User::factory()->create([
+        $tenant = $this->createTenant();
+        $user1 = $this->createUser($tenant, [], [
             'email' => $email1,
             'password' => bcrypt('password'),
             'name' => 'Name',
         ]);
 
         $email2 = 'existing+'.rand(1, 1000000).'@gmail.com';
-
-        $user2 = User::factory()->create([
+        $user2 = $this->createUser($tenant, [], [
             'email' => $email2,
             'password' => bcrypt('password'),
             'name' => 'Name',
@@ -185,6 +259,7 @@ class ConvertLocalSubscriptionCheckoutFormTest extends FeatureTest
             'status' => SubscriptionStatus::ACTIVE->value,
             'plan_id' => $plan->id,
             'type' => SubscriptionType::LOCALLY_MANAGED,
+            'tenant_id' => $tenant->id,
         ]);
 
         $sessionDto->subscriptionId = $subscription->id;
@@ -235,7 +310,8 @@ class ConvertLocalSubscriptionCheckoutFormTest extends FeatureTest
 
         $email = 'existing+'.rand(1, 1000000).'@gmail.com';
 
-        $user = User::factory()->create([
+        $tenant = $this->createTenant();
+        $user = $this->createUser($tenant, [], [
             'email' => $email,
             'password' => bcrypt('password'),
             'name' => 'Name',
@@ -246,6 +322,7 @@ class ConvertLocalSubscriptionCheckoutFormTest extends FeatureTest
             'status' => SubscriptionStatus::ACTIVE->value,
             'plan_id' => $plan->id,
             'type' => SubscriptionType::LOCALLY_MANAGED,
+            'tenant_id' => $tenant->id,
         ]);
 
         $sessionDto->subscriptionId = $subscription->id;
@@ -298,7 +375,8 @@ class ConvertLocalSubscriptionCheckoutFormTest extends FeatureTest
 
         $email = 'existing+'.rand(1, 1000000).'@gmail.com';
 
-        $user = User::factory()->create([
+        $tenant = $this->createTenant();
+        $user = $this->createUser($tenant, [], [
             'email' => $email,
             'password' => bcrypt('password'),
             'name' => 'Name',
@@ -309,6 +387,7 @@ class ConvertLocalSubscriptionCheckoutFormTest extends FeatureTest
             'status' => SubscriptionStatus::ACTIVE->value,
             'plan_id' => $plan->id,
             'type' => SubscriptionType::LOCALLY_MANAGED,
+            'tenant_id' => $tenant->id,
         ]);
 
         $sessionDto->subscriptionId = $subscription->id;
@@ -363,7 +442,8 @@ class ConvertLocalSubscriptionCheckoutFormTest extends FeatureTest
 
         $email = 'existing+'.rand(1, 1000000).'@gmail.com';
 
-        $user = User::factory()->create([
+        $tenant = $this->createTenant();
+        $user = $this->createUser($tenant, [], [
             'email' => $email,
             'password' => bcrypt('password'),
             'name' => 'Name',
@@ -374,6 +454,7 @@ class ConvertLocalSubscriptionCheckoutFormTest extends FeatureTest
             'status' => SubscriptionStatus::ACTIVE->value,
             'plan_id' => $plan->id,
             'type' => SubscriptionType::LOCALLY_MANAGED,
+            'tenant_id' => $tenant->id,
         ]);
 
         $sessionDto->subscriptionId = $subscription->id;
@@ -418,7 +499,7 @@ class ConvertLocalSubscriptionCheckoutFormTest extends FeatureTest
             'type' => 'any',
         ]);
 
-        $mock = \Mockery::mock(PaymentProviderInterface::class);
+        $mock = Mockery::mock(PaymentProviderInterface::class);
 
         $mock->shouldReceive('isRedirectProvider')
             ->andReturn($isRedirect);

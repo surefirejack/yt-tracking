@@ -11,6 +11,7 @@ use App\Services\PaymentProviders\PaymentManager;
 use App\Services\PlanManager;
 use App\Services\SessionManager;
 use App\Services\SubscriptionManager;
+use App\Services\TenantSubscriptionManager;
 use App\Services\UserManager;
 use App\Validator\LoginValidator;
 use App\Validator\RegisterValidator;
@@ -25,16 +26,20 @@ class ConvertLocalSubscriptionCheckoutForm extends CheckoutForm
 
     private SubscriptionManager $subscriptionManager;
 
+    private TenantSubscriptionManager $tenantSubscriptionManager;
+
     public function boot(
         PlanManager $planManager,
         SessionManager $sessionManager,
         CalculationManager $calculationManager,
         SubscriptionManager $subscriptionManager,
+        TenantSubscriptionManager $tenantSubscriptionManager
     ) {
         $this->planManager = $planManager;
         $this->sessionManager = $sessionManager;
         $this->calculationManager = $calculationManager;
         $this->subscriptionManager = $subscriptionManager;
+        $this->tenantSubscriptionManager = $tenantSubscriptionManager;
     }
 
     public function render(PaymentManager $paymentManager)
@@ -48,6 +53,7 @@ class ConvertLocalSubscriptionCheckoutForm extends CheckoutForm
             auth()->user(),
             $planSlug,
             $subscriptionCheckoutDto?->discountCode,
+            $subscriptionCheckoutDto->quantity,
         );
 
         return view('livewire.checkout.convert-local-subscription-checkout-form', [
@@ -110,7 +116,9 @@ class ConvertLocalSubscriptionCheckoutForm extends CheckoutForm
             return redirect()->route('home');
         }
 
-        $initData = $paymentProvider->initSubscriptionCheckout($plan, $subscription, $discount);
+        $quantity = max($subscriptionCheckoutDto->quantity, $this->tenantSubscriptionManager->calculateCurrentSubscriptionQuantity($subscription));
+
+        $initData = $paymentProvider->initSubscriptionCheckout($plan, $subscription, $discount, $quantity);
 
         $this->sessionManager->saveSubscriptionCheckoutDto($subscriptionCheckoutDto);
 
@@ -119,6 +127,7 @@ class ConvertLocalSubscriptionCheckoutForm extends CheckoutForm
                 $plan,
                 $subscription,
                 $discount,
+                $quantity,
             );
 
             return redirect()->away($link);
