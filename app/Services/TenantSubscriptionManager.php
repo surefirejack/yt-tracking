@@ -56,4 +56,26 @@ class TenantSubscriptionManager
 
         return 1;
     }
+
+    public function syncSubscriptionQuantities()
+    {
+        $subscriptions = Subscription::where('status', '=', SubscriptionStatus::ACTIVE->value)
+            ->whereHas('plan', function ($query) {
+                $query->where('type', PlanType::SEAT_BASED->value);
+            })->cursor();
+
+        foreach ($subscriptions as $subscription) {
+            $quantity = $this->calculateCurrentSubscriptionQuantity($subscription);
+
+            if ($subscription->quantity < $quantity) {
+                logger()->info('Updating subscription quantity', [
+                    'subscription_id' => $subscription->id,
+                    'old_quantity' => $subscription->quantity,
+                    'new_quantity' => $quantity,
+                ]);
+                $this->updateSubscriptionQuantity($subscription, $quantity);
+            }
+        }
+
+    }
 }
