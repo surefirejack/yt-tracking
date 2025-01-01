@@ -98,7 +98,7 @@ Route::get('/checkout/subscription/success', [
     'subscriptionCheckoutSuccess',
 ])->name('checkout.subscription.success')->middleware('auth');
 
-Route::get('/checkout/convert-subscription/success', [
+Route::get('/checkout/convert-subscription-success', [
     App\Http\Controllers\SubscriptionCheckoutController::class,
     'convertLocalSubscriptionCheckoutSuccess',
 ])->name('checkout.convert-local-subscription.success')->middleware('auth');
