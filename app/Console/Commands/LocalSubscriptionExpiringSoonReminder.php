@@ -36,8 +36,10 @@ class LocalSubscriptionExpiringSoonReminder extends Command
     {
         $firstReminderDays = config('app.trial_without_payment.first_reminder_days');
         $secondReminderDays = config('app.trial_without_payment.second_reminder_days');
+        $firstReminderEnabled = config('app.trial_without_payment.first_reminder_enabled');
+        $secondReminderEnabled = config('app.trial_without_payment.second_reminder_enabled');
 
-        if ($firstReminderDays > 0) {
+        if ($firstReminderEnabled) {
             $subscriptions = $this->subscriptionManager->getLocalSubscriptionExpiringIn($firstReminderDays);
 
             foreach ($subscriptions as $subscription) {
@@ -46,7 +48,7 @@ class LocalSubscriptionExpiringSoonReminder extends Command
             }
         }
 
-        if ($secondReminderDays > 0) {
+        if ($secondReminderEnabled) {
             $subscriptions = $this->subscriptionManager->getLocalSubscriptionExpiringIn($secondReminderDays);
 
             foreach ($subscriptions as $subscription) {
