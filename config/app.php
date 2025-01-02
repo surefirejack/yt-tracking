@@ -195,7 +195,9 @@ return [
 
     'trial_without_payment' => [
         'enabled' => env('TRIAL_WITHOUT_PAYMENT_ENABLED', false),
+        'first_reminder_enabled' => env('TRIAL_WITHOUT_PAYMENT_FIRST_REMINDER_ENABLED', true),
         'first_reminder_days' => env('TRIAL_WITHOUT_PAYMENT_FIRST_REMINDER_DAYS', 3),
+        'second_reminder_enabled' => env('TRIAL_WITHOUT_PAYMENT_SECOND_REMINDER_ENABLED', true),
         'second_reminder_days' => env('TRIAL_WITHOUT_PAYMENT_SECOND_REMINDER_DAYS', 1),
     ],
 

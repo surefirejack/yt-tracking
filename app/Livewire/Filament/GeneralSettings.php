@@ -67,6 +67,8 @@ class GeneralSettings extends Component implements HasForms
             'cookie_consent_enabled' => $this->configManager->get('cookie-consent.enabled', false),
             'two_factor_auth_enabled' => $this->configManager->get('app.two_factor_auth_enabled', false),
             'trial_without_payment_enabled' => $this->configManager->get('app.trial_without_payment.enabled', false),
+            'trial_first_reminder_enabled' => $this->configManager->get('app.trial_without_payment.first_reminder_enabled', true),
+            'trial_second_reminder_enabled' => $this->configManager->get('app.trial_without_payment.second_reminder_enabled', true),
             'trial_first_reminder_days' => $this->configManager->get('app.trial_without_payment.first_reminder_days'),
             'trial_second_reminder_days' => $this->configManager->get('app.trial_without_payment.second_reminder_days'),
         ]);
@@ -191,13 +193,25 @@ class GeneralSettings extends Component implements HasForms
                                 ->label(__('Trial Without Payment Enabled'))
                                 ->helperText(__('If enabled, customers will be able to start subscription trials without entering payment details, and later they can enter payment details to continue their subscription.'))
                                 ->required(),
+                            Toggle::make('trial_first_reminder_enabled')
+                                ->label(__('First Reminder Enabled'))
+                                ->helperText(__('If enabled, a reminder email will be sent to the user when the trial is ending soon.'))
+                                ->live()
+                                ->required(),
                             TextInput::make('trial_first_reminder_days')
                                 ->label(__('First Reminder Days'))
-                                ->helperText(__('This email will remind the user that the trial is ending soon. Enter the number of days before the trial ends that the first reminder email will be sent. Enter 0 to disable this reminder.'))
+                                ->helperText(__('This email will remind the user that the trial is ending soon. Enter the number of days before the trial ends that the first reminder email will be sent.'))
+                                ->disabled(fn ($get) => ! $get('trial_first_reminder_enabled'))
                                 ->integer(),
+                            Toggle::make('trial_second_reminder_enabled')
+                                ->label(__('Second Reminder Enabled'))
+                                ->helperText(__('If enabled, a second reminder email will be sent to the user when the trial is ending soon.'))
+                                ->live()
+                                ->required(),
                             TextInput::make('trial_second_reminder_days')
                                 ->label(__('Second Reminder Days'))
-                                ->helperText(__('Enter the number of days before the trial ends that the second reminder email will be sent. Enter 0 to disable this reminder.'))
+                                ->helperText(__('Enter the number of days before the trial ends that the second reminder email will be sent.'))
+                                ->disabled(fn ($get) => ! $get('trial_second_reminder_enabled'))
                                 ->integer(),
                         ]),
                     Tabs\Tab::make(__('Customer Dashboard'))
@@ -301,8 +315,10 @@ class GeneralSettings extends Component implements HasForms
         $this->configManager->set('cookie-consent.enabled', $data['cookie_consent_enabled']);
         $this->configManager->set('app.two_factor_auth_enabled', $data['two_factor_auth_enabled']);
         $this->configManager->set('app.trial_without_payment.enabled', $data['trial_without_payment_enabled']);
-        $this->configManager->set('app.trial_without_payment.first_reminder_days', $data['trial_first_reminder_days']);
-        $this->configManager->set('app.trial_without_payment.second_reminder_days', $data['trial_second_reminder_days']);
+        $this->configManager->set('app.trial_without_payment.first_reminder_days', $data['trial_first_reminder_days'] ?? 3);
+        $this->configManager->set('app.trial_without_payment.second_reminder_days', $data['trial_second_reminder_days'] ?? 1);
+        $this->configManager->set('app.trial_without_payment.first_reminder_enabled', $data['trial_first_reminder_enabled']);
+        $this->configManager->set('app.trial_without_payment.second_reminder_enabled', $data['trial_second_reminder_enabled']);
 
         Notification::make()
             ->title(__('Settings Saved'))
