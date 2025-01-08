@@ -72,7 +72,7 @@ class CheckoutManager
     {
         $user = auth()->user();
 
-        $tenant = $this->tenantCreationManager->findUserTenantForNewSubscriptionByUuid($user, $tenantUuid);
+        $tenant = $this->tenantCreationManager->findUserTenantForNewOrderByUuid($user, $tenantUuid);
 
         if ($tenant === null) {
             $tenant = $this->tenantCreationManager->createTenant($user);
