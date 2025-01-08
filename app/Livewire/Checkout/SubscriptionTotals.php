@@ -2,7 +2,7 @@
 
 namespace App\Livewire\Checkout;
 
-use App\Constants\SessionConstants;
+use App\Dto\SubscriptionCheckoutDto;
 use App\Dto\TotalsDto;
 use App\Models\Plan;
 use App\Services\CalculationManager;
@@ -19,6 +19,8 @@ class SubscriptionTotals extends Component
 
     public $planHasTrial = false;
 
+    public $isTrailSkipped = false;
+
     public $subtotal;
 
     public $discountAmount;
@@ -30,9 +32,14 @@ class SubscriptionTotals extends Component
     public $code;
 
     public ?string $unitMeterName;
+
     public ?string $planPriceType = null;
+
     public ?string $pricePerUnit = null;
+
     public ?array $tiers = null;
+
+    public bool $canAddDiscount = true;
 
     private DiscountManager $discountManager;
 
@@ -50,11 +57,12 @@ class SubscriptionTotals extends Component
         $this->sessionManager = $sessionManager;
     }
 
-    public function mount(TotalsDto $totals, Plan $plan, $page)
+    public function mount(TotalsDto $totals, Plan $plan, $page, bool $canAddDiscount = true, bool $isTrailSkipped = false)
     {
         $this->page = $page;
         $this->planSlug = $plan->slug;
         $this->planHasTrial = $plan->has_trial;
+        $this->isTrailSkipped = $isTrailSkipped;
         $this->subtotal = $totals->subtotal;
         $this->discountAmount = $totals->discountAmount;
         $this->amountDue = $totals->amountDue;
@@ -63,13 +71,12 @@ class SubscriptionTotals extends Component
         $this->planPriceType = $totals->planPriceType;
         $this->pricePerUnit = $totals->pricePerUnit;
         $this->tiers = $totals->tiers;
+        $this->canAddDiscount = $canAddDiscount;
     }
 
-    public function getCodeFromSession()
+    public function getCodeFromSession(): ?string
     {
-        $subscriptionCheckoutDto = $this->sessionManager->getSubscriptionCheckoutDto();
-
-        return $subscriptionCheckoutDto->discountCode;
+        return $this->sessionManager->getSubscriptionCheckoutDto()->discountCode;
     }
 
     public function add()
@@ -92,12 +99,13 @@ class SubscriptionTotals extends Component
             return;
         }
 
+        /** @var SubscriptionCheckoutDto $subscriptionCheckoutDto */
         $subscriptionCheckoutDto = $this->sessionManager->getSubscriptionCheckoutDto();
 
         $subscriptionCheckoutDto->discountCode = $code;
         $subscriptionCheckoutDto->planSlug = $this->planSlug;
 
-        session()->put(SessionConstants::SUBSCRIPTION_CHECKOUT_DTO, $subscriptionCheckoutDto);
+        $this->sessionManager->saveSubscriptionCheckoutDto($subscriptionCheckoutDto);
 
         $this->updateTotals();
 

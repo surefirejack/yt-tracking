@@ -46,10 +46,8 @@ class OrderResource extends Resource
                     return money($state, $record->currency->code);
                 })->label(__('Total Amount')),
                 Tables\Columns\TextColumn::make('status')
+                    ->color(fn (Order $record, OrderStatusMapper $mapper): string => $mapper->mapColor($record->status))
                     ->badge()
-                    ->colors([
-                        OrderStatus::SUCCESS->value => 'success',
-                    ])
                     ->formatStateUsing(
                         function (string $state, $record, OrderStatusMapper $mapper) {
                             return $mapper->mapForDisplay($state);
@@ -111,6 +109,7 @@ class OrderResource extends Resource
                                             return money(0, $record->currency->code);
                                         }),
                                         TextEntry::make('status')
+                                            ->color(fn (Order $record, OrderStatusMapper $mapper): string => $mapper->mapColor($record->status))
                                             ->formatStateUsing(fn (string $state, OrderStatusMapper $mapper): string => $mapper->mapForDisplay($state))
                                             ->badge(),
                                         TextEntry::make('discounts.amount')

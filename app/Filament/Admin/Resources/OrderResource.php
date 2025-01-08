@@ -37,9 +37,7 @@ class OrderResource extends Resource
                 Tables\Columns\TextColumn::make('tenant.name')->label(__('Tenant'))->searchable(),
                 Tables\Columns\TextColumn::make('status')
                     ->badge()
-                    ->colors([
-                        'success' => OrderStatus::SUCCESS->value,
-                    ])
+                    ->color(fn (Order $record, OrderStatusMapper $mapper): string => $mapper->mapColor($record->status))
                     ->formatStateUsing(
                         function (string $state, $record, OrderStatusMapper $mapper) {
                             return $mapper->mapForDisplay($state);
@@ -108,9 +106,7 @@ class OrderResource extends Resource
                                         }),
                                         TextEntry::make('status')
                                             ->badge()
-                                            ->colors([
-                                                'success' => OrderStatus::SUCCESS->value,
-                                            ])
+                                            ->color(fn (Order $record, OrderStatusMapper $mapper): string => $mapper->mapColor($record->status))
                                             ->formatStateUsing(
                                                 function (string $state, $record, OrderStatusMapper $mapper) {
                                                     return $mapper->mapForDisplay($state);

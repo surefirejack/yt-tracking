@@ -6,6 +6,7 @@ use App\Constants\LemonSqueezyConstants;
 use App\Constants\OrderStatus;
 use App\Constants\PaymentProviderConstants;
 use App\Constants\SubscriptionStatus;
+use App\Constants\SubscriptionType;
 use App\Constants\TransactionStatus;
 use App\Exceptions\SubscriptionCreationNotAllowedException;
 use App\Models\Currency;
@@ -213,6 +214,7 @@ class LemonSqueezyWebhookHandler
             }
 
             $this->subscriptionManager->updateSubscription($subscription, [
+                'type' => SubscriptionType::PAYMENT_PROVIDER_MANAGED,
                 'status' => $subscriptionStatus,
                 'ends_at' => $endsAt,
                 'payment_provider_subscription_id' => $data['id'],
@@ -243,6 +245,7 @@ class LemonSqueezyWebhookHandler
             }
 
             $this->subscriptionManager->updateSubscription($subscription, [
+                'type' => SubscriptionType::PAYMENT_PROVIDER_MANAGED,
                 'status' => $subscriptionStatus,
                 'ends_at' => $endsAt,
                 'payment_provider_subscription_id' => $data['id'],

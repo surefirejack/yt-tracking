@@ -5,6 +5,7 @@ namespace App\Services\PaymentProviders\Stripe;
 use App\Constants\OrderStatus;
 use App\Constants\PaymentProviderConstants;
 use App\Constants\SubscriptionStatus;
+use App\Constants\SubscriptionType;
 use App\Constants\TransactionStatus;
 use App\Models\Currency;
 use App\Models\PaymentProvider;
@@ -55,6 +56,7 @@ class StripeWebhookHandler
             $cancelledAt = $event->data->object->canceled_at ? Carbon::createFromTimestampUTC($event->data->object->canceled_at)->toDateTimeString() : null;
 
             $this->subscriptionManager->updateSubscription($subscription, [
+                'type' => SubscriptionType::PAYMENT_PROVIDER_MANAGED,
                 'status' => $subscriptionStatus,
                 'ends_at' => $endsAt,
                 'payment_provider_subscription_id' => $event->data->object->id,

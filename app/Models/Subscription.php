@@ -37,6 +37,7 @@ class Subscription extends Model
         'price_tiers',
         'price_per_unit',
         'extra_payment_provider_data',
+        'type',
     ];
 
     protected $casts = [

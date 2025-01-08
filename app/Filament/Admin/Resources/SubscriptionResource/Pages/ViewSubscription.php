@@ -34,8 +34,8 @@ class ViewSubscription extends ViewRecord
                 \Filament\Actions\Action::make('change-plan')
                     ->label(__('Change Plan'))
                     ->icon('heroicon-o-rocket-launch')
-                    ->visible(function (Subscription $record): bool {
-                        return $record->status === SubscriptionStatus::ACTIVE->value;
+                    ->visible(function (Subscription $record, SubscriptionManager $subscriptionManager): bool {
+                        return $subscriptionManager->canChangeSubscriptionPlan($record);
                     })
                     ->form([
                         \Filament\Forms\Components\Select::make('plan_id')
@@ -175,6 +175,29 @@ class ViewSubscription extends ViewRecord
                         }
                     })->visible(fn (Subscription $record, SubscriptionManager $subscriptionManager): bool => $subscriptionManager->canDiscardSubscriptionCancellation($record)),
             ])->button()->icon('heroicon-s-cog')->label(__('Manage Subscription')),
+            \Filament\Actions\Action::make('end_now')
+                ->color('danger')
+                ->label(__('End Subscription Now'))
+                ->requiresConfirmation()
+                ->icon('heroicon-m-x-circle')
+                ->action(function (Subscription $userSubscription, SubscriptionManager $subscriptionManager) {
+                    $result = $subscriptionManager->endSubscription(
+                        $userSubscription,
+                    );
+
+                    if ($result) {
+                        Notification::make()
+                            ->title(__('Subscription has been ended.'))
+                            ->success()
+                            ->send();
+                    } else {
+                        Notification::make()
+                            ->title(__('Subscription end failed.'))
+                            ->danger()
+                            ->send();
+                    }
+                })
+                ->visible(fn (Subscription $record, SubscriptionManager $subscriptionManager): bool => $subscriptionManager->canEndSubscription($record)),
         ];
     }
 }

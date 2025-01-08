@@ -20,9 +20,7 @@ class TenantManager
     public function __construct(
         private TenantPermissionManager $tenantPermissionManager,
         private TenantSubscriptionManager $tenantSubscriptionManager,
-    ) {
-
-    }
+    ) {}
 
     public function acceptInvitation(Invitation $invitation, User $user): bool
     {

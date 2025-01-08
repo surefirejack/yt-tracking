@@ -15,19 +15,19 @@ class SessionManager
 
     public function getSubscriptionCheckoutDto(): SubscriptionCheckoutDto
     {
-        return session()->get(SessionConstants::SUBSCRIPTION_CHECKOUT_DTO) ?? new SubscriptionCheckoutDto();
+        return session()->get(SessionConstants::SUBSCRIPTION_CHECKOUT_DTO) ?? new SubscriptionCheckoutDto;
     }
 
     public function resetSubscriptionCheckoutDto(): SubscriptionCheckoutDto
     {
         session()->forget(SessionConstants::SUBSCRIPTION_CHECKOUT_DTO);
 
-        return new SubscriptionCheckoutDto();
+        return new SubscriptionCheckoutDto;
     }
 
     public function getCartDto(): CartDto
     {
-        return session()->get(SessionConstants::CART_DTO) ?? new CartDto();
+        return session()->get(SessionConstants::CART_DTO) ?? new CartDto;
     }
 
     public function saveCartDto(CartDto $cartDto): void
@@ -39,7 +39,7 @@ class SessionManager
     {
         session()->forget(SessionConstants::CART_DTO);
 
-        return new CartDto();
+        return new CartDto;
     }
 
     public function setCreateTenantForFreePlanUser(bool $shouldCreateTenantAfterRegistration): void

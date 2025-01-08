@@ -4,6 +4,7 @@ namespace Tests\Feature\Http\Controllers\PaymentProviders;
 
 use App\Constants\OrderStatus;
 use App\Constants\SubscriptionStatus;
+use App\Constants\SubscriptionType;
 use App\Constants\TransactionStatus;
 use App\Models\Currency;
 use App\Models\Order;
@@ -53,6 +54,46 @@ class StripeControllerTest extends FeatureTest
             'uuid' => $uuid,
             'status' => SubscriptionStatus::INACTIVE->value,
         ]);
+    }
+
+    public function test_local_subscription_created_webhook(): void
+    {
+        $tenant = $this->createTenant();
+        $user = $this->createUser($tenant);
+
+        $uuid = (string) Str::uuid();
+        Subscription::create([
+            'uuid' => $uuid,
+            'user_id' => $user->id,
+            'tenant_id' => $tenant->id,
+            'price' => 10,
+            'currency_id' => 1,
+            'plan_id' => 1,
+            'interval_id' => 2,
+            'interval_count' => 1,
+            'status' => SubscriptionStatus::NEW->value,
+            'type' => SubscriptionType::LOCALLY_MANAGED,
+        ]);
+
+        $payload = $this->getStripeSubscription('incomplete', 'customer.subscription.created', $uuid);
+
+        $timestamp = time();
+        $payloadString = json_encode($payload);
+        $signature = \hash_hmac('sha256', "{$timestamp}.{$payloadString}", config('services.stripe.webhook_signing_secret'));
+
+        $response = $this->postJson(route('payments-providers.stripe.webhook'), $payload, [
+            'Stripe-Signature' => 't='.$timestamp.',v1='.$signature,
+            'Content-Type' => 'application/json',
+        ]);
+
+        $response->assertStatus(200);
+
+        $this->assertDatabaseHas('subscriptions', [
+            'uuid' => $uuid,
+            'status' => SubscriptionStatus::INACTIVE->value,
+        ]);
+
+        $this->assertEquals(Subscription::where('uuid', $uuid)->firstOrFail()->type, SubscriptionType::PAYMENT_PROVIDER_MANAGED);
     }
 
     public function test_subscription_updated_webhook(): void

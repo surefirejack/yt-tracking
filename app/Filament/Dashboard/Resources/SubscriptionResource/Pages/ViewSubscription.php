@@ -23,8 +23,8 @@ class ViewSubscription extends ViewRecord
                     ->label(__('Change Plan'))
                     ->color('primary')
                     ->icon('heroicon-o-rocket-launch')
-                    ->visible(function (Subscription $record, PlanManager $planManager): bool {
-                        return $record->status === SubscriptionStatus::ACTIVE->value && $planManager->isPlanChangeable($record->plan);
+                    ->visible(function (Subscription $record, SubscriptionManager $subscriptionManager): bool {
+                        return $subscriptionManager->canChangeSubscriptionPlan($record);
                     })
                     ->url(fn (Subscription $record): string => SubscriptionResource::getUrl('change-plan', ['record' => $record->uuid])),
                 \Filament\Actions\Action::make('update-payment-details')

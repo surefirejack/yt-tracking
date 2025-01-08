@@ -17,4 +17,12 @@ class TransactionStatusMapper
             default => __('Pending'),
         };
     }
+
+    public function mapColor(string $status)
+    {
+        return match ($status) {
+            TransactionStatus::SUCCESS->value => 'success',
+            default => 'warning',
+        };
+    }
 }

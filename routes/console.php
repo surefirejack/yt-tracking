@@ -16,3 +16,9 @@ use Illuminate\Support\Facades\Schedule;
 Schedule::command('app:generate-sitemap')->everyOddHour();
 
 Schedule::command('app:metrics-beat')->dailyAt('00:01');
+
+Schedule::command('app:local-subscription-expiring-soon-reminder')->dailyAt('00:01');
+
+Schedule::command('app:cleanup-local-subscription-statuses')->hourly();
+
+Schedule::command('app:sync-seat-based-subscription-quantities')->hourly();
