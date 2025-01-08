@@ -2,6 +2,8 @@
 
 namespace Tests\Feature\Livewire\Checkout;
 
+use App\Dto\CartDto;
+use App\Dto\CartItemDto;
 use App\Livewire\Checkout\ProductCheckoutForm;
 use App\Models\Currency;
 use App\Models\OneTimeProduct;
@@ -11,7 +13,10 @@ use App\Models\PaymentProvider;
 use App\Models\User;
 use App\Services\PaymentProviders\PaymentManager;
 use App\Services\PaymentProviders\PaymentProviderInterface;
+use App\Services\SessionManager;
 use Livewire\Livewire;
+use Mockery;
+use Mockery\MockInterface;
 use Tests\Feature\FeatureTest;
 
 class ProductCheckoutFormTest extends FeatureTest
@@ -30,6 +35,16 @@ class ProductCheckoutFormTest extends FeatureTest
         ]);
 
         $this->addPaymentProvider();
+
+        $this->instance(SessionManager::class, Mockery::mock(SessionManager::class, function (MockInterface $mock) use ($product) {
+            $cartDto = new CartDto;
+            $cartItem = new CartItemDto;
+            $cartItem->productId = $product->id;
+            $cartDto->items = [$cartItem];
+            $mock->shouldReceive('getCartDto')->andReturn($cartDto);
+
+            $mock->shouldReceive('saveCartDto');
+        }));
 
         // get number of orders before checkout
         $ordersBefore = Order::count();
@@ -75,6 +90,16 @@ class ProductCheckoutFormTest extends FeatureTest
 
         $this->addPaymentProvider();
 
+        $this->instance(SessionManager::class, Mockery::mock(SessionManager::class, function (MockInterface $mock) use ($product) {
+            $cartDto = new CartDto;
+            $cartItem = new CartItemDto;
+            $cartItem->productId = $product->id;
+            $cartDto->items = [$cartItem];
+            $mock->shouldReceive('getCartDto')->andReturn($cartDto);
+
+            $mock->shouldReceive('saveCartDto');
+        }));
+
         // get number of orders before checkout
         $ordersBefore = Order::count();
 
@@ -105,7 +130,7 @@ class ProductCheckoutFormTest extends FeatureTest
             'type' => 'any',
         ]);
 
-        $mock = \Mockery::mock(PaymentProviderInterface::class);
+        $mock = Mockery::mock(PaymentProviderInterface::class);
         $mock->shouldReceive('initProductCheckout')
             ->once()
             ->andReturn([]);
@@ -148,6 +173,16 @@ class ProductCheckoutFormTest extends FeatureTest
         ]);
 
         $this->addPaymentProvider(false);
+
+        $this->instance(SessionManager::class, Mockery::mock(SessionManager::class, function (MockInterface $mock) use ($product) {
+            $cartDto = new CartDto;
+            $cartItem = new CartItemDto;
+            $cartItem->productId = $product->id;
+            $cartDto->items = [$cartItem];
+            $mock->shouldReceive('getCartDto')->andReturn($cartDto);
+
+            $mock->shouldReceive('saveCartDto');
+        }));
 
         // get number of orders before checkout
         $ordersBefore = Order::count();

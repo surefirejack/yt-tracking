@@ -2,12 +2,12 @@
 
 namespace App\Livewire\Checkout;
 
-use App\Constants\SessionConstants;
 use App\Dto\SubscriptionCheckoutDto;
 use App\Dto\TotalsDto;
 use App\Models\Plan;
 use App\Services\CalculationManager;
 use App\Services\DiscountManager;
+use App\Services\SessionManager;
 use Livewire\Attributes\On;
 use Livewire\Component;
 
@@ -18,6 +18,8 @@ class SubscriptionTotals extends Component
     public $planSlug;
 
     public $planHasTrial = false;
+
+    public $isTrailSkipped = false;
 
     public $subtotal;
 
@@ -33,22 +35,26 @@ class SubscriptionTotals extends Component
     public ?string $planPriceType = null;
     public ?string $pricePerUnit = null;
     public ?array $tiers = null;
+    public bool $canAddDiscount = true;
 
     private DiscountManager $discountManager;
 
     private CalculationManager $calculationManager;
+    private SessionManager $sessionManager;
 
-    public function boot(DiscountManager $discountManager, CalculationManager $calculationManager)
+    public function boot(DiscountManager $discountManager, CalculationManager $calculationManager, SessionManager $sessionManager)
     {
         $this->discountManager = $discountManager;
         $this->calculationManager = $calculationManager;
+        $this->sessionManager = $sessionManager;
     }
 
-    public function mount(TotalsDto $totals, Plan $plan, $page)
+    public function mount(TotalsDto $totals, Plan $plan, $page, bool $canAddDiscount = true, bool $isTrailSkipped = false)
     {
         $this->page = $page;
         $this->planSlug = $plan->slug;
         $this->planHasTrial = $plan->has_trial;
+        $this->isTrailSkipped = $isTrailSkipped;
         $this->subtotal = $totals->subtotal;
         $this->discountAmount = $totals->discountAmount;
         $this->amountDue = $totals->amountDue;
@@ -57,18 +63,12 @@ class SubscriptionTotals extends Component
         $this->planPriceType = $totals->planPriceType;
         $this->pricePerUnit = $totals->pricePerUnit;
         $this->tiers = $totals->tiers;
+        $this->canAddDiscount = $canAddDiscount;
     }
 
-    public function getCodeFromSession()
+    public function getCodeFromSession(): ?string
     {
-        /** @var SubscriptionCheckoutDto $subscriptionCheckoutDto */
-        $subscriptionCheckoutDto = session()->get(SessionConstants::SUBSCRIPTION_CHECKOUT_DTO);
-
-        if ($subscriptionCheckoutDto === null) {
-            return null;
-        }
-
-        return $subscriptionCheckoutDto->discountCode;
+        return $this->sessionManager->getSubscriptionCheckoutDto()->discountCode;
     }
 
     public function add()
@@ -92,15 +92,12 @@ class SubscriptionTotals extends Component
         }
 
         /** @var SubscriptionCheckoutDto $subscriptionCheckoutDto */
-        $subscriptionCheckoutDto = session()->get(SessionConstants::SUBSCRIPTION_CHECKOUT_DTO);
-        if ($subscriptionCheckoutDto === null) {
-            $subscriptionCheckoutDto = new SubscriptionCheckoutDto();
-        }
+        $subscriptionCheckoutDto = $this->sessionManager->getSubscriptionCheckoutDto();
 
         $subscriptionCheckoutDto->discountCode = $code;
         $subscriptionCheckoutDto->planSlug = $this->planSlug;
 
-        session()->put(SessionConstants::SUBSCRIPTION_CHECKOUT_DTO, $subscriptionCheckoutDto);
+        $this->sessionManager->saveSubscriptionCheckoutDto($subscriptionCheckoutDto);
 
         $this->updateTotals();
 
@@ -109,16 +106,11 @@ class SubscriptionTotals extends Component
 
     public function remove()
     {
-        /** @var SubscriptionCheckoutDto $subscriptionCheckoutDto */
-        $subscriptionCheckoutDto = session()->get(SessionConstants::SUBSCRIPTION_CHECKOUT_DTO);
-
-        if ($subscriptionCheckoutDto === null) {
-            return;
-        }
+        $subscriptionCheckoutDto = $this->sessionManager->getSubscriptionCheckoutDto();
 
         $subscriptionCheckoutDto->discountCode = null;
 
-        session()->put(SessionConstants::SUBSCRIPTION_CHECKOUT_DTO, $subscriptionCheckoutDto);
+        $this->sessionManager->saveSubscriptionCheckoutDto($subscriptionCheckoutDto);
 
         session()->flash('success', __('The discount code has been removed.'));
 

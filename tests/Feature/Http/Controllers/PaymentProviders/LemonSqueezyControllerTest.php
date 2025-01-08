@@ -2,10 +2,10 @@
 
 namespace Tests\Feature\Http\Controllers\PaymentProviders;
 
-use App\Constants\LemonSqueezyConstants;
 use App\Constants\OrderStatus;
 use App\Constants\PaymentProviderConstants;
 use App\Constants\SubscriptionStatus;
+use App\Constants\SubscriptionType;
 use App\Constants\TransactionStatus;
 use App\Models\Currency;
 use App\Models\OneTimeProduct;
@@ -63,6 +63,45 @@ class LemonSqueezyControllerTest extends FeatureTest
         $this->assertEquals($subscriptionFromDb->extra_payment_provider_data, [
             'subscription_item_id' => 257408,
         ]);
+    }
+
+    public function test_local_subscription_created_webhook(): void
+    {
+        $uuid = (string) Str::uuid();
+        Subscription::create([
+            'uuid' => $uuid,
+            'user_id' => 1,
+            'price' => 10,
+            'currency_id' => 1,
+            'plan_id' => 1,
+            'interval_id' => 2,
+            'interval_count' => 2,
+            'status' => SubscriptionStatus::NEW->value,
+            'type' => SubscriptionType::LOCALLY_MANAGED,
+        ]);
+
+        $payload = $this->getLemonSqueezySubscriptionEvent('active', 'subscription_created', $uuid, '309911');
+
+        $signature = $this->generateSignature(json_encode($payload));
+
+        $response = $this->postJson(route('payments-providers.lemon-squeezy.webhook'), $payload, [
+            'X-Signature' => $signature,
+            'Content-Type' => 'application/json',
+        ]);
+
+        $response->assertStatus(200);
+
+        $this->assertDatabaseHas('subscriptions', [
+            'uuid' => $uuid,
+            'status' => SubscriptionStatus::ACTIVE->value,
+        ]);
+
+        $subscriptionFromDb = Subscription::where('uuid', $uuid)->firstOrFail();
+        $this->assertEquals($subscriptionFromDb->extra_payment_provider_data, [
+            'subscription_item_id' => 257408,
+        ]);
+
+        $this->assertEquals(Subscription::where('uuid', $uuid)->firstOrFail()->type, SubscriptionType::PAYMENT_PROVIDER_MANAGED);
     }
 
     public function test_subscription_created_without_subscription_webhook(): void

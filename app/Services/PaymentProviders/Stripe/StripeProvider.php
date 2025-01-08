@@ -9,6 +9,7 @@ use App\Constants\PlanMeterConstants;
 use App\Constants\PlanPriceTierConstants;
 use App\Constants\PlanPriceType;
 use App\Constants\PlanType;
+use App\Constants\SubscriptionType;
 use App\Filament\Dashboard\Resources\SubscriptionResource;
 use App\Models\Discount;
 use App\Models\OneTimeProduct;
@@ -66,8 +67,8 @@ class StripeProvider implements PaymentProviderInterface
 
             $sessionCreationObject = [
                 'customer' => $stripeCustomerId,
-                'success_url' => route('checkout.subscription.success'),
-                'cancel_url' => route('checkout.subscription', ['planSlug' => $plan->slug]),
+                'success_url' => $this->getSubscriptionCheckoutSuccessUrl($subscription),
+                'cancel_url' => $this->getSubscriptionCheckoutCancelUrl($plan, $subscription),
                 'mode' => 'subscription',
                 'line_items' => $lineItems,
                 'subscription_data' => [
@@ -77,7 +78,9 @@ class StripeProvider implements PaymentProviderInterface
                 ],
             ];
 
-            if ($trialDays > 0) {
+            $shouldSkipTrial = $this->subscriptionManager->shouldSkipTrial($subscription);
+
+            if (! $shouldSkipTrial && $trialDays > 0) {
                 $sessionCreationObject['subscription_data']['trial_period_days'] = $trialDays;
             }
 
@@ -725,5 +728,28 @@ class StripeProvider implements PaymentProviderInterface
         }
 
         return true;
+    }
+
+    public function supportsSkippingTrial(): bool
+    {
+        return true;
+    }
+
+    private function getSubscriptionCheckoutCancelUrl(Plan $plan, Subscription $subscription)
+    {
+        if ($subscription->type === SubscriptionType::LOCALLY_MANAGED) {
+            return route('checkout.convert-local-subscription', ['subscriptionUuid' => $subscription->uuid]);
+        }
+
+        return route('checkout.subscription', ['planSlug' => $plan->slug]);
+    }
+
+    private function getSubscriptionCheckoutSuccessUrl(Subscription $subscription)
+    {
+        if ($subscription->type === SubscriptionType::LOCALLY_MANAGED) {
+            return route('checkout.convert-local-subscription.success');
+        }
+
+        return route('checkout.subscription.success');
     }
 }

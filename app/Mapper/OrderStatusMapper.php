@@ -15,4 +15,12 @@ class OrderStatusMapper
             default => __('Pending'),
         };
     }
+
+    public function mapColor(string $status)
+    {
+        return match ($status) {
+            OrderStatus::SUCCESS->value => 'success',
+            default => 'warning',
+        };
+    }
 }

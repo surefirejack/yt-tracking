@@ -23,31 +23,27 @@
                 </div>
             @endif
 
-            <form wire:submit="add">
-
-                @if ($isDiscountCodeAdded)
-                    <div class="flex flex-row items-center gap-3 justify-end">
-                        <div class="rounded border-primary-500 py-1 px-2 text-xs border border-dashed">
-                            {{ $addedCode }}
-                        </div>
-
-                        <a wire:click.prevent="remove" class="!text-primary-500 !border-primary-500 !text-xs !py-1 cursor-pointer">
-                            {{ __('Remove Discount') }}
-                        </a>
+            @if ($isDiscountCodeAdded)
+                <div class="flex flex-row items-center gap-3 justify-end">
+                    <div class="rounded border-primary-500 py-1 px-2 text-xs border border-dashed">
+                        {{ $addedCode }}
                     </div>
-                @else
-                    <div class="flex flex-row items-center gap-3">
-                        <x-input.field wire:model="code" placeholder="{{ __('Discount code') }}" type="text" class="input-sm !mx-0 !px-0"
-                               value="{{$addedCode ?? ''}}" disabled="{{$isDiscountCodeAdded}}"/>
 
-                        <x-button-link.primary-outline elementType="button" type="submit"
-                                                       class="!text-primary-500 !border-primary-500 !text-xs !py-1 ">
-                            {{ __('Add Discount') }}
-                        </x-button-link.primary-outline>
-                    </div>
-                @endif
+                    <a wire:click.prevent="remove" class="!text-primary-500 !border-primary-500 !text-xs !py-1 cursor-pointer">
+                        {{ __('Remove Discount') }}
+                    </a>
+                </div>
+            @else
+                <div class="flex flex-row items-center gap-3 mt-6">
+                    <x-input.field wire:model="code" placeholder="{{ __('Discount code') }}" type="text" class="input-sm !mx-0 !px-0"
+                           value="{{$addedCode ?? ''}}" disabled="{{$isDiscountCodeAdded}}"/>
 
-            </form>
+                    <x-button-link.primary-outline wire:click.prevent="add"
+                                                   class="!text-primary-500 !border-primary-500 !text-xs !py-1 whitespace-nowrap">
+                        {{ __('Add Discount') }}
+                    </x-button-link.primary-outline>
+                </div>
+            @endif
         </div>
     </div>
 

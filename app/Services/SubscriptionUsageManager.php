@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Constants\PlanType;
+use App\Constants\SubscriptionType;
 use App\Models\Subscription;
 use App\Models\SubscriptionUsage;
 use App\Services\PaymentProviders\PaymentManager;
@@ -26,11 +27,14 @@ class SubscriptionUsageManager
             return false;
         }
 
-        $paymentProvider = $this->paymentManager->getPaymentProviderBySlug(
-            $subscription->paymentProvider->slug
-        );
+        $result = true;
+        if ($subscription->type === SubscriptionType::PAYMENT_PROVIDER_MANAGED) {
+            $paymentProvider = $this->paymentManager->getPaymentProviderBySlug(
+                $subscription->paymentProvider->slug
+            );
 
-        $result = $paymentProvider->reportUsage($subscription, $unitCount);
+            $result = $paymentProvider->reportUsage($subscription, $unitCount);
+        }
 
         if ($result) {
             SubscriptionUsage::create([

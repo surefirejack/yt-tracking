@@ -29,7 +29,7 @@
             {{$slot}}
         </div>
 
-        @include('components.layouts.partials.tail')
+        @include('components.layouts.partials.tail', ['skipCookieContentBar' => true])
     </div>
 </body>
 </html>
