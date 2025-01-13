@@ -17,6 +17,7 @@ use App\Models\Plan;
 use App\Models\Product;
 use App\Models\Subscription;
 use App\Models\User;
+use App\Models\UserSubscriptionTrial;
 use App\Services\PaymentProviders\PaymentProviderInterface;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -101,6 +102,8 @@ class SubscriptionManager
             }
 
             $newSubscription = Subscription::create($subscriptionAttributes);
+
+            $this->updateUserSubscriptionTrials($newSubscription->id);
         });
 
         return $newSubscription;
@@ -190,7 +193,11 @@ class SubscriptionManager
 
     public function shouldSkipTrial(Subscription $subscription)
     {
-        return $this->isLocalSubscription($subscription) && $subscription->plan->has_trial;
+        if ($this->isLocalSubscription($subscription) && $subscription->plan->has_trial) {
+            return true;
+        }
+
+        return ! $this->canUserHaveSubscriptionTrial($subscription->user);
     }
 
     public function findById(int $id): ?Subscription
@@ -214,6 +221,8 @@ class SubscriptionManager
         $oldEndsAt = $subscription->ends_at;
         $newEndsAt = $data['ends_at'] ?? $oldEndsAt;
         $subscription->update($data);
+
+        $this->updateUserSubscriptionTrials($subscription->id);
 
         $this->handleDispatchingEvents(
             $oldStatus,
@@ -491,5 +500,49 @@ class SubscriptionManager
             ->update([
                 'status' => SubscriptionStatus::INACTIVE->value,
             ]);
+    }
+
+    public function updateUserSubscriptionTrials(int $subscriptionId)
+    {
+        $subscription = Subscription::where('id', $subscriptionId)
+            ->where('status', SubscriptionStatus::ACTIVE->value)
+            ->whereNotNull('trial_ends_at')
+            ->first();
+
+        if (! $subscription) {
+            return;
+        }
+
+        $user = $subscription->user;
+
+        // if user already has a trial for this subscription, do not create another one
+        $user->subscriptionTrials()
+            ->where('subscription_id', $subscription->id)
+            ->firstOrCreate([
+                'subscription_id' => $subscription->id,
+                'trial_ends_at' => $subscription->trial_ends_at,
+            ]);
+    }
+
+    public function getUserSubscriptionTrialCount(int $userId): int
+    {
+        return UserSubscriptionTrial::where('user_id', $userId)->count();
+    }
+
+    public function canUserHaveSubscriptionTrial(?User $user): bool
+    {
+        if (! $user) {
+            return true;
+        }
+
+        if (! config('app.limit_user_trials.enabled')) {
+            return true;
+        }
+
+        if ($this->getUserSubscriptionTrialCount($user->id) >= config('app.limit_user_trials.max_count')) {
+            return false;
+        }
+
+        return true;
     }
 }

@@ -5,6 +5,7 @@ namespace App\Livewire\Filament;
 use App\Models\Currency;
 use App\Models\EmailProvider;
 use App\Services\ConfigManager;
+use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Tabs;
 use Filament\Forms\Components\Textarea;
@@ -72,6 +73,8 @@ class GeneralSettings extends Component implements HasForms
             'trial_second_reminder_enabled' => $this->configManager->get('app.trial_without_payment.second_reminder_enabled', true),
             'trial_first_reminder_days' => $this->configManager->get('app.trial_without_payment.first_reminder_days'),
             'trial_second_reminder_days' => $this->configManager->get('app.trial_without_payment.second_reminder_days'),
+            'limit_user_trials_enabled' => $this->configManager->get('app.limit_user_trials.enabled'),
+            'limit_user_trials_max_count' => $this->configManager->get('app.limit_user_trials.max_count'),
         ]);
     }
 
@@ -193,30 +196,44 @@ class GeneralSettings extends Component implements HasForms
                     Tabs\Tab::make(__('Subscription Trials'))
                         ->icon('heroicon-s-user')
                         ->schema([
-                            Toggle::make('trial_without_payment_enabled')
-                                ->label(__('Trial Without Payment Enabled'))
-                                ->helperText(__('If enabled, customers will be able to start subscription trials without entering payment details, and later they can enter payment details to continue their subscription.'))
-                                ->required(),
-                            Toggle::make('trial_first_reminder_enabled')
-                                ->label(__('First Reminder Enabled'))
-                                ->helperText(__('If enabled, a reminder email will be sent to the user when the trial is ending soon.'))
-                                ->live()
-                                ->required(),
-                            TextInput::make('trial_first_reminder_days')
-                                ->label(__('First Reminder Days'))
-                                ->helperText(__('This email will remind the user that the trial is ending soon. Enter the number of days before the trial ends that the first reminder email will be sent.'))
-                                ->disabled(fn ($get) => ! $get('trial_first_reminder_enabled'))
-                                ->integer(),
-                            Toggle::make('trial_second_reminder_enabled')
-                                ->label(__('Second Reminder Enabled'))
-                                ->helperText(__('If enabled, a second reminder email will be sent to the user when the trial is ending soon.'))
-                                ->live()
-                                ->required(),
-                            TextInput::make('trial_second_reminder_days')
-                                ->label(__('Second Reminder Days'))
-                                ->helperText(__('Enter the number of days before the trial ends that the second reminder email will be sent.'))
-                                ->disabled(fn ($get) => ! $get('trial_second_reminder_enabled'))
-                                ->integer(),
+                            Section::make(__('Trials without Payment'))->schema([
+                                Toggle::make('trial_without_payment_enabled')
+                                    ->label(__('Trial Without Payment Enabled'))
+                                    ->helperText(__('If enabled, customers will be able to start subscription trials without entering payment details, and later they can enter payment details to continue their subscription.'))
+                                    ->required(),
+                                Toggle::make('trial_first_reminder_enabled')
+                                    ->label(__('First Reminder Enabled'))
+                                    ->helperText(__('If enabled, a reminder email will be sent to the user when the trial is ending soon.'))
+                                    ->live()
+                                    ->required(),
+                                TextInput::make('trial_first_reminder_days')
+                                    ->label(__('First Reminder Days'))
+                                    ->helperText(__('This email will remind the user that the trial is ending soon. Enter the number of days before the trial ends that the first reminder email will be sent.'))
+                                    ->disabled(fn ($get) => ! $get('trial_first_reminder_enabled'))
+                                    ->integer(),
+                                Toggle::make('trial_second_reminder_enabled')
+                                    ->label(__('Second Reminder Enabled'))
+                                    ->helperText(__('If enabled, a second reminder email will be sent to the user when the trial is ending soon.'))
+                                    ->live()
+                                    ->required(),
+                                TextInput::make('trial_second_reminder_days')
+                                    ->label(__('Second Reminder Days'))
+                                    ->helperText(__('Enter the number of days before the trial ends that the second reminder email will be sent.'))
+                                    ->disabled(fn ($get) => ! $get('trial_second_reminder_enabled'))
+                                    ->integer(),
+                            ]),
+                            Section::make(__('Limit User Trials'))->schema([
+                                Toggle::make('limit_user_trials_enabled')
+                                    ->label(__('Limit User Trials Enabled'))
+                                    ->helperText(__('If enabled, users will only be able to start a limited number of trials (to prevent abuse).'))
+                                    ->live()
+                                    ->required(),
+                                TextInput::make('limit_user_trials_max_count')
+                                    ->label(__('Maximum Trial Count'))
+                                    ->helperText(__('Enter the maximum number of trials a user can start. If a user reaches this limit, they will not be able to start any more trials and they will be required to enter payment details to start subscription.'))
+                                    ->disabled(fn ($get) => ! $get('limit_user_trials_enabled'))
+                                    ->integer(),
+                            ]),
                         ]),
                     Tabs\Tab::make(__('Customer Dashboard'))
                         ->icon('heroicon-s-user')
@@ -324,6 +341,8 @@ class GeneralSettings extends Component implements HasForms
         $this->configManager->set('app.trial_without_payment.second_reminder_days', $data['trial_second_reminder_days'] ?? 1);
         $this->configManager->set('app.trial_without_payment.first_reminder_enabled', $data['trial_first_reminder_enabled']);
         $this->configManager->set('app.trial_without_payment.second_reminder_enabled', $data['trial_second_reminder_enabled']);
+        $this->configManager->set('app.limit_user_trials.enabled', $data['limit_user_trials_enabled']);
+        $this->configManager->set('app.limit_user_trials.max_count', $data['limit_user_trials_max_count']);
 
         Notification::make()
             ->title(__('Settings Saved'))

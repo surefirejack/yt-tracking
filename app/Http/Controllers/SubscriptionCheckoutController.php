@@ -38,7 +38,10 @@ class SubscriptionCheckoutController extends Controller
 
         $this->sessionManager->saveSubscriptionCheckoutDto($checkoutDto);
 
-        if ($plan->has_trial && config('app.trial_without_payment.enabled')) {
+        if ($plan->has_trial &&
+            config('app.trial_without_payment.enabled') &&
+            $this->subscriptionManager->canUserHaveSubscriptionTrial($user)
+        ) {
             return view('checkout.local-subscription');
         }
 
@@ -57,12 +60,6 @@ class SubscriptionCheckoutController extends Controller
         $plan = Plan::where('slug', $planSlug)->where('is_active', true)->firstOrFail();
 
         $checkoutDto = $this->sessionManager->getSubscriptionCheckoutDto();
-
-        $user = auth()->user();
-
-        if ($user && ! $this->subscriptionManager->canCreateSubscription($user->id)) {
-            throw new SubscriptionCreationNotAllowedException(__('You already have subscription.'));
-        }
 
         if ($checkoutDto->planSlug !== $planSlug) {
             $checkoutDto = $this->sessionManager->resetSubscriptionCheckoutDto();
@@ -128,6 +125,7 @@ class SubscriptionCheckoutController extends Controller
         }
 
         $this->subscriptionManager->setAsPending($checkoutDto->subscriptionId);
+        $this->subscriptionManager->updateUserSubscriptionTrials($checkoutDto->subscriptionId);
 
         if ($checkoutDto->discountCode !== null) {
             $this->discountManager->redeemCodeForSubscription($checkoutDto->discountCode, auth()->user(), $checkoutDto->subscriptionId);
