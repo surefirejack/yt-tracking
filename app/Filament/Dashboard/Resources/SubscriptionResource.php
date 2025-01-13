@@ -103,7 +103,8 @@ class SubscriptionResource extends Resource
                 ]),
             ])
             ->bulkActions([
-            ]);
+            ])
+            ->defaultSort('updated_at', 'desc');
     }
 
     public static function getRelations(): array

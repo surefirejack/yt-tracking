@@ -201,6 +201,11 @@ return [
         'second_reminder_days' => env('TRIAL_WITHOUT_PAYMENT_SECOND_REMINDER_DAYS', 1),
     ],
 
+    'limit_user_trials' => [
+        'enabled' => env('LIMIT_USER_TRIALS_ENABLED', false),
+        'max_count' => env('LIMIT_USER_TRIALS_MAX_COUNT', 1),
+    ],
+
     /*
     |--------------------------------------------------------------------------
     | Class Aliases
