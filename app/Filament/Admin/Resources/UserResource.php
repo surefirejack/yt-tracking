@@ -46,6 +46,9 @@ class UserResource extends Resource
                         ->required(fn (string $context): bool => $context === 'create')
                         ->helperText(fn (string $context): string => ($context !== 'create') ? __('Leave blank to keep the current password.') : '')
                         ->maxLength(255),
+                    Forms\Components\RichEditor::make('notes')
+                        ->nullable()
+                        ->helperText('Any notes you want to keep about this user.'),
                     Forms\Components\Select::make('roles')
                         ->multiple()
                         ->relationship('roles', 'name')
@@ -71,6 +74,10 @@ class UserResource extends Resource
             ->columns([
                 Tables\Columns\TextColumn::make('name')->searchable()->sortable(),
                 Tables\Columns\TextColumn::make('email')->searchable()->sortable(),
+                Tables\Columns\IconColumn::make('email_verified_at')
+                    ->label(__('Email Verified'))
+                    ->getStateUsing(fn (User $user) => $user->email_verified_at ? true : false)
+                    ->boolean(),
                 Tables\Columns\TextColumn::make('updated_at')
                     ->dateTime(config('app.datetime_format')),
                 Tables\Columns\TextColumn::make('created_at')

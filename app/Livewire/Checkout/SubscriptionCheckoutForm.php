@@ -12,6 +12,7 @@ use App\Services\LoginManager;
 use App\Services\PaymentProviders\PaymentManager;
 use App\Services\PlanManager;
 use App\Services\SessionManager;
+use App\Services\SubscriptionManager;
 use App\Services\UserManager;
 use App\Validator\LoginValidator;
 use App\Validator\RegisterValidator;
@@ -24,14 +25,18 @@ class SubscriptionCheckoutForm extends CheckoutForm
 
     private CalculationManager $calculationManager;
 
+    private SubscriptionManager $subscriptionManager;
+
     public function boot(
         PlanManager $planManager,
         SessionManager $sessionManager,
         CalculationManager $calculationManager,
+        SubscriptionManager $subscriptionManager,
     ) {
         $this->planManager = $planManager;
         $this->sessionManager = $sessionManager;
         $this->calculationManager = $calculationManager;
+        $this->subscriptionManager = $subscriptionManager;
     }
 
     public function render(PaymentManager $paymentManager)
@@ -47,11 +52,17 @@ class SubscriptionCheckoutForm extends CheckoutForm
             $subscriptionCheckoutDto?->discountCode,
         );
 
+        $canUserHaveSubscriptionTrial = $this->subscriptionManager->canUserHaveSubscriptionTrial(auth()->user());
+
         return view('livewire.checkout.subscription-checkout-form', [
             'userExists' => $this->userExists($this->email),
-            'paymentProviders' => $this->getPaymentProviders($paymentManager),
+            'paymentProviders' => $this->getPaymentProviders(
+                $paymentManager,
+                ! $canUserHaveSubscriptionTrial,
+            ),
             'plan' => $plan,
             'totals' => $totals,
+            'isTrialSkipped' => ! $canUserHaveSubscriptionTrial,
         ]);
     }
 
@@ -128,7 +139,7 @@ class SubscriptionCheckoutForm extends CheckoutForm
         );
     }
 
-    protected function getPaymentProviders(PaymentManager $paymentManager)
+    protected function getPaymentProviders(PaymentManager $paymentManager, bool $shouldSupportSkippingTrial = false)
     {
         if (count($this->paymentProviders) > 0) {
             return $this->paymentProviders;
@@ -139,7 +150,7 @@ class SubscriptionCheckoutForm extends CheckoutForm
 
         $plan = $this->planManager->getActivePlanBySlug($planSlug);
 
-        $this->paymentProviders = $paymentManager->getActivePaymentProvidersForPlan($plan);
+        $this->paymentProviders = $paymentManager->getActivePaymentProvidersForPlan($plan, $shouldSupportSkippingTrial);
 
         if (empty($this->paymentProviders)) {
             logger()->error('No payment providers available for plan', [

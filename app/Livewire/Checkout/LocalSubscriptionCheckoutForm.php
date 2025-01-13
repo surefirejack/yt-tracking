@@ -10,6 +10,7 @@ use App\Services\LoginManager;
 use App\Services\PaymentProviders\PaymentManager;
 use App\Services\PlanManager;
 use App\Services\SessionManager;
+use App\Services\SubscriptionManager;
 use App\Services\UserManager;
 use App\Validator\LoginValidator;
 use App\Validator\RegisterValidator;
@@ -22,14 +23,18 @@ class LocalSubscriptionCheckoutForm extends CheckoutForm
 
     private CalculationManager $calculationManager;
 
+    private SubscriptionManager $subscriptionManager;
+
     public function boot(
         PlanManager $planManager,
         SessionManager $sessionManager,
         CalculationManager $calculationManager,
+        SubscriptionManager $subscriptionManager,
     ) {
         $this->planManager = $planManager;
         $this->sessionManager = $sessionManager;
         $this->calculationManager = $calculationManager;
+        $this->subscriptionManager = $subscriptionManager;
     }
 
     public function render(PaymentManager $paymentManager)
@@ -67,6 +72,10 @@ class LocalSubscriptionCheckoutForm extends CheckoutForm
             parent::handleLoginOrRegistration($loginValidator, $registerValidator, $userManager, $loginManager);
         } catch (LoginException $exception) { // 2fa is enabled, user has to go through typical login flow to enter 2fa code
             return redirect()->route('login');
+        }
+
+        if (! $this->subscriptionManager->canUserHaveSubscriptionTrial(auth()->user())) {
+            return redirect()->route('home');
         }
 
         $subscriptionCheckoutDto = $this->sessionManager->getSubscriptionCheckoutDto();

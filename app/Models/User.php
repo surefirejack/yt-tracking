@@ -34,6 +34,7 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail, Two
         'is_admin',
         'public_name',
         'is_blocked',
+        'notes',
     ];
 
     /**
@@ -79,6 +80,11 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail, Two
     public function subscriptions(): HasMany
     {
         return $this->hasMany(Subscription::class);
+    }
+
+    public function subscriptionTrials(): HasMany
+    {
+        return $this->hasMany(UserSubscriptionTrial::class);
     }
 
     public function orders()
