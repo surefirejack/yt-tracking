@@ -65,7 +65,8 @@ class OrderResource extends Resource
             ])
             ->bulkActions([
 
-            ])->defaultSort('updated_at', 'desc');
+            ])
+            ->defaultSort('updated_at', 'desc');
     }
 
     public static function infolist(Infolist $infolist): Infolist

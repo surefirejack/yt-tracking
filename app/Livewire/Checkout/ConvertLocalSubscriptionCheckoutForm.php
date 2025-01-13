@@ -61,6 +61,7 @@ class ConvertLocalSubscriptionCheckoutForm extends CheckoutForm
             'totals' => $totals,
             'userExists' => $this->userExists($this->email),
             'paymentProviders' => $this->getPaymentProviders($paymentManager),
+            'isTenantPickerEnabled' => false,
         ]);
     }
 

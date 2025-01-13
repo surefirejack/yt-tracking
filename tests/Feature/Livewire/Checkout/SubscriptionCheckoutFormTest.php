@@ -5,15 +5,18 @@ namespace Tests\Feature\Livewire\Checkout;
 use App\Constants\PlanPriceType;
 use App\Constants\PlanType;
 use App\Constants\SessionConstants;
+use App\Constants\SubscriptionStatus;
 use App\Dto\SubscriptionCheckoutDto;
 use App\Livewire\Checkout\SubscriptionCheckoutForm;
 use App\Models\Currency;
+use App\Models\Interval;
 use App\Models\PaymentProvider;
 use App\Models\Plan;
 use App\Models\PlanPrice;
 use App\Models\Subscription;
 use App\Models\Tenant;
 use App\Models\User;
+use App\Models\UserSubscriptionTrial;
 use App\Services\PaymentProviders\PaymentManager;
 use App\Services\PaymentProviders\PaymentProviderInterface;
 use Exception;
@@ -138,6 +141,63 @@ class SubscriptionCheckoutFormTest extends FeatureTest
         $this->assertEquals($subscriptionsBefore + 1, Subscription::count());
         $this->assertEquals($tenantsBefore + 1, Tenant::count());
     }
+
+    public function test_can_checkout_existing_user_no_trial_if_user_is_not_eligible()
+    {
+        config()->set('app.limit_user_trials.enabled', true);
+        config()->set('app.limit_user_trials.max_count', 1);
+
+        $planSlug = 'plan-slug-'.rand(1, 1000000);
+        $sessionDto = new SubscriptionCheckoutDto;
+        $sessionDto->planSlug = $planSlug;
+
+        $this->withSession([SessionConstants::SUBSCRIPTION_CHECKOUT_DTO => $sessionDto]);
+
+        $plan = Plan::factory()->create([
+            'slug' => $planSlug,
+            'is_active' => true,
+            'has_trial' => true,
+            'trial_interval_count' => 1,
+            'trial_interval_id' => Interval::where('slug', 'week')->first()->id,
+        ]);
+
+        PlanPrice::create([
+            'plan_id' => $plan->id,
+            'currency_id' => Currency::where('code', 'USD')->first()->id,
+            'price' => 100,
+        ]);
+
+        $email = 'existing+'.rand(1, 1000000).'@gmail.com';
+
+        $user = User::factory()->create([
+            'email' => $email,
+            'password' => bcrypt('password'),
+            'name' => 'Name',
+        ]);
+
+        $tenant = $this->createTenant();
+
+        $subscription = Subscription::factory()->create([
+            'user_id' => $user->id,
+            'status' => SubscriptionStatus::ACTIVE->value,
+            'plan_id' => $plan->id,
+            'ends_at' => now(),
+            'trial_ends_at' => now()->addDays(7),
+            'tenant_id' => $tenant->id,
+        ]);
+
+        UserSubscriptionTrial::factory()->create([
+            'user_id' => $user->id,
+            'subscription_id' => $subscription->id,
+            'trial_ends_at' => now()->addDays(7),
+        ]);
+
+        $this->actingAs($user);
+
+        Livewire::test(SubscriptionCheckoutForm::class)
+            ->assertDontSeeHtml('trial');
+    }
+
 
     public function test_can_not_checkout_if_payment_does_not_support_plan_type()
     {

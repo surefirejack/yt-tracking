@@ -33,7 +33,12 @@ class SubscriptionCheckoutController extends Controller
 
         $this->sessionManager->saveSubscriptionCheckoutDto($checkoutDto);
 
-        if ($plan->has_trial && config('app.trial_without_payment.enabled')) {
+        $user = auth()->user();
+
+        if ($plan->has_trial &&
+            config('app.trial_without_payment.enabled') &&
+            $this->subscriptionManager->canUserHaveSubscriptionTrial($user)
+        ) {
             return view('checkout.local-subscription');
         }
 
@@ -119,6 +124,7 @@ class SubscriptionCheckoutController extends Controller
         }
 
         $this->subscriptionManager->setAsPending($checkoutDto->subscriptionId);
+        $this->subscriptionManager->updateUserSubscriptionTrials($checkoutDto->subscriptionId);
 
         if ($checkoutDto->discountCode !== null) {
             $this->discountManager->redeemCodeForSubscription($checkoutDto->discountCode, auth()->user(), $checkoutDto->subscriptionId);
