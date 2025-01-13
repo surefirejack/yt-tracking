@@ -2,6 +2,7 @@
     @php
         $canAddDiscount = $canAddDiscount ?? true;
         $isTrialSkipped = $isTrialSkipped ?? false;
+        $isTenantPickerEnabled = $isTenantPickerEnabled ?? true;
     @endphp
     <x-heading.h2 class="text-primary-900 !text-xl">
         {{ __('Plan details') }}
@@ -41,7 +42,7 @@
 
             @inject('tenantCreationManager', 'App\Services\TenantCreationManager')
 
-            @if ($tenantCreationManager->findUserTenantsForNewSubscription(auth()->user())->count() > 0)
+            @if ($isTenantPickerEnabled && $tenantCreationManager->findUserTenantsForNewSubscription(auth()->user())->count() > 0)
                 <livewire:checkout.subscription-tenant-picker />
             @endif
 

@@ -33,6 +33,8 @@ class SubscriptionCheckoutController extends Controller
 
         $this->sessionManager->saveSubscriptionCheckoutDto($checkoutDto);
 
+        $user = auth()->user();
+
         if ($plan->has_trial &&
             config('app.trial_without_payment.enabled') &&
             $this->subscriptionManager->canUserHaveSubscriptionTrial($user)
