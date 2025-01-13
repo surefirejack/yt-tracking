@@ -199,12 +199,15 @@ class LocalSubscriptionCheckoutFormTest extends FeatureTest
             'name' => 'Name',
         ]);
 
+        $tenant = $this->createTenant();
+
         $subscription = Subscription::factory()->create([
             'user_id' => $user->id,
             'status' => SubscriptionStatus::ACTIVE->value,
             'plan_id' => $plan->id,
             'ends_at' => now(),
             'trial_ends_at' => now()->addDays(7),
+            'tenant_id' => $tenant->id,
         ]);
 
         UserSubscriptionTrial::factory()->create([
