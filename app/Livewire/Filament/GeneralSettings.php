@@ -337,7 +337,7 @@ class GeneralSettings extends Component implements HasForms
         $this->configManager->set('app.trial_without_payment.first_reminder_enabled', $data['trial_first_reminder_enabled']);
         $this->configManager->set('app.trial_without_payment.second_reminder_enabled', $data['trial_second_reminder_enabled']);
         $this->configManager->set('app.limit_user_trials.enabled', $data['limit_user_trials_enabled']);
-        $this->configManager->set('app.limit_user_trials.max_count', $data['limit_user_trials_max_count']);
+        $this->configManager->set('app.limit_user_trials.max_count', $data['limit_user_trials_max_count'] ?? 1);
 
         Notification::make()
             ->title(__('Settings Saved'))
