@@ -9,4 +9,5 @@ class SessionConstants
     public const SHOULD_CREATE_TENANT_FOR_FREE_PLAN_USER = 'shouldCreateTenantForFreePlanUser';
 
     public const TWO_FACTOR_AUTH_ACTION = 'twoFactorAuthAction';
+    public const SMS_VERIFICATION_DTO = 'smsVerificationDto';
 }

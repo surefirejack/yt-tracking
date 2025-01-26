@@ -61,6 +61,16 @@ Route::get('/email/verify/{id}/{hash}', function (EmailVerificationRequest $requ
     return redirect('/');
 })->middleware(['auth', 'signed'])->name('verification.verify');
 
+Route::get('/phone/verify', function () {
+    return view('verify.sms-verification');
+})->name('user.phone-verify')
+    ->middleware('auth');
+
+Route::get('/phone/verified', function () {
+    return view('verify.sms-verification-success');
+})->name('user.phone-verified')
+    ->middleware('auth');
+
 Route::post('/email/verification-notification', function (\Illuminate\Http\Request $request) {
     $request->user()->sendEmailVerificationNotification();
 

@@ -4,6 +4,7 @@ namespace App\Livewire\Filament;
 
 use App\Models\Currency;
 use App\Models\EmailProvider;
+use App\Models\VerificationProvider;
 use App\Services\ConfigManager;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Select;
@@ -71,9 +72,11 @@ class GeneralSettings extends Component implements HasForms
             'trial_first_reminder_enabled' => $this->configManager->get('app.trial_without_payment.first_reminder_enabled', true),
             'trial_second_reminder_enabled' => $this->configManager->get('app.trial_without_payment.second_reminder_enabled', true),
             'trial_first_reminder_days' => $this->configManager->get('app.trial_without_payment.first_reminder_days'),
+            'trial_without_payment_sms_verification_enabled' => $this->configManager->get('app.trial_without_payment.sms_verification_enabled'),
             'trial_second_reminder_days' => $this->configManager->get('app.trial_without_payment.second_reminder_days'),
             'limit_user_trials_enabled' => $this->configManager->get('app.limit_user_trials.enabled'),
             'limit_user_trials_max_count' => $this->configManager->get('app.limit_user_trials.max_count'),
+            'default_verification_provider' => $this->configManager->get('app.verification.default_provider'),
         ]);
     }
 
@@ -176,6 +179,24 @@ class GeneralSettings extends Component implements HasForms
                                 ->required()
                                 ->email(),
                         ]),
+                    Tabs\Tab::make(__('Verification'))
+                        ->icon('heroicon-o-chat-bubble-oval-left-ellipsis')
+                        ->schema([
+                            Select::make('default_verification_provider')
+                                ->label(__('Default Verification Provider'))
+                                ->options(function () {
+                                    $providers = [];
+
+                                    foreach (VerificationProvider::all() as $provider) {
+                                        $providers[$provider->slug] = $provider->name;
+                                    }
+
+                                    return $providers;
+                                })
+                                ->helperText(__('This is the verification provider that will be used for all user phone SMS verifications.'))
+                                ->required()
+                                ->searchable(),
+                        ]),
                     Tabs\Tab::make(__('Analytics & Cookies'))
                         ->icon('heroicon-o-squares-2x2')
                         ->schema([
@@ -190,7 +211,7 @@ class GeneralSettings extends Component implements HasForms
                                 ->label(__('Other Tracking Scripts')),
                         ]),
                     Tabs\Tab::make(__('Subscription Trials'))
-                        ->icon('heroicon-s-user')
+                        ->icon('heroicon-s-eye-dropper')
                         ->schema([
                             Section::make(__('Trials without Payment'))->schema([
                                 Toggle::make('trial_without_payment_enabled')
@@ -217,6 +238,10 @@ class GeneralSettings extends Component implements HasForms
                                     ->helperText(__('Enter the number of days before the trial ends that the second reminder email will be sent.'))
                                     ->disabled(fn ($get) => ! $get('trial_second_reminder_enabled'))
                                     ->integer(),
+                                Toggle::make('trial_without_payment_sms_verification_enabled')
+                                    ->label(__('SMS Verification Enabled'))
+                                    ->helperText(__('If enabled, users will be required to verify their phone number via SMS before starting a trial without payment (to prevent abuse).'))
+                                    ->required(),
                             ]),
                             Section::make(__('Limit User Trials'))->schema([
                                 Toggle::make('limit_user_trials_enabled')
@@ -336,8 +361,10 @@ class GeneralSettings extends Component implements HasForms
         $this->configManager->set('app.trial_without_payment.second_reminder_days', $data['trial_second_reminder_days'] ?? 1);
         $this->configManager->set('app.trial_without_payment.first_reminder_enabled', $data['trial_first_reminder_enabled']);
         $this->configManager->set('app.trial_without_payment.second_reminder_enabled', $data['trial_second_reminder_enabled']);
+        $this->configManager->set('app.trial_without_payment.sms_verification_enabled', $data['trial_without_payment_sms_verification_enabled']);
         $this->configManager->set('app.limit_user_trials.enabled', $data['limit_user_trials_enabled']);
         $this->configManager->set('app.limit_user_trials.max_count', $data['limit_user_trials_max_count'] ?? 1);
+        $this->configManager->set('app.verification.default_provider', $data['default_verification_provider']);
 
         Notification::make()
             ->title(__('Settings Saved'))

@@ -11,13 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('payment_providers', function (Blueprint $table) {
+        Schema::create('verification_providers', function (Blueprint $table) {
             $table->id();
             $table->timestamps();
-            $table->string('type');
             $table->string('name');
             $table->string('slug')->unique();
-            $table->boolean('is_active')->default(true);
         });
     }
 
@@ -26,6 +24,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('payment_providers');
+        Schema::dropIfExists('verification_providers');
     }
 };

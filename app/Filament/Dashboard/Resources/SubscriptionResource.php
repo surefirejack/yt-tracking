@@ -74,6 +74,13 @@ class SubscriptionResource extends Resource
                 //
             ])
             ->actions([
+                Tables\Actions\Action::make('verify-phone')
+                    ->button()
+                    ->color('warning')
+                    ->icon('heroicon-s-phone')
+                    ->visible(fn (Subscription $record, SubscriptionManager $subscriptionManager): bool => $subscriptionManager->subscriptionRequiresUserVerification($record))
+                    ->url(fn (Subscription $record): string => route('user.phone-verify'))
+                    ->label(__('Verify Phone Number')),
                 Tables\Actions\Action::make('complete-subscription')
                     ->button()
                     ->color('primary')

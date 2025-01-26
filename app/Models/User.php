@@ -39,6 +39,8 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail, Has
         'public_name',
         'is_blocked',
         'notes',
+        'phone_number',
+        'phone_number_verified_at',
     ];
 
     /**
@@ -58,6 +60,7 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail, Has
      */
     protected $casts = [
         'email_verified_at' => 'datetime',
+        'phone_number_verified_at' => 'datetime',
         'password' => 'hashed',
     ];
 
@@ -123,6 +126,11 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail, Has
     public function isAdmin()
     {
         return $this->is_admin;
+    }
+
+    public function isPhoneNumberVerified()
+    {
+        return $this->phone_number_verified_at !== null;
     }
 
     public function canImpersonate()
