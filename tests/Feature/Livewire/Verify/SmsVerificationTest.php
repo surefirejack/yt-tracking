@@ -27,7 +27,8 @@ class SmsVerificationTest extends FeatureTest
 
         $email = 'something+'.rand(1, 1000000).'@gmail.com';
 
-        $user = $this->createUser([
+
+        $user = $this->createUser(attributes: [
             'email' => $email,
         ]);
 
@@ -63,7 +64,7 @@ class SmsVerificationTest extends FeatureTest
 
         $email = 'something+'.rand(1, 1000000).'@gmail.com';
 
-        $user = $this->createUser([
+        $user = $this->createUser(attributes: [
             'email' => $email,
         ]);
 
@@ -89,7 +90,7 @@ class SmsVerificationTest extends FeatureTest
 
         $email = 'something+'.rand(1, 1000000).'@gmail.com';
 
-        $user = $this->createUser([
+        $user = $this->createUser(attributes: [
             'email' => $email,
         ]);
 

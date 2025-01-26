@@ -174,6 +174,7 @@ class LocalSubscriptionCheckoutFormTest extends FeatureTest
 
         // get number of subscriptions before checkout
         $subscriptionsBefore = Subscription::count();
+        $tenantsBefore = Tenant::count();
 
         Event::fake();
 
