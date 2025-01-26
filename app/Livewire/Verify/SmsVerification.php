@@ -29,6 +29,8 @@ class SmsVerification extends Component
     {
         $this->validate([
             'phone' => 'phone:INTERNATIONAL',
+        ], [
+            'phone' => __('Invalid phone number. Make sure to include the country code with +.'),
         ]);
 
         $user = auth()->user();
@@ -86,5 +88,8 @@ class SmsVerification extends Component
     public function editPhone(SessionManager $sessionManager)
     {
         $sessionManager->clearSmsVerificationDto();
+
+        $this->phone = null;
+
     }
 }

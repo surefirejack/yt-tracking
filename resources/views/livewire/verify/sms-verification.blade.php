@@ -13,6 +13,10 @@
                     </p>
                 </div>
 
+                @php
+                    $validPhoneNumber = !empty($phone) && !$errors->has('phone');
+                @endphp
+
                 <div class="mt-8 mx-auto">
                     <div class="flex flex-col gap-4">
                         <div>
@@ -20,7 +24,7 @@
                                 <div class="label">
                                     <span class="label-text">{{ __('Your Mobile Phone Number') }}</span>
                                 </div>
-                                <input type="text" class="input input-bordered input-md w-full" name="phone" required id="phone" wire:model="phone" @disabled(!empty($phone))>
+                                <input type="text" class="input input-bordered input-md w-full" name="phone" required id="phone" wire:model="phone" @disabled($validPhoneNumber)>
                             </label>
 
                             @error('phone')
@@ -28,14 +32,14 @@
                                     {{ $message }}
                                 </span>
                             @enderror
-                            @if (!empty($phone))
+                            @if ($validPhoneNumber)
                                 <a wire:click="editPhone" class="text-primary-500 hover:underline cursor-pointer text-xxs ms-2">
                                     {{ __('Edit Phone Number') }}
                                 </a>
                             @endif
                         </div>
 
-                        @if (!empty($phone))
+                        @if (!empty($phone) && !$errors->has('phone'))
                             <div>
                                 <label class="form-control w-full" for="code">
                                     <div class="label">
