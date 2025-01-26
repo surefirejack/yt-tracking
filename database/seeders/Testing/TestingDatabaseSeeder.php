@@ -6,6 +6,7 @@ use Database\Seeders\CurrenciesSeeder;
 use Database\Seeders\IntervalsSeeder;
 use Database\Seeders\PaymentProvidersSeeder;
 use Database\Seeders\RolesAndPermissionsSeeder;
+use Database\Seeders\VerificationProvidersSeeder;
 use Illuminate\Database\Seeder;
 
 class TestingDatabaseSeeder extends Seeder
@@ -28,6 +29,7 @@ class TestingDatabaseSeeder extends Seeder
             PaymentProvidersSeeder::class,
             ProductsSeeder::class,
             PlansSeeder::class,
+            VerificationProvidersSeeder::class,
         ]);
     }
 }

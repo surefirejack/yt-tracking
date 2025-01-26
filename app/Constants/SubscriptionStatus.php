@@ -11,4 +11,5 @@ enum SubscriptionStatus: string
     case CANCELED = 'canceled';
     case PAUSED = 'paused';
     case PAST_DUE = 'past_due';
+    case PENDING_USER_VERIFICATION = 'pending_user_verification';
 }

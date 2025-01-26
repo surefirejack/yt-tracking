@@ -96,6 +96,12 @@ class LocalSubscriptionCheckoutForm extends CheckoutForm
         $subscriptionCheckoutDto->subscriptionId = $subscription->id;
         $this->sessionManager->saveSubscriptionCheckoutDto($subscriptionCheckoutDto);
 
+        if ($this->subscriptionManager->shouldUserVerifyPhoneNumberForTrial(auth()->user())) {
+            $this->redirect(route('user.phone-verify'));
+
+            return;
+        }
+
         $this->redirect(route('checkout.subscription.success'));
     }
 }

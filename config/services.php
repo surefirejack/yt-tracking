@@ -99,4 +99,10 @@ return [
         'is_test_mode' => env('LEMON_SQUEEZY_IS_TEST_MODE', false),
     ],
 
+    'twilio' => [
+        'sid' => env('TWILIO_SID'),
+        'token' => env('TWILIO_TOKEN'),
+        'from' => env('TWILIO_FROM'),
+    ],
+
 ];

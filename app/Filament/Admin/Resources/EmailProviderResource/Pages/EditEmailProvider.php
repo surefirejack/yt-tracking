@@ -56,6 +56,7 @@ class EditEmailProvider extends EditRecord
 
                     Notification::make()
                         ->title(__('Test Email Queued For Sending, check /horizon to see if it was sent.'))
+                        ->success()
                         ->send();
                 })->modalSubmitActionLabel(__('Send Test Email')),
         ];
