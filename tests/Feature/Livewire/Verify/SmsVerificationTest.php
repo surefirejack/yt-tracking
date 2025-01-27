@@ -97,7 +97,7 @@ class SmsVerificationTest extends FeatureTest
         $this->actingAs($user);
 
         Livewire::test(SmsVerification::class)
-            ->set('phone', '+18482560284')
+            ->set('phone', '+18482560283')
             ->call('sendVerificationCode');
 
         $sessionManager = app(SessionManager::class);
@@ -106,15 +106,39 @@ class SmsVerificationTest extends FeatureTest
 
         $this->assertNotNull($dto);
 
-        $this->assertEquals($dto->phoneNumber, '+18482560284');
+        $this->assertEquals($dto->phoneNumber, '+18482560283');
 
         Livewire::test(SmsVerification::class)
-            ->set('phone', '+18482560284')
+            ->set('phone', '+18482560283')
             ->set('code', '123456')
             ->call('verifyCode');
 
         $user = $user->fresh();
         $this->assertNull($user->phone_number_verified_at);
+    }
+
+    public function test_same_number_twice()
+    {
+        $this->addVerificationProvider();
+
+        $email = 'something+'.rand(1, 1000000).'@gmail.com';
+
+        $user = $this->createUser([
+            'email' => $email,
+        ]);
+
+        $email2 = 'something+'.rand(1, 1000000).'@gmail.com';
+        $user2 = $this->createUser([
+            'email' => $email2,
+            'phone_number' => '+18482560282',
+        ]);
+
+        $this->actingAs($user);
+
+        Livewire::test(SmsVerification::class)
+            ->set('phone', '+18482560282')
+            ->call('sendVerificationCode')
+            ->assertHasErrors('phone');
     }
 
     private function addVerificationProvider(): VerificationProviderInterface|Mockery\MockInterface

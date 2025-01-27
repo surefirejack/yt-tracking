@@ -31,6 +31,15 @@ class UserVerificationManager
         throw new \Exception('No verification provider found with slug '.$providerSlug);
     }
 
+    public function phoneAlreadyExists(User $currentUser, string $phoneNumber): bool
+    {
+        if (User::where('phone_number', $phoneNumber)->where('id', '!=', $currentUser->id)->exists()) {
+            return true;
+        }
+
+        return false;
+    }
+
     public function generateAndSendSmsVerificationCode(string $phoneNumber): bool
     {
         $code = mt_rand(100000, 999999);
