@@ -123,12 +123,12 @@ class SmsVerificationTest extends FeatureTest
 
         $email = 'something+'.rand(1, 1000000).'@gmail.com';
 
-        $user = $this->createUser([
+        $user = $this->createUser(attributes: [
             'email' => $email,
         ]);
 
         $email2 = 'something+'.rand(1, 1000000).'@gmail.com';
-        $user2 = $this->createUser([
+        $user2 = $this->createUser(attributes: [
             'email' => $email2,
             'phone_number' => '+18482560282',
         ]);
