@@ -27,6 +27,9 @@ class SmsVerification extends Component
 
     public function sendVerificationCode(UserVerificationManager $userVerificationManager)
     {
+        // remove spaces from phone number
+        $this->phone = preg_replace('/\s+/', '', $this->phone);
+
         $this->validate([
             'phone' => 'phone:INTERNATIONAL',
         ], [
@@ -38,7 +41,13 @@ class SmsVerification extends Component
         $executed = RateLimiter::attempt(
             'send-verification-code:'.$user->id,
             10,
-            function () use ($userVerificationManager) {
+            function () use ($userVerificationManager, $user) {
+
+                if ($userVerificationManager->phoneAlreadyExists($user, $this->phone)) {
+                    $this->addError('phone', __('Phone number already exists.'));
+
+                    return;
+                }
                 $result = $userVerificationManager->generateAndSendSmsVerificationCode($this->phone);
 
                 if (! $result) {
