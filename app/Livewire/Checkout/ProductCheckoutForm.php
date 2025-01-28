@@ -19,15 +19,18 @@ class ProductCheckoutForm extends CheckoutForm
     private OneTimeProductManager $productManager;
     private SessionManager $sessionManager;
     private CalculationManager $calculationManager;
+    private OneTimeProductManager $oneTimeProductManager;
 
     public function boot(
         OneTimeProductManager $productManager,
         SessionManager $sessionManager,
         CalculationManager $calculationManager,
+        OneTimeProductManager $oneTimeProductManager,
     ) {
         $this->productManager = $productManager;
         $this->sessionManager = $sessionManager;
         $this->calculationManager = $calculationManager;
+        $this->oneTimeProductManager = $oneTimeProductManager;
     }
 
     public function checkout(
