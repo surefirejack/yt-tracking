@@ -95,15 +95,31 @@ class SubscriptionManager
                     $subscriptionAttributes['trial_ends_at'] = $endDate;
                 }
 
-                $subscriptionAttributes['status'] = SubscriptionStatus::ACTIVE->value;
+                $user = User::find($userId);
+                if ($this->shouldUserVerifyPhoneNumberForTrial($user)) {
+                    $subscriptionAttributes['status'] = SubscriptionStatus::PENDING_USER_VERIFICATION->value;
+                } else {
+                    $subscriptionAttributes['status'] = SubscriptionStatus::ACTIVE->value;
+                }
             }
 
             $newSubscription = Subscription::create($subscriptionAttributes);
+
+            if ($localSubscription) {
+                // if it's a local subscription, dispatch Subscribed event.
+                // Payment provider subscriptions events are dispatched by payment provider strategy
+                Subscribed::dispatch($newSubscription);
+            }
 
             $this->updateUserSubscriptionTrials($newSubscription->id);
         });
 
         return $newSubscription;
+    }
+
+    public function shouldUserVerifyPhoneNumberForTrial(User $user): bool
+    {
+        return config('app.trial_without_payment.sms_verification_enabled') && ! $user->isPhoneNumberVerified();
     }
 
     public function canCreateSubscription(int $tenantId): bool
@@ -563,12 +579,16 @@ class SubscriptionManager
 
     public function cleanupLocalSubscriptionStatuses()
     {
-        Subscription::where('type', SubscriptionType::LOCALLY_MANAGED)
+        $subscriptions = Subscription::where('type', SubscriptionType::LOCALLY_MANAGED)
             ->where('status', SubscriptionStatus::ACTIVE->value)
             ->where('ends_at', '<', now())
-            ->update([
+            ->get();
+
+        $subscriptions->each(function (Subscription $subscription) {
+            $this->updateSubscription($subscription, [
                 'status' => SubscriptionStatus::INACTIVE->value,
             ]);
+        });
     }
 
     public function updateUserSubscriptionTrials(int $subscriptionId)
@@ -613,5 +633,24 @@ class SubscriptionManager
         }
 
         return true;
+    }
+
+    public function activateSubscriptionsPendingUserVerification(User $user)
+    {
+        $subscriptions = Subscription::where('user_id', $user->id)
+            ->where('status', SubscriptionStatus::PENDING_USER_VERIFICATION->value)
+            ->get();
+
+        $subscriptions->each(function (Subscription $subscription) {
+            $this->updateSubscription($subscription, [
+                'status' => SubscriptionStatus::ACTIVE->value,
+            ]);
+        });
+    }
+
+    public function subscriptionRequiresUserVerification(Subscription $subscription): bool
+    {
+        return $subscription->status === SubscriptionStatus::PENDING_USER_VERIFICATION->value &&
+            $this->shouldUserVerifyPhoneNumberForTrial($subscription->user);
     }
 }

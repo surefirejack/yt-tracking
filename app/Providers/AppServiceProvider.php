@@ -6,6 +6,8 @@ use App\Services\PaymentProviders\LemonSqueezy\LemonSqueezyProvider;
 use App\Services\PaymentProviders\Paddle\PaddleProvider;
 use App\Services\PaymentProviders\PaymentManager;
 use App\Services\PaymentProviders\Stripe\StripeProvider;
+use App\Services\UserVerificationManager;
+use App\Services\VerificationProviders\TwilioProvider;
 use Filament\Support\Assets\Js;
 use Filament\Support\Facades\FilamentAsset;
 use Illuminate\Support\ServiceProvider;
@@ -22,6 +24,7 @@ class AppServiceProvider extends ServiceProvider
             $this->app->register(TelescopeServiceProvider::class);
         }
 
+        // payment providers
         $this->app->tag([
             StripeProvider::class,
             PaddleProvider::class,
@@ -32,6 +35,14 @@ class AppServiceProvider extends ServiceProvider
             return new PaymentManager(...$this->app->tagged('payment-providers'));
         });
 
+        // verification providers
+        $this->app->tag([
+            TwilioProvider::class,
+        ], 'verification-providers');
+
+        $this->app->afterResolving(UserVerificationManager::class, function (UserVerificationManager $manager) {
+            $manager->setVerificationProviders(...$this->app->tagged('verification-providers'));
+        });
     }
 
     /**

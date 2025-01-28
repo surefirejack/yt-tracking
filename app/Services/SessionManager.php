@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Constants\SessionConstants;
 use App\Dto\CartDto;
+use App\Dto\SmsVerificationDto;
 use App\Dto\SubscriptionCheckoutDto;
 
 class SessionManager
@@ -55,5 +56,20 @@ class SessionManager
     public function resetCreateTenantForFreePlanUser()
     {
         session()->forget(SessionConstants::SHOULD_CREATE_TENANT_FOR_FREE_PLAN_USER);
+    }
+
+    public function saveSmsVerificationDto(SmsVerificationDto $smsVerificationDto): void
+    {
+        session()->put(SessionConstants::SMS_VERIFICATION_DTO, $smsVerificationDto);
+    }
+
+    public function getSmsVerificationDto(): ?SmsVerificationDto
+    {
+        return session()->get(SessionConstants::SMS_VERIFICATION_DTO);
+    }
+
+    public function clearSmsVerificationDto()
+    {
+        session()->forget(SessionConstants::SMS_VERIFICATION_DTO);
     }
 }
