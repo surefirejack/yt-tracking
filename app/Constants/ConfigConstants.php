@@ -117,7 +117,14 @@ class ConfigConstants
         'app.trial_without_payment.second_reminder_days',
         'app.trial_without_payment.first_reminder_enabled',
         'app.trial_without_payment.second_reminder_enabled',
+        'app.trial_without_payment.sms_verification_enabled',
         'app.limit_user_trials.enabled',
         'app.limit_user_trials.max_count',
+
+        // twilio
+        'services.twilio.sid',
+        'services.twilio.token',
+        'services.twilio.from',
+        'app.verification.default_provider',
     ];
 }

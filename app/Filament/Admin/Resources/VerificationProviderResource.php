@@ -2,19 +2,22 @@
 
 namespace App\Filament\Admin\Resources;
 
-use App\Filament\Admin\Resources\PaymentProviderResource\Pages;
-use App\Models\PaymentProvider;
+use App\Filament\Admin\Resources\VerificationProviderResource\Pages;
+use App\Filament\Admin\Resources\VerificationProviderResource\RelationManagers;
+use App\Models\VerificationProvider;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Illuminate\Support\HtmlString;
 
-class PaymentProviderResource extends Resource
+class VerificationProviderResource extends Resource
 {
-    protected static ?string $model = PaymentProvider::class;
+    protected static ?string $model = VerificationProvider::class;
 
     protected static ?string $navigationGroup = 'Settings';
 
@@ -25,11 +28,7 @@ class PaymentProviderResource extends Resource
                 Forms\Components\Section::make()->schema([
                     Forms\Components\TextInput::make('name')
                         ->required()
-                        ->helperText(__('The name of the payment provider (shown on checkout page).'))
                         ->maxLength(255),
-                    Forms\Components\Toggle::make('is_active')
-                        ->helperText(__('Deactivating this payment provider will prevent it from being used for new & old subscriptions. Customers will not be able to pay for their services so USE WITH CAUTION.'))
-                        ->required(),
                 ]),
             ]);
     }
@@ -37,22 +36,27 @@ class PaymentProviderResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
-            ->reorderable('sort')
             ->columns([
                 Tables\Columns\TextColumn::make('icon')
-                    ->getStateUsing(function (PaymentProvider $record) {
+                    ->getStateUsing(function (VerificationProvider $record) {
                         return new HtmlString(
                             '<div class="flex gap-2">'.
-                            ' <img src="'.asset('images/payment-providers/'.$record->slug.'.png').'" alt="'.$record->name.'" class="h-6"> '
+                            ' <img src="'.asset('images/verification-providers/'.$record->slug.'.png').'" alt="'.$record->name.'" class="h-6"> '
                             .'</div>'
                         );
                     }),
-                Tables\Columns\TextColumn::make('name')->label(__('Name')),
-                Tables\Columns\TextColumn::make('slug')
-                    ->label(__('Slug'))
+                Tables\Columns\TextColumn::make('name')
                     ->searchable(),
-                Tables\Columns\ToggleColumn::make('is_active')
-                    ->label(__('Active')),
+                Tables\Columns\TextColumn::make('slug')
+                    ->searchable(),
+                Tables\Columns\TextColumn::make('created_at')
+                    ->dateTime()
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+                Tables\Columns\TextColumn::make('updated_at')
+                    ->dateTime()
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
                 //
@@ -61,8 +65,10 @@ class PaymentProviderResource extends Resource
                 Tables\Actions\EditAction::make(),
             ])
             ->bulkActions([
-            ])
-            ->defaultSort('sort', 'asc');
+                Tables\Actions\BulkActionGroup::make([
+                    Tables\Actions\DeleteBulkAction::make(),
+                ]),
+            ]);
     }
 
     public static function getRelations(): array
@@ -75,11 +81,10 @@ class PaymentProviderResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListPaymentProviders::route('/'),
-            'edit' => Pages\EditPaymentProvider::route('/{record}/edit'),
-            'stripe-settings' => Pages\StripeSettings::route('/stripe-settings'),
-            'paddle-settings' => Pages\PaddleSettings::route('/paddle-settings'),
-            'lemon-squeezy-settings' => Pages\LemonSqueezySettings::route('/lemon-squeezy-settings'),
+            'index' => Pages\ListVerificationProviders::route('/'),
+            'create' => Pages\CreateVerificationProvider::route('/create'),
+            'edit' => Pages\EditVerificationProvider::route('/{record}/edit'),
+            'twilio-settings' => Pages\TwilioSettings::route('/twilio-settings'),
         ];
     }
 
@@ -95,6 +100,6 @@ class PaymentProviderResource extends Resource
 
     public static function getNavigationLabel(): string
     {
-        return __('Payment Providers');
+        return __('Verification Providers');
     }
 }

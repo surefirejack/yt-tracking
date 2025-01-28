@@ -19,6 +19,7 @@ class DatabaseSeeder extends Seeder
             PaymentProvidersSeeder::class,
             RolesAndPermissionsSeeder::class,
             EmailProviderSeeder::class,
+            VerificationProvidersSeeder::class,
         ]);
     }
 }

@@ -197,11 +197,16 @@ return [
         'first_reminder_days' => env('TRIAL_WITHOUT_PAYMENT_FIRST_REMINDER_DAYS', 3),
         'second_reminder_enabled' => env('TRIAL_WITHOUT_PAYMENT_SECOND_REMINDER_ENABLED', true),
         'second_reminder_days' => env('TRIAL_WITHOUT_PAYMENT_SECOND_REMINDER_DAYS', 1),
+        'sms_verification_enabled' => env('TRIAL_WITHOUT_PAYMENT_SMS_VERIFICATION_ENABLED', false),
     ],
 
     'limit_user_trials' => [
         'enabled' => env('LIMIT_USER_TRIALS_ENABLED', false),
         'max_count' => env('LIMIT_USER_TRIALS_MAX_COUNT', 1),
+    ],
+
+    'verification' => [
+        'default_provider' => env('VERIFICATION_DEFAULT_PROVIDER', 'twilio'),
     ],
 
     /*
