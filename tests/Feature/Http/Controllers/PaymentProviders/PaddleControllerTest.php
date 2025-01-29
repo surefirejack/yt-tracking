@@ -23,6 +23,7 @@ class PaddleControllerTest extends FeatureTest
 
         $response->assertStatus(400);
     }
+
     public function test_subscription_created_webhook(): void
     {
         $uuid = (string) Str::uuid();
@@ -489,7 +490,7 @@ class PaddleControllerTest extends FeatureTest
         $time = time();
         $secret = config('services.paddle.webhook_secret');
 
-        return 't=' . $time . ';h1=' . hash_hmac('sha256', $time . ':' . $content, $secret);
+        return 't='.$time.';h1='.hash_hmac('sha256', $time.':'.$content, $secret);
     }
 
     private function getPaddleTransactionForSubscription(

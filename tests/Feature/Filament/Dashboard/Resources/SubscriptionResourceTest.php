@@ -5,10 +5,7 @@ namespace Tests\Feature\Filament\Dashboard\Resources;
 use App\Filament\Dashboard\Resources\SubscriptionResource;
 use App\Models\Subscription;
 use App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Foundation\Testing\WithFaker;
 use Tests\Feature\FeatureTest;
-use Tests\TestCase;
 
 class SubscriptionResourceTest extends FeatureTest
 {

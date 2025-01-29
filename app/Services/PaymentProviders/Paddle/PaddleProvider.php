@@ -34,9 +34,7 @@ class PaddleProvider implements PaymentProviderInterface
         private CalculationManager $calculationManager,
         private DiscountManager $discountManager,
         private OneTimeProductManager $oneTimeProductManager,
-    ) {
-
-    }
+    ) {}
 
     public function initSubscriptionCheckout(Plan $plan, Subscription $subscription, ?Discount $discount = null): array
     {

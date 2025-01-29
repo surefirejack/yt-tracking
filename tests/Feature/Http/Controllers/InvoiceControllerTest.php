@@ -19,7 +19,7 @@ class InvoiceControllerTest extends FeatureTest
         config(['invoices.enabled' => true]);
 
         $product = OneTimeProduct::factory()->create([
-            'slug' => 'product-slug-' . Str::random(20),
+            'slug' => 'product-slug-'.Str::random(20),
             'is_active' => true,
         ]);
 

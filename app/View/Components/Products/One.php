@@ -11,9 +11,7 @@ class One extends Component
     public function __construct(
         private OneTimeProductManager $productManager,
         public string $slug,
-    ) {
-
-    }
+    ) {}
 
     /**
      * Get the view / contents that represent the component.

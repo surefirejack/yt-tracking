@@ -50,55 +50,55 @@ class InvoiceSettings extends Component implements HasForms
     {
         return $form
             ->schema([
-                    Section::make(__('Invoice generation'))
-                        ->schema([
-                            Toggle::make('invoices_enabled')
-                                ->label(__('Enable invoice generation'))
-                                ->helperText(__('If enabled, invoices will be generated for each successful transaction. Customers will be able to see their invoices in their dashboard.'))
-                                ->required(),
-                            TextInput::make('serial_number_series')
-                                ->required()
-                                ->default('')
-                                ->label(__('Invoice number prefix')),
-                            TextInput::make('seller_name')
-                                ->default('')
-                                ->label(__('Company name')),
-                            TextInput::make('seller_code')
-                                ->default('')
-                                ->label(__('Company code')),
-                            TextInput::make('seller_address')
-                                ->default('')
-                                ->label(__('Company address')),
-                            TextInput::make('seller_tax_number')
-                                ->default('')
-                                ->label(__('Company tax number (VAT)')),
-                            TextInput::make('seller_phone')
-                                ->default('')
-                                ->label(__('Company phone')),
-                            Actions::make([
-                                Action::make('preview')
-                                    ->label(__('Generate Preview'))
-                                    ->icon('heroicon-o-eye')
-                                    ->color('gray')
-                                    ->modalSubmitAction(false)
-                                    ->modalCancelAction(false)
-                                    ->modalContent()
-                                    ->openUrlInNewTab()
-                                    ->modalContent(function ($get) {
-                                        $url = route('invoice.preview', [
-                                            'serial_number_series' => $get('serial_number_series'),
-                                            'seller_name' => $get('seller_name'),
-                                            'seller_code' => $get('seller_code'),
-                                            'seller_address' => $get('seller_address'),
-                                            'seller_tax_number' => $get('seller_tax_number'),
-                                            'seller_phone' => $get('seller_phone'),
-                                        ]);
+                Section::make(__('Invoice generation'))
+                    ->schema([
+                        Toggle::make('invoices_enabled')
+                            ->label(__('Enable invoice generation'))
+                            ->helperText(__('If enabled, invoices will be generated for each successful transaction. Customers will be able to see their invoices in their dashboard.'))
+                            ->required(),
+                        TextInput::make('serial_number_series')
+                            ->required()
+                            ->default('')
+                            ->label(__('Invoice number prefix')),
+                        TextInput::make('seller_name')
+                            ->default('')
+                            ->label(__('Company name')),
+                        TextInput::make('seller_code')
+                            ->default('')
+                            ->label(__('Company code')),
+                        TextInput::make('seller_address')
+                            ->default('')
+                            ->label(__('Company address')),
+                        TextInput::make('seller_tax_number')
+                            ->default('')
+                            ->label(__('Company tax number (VAT)')),
+                        TextInput::make('seller_phone')
+                            ->default('')
+                            ->label(__('Company phone')),
+                        Actions::make([
+                            Action::make('preview')
+                                ->label(__('Generate Preview'))
+                                ->icon('heroicon-o-eye')
+                                ->color('gray')
+                                ->modalSubmitAction(false)
+                                ->modalCancelAction(false)
+                                ->modalContent()
+                                ->openUrlInNewTab()
+                                ->modalContent(function ($get) {
+                                    $url = route('invoice.preview', [
+                                        'serial_number_series' => $get('serial_number_series'),
+                                        'seller_name' => $get('seller_name'),
+                                        'seller_code' => $get('seller_code'),
+                                        'seller_address' => $get('seller_address'),
+                                        'seller_tax_number' => $get('seller_tax_number'),
+                                        'seller_phone' => $get('seller_phone'),
+                                    ]);
 
-                                        return new HtmlString('<iframe src="' . $url . '" class="w-full h-screen"></iframe>');
-                                    })
+                                    return new HtmlString('<iframe src="'.$url.'" class="w-full h-screen"></iframe>');
+                                }),
 
-                            ]),
                         ]),
+                    ]),
 
             ])
             ->statePath('data');

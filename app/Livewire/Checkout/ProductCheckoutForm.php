@@ -17,8 +17,11 @@ use App\Validator\RegisterValidator;
 class ProductCheckoutForm extends CheckoutForm
 {
     private OneTimeProductManager $productManager;
+
     private SessionManager $sessionManager;
+
     private CalculationManager $calculationManager;
+
     private OneTimeProductManager $oneTimeProductManager;
 
     public function boot(

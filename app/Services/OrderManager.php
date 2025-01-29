@@ -18,8 +18,7 @@ class OrderManager
 {
     public function __construct(
         private CalculationManager $calculationManager,
-    ) {
-    }
+    ) {}
 
     public function create(
         User $user,

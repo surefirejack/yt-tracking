@@ -11,14 +11,14 @@ return [
     ],
 
     'serial_number' => [
-        'series'   => 'INV',
+        'series' => 'INV',
         'sequence' => 1,
 
         /*
          * Sequence will be padded accordingly, for ex. 00001
          */
         'sequence_padding' => 5,
-        'delimiter'        => '.',
+        'delimiter' => '.',
 
         /*
          * Supported tags {SERIES}, {DELIMITER}, {SEQUENCE}
@@ -29,7 +29,7 @@ return [
 
     'paper' => [
         // A4 = 210 mm x 297 mm = 595 pt x 842 pt
-        'size'        => 'a4',
+        'size' => 'a4',
         'orientation' => 'portrait',
     ],
 
@@ -49,11 +49,11 @@ return [
          * Default attributes for Seller::class
          */
         'attributes' => [
-            'name'          => 'SaaSykit Company Inc.',
-            'address'       => 'SaaSy Street 123',
-            'code'          => '',
-            'vat'           => '',
-            'phone'         => '',
+            'name' => 'SaaSykit Company Inc.',
+            'address' => 'SaaSy Street 123',
+            'code' => '',
+            'vat' => '',
+            'phone' => '',
             'custom_fields' => [
                 /*
                  * Custom attributes for Seller::class
@@ -69,6 +69,7 @@ return [
         'enable_php' => true,
         /**
          * Do not write log.html or make it optional
+         *
          *  @see https://github.com/dompdf/dompdf/issues/2810
          */
         'logOutputFile' => '/dev/null',

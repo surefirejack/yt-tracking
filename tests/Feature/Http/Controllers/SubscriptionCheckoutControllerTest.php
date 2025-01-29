@@ -29,7 +29,6 @@ class SubscriptionCheckoutControllerTest extends FeatureTest
             'planSlug' => $plan->slug,
         ]));
 
-
         $response->assertStatus(200);
 
         $response->assertSee('Complete Subscription');
@@ -56,7 +55,6 @@ class SubscriptionCheckoutControllerTest extends FeatureTest
         $response = $this->followingRedirects()->get(route('checkout.subscription', [
             'planSlug' => $plan->slug,
         ]));
-
 
         $response->assertStatus(200);
 
@@ -86,7 +84,6 @@ class SubscriptionCheckoutControllerTest extends FeatureTest
         $response = $this->followingRedirects()->get(route('checkout.subscription', [
             'planSlug' => $plan->slug,
         ]));
-
 
         $response->assertStatus(200);
 

@@ -15,9 +15,7 @@ class SubscriptionController extends Controller
         private SubscriptionManager $subscriptionManager,
         private PaymentManager $paymentManager,
         private CalculationManager $calculationManager,
-    ) {
-
-    }
+    ) {}
 
     public function changePlan(string $subscriptionUuid, string $newPlanSlug, Request $request)
     {

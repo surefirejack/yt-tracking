@@ -16,7 +16,6 @@ class DiscountCode extends Model
         'code',
     ];
 
-
     public function discount(): BelongsTo
     {
         return $this->belongsTo(Discount::class);

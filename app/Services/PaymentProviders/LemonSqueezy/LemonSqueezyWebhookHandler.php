@@ -31,9 +31,7 @@ class LemonSqueezyWebhookHandler
         private OrderManager $orderManager,
         private PlanManager $planManager,
         private OneTimeProductManager $oneTimeProductManager,
-    ) {
-
-    }
+    ) {}
 
     public function handleWebhook(Request $request): JsonResponse
     {

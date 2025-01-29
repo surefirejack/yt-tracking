@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\PaymentProviders;
 
 use App\Http\Controllers\Controller;
-use App\Services\PaymentProviders\Stripe\StripeProvider;
 use App\Services\PaymentProviders\Stripe\StripeWebhookHandler;
 use Illuminate\Http\Request;
 

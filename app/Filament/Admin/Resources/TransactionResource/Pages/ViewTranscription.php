@@ -8,5 +8,4 @@ use Filament\Resources\Pages\ViewRecord;
 class ViewTranscription extends ViewRecord
 {
     protected static string $resource = TransactionResource::class;
-
 }
