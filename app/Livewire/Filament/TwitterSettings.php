@@ -2,8 +2,6 @@
 
 namespace App\Livewire\Filament;
 
-use Livewire\Component;
-
 class TwitterSettings extends OauthProviderSettings
 {
     protected string $slug = 'twitter-oauth-2';

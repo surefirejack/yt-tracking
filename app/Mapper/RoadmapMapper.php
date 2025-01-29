@@ -44,5 +44,4 @@ class RoadmapMapper
                 return __('Unknown');
         }
     }
-
 }

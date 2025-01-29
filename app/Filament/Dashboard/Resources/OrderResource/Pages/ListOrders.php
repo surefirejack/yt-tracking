@@ -32,5 +32,4 @@ class ListOrders extends ListRecords
                 ->modifyQueryUsing(fn (Builder $query) => $query->where('status', OrderStatus::FAILED)),
         ];
     }
-
 }

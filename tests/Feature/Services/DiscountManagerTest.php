@@ -277,7 +277,4 @@ class DiscountManagerTest extends FeatureTest
 
         $this->assertFalse($discountManager->isCodeRedeemableForPlan($code, $user, $plan2));
     }
-
-
-
 }

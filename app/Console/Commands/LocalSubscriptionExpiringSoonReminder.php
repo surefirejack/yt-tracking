@@ -15,6 +15,7 @@ class LocalSubscriptionExpiringSoonReminder extends Command
     ) {
         parent::__construct();
     }
+
     /**
      * The name and signature of the console command.
      *

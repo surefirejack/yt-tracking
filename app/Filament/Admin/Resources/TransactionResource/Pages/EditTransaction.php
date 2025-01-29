@@ -10,6 +10,7 @@ use Filament\Resources\Pages\EditRecord;
 class EditTransaction extends EditRecord
 {
     use CrudDefaults;
+
     protected static string $resource = TransactionResource::class;
 
     protected function getHeaderActions(): array

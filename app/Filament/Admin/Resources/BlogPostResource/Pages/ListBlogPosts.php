@@ -10,6 +10,7 @@ use Filament\Resources\Pages\ListRecords;
 class ListBlogPosts extends ListRecords
 {
     use ListDefaults;
+
     protected static string $resource = BlogPostResource::class;
 
     protected function getHeaderActions(): array

@@ -3,7 +3,6 @@
 namespace App\Filament\Admin\Resources;
 
 use App\Constants\DiscountConstants;
-use App\Constants\OrderStatus;
 use App\Filament\Admin\Resources\OrderResource\Pages;
 use App\Filament\Admin\Resources\TenantResource\Pages\EditTenant;
 use App\Mapper\OrderStatusMapper;
@@ -15,6 +14,7 @@ use Filament\Infolists\Infolist;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 
 class OrderResource extends Resource
 {
@@ -63,6 +63,11 @@ class OrderResource extends Resource
                     ->searchable()->sortable(),
             ])
             ->defaultSort('updated_at', 'desc')
+            ->modifyQueryUsing(fn (Builder $query) => $query->with([
+                'user',
+                'currency',
+                'paymentProvider',
+            ]))
             ->filters([
                 //
             ])

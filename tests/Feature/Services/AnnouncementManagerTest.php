@@ -34,7 +34,6 @@ class AnnouncementManagerTest extends FeatureTest
         $this->assertEquals($announcement->id, $result->id);
     }
 
-
     public function test_get_announcement_for_user_dashboard()
     {
         Announcement::query()->delete();

@@ -92,7 +92,7 @@ class CheckoutForm extends Component
             $result = $loginManager->attempt([
                 'email' => $this->email,
                 'password' => $this->password,
-            ],  true);
+            ], true);
         } catch (\Throwable $e) {  // usually thrown when 2FA is enabled so user need to be redirected to login page to enter 2FA code
             throw new LoginException;
         }

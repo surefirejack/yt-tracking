@@ -26,6 +26,7 @@ class TwoFactorAuth extends Page
     {
         /** @var User $user */
         $user = auth()->user();
+
         return [
             'twoFactorAuthEnabled' => $user->hasTwoFactorEnabled(),
         ];

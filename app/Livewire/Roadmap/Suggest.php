@@ -9,6 +9,7 @@ use Livewire\Component;
 class Suggest extends Component
 {
     public RoadmapItemForm $form;
+
     private RoadmapManager $roadmapManager;
 
     // boot
@@ -34,5 +35,4 @@ class Suggest extends Component
     {
         return view('livewire.roadmap.suggest');
     }
-
 }
