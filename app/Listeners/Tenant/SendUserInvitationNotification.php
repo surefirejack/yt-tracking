@@ -4,7 +4,6 @@ namespace App\Listeners\Tenant;
 
 use App\Events\Tenant\UserInvitedToTenant;
 use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Support\Facades\Mail;
 
 class SendUserInvitationNotification implements ShouldQueue

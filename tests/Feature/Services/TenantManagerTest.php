@@ -65,12 +65,11 @@ class TenantManagerTest extends FeatureTest
             ->once()
             ->with(\Mockery::any(), 2, true)
             ->andReturn(true);
-        ;
 
         // get from the container
         $paymentManager = app(PaymentManager::class);
 
-        $permissionManager = new TenantPermissionManager();
+        $permissionManager = new TenantPermissionManager;
         $tenantManager = new TenantManager(
             $permissionManager,
             new TenantSubscriptionManager($paymentManager),
@@ -134,7 +133,7 @@ class TenantManagerTest extends FeatureTest
         // get from the container
         $paymentManager = app(PaymentManager::class);
 
-        $permissionManager = new TenantPermissionManager();
+        $permissionManager = new TenantPermissionManager;
         $tenantManager = new TenantManager(
             $permissionManager,
             new TenantSubscriptionManager($paymentManager),
@@ -199,7 +198,7 @@ class TenantManagerTest extends FeatureTest
         // get from the container
         $paymentManager = app(PaymentManager::class);
 
-        $permissionManager = new TenantPermissionManager();
+        $permissionManager = new TenantPermissionManager;
         $tenantManager = new TenantManager(
             $permissionManager,
             new TenantSubscriptionManager($paymentManager),
@@ -252,7 +251,7 @@ class TenantManagerTest extends FeatureTest
         // get from the container
         $paymentManager = app(PaymentManager::class);
 
-        $permissionManager = new TenantPermissionManager();
+        $permissionManager = new TenantPermissionManager;
         $tenantManager = new TenantManager(
             $permissionManager,
             new TenantSubscriptionManager($paymentManager),
@@ -309,12 +308,11 @@ class TenantManagerTest extends FeatureTest
             ->once()
             ->with(\Mockery::any(), 1, true)
             ->andReturn(true);
-        ;
 
         // get from the container
         $paymentManager = app(PaymentManager::class);
 
-        $permissionManager = new TenantPermissionManager();
+        $permissionManager = new TenantPermissionManager;
         $tenantManager = new TenantManager(
             $permissionManager,
             new TenantSubscriptionManager($paymentManager),
@@ -369,7 +367,7 @@ class TenantManagerTest extends FeatureTest
         // get from the container
         $paymentManager = app(PaymentManager::class);
 
-        $permissionManager = new TenantPermissionManager();
+        $permissionManager = new TenantPermissionManager;
         $tenantManager = new TenantManager(
             $permissionManager,
             new TenantSubscriptionManager($paymentManager),
@@ -386,7 +384,6 @@ class TenantManagerTest extends FeatureTest
 
         Event::assertNotDispatched(UserRemovedFromTenant::class);
     }
-
 
     private function addPaymentProvider()
     {

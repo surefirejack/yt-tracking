@@ -2,13 +2,12 @@
 
 use App\Http\Controllers\Auth\OAuthController;
 use App\Http\Controllers\PaymentProviders\PaddleController as PaddleController;
-use App\Services\UserDashboardManager;
 use App\Services\SessionManager;
 use App\Services\TenantCreationManager;
+use App\Services\UserDashboardManager;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
-
 
 /*
 |--------------------------------------------------------------------------

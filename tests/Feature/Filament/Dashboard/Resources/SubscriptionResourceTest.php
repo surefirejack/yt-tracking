@@ -5,8 +5,8 @@ namespace Tests\Feature\Filament\Dashboard\Resources;
 use App\Constants\TenancyPermissionConstants;
 use App\Filament\Dashboard\Resources\SubscriptionResource;
 use App\Models\Subscription;
-use Symfony\Component\HttpKernel\Exception\HttpException;
 use App\Models\User;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 use Tests\Feature\FeatureTest;
 
 class SubscriptionResourceTest extends FeatureTest

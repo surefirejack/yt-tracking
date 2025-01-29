@@ -13,9 +13,7 @@ class TenantCreationManager
 {
     public function __construct(
         private TenantPermissionManager $tenantPermissionManager,
-    ) {
-
-    }
+    ) {}
 
     public function findUserTenantsForNewOrder(?User $user)
     {

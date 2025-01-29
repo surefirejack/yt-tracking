@@ -17,9 +17,7 @@ class DiscardSubscriptionCancellationActionHandler
         private SubscriptionManager $subscriptionManager,
         private PaymentManager $paymentManager,
         private TenantPermissionManager $tenantPermissionManager,
-    ) {
-
-    }
+    ) {}
 
     public function handle(Subscription $record)
     {

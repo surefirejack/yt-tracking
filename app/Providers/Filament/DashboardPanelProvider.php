@@ -2,13 +2,13 @@
 
 namespace App\Providers\Filament;
 
+use App\Constants\AnnouncementPlacement;
 use App\Constants\TenancyPermissionConstants;
 use App\Filament\Dashboard\Pages\TenantSettings;
+use App\Filament\Dashboard\Pages\TwoFactorAuth\TwoFactorAuth;
 use App\Models\Tenant;
 use App\Services\TenantPermissionManager;
 use Filament\Facades\Filament;
-use App\Constants\AnnouncementPlacement;
-use App\Filament\Dashboard\Pages\TwoFactorAuth\TwoFactorAuth;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;

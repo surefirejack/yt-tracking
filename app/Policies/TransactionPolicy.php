@@ -12,9 +12,7 @@ class TransactionPolicy
 {
     public function __construct(
         private TenantPermissionManager $tenantPermissionManager
-    ) {
-
-    }
+    ) {}
 
     /**
      * Determine whether the user can view any models.
