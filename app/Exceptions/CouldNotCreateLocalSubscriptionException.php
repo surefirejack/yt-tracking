@@ -4,7 +4,4 @@ namespace App\Exceptions;
 
 use Exception;
 
-class CouldNotCreateLocalSubscriptionException extends Exception
-{
-
-}
+class CouldNotCreateLocalSubscriptionException extends Exception {}

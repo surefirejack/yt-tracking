@@ -9,5 +9,6 @@ use Filament\Resources\Pages\CreateRecord;
 class CreateUser extends CreateRecord
 {
     use CrudDefaults;
+
     protected static string $resource = UserResource::class;
 }

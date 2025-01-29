@@ -11,6 +11,7 @@ use Mpociot\Versionable\VersionableTrait;
 class Subscription extends Model
 {
     use HasFactory, VersionableTrait;
+
     protected string $versionClass = SubscriptionVersion::class;
 
     protected $fillable = [
@@ -93,5 +94,4 @@ class Subscription extends Model
         // used to find a model by its uuid instead of its id
         return 'uuid';
     }
-
 }

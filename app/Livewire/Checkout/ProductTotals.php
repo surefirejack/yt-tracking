@@ -30,6 +30,7 @@ class ProductTotals extends Component
     private DiscountManager $discountManager;
 
     private CalculationManager $calculationManager;
+
     private SessionManager $sessionManager;
 
     public function boot(DiscountManager $discountManager, CalculationManager $calculationManager, SessionManager $sessionManager)

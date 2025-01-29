@@ -14,5 +14,4 @@ class DiscountPaymentProviderData extends Model
         'payment_provider_id',
         'payment_provider_discount_id',
     ];
-
 }

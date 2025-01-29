@@ -19,9 +19,7 @@ class CalculationManager
         private PlanManager $planManager,
         private DiscountManager $discountManager,
         private OneTimeProductManager $oneTimeProductManager,
-    ) {
-
-    }
+    ) {}
 
     /**
      * Subscription price equals to the plan price
@@ -58,7 +56,7 @@ class CalculationManager
 
         $planPrice = $this->getPlanPrice($plan);
         $currencyCode = $planPrice->currency->code;
-        $totalsDto = new TotalsDto();
+        $totalsDto = new TotalsDto;
 
         $totalsDto->currencyCode = $currencyCode;
 
@@ -88,7 +86,7 @@ class CalculationManager
 
         $planPrice = $this->getPlanPrice($plan);
         $currencyCode = $planPrice->currency->code;
-        $totalsDto = new TotalsDto();
+        $totalsDto = new TotalsDto;
 
         $totalsDto->currencyCode = $currencyCode;
 
@@ -105,7 +103,7 @@ class CalculationManager
 
     public function calculateCartTotals(CartDto $cart, ?User $user): TotalsDto
     {
-        $totalsDto = new TotalsDto();
+        $totalsDto = new TotalsDto;
         $totalsDto->currencyCode = config('app.default_currency');
         $currency = Currency::where('code', $totalsDto->currencyCode)->firstOrFail();
 

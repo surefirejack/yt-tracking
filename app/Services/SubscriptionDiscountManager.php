@@ -12,9 +12,7 @@ class SubscriptionDiscountManager
         private DiscountManager $discountManager,
         private SubscriptionManager $subscriptionManager,
         private PaymentManager $paymentManager,
-    ) {
-
-    }
+    ) {}
 
     public function applyDiscount(Subscription $subscription, string $discountCode, User $user): bool
     {

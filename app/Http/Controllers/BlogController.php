@@ -9,9 +9,7 @@ class BlogController extends Controller
 {
     public function __construct(
         private BlogManager $blogManager
-    ) {
-
-    }
+    ) {}
 
     public function view(string $slug)
     {
@@ -36,6 +34,7 @@ class BlogController extends Controller
     public function category(string $slug)
     {
         $category = BlogPostCategory::where('slug', $slug)->firstOrFail();
+
         return view('blog.category', [
             'category' => $category,
             'posts' => $this->blogManager->getAllPostsForCategory($category),

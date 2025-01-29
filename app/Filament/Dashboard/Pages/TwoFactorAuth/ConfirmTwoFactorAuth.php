@@ -20,7 +20,7 @@ class ConfirmTwoFactorAuth extends Page
     public function confirmTwoFactorAuth()
     {
         $this->validate([
-            'code' => 'required|numeric'
+            'code' => 'required|numeric',
         ]);
 
         $user = auth()->user();
@@ -31,9 +31,9 @@ class ConfirmTwoFactorAuth extends Page
             if ($action === 'enable') {
                 $activated = $user->confirmTwoFactorAuth($this->code);
 
-                if (!$activated) {
+                if (! $activated) {
                     throw ValidationException::withMessages([
-                        'code' => __('Invalid code, please try again.')
+                        'code' => __('Invalid code, please try again.'),
                     ]);
                 }
 
@@ -52,9 +52,9 @@ class ConfirmTwoFactorAuth extends Page
 
                 $validated = $user->validateTwoFactorCode($this->code);
 
-                if (!$validated) {
+                if (! $validated) {
                     throw ValidationException::withMessages([
-                        'code' => __('Invalid code, please try again.')
+                        'code' => __('Invalid code, please try again.'),
                     ]);
                 }
 
@@ -71,5 +71,4 @@ class ConfirmTwoFactorAuth extends Page
 
         $this->redirect(TwoFactorAuth::getUrl());
     }
-
 }

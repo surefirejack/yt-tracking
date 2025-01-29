@@ -13,6 +13,7 @@ use Mpociot\Versionable\VersionableTrait;
 class Transaction extends Model
 {
     use HasFactory, VersionableTrait;
+
     protected string $versionClass = TransactionVersion::class;
 
     protected $fillable = [
@@ -92,5 +93,4 @@ class Transaction extends Model
     {
         return $this->belongsTo(Order::class);
     }
-
 }

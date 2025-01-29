@@ -14,6 +14,7 @@ use Illuminate\Database\Eloquent\Builder;
 class ListTransactions extends ListRecords
 {
     use ListDefaults;
+
     protected static string $resource = TransactionResource::class;
 
     protected function getHeaderActions(): array

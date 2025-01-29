@@ -3,7 +3,6 @@
 namespace App\Exceptions;
 
 use Exception;
-use Illuminate\Http\Request;
 
 class SubscriptionCreationNotAllowedException extends Exception
 {

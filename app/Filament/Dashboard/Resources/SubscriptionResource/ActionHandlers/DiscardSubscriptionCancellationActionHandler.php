@@ -13,9 +13,7 @@ class DiscardSubscriptionCancellationActionHandler
     public function __construct(
         private SubscriptionManager $subscriptionManager,
         private PaymentManager $paymentManager
-    ) {
-
-    }
+    ) {}
 
     public function handle(Subscription $record)
     {

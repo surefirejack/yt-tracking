@@ -32,14 +32,19 @@ class SubscriptionTotals extends Component
     public $code;
 
     public ?string $unitMeterName;
+
     public ?string $planPriceType = null;
+
     public ?string $pricePerUnit = null;
+
     public ?array $tiers = null;
+
     public bool $canAddDiscount = true;
 
     private DiscountManager $discountManager;
 
     private CalculationManager $calculationManager;
+
     private SessionManager $sessionManager;
 
     public function boot(DiscountManager $discountManager, CalculationManager $calculationManager, SessionManager $sessionManager)
