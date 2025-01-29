@@ -30,9 +30,7 @@ class DemoDatabaseSeeder extends Seeder
     public function __construct(
         private MetricsManager $metricsManager,
         private TenantPermissionManager $tenantPermissionManager,
-    ) {
-
-    }
+    ) {}
 
     private array $blogPostTitles = [
         'The Art of Responsive Web Design: A Comprehensive Guide',

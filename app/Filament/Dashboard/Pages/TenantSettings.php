@@ -25,13 +25,13 @@ class TenantSettings extends Page
     public static function canAccess(): bool
     {
         $tenantPermissionManager = app(TenantPermissionManager::class); // a bit ugly, but this is the Filament way :/
+
         return $tenantPermissionManager->tenantUserHasPermissionTo(
             Filament::getTenant(),
             auth()->user(),
             TenancyPermissionConstants::PERMISSION_UPDATE_TENANT_SETTINGS
         );
     }
-
 
     public static function shouldRegisterNavigation(): bool
     {

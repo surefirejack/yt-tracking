@@ -29,5 +29,4 @@ class MetricsBeat extends Command implements Isolatable
     {
         $metricsManager->beat();
     }
-
 }

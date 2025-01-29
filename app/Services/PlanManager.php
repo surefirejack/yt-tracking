@@ -172,6 +172,13 @@ class PlanManager
                 $result->where('type', $planType);
             }
 
+            $result->with([
+                'interval',
+                'product',
+                'prices',
+                'prices.currency',
+            ]);
+
             return $result->get();
 
         }
@@ -188,6 +195,13 @@ class PlanManager
         if ($planType) {
             $result->where('type', $planType);
         }
+
+        $result->with([
+            'interval',
+            'product',
+            'prices',
+            'prices.currency',
+        ]);
 
         return $result->get();
     }

@@ -10,6 +10,7 @@ use Filament\Resources\Pages\EditRecord;
 class EditBlogPostCategory extends EditRecord
 {
     use CrudDefaults;
+
     protected static string $resource = BlogPostCategoryResource::class;
 
     protected function getHeaderActions(): array

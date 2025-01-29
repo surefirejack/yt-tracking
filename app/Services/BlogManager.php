@@ -9,7 +9,12 @@ class BlogManager
 {
     public function getBlogBySlug(string $slug, ?bool $isPublished = true)
     {
-        $post = BlogPost::where('slug', $slug);
+        $post = BlogPost::where('slug', $slug)->with([
+            'author',
+            'blogPostCategory',
+            'user',
+            'media',
+        ]);
 
         if ($isPublished) {
             $post->where('is_published', true);
@@ -23,6 +28,11 @@ class BlogManager
         return BlogPost::where('id', '!=', $post->id)
             ->where('is_published', true)
             ->orderBy('published_at', 'desc')
+            ->with([
+                'author',
+                'blogPostCategory',
+                'user',
+            ])
             ->limit($limit)
             ->get();
     }
@@ -43,6 +53,12 @@ class BlogManager
     public function getAllPostsQuery()
     {
         return BlogPost::where('is_published', true)
+            ->with([
+                'author',
+                'blogPostCategory',
+                'user',
+                'media',
+            ])
             ->orderBy('published_at', 'desc');
 
     }

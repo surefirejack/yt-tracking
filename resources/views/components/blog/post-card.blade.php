@@ -20,7 +20,7 @@
             —
             {{ $post->author->getPublicName() }}
         </div>
-        @if ($post->blogPostCategory()->exists())
+        @if ($post->blogPostCategory)
             <div class="text-neutral-400 rounded-lg px-2 py-1 border border-neutral-300 max-w-fit text-xs mt-3 hover:bg-neutral-100">
                 <a href="{{route('blog.category', ['slug' => $post->blogPostCategory->slug])}}">{{ $post->blogPostCategory->name }}</a>
             </div>

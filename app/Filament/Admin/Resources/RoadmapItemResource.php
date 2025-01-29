@@ -109,11 +109,8 @@ class RoadmapItemResource extends Resource
                     ->default(1)
                     ->numeric()
                     ->sortable(),
-                Tables\Columns\TextColumn::make('user_id')
+                Tables\Columns\TextColumn::make('user.name')
                     ->label(__('User'))
-                    ->formatStateUsing(function ($state) {
-                        return \App\Models\User::find($state)->name;
-                    })
                     ->sortable(),
                 Tables\Columns\TextColumn::make('updated_at')
                     ->dateTime()

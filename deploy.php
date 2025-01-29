@@ -21,8 +21,8 @@ $subDirectory = '';    // the subdirectory of the repository where the app is lo
 $phpVersion = '8.2'; // the version of PHP to be installed on the server
 
 // End of configs
-/////////////////////////////////////
-/////////////////////////////////////
+// ///////////////////////////////////
+// ///////////////////////////////////
 
 set('repository', $repository);
 set('sub_directory', $subDirectory);
@@ -111,10 +111,10 @@ task('deploy:sitemap', artisan('app:generate-sitemap', ['skipIfNoEnv']));
 // seed database
 after('artisan:migrate', 'artisan:db:seed');
 
-//npm
+// npm
 after('artisan:migrate', 'npm:build');
 
-//php
+// php
 after('provision:php', 'provision:php-extra');
 after('provision:verify', 'provision:supervisor');
 after('provision:deployer', 'provision:fix-aws-ssh');

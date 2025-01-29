@@ -16,6 +16,7 @@ class SubscriptionSeats extends Component
     public $quantity;
 
     public $planSlug;
+
     public $maxQuantity;
 
     private SessionManager $sessionManager;

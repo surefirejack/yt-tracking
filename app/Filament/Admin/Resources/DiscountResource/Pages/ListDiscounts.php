@@ -10,6 +10,7 @@ use Filament\Resources\Pages\ListRecords;
 class ListDiscounts extends ListRecords
 {
     use ListDefaults;
+
     protected static string $resource = DiscountResource::class;
 
     protected function getHeaderActions(): array

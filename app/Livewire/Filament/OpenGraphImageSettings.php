@@ -76,113 +76,113 @@ class OpenGraphImageSettings extends Component implements HasForms
     {
         return $form
             ->schema([
-                    Section::make(__('Open Graph Images'))
-                        ->schema([
-                            Toggle::make('open_graphy_image_enabled')
-                                ->label(__('Open Graph Image Generation Enabled'))
-                                ->helperText(__('If enabled, an open graph image will be generated for each page that has a title. Make sure that you already set the chrome binary in the config file.'))
-                                ->required(),
-                            Toggle::make('open_graphy_logo_enabled')
-                                ->label(__('Add Logo'))
-                                ->live()
-                                ->helperText(__('If enabled, the logo will be added to the open graph image.'))
-                                ->required(),
-                            Radio::make('open_graphy_logo_path')
-                                ->label(__('Logo Style'))
-                                ->helperText(__('Choose the style of the logo to use in the open graph image.'))
-                                ->options([
-                                    config('app.logo.light') => 'Light',
-                                    config('app.logo.dark') => 'Dark',
-                                ])
-                                ->disabled(function ($get) {
-                                    return !$get('open_graphy_logo_enabled');
-                                })
-                                ->required(function ($get) {
-                                    return $get('open_graphy_logo_enabled');
-                                }),
-                            Toggle::make('open_graphy_screenshot_enabled')
-                                ->label(__('Add Page Screenshot'))
-                                ->helperText(__('If enabled, a screenshot of the page will be added to the open graph image.'))
-                                ->required(),
-                            Select::make('open_graphy_template')
-                                ->label(__('Template'))
-                                ->live()
-                                ->helperText(__('Select the template to use for the open graph image. Changing the template or any of the settings will regenerate all open graph images for your pages, so choose your settings wisely.'))
-                                ->options(function () {
-                                    $templates = config('open-graphy.template_settings');
+                Section::make(__('Open Graph Images'))
+                    ->schema([
+                        Toggle::make('open_graphy_image_enabled')
+                            ->label(__('Open Graph Image Generation Enabled'))
+                            ->helperText(__('If enabled, an open graph image will be generated for each page that has a title. Make sure that you already set the chrome binary in the config file.'))
+                            ->required(),
+                        Toggle::make('open_graphy_logo_enabled')
+                            ->label(__('Add Logo'))
+                            ->live()
+                            ->helperText(__('If enabled, the logo will be added to the open graph image.'))
+                            ->required(),
+                        Radio::make('open_graphy_logo_path')
+                            ->label(__('Logo Style'))
+                            ->helperText(__('Choose the style of the logo to use in the open graph image.'))
+                            ->options([
+                                config('app.logo.light') => 'Light',
+                                config('app.logo.dark') => 'Dark',
+                            ])
+                            ->disabled(function ($get) {
+                                return ! $get('open_graphy_logo_enabled');
+                            })
+                            ->required(function ($get) {
+                                return $get('open_graphy_logo_enabled');
+                            }),
+                        Toggle::make('open_graphy_screenshot_enabled')
+                            ->label(__('Add Page Screenshot'))
+                            ->helperText(__('If enabled, a screenshot of the page will be added to the open graph image.'))
+                            ->required(),
+                        Select::make('open_graphy_template')
+                            ->label(__('Template'))
+                            ->live()
+                            ->helperText(__('Select the template to use for the open graph image. Changing the template or any of the settings will regenerate all open graph images for your pages, so choose your settings wisely.'))
+                            ->options(function () {
+                                $templates = config('open-graphy.template_settings');
 
-                                    return array_combine(array_keys($templates), array_keys($templates));
-                                })
-                                ->required(),
-                            Grid::make('template_settings_container')
-                                ->columns(2)
-                                ->schema([
-                                    $this->buildTemplateSettingsFields(),
-                                    Fieldset::make('preview')
-                                        ->label(__('Preview'))
-                                        ->columnSpan(1)
-                                        ->schema([
-                                            TextInput::make('open_graphy_preview_title')
-                                                ->columnSpanFull()
-                                                ->helperText(__('Enter a title to use to preview the open graph image.'))
-                                                ->label(__('Preview Title')),
-                                            TextInput::make('open_graphy_preview_image')
-                                                ->columnSpanFull()
-                                                ->helperText(__('Enter an image URL to use to preview the open graph image. (either image or snapshot will be used, not both, snapshot takes precedence). '))
-                                                ->label(__('Preview Image')),
-                                            TextInput::make('open_graphy_preview_url')
-                                                ->helperText(__('Enter a URL of a site to take a snapshot of to preview the open graph image. (either image or snapshot will be used, not both, snapshot takes precedence). Make sure above "Add Page Screenshot" is enabled.'))
-                                                ->columnSpanFull()
-                                                ->label(__('Preview Snapshot URL')),
-                                            Actions::make([
-                                                Action::make('preview')
-                                                    ->label(__('Generate Preview'))
-                                                    ->icon('heroicon-o-eye')
-                                                    ->color('gray')
-                                                    ->modalSubmitAction(false)
-                                                    ->modalCancelAction(false)
-                                                    ->modalContent(function ($get, ImageGenerator $imageGenerator) {
-                                                        try {
-                                                            $templateSettings = config('open-graphy.template_settings');
+                                return array_combine(array_keys($templates), array_keys($templates));
+                            })
+                            ->required(),
+                        Grid::make('template_settings_container')
+                            ->columns(2)
+                            ->schema([
+                                $this->buildTemplateSettingsFields(),
+                                Fieldset::make('preview')
+                                    ->label(__('Preview'))
+                                    ->columnSpan(1)
+                                    ->schema([
+                                        TextInput::make('open_graphy_preview_title')
+                                            ->columnSpanFull()
+                                            ->helperText(__('Enter a title to use to preview the open graph image.'))
+                                            ->label(__('Preview Title')),
+                                        TextInput::make('open_graphy_preview_image')
+                                            ->columnSpanFull()
+                                            ->helperText(__('Enter an image URL to use to preview the open graph image. (either image or snapshot will be used, not both, snapshot takes precedence). '))
+                                            ->label(__('Preview Image')),
+                                        TextInput::make('open_graphy_preview_url')
+                                            ->helperText(__('Enter a URL of a site to take a snapshot of to preview the open graph image. (either image or snapshot will be used, not both, snapshot takes precedence). Make sure above "Add Page Screenshot" is enabled.'))
+                                            ->columnSpanFull()
+                                            ->label(__('Preview Snapshot URL')),
+                                        Actions::make([
+                                            Action::make('preview')
+                                                ->label(__('Generate Preview'))
+                                                ->icon('heroicon-o-eye')
+                                                ->color('gray')
+                                                ->modalSubmitAction(false)
+                                                ->modalCancelAction(false)
+                                                ->modalContent(function ($get, ImageGenerator $imageGenerator) {
+                                                    try {
+                                                        $templateSettings = config('open-graphy.template_settings');
 
-                                                            $currentTemplate = $get('open_graphy_template'); // this is to get the current template from form state
+                                                        $currentTemplate = $get('open_graphy_template'); // this is to get the current template from form state
 
-                                                            $currentTemplateSettings = $templateSettings[$currentTemplate];
+                                                        $currentTemplateSettings = $templateSettings[$currentTemplate];
 
-                                                            $keys = array_keys($currentTemplateSettings);
+                                                        $keys = array_keys($currentTemplateSettings);
 
-                                                            $settings = [];
+                                                        $settings = [];
 
-                                                            foreach ($keys as $key) {
-                                                                $settings[$key] = $get('open-graphy_template_settings_' . $currentTemplate . '_' . $key);
-                                                            }
-
-                                                            $imageType = config('open-graphy.open_graph_image.type');
-
-                                                            $imagePath = $imageGenerator->generate(
-                                                                $get('open_graphy_preview_title'),
-                                                                $get('open_graphy_preview_url'),
-                                                                $get('open_graphy_logo_enabled'),
-                                                                $get('open_graphy_screenshot_enabled'),
-                                                                $get('open_graphy_preview_image'),
-                                                                $currentTemplate,
-                                                                $settings,
-                                                                $get('open_graphy_logo_path'),
-                                                                true
-                                                            );
-
-                                                            $encodedImage = $imageGenerator->base64FromPath($imagePath);
-
-                                                            return new HtmlString("<img src=\"data:image/$imageType;base64,$encodedImage\" alt=\"Open Graph Image Preview\" class=\"w-full h-auto\" />");
-                                                        } catch (\Throwable $e) {
-                                                            return new HtmlString('<p class="text-red-500">' . __('Cannot render image, make sure the chrome binary is set correctly in the config file "open-graphy.php".') . '</p>');
+                                                        foreach ($keys as $key) {
+                                                            $settings[$key] = $get('open-graphy_template_settings_'.$currentTemplate.'_'.$key);
                                                         }
-                                                    })
 
-                                            ]),
-                                        ])
-                                ]),
-                        ]),
+                                                        $imageType = config('open-graphy.open_graph_image.type');
+
+                                                        $imagePath = $imageGenerator->generate(
+                                                            $get('open_graphy_preview_title'),
+                                                            $get('open_graphy_preview_url'),
+                                                            $get('open_graphy_logo_enabled'),
+                                                            $get('open_graphy_screenshot_enabled'),
+                                                            $get('open_graphy_preview_image'),
+                                                            $currentTemplate,
+                                                            $settings,
+                                                            $get('open_graphy_logo_path'),
+                                                            true
+                                                        );
+
+                                                        $encodedImage = $imageGenerator->base64FromPath($imagePath);
+
+                                                        return new HtmlString("<img src=\"data:image/$imageType;base64,$encodedImage\" alt=\"Open Graph Image Preview\" class=\"w-full h-auto\" />");
+                                                    } catch (\Throwable $e) {
+                                                        return new HtmlString('<p class="text-red-500">'.__('Cannot render image, make sure the chrome binary is set correctly in the config file "open-graphy.php".').'</p>');
+                                                    }
+                                                }),
+
+                                        ]),
+                                    ]),
+                            ]),
+                    ]),
 
             ])
             ->statePath('data');
@@ -206,11 +206,11 @@ class OpenGraphImageSettings extends Component implements HasForms
                 foreach ($settings as $key => $value) {
                     // if key ends with _color or background, show color picker
                     if (str_ends_with($key, '_color') || $key === 'background') {
-                        $schema[] = ColorPicker::make('open-graphy_template_settings_' . $template . '_' . $key)
+                        $schema[] = ColorPicker::make('open-graphy_template_settings_'.$template.'_'.$key)
                             ->label(ucfirst(str_replace('_', ' ', $key)))
                             ->required();
                     } else {
-                        $schema[] = TextInput::make('open-graphy_template_settings_' . $template . '_' . $key)
+                        $schema[] = TextInput::make('open-graphy_template_settings_'.$template.'_'.$key)
                             ->label(ucfirst(str_replace('_', ' ', $key)))
                             ->required();
                     }
@@ -248,7 +248,6 @@ class OpenGraphImageSettings extends Component implements HasForms
 
         $this->configManager->set('open-graphy.logo.enabled', $data['open_graphy_logo_enabled']);
         $this->saveKeyIfExists('open-graphy.logo.location', 'open_graphy_logo_path', $data);
-
 
         Notification::make()
             ->title(__('Settings Saved'))

@@ -14,9 +14,7 @@ class CreateTenantIfNeeded
     public function __construct(
         private SessionManager $sessionManager,
         private TenantCreationManager $tenantCreationManager,
-    ) {
-
-    }
+    ) {}
 
     /**
      * Handle the event.

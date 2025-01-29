@@ -198,7 +198,6 @@ class SubscriptionCheckoutFormTest extends FeatureTest
             ->assertDontSeeHtml('trial');
     }
 
-
     public function test_can_not_checkout_if_payment_does_not_support_plan_type()
     {
         $planSlug = 'plan-slug-'.rand(1, 1000000);

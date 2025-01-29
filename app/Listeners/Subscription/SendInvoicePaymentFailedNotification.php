@@ -4,7 +4,6 @@ namespace App\Listeners\Subscription;
 
 use App\Events\Subscription\InvoicePaymentFailed;
 use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Support\Facades\Mail;
 
 class SendInvoicePaymentFailedNotification implements ShouldQueue

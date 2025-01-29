@@ -10,5 +10,6 @@ class CartDto
     public ?string $discountCode = null;
 
     public ?string $orderId = null;
+
     public ?string $tenantUuid = null;
 }

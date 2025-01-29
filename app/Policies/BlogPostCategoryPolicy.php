@@ -4,7 +4,6 @@ namespace App\Policies;
 
 use App\Models\BlogPostCategory;
 use App\Models\User;
-use Illuminate\Auth\Access\Response;
 
 class BlogPostCategoryPolicy
 {

@@ -20,8 +20,7 @@ class All extends Component
         public bool $calculateSavingRates = false,
         public ?string $currentSubscriptionUuid = null,
         public bool $showDefaultProduct = false,
-    ) {
-    }
+    ) {}
 
     /**
      * Get the view / contents that represent the component.

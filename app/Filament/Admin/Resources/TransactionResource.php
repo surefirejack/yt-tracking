@@ -18,6 +18,7 @@ use Filament\Infolists\Infolist;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 
 class TransactionResource extends Resource
 {
@@ -91,6 +92,14 @@ class TransactionResource extends Resource
                         ),
                 ]),
             ])
+            ->modifyQueryUsing(fn (Builder $query) => $query->with([
+                'user',
+                'currency',
+                'paymentProvider',
+                'order',
+                'subscription',
+                'subscription.plan',
+            ]))
             ->bulkActions([
 
             ]);

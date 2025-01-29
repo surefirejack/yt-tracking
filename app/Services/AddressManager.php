@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Services;
+
 use App\Models\User;
 
 class AddressManager
@@ -9,7 +10,7 @@ class AddressManager
     {
         $address = $user->address()->first();
 
-        if (!$address) {
+        if (! $address) {
             return false;
         }
 

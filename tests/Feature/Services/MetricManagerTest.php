@@ -60,7 +60,7 @@ class MetricManagerTest extends FeatureTest
             'payment_provider_transaction_id' => '234',
         ]);
 
-        $metricManager = new MetricsManager();
+        $metricManager = new MetricsManager;
         $result = $metricManager->calculateDailyRevenue(now());
 
         $this->assertEquals($result, 10.00);
@@ -116,7 +116,7 @@ class MetricManagerTest extends FeatureTest
         $transaction->created_at = $weekAgo;
         $transaction->save();
 
-        $metricManager = new MetricsManager();
+        $metricManager = new MetricsManager;
         $result = $metricManager->calculateAverageRevenuePerUser($weekAgo);
 
         $this->assertEquals($result, 10.00);
@@ -145,7 +145,7 @@ class MetricManagerTest extends FeatureTest
             'interval_id' => Interval::where('slug', 'month')->firstOrFail()->id,
         ])->save();
 
-        $metricManager = new MetricsManager();
+        $metricManager = new MetricsManager;
         $result = $metricManager->calculateMRR(now());
 
         $this->assertEquals($result, 50.00);

@@ -12,9 +12,7 @@ class All extends Component
         private OneTimeProductManager $productManager,
         private string $sortBy = 'name',
         private string $sortDirection = 'asc',
-    ) {
-
-    }
+    ) {}
 
     /**
      * Get the view / contents that represent the component.

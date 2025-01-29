@@ -33,9 +33,7 @@ class LemonSqueezyWebhookHandler
         private PlanManager $planManager,
         private OneTimeProductManager $oneTimeProductManager,
         private TenantCreationManager $tenantCreationManager,
-    ) {
-
-    }
+    ) {}
 
     public function handleWebhook(Request $request): JsonResponse
     {

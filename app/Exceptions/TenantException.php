@@ -4,7 +4,4 @@ namespace App\Exceptions;
 
 use Exception;
 
-class TenantException extends Exception
-{
-
-}
+class TenantException extends Exception {}

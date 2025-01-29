@@ -201,6 +201,10 @@ class PlanResource extends Resource
             ->actions([
                 Tables\Actions\EditAction::make(),
             ])
+            ->modifyQueryUsing(fn (Builder $query) => $query->with([
+                'interval',
+                'trialInterval',
+            ]))
             ->bulkActions([
             ]);
     }
