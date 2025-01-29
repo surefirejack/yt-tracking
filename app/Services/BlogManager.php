@@ -13,7 +13,7 @@ class BlogManager
             'author',
             'blogPostCategory',
             'user',
-            'media'
+            'media',
         ]);
 
         if ($isPublished) {
@@ -57,7 +57,7 @@ class BlogManager
                 'author',
                 'blogPostCategory',
                 'user',
-                'media'
+                'media',
             ])
             ->orderBy('published_at', 'desc');
 
