@@ -14,6 +14,7 @@ use Filament\Infolists\Infolist;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 
 class OrderResource extends Resource
 {
@@ -62,6 +63,11 @@ class OrderResource extends Resource
                     ->searchable()->sortable(),
             ])
             ->defaultSort('updated_at', 'desc')
+            ->modifyQueryUsing(fn (Builder $query) => $query->with([
+                'user',
+                'currency',
+                'paymentProvider',
+            ]))
             ->filters([
                 //
             ])

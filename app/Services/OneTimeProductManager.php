@@ -78,6 +78,11 @@ class OneTimeProductManager
             $query->orderBy($sortBy, $sortDirection);
         }
 
+        $query->with([
+            'prices',
+            'prices.currency',
+        ]);
+
         return $query->get();
     }
 

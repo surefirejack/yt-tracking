@@ -11,6 +11,7 @@ use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Support\Str;
+use Illuminate\Database\Eloquent\Builder;
 
 class BlogPostResource extends Resource
 {
@@ -95,6 +96,10 @@ class BlogPostResource extends Resource
                 Tables\Columns\IconColumn::make('is_published')
                     ->boolean(),
             ])
+            ->modifyQueryUsing(fn (Builder $query) => $query->with([
+                'author',
+                'user',
+            ]))
             ->filters([
                 //
             ])

@@ -27,6 +27,7 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\HtmlString;
+use Illuminate\Database\Eloquent\Builder;
 
 class SubscriptionResource extends Resource
 {
@@ -176,6 +177,12 @@ class SubscriptionResource extends Resource
                             ->send();
                     }),
             ])
+            ->modifyQueryUsing(fn (Builder $query) => $query->with([
+                'user',
+                'currency',
+                'paymentProvider',
+                'interval',
+            ]))
             ->bulkActions([
             ])->defaultSort('created_at', 'desc');
     }
