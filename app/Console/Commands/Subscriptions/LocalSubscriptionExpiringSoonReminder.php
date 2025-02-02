@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Console\Commands;
+namespace App\Console\Commands\Subscriptions;
 
 use App\Mail\Subscription\LocalSubscriptionExpiringSoon;
 use App\Models\User;
