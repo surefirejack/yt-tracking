@@ -4,6 +4,31 @@ namespace App\Constants;
 
 class ConfigConstants
 {
+    public const ENCRYPTED_CONFIGS = [
+        'services.ses.secret',
+        'services.mailgun.secret',
+        'services.facebook.client_secret',
+        'services.google.client_secret',
+        'services.twitter-oauth-2.client_secret',
+        'services.bitbucket.client_secret',
+        'services.github.client_secret',
+        'services.linkedin-openid.client_secret',
+        'services.gitlab.client_secret',
+        'services.paddle.client_side_token',
+        'services.paddle.vendor_auth_code',
+        'services.paddle.webhook_secret',
+        'services.stripe.secret_key',
+        'services.stripe.publishable_key',
+        'services.stripe.webhook_signing_secret',
+        'services.lemon-squeezy.api_key',
+        'services.lemon-squeezy.signing_secret',
+        'services.postmark.token',
+        'services.resend.key',
+        'recaptcha.api_secret_key',
+        'services.twilio.sid',
+        'services.twilio.token',
+    ];
+
     public const OVERRIDABLE_CONFIGS = [  // correspond to laravel config keys
         'app.name',
         'app.description',
