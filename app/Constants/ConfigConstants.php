@@ -24,9 +24,9 @@ class ConfigConstants
         'services.lemon-squeezy.signing_secret',
         'services.postmark.token',
         'services.resend.key',
-        'services.twilio.token',
         'recaptcha.api_secret_key',
         'services.twilio.sid',
+        'services.twilio.token',
     ];
 
     public const OVERRIDABLE_CONFIGS = [  // correspond to laravel config keys
