@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Console\Commands;
+namespace App\Console\Commands\Subscriptions;
 
 use App\Services\SubscriptionManager;
 use Illuminate\Console\Command;

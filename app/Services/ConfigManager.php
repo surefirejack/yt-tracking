@@ -29,11 +29,24 @@ class ConfigManager
 
     public function exportAllConfigs(): void
     {
-        $configs = Config::all();
+        $configs = Config::getAll();
 
-        $configs->each(function ($config) {
-            cache()->forever($config->key, $config->value);
-        });
+        foreach ($configs as $key => $value) {
+            cache()->forever($key, $value);
+        }
+    }
+
+    /**
+     * This is a one-time operation to encrypt sensitive configs to migrate non-encrypted sensitive configs to be encrypted.
+     */
+    public function encryptSensitiveConfigs()
+    {
+        foreach (ConfigConstants::ENCRYPTED_CONFIGS as $key) {
+            $value = Config::get($key);
+            if ($value) {
+                Config::set($key, $value);
+            }
+        }
     }
 
     public function get(string $key, ?string $default = null): string|array|null
