@@ -63,8 +63,12 @@ class Config extends Model
         }
     }
 
-    private static function decryptValue(string $value): string
+    private static function decryptValue(?string $value): ?string
     {
+        if (is_null($value)) {
+            return null;
+        }
+
         try {
             return decrypt($value);
         } catch (\Exception $e) {
@@ -72,8 +76,12 @@ class Config extends Model
         }
     }
 
-    private static function encryptValue(string $value): string
+    private static function encryptValue(?string $value): ?string
     {
+        if (is_null($value)) {
+            return null;
+        }
+
         try {
             return encrypt($value);
         } catch (\Exception $e) {
