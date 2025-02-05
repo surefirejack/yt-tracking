@@ -287,8 +287,7 @@ class TenantManager
         $tenantUserCount = $tenant->users->count();
 
         foreach ($tenantSubscriptions as $subscription) {
-            if ($subscription->plan->type === PlanType::SEAT_BASED->value &&
-                $subscription->plan->max_users_per_tenant !== 0 &&
+            if ($subscription->plan->max_users_per_tenant !== 0 &&
                 $tenantUserCount >= $subscription->plan->max_users_per_tenant) {
                 return false;
             }
