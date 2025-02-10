@@ -21,13 +21,14 @@ class All extends \App\View\Components\Plans\All
             $subscription = $this->subscriptionManager->findActiveByUserAndSubscriptionUuid(auth()->user()->id, $this->currentSubscriptionUuid);
         }
 
-        if ($subscription === null) {
-            return [];
+        $planType = null;
+        if ($subscription !== null) {
+            $planType = $subscription->plan->type;
         }
 
         $plans = $this->planManager->getAllPlansWithPrices(
             $this->products,
-            $subscription->plan->type,
+            $planType,
         );
 
         $viewData['subscription'] = $subscription;
