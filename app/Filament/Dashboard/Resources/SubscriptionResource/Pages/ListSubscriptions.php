@@ -16,4 +16,13 @@ class ListSubscriptions extends ListRecords
             Actions\CreateAction::make(),
         ];
     }
+
+    public function getView(): string
+    {
+        if ($this->getTableRecords()->count() === 0) {
+            return 'filament.dashboard.resources.subscription-resource.pages.subscriptions';
+        }
+
+        return parent::getView();
+    }
 }
