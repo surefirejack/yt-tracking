@@ -1,7 +1,10 @@
 <?php
 
 use App\Http\Controllers\Auth\OAuthController;
-use App\Http\Controllers\PaymentProviders\PaddleController as PaddleController;
+use App\Http\Controllers\BlogController;
+use App\Http\Controllers\InvoiceController;
+use App\Http\Controllers\PaymentProviders\PaddleController;
+use App\Http\Controllers\RoadmapController;
 use App\Services\SessionManager;
 use App\Services\TenantCreationManager;
 use App\Services\UserDashboardManager;
@@ -133,20 +136,13 @@ Route::get('/subscription/change-plan-thank-you', [
 ])->name('subscription.change-plan.thank-you')->middleware('auth');
 
 // blog
-Route::get('/blog/{slug}', [
-    App\Http\Controllers\BlogController::class,
-    'view',
-])->name('blog.view');
-
-Route::get('/blog', [
-    App\Http\Controllers\BlogController::class,
-    'all',
-])->name('blog')->middleware('sitemapped');
-
-Route::get('/blog/category/{slug}', [
-    App\Http\Controllers\BlogController::class,
-    'category',
-])->name('blog.category');
+Route::controller(BlogController::class)
+    ->prefix('/blog')
+    ->group(function () {
+        Route::get('/', 'all')->name('blog')->middleware('sitemapped');
+        Route::get('/category/{slug}', 'category')->name('blog.category');
+        Route::get('/{slug}', 'view')->name('blog.view');
+    });
 
 Route::get('/terms-of-service', function () {
     return view('pages.terms-of-service');
@@ -180,20 +176,13 @@ Route::get('/checkout/product/success', [
 
 // roadmap
 
-Route::get('/roadmap/suggest', [
-    App\Http\Controllers\RoadmapController::class,
-    'suggest',
-])->name('roadmap.suggest')->middleware('auth');
-
-Route::get('/roadmap', [
-    App\Http\Controllers\RoadmapController::class,
-    'index',
-])->name('roadmap');
-
-Route::get('/roadmap/i/{itemSlug}', [
-    App\Http\Controllers\RoadmapController::class,
-    'viewItem',
-])->name('roadmap.viewItem');
+Route::controller(RoadmapController::class)
+    ->prefix('/roadmap')
+    ->group(function () {
+        Route::get('/', 'index')->name('roadmap');
+        Route::get('/i/{itemSlug}', 'viewItem')->name('roadmap.viewItem');
+        Route::get('/suggest', 'suggest')->name('roadmap.suggest')->middleware('auth');
+    });
 
 // Invitations
 
@@ -204,12 +193,9 @@ Route::get('/invitations', [
 
 // Invoice
 
-Route::get('/invoice/generate/{transactionUuid}', [
-    App\Http\Controllers\InvoiceController::class,
-    'generate',
-])->name('invoice.generate');
-
-Route::get('/invoice/preview', [
-    App\Http\Controllers\InvoiceController::class,
-    'preview',
-])->name('invoice.preview');
+Route::controller(InvoiceController::class)
+    ->prefix('/invoice')
+    ->group(function () {
+        Route::get('/generate/{transactionUuid}', 'generate')->name('invoice.generate');
+        Route::get('/preview', 'preview')->name('invoice.preview');
+    });

@@ -56,6 +56,57 @@ class StripeControllerTest extends FeatureTest
         ]);
     }
 
+    public function test_subscription_created_arrived_after_subscription_updated_webhook(): void
+    {
+        $uuid = (string) Str::uuid();
+        Subscription::create([
+            'uuid' => $uuid,
+            'user_id' => 1,
+            'price' => 10,
+            'currency_id' => 1,
+            'plan_id' => 1,
+            'interval_id' => 2,
+            'interval_count' => 1,
+            'status' => SubscriptionStatus::INACTIVE->value,
+        ]);
+
+        $payload = $this->getStripeSubscription('active', 'customer.subscription.updated', $uuid);
+
+        $timestamp = time();
+        $payloadString = json_encode($payload);
+        $signature = \hash_hmac('sha256', "{$timestamp}.{$payloadString}", config('services.stripe.webhook_signing_secret'));
+
+        $response = $this->postJson(route('payments-providers.stripe.webhook'), $payload, [
+            'Stripe-Signature' => 't='.$timestamp.',v1='.$signature,
+            'Content-Type' => 'application/json',
+        ]);
+
+        $response->assertStatus(200);
+
+        $this->assertDatabaseHas('subscriptions', [
+            'uuid' => $uuid,
+            'status' => SubscriptionStatus::ACTIVE->value,
+        ]);
+
+        $payload = $this->getStripeSubscription('incomplete', 'customer.subscription.created', $uuid);
+
+        $timestamp = time();
+        $payloadString = json_encode($payload);
+        $signature = \hash_hmac('sha256', "{$timestamp}.{$payloadString}", config('services.stripe.webhook_signing_secret'));
+
+        $response = $this->postJson(route('payments-providers.stripe.webhook'), $payload, [
+            'Stripe-Signature' => 't='.$timestamp.',v1='.$signature,
+            'Content-Type' => 'application/json',
+        ]);
+
+        $response->assertStatus(200);
+
+        $this->assertDatabaseHas('subscriptions', [
+            'uuid' => $uuid,
+            'status' => SubscriptionStatus::ACTIVE->value,
+        ]);
+    }
+
     public function test_local_subscription_created_webhook(): void
     {
         $tenant = $this->createTenant();
