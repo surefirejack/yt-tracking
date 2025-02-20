@@ -184,7 +184,7 @@ class MetricsManager
 
         $result = $userCount > 0 ? $totalTransactionAmounts / $userCount : 0;
 
-        return number_format($result, 2);
+        return round($result, 2);
     }
 
     public function calculateSubscriptionChurnRate(?Carbon $date = null)

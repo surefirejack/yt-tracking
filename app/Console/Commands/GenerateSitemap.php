@@ -30,7 +30,7 @@ class GenerateSitemap extends Command implements Isolatable
      */
     public function handle(BlogManager $blogManager)
     {
-        if (app()->environment('local')) {
+        if (! app()->environment('production')) {
             $this->warn('Not generating sitemap in local environment');
 
             return;

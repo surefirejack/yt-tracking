@@ -9,6 +9,7 @@ use App\Constants\SubscriptionType;
 use App\Constants\TransactionStatus;
 use App\Models\Currency;
 use App\Models\PaymentProvider;
+use App\Models\Subscription;
 use App\Models\UserStripeData;
 use App\Services\OrderManager;
 use App\Services\SubscriptionManager;
@@ -47,24 +48,34 @@ class StripeWebhookHandler
             $event->type == 'customer.subscription.paused'
         ) {
             $subscriptionUuid = $event->data->object->metadata->subscription_uuid;
-            $subscription = $this->subscriptionManager->findByUuidOrFail($subscriptionUuid);
-            $stripeSubscriptionStatus = $event->data->object->status;
-            $subscriptionStatus = $this->mapStripeSubscriptionStatusToSubscriptionStatus($stripeSubscriptionStatus);
-            $endsAt = $event->data->object->current_period_end;
-            $endsAt = Carbon::createFromTimestampUTC($endsAt)->toDateTimeString();
-            $trialEndsAt = $event->data->object->trial_end ? Carbon::createFromTimestampUTC($event->data->object->trial_end)->toDateTimeString() : null;
-            $cancelledAt = $event->data->object->canceled_at ? Carbon::createFromTimestampUTC($event->data->object->canceled_at)->toDateTimeString() : null;
 
-            $this->subscriptionManager->updateSubscription($subscription, [
-                'type' => SubscriptionType::PAYMENT_PROVIDER_MANAGED,
-                'status' => $subscriptionStatus,
-                'ends_at' => $endsAt,
-                'payment_provider_subscription_id' => $event->data->object->id,
-                'payment_provider_status' => $event->data->object->status,
-                'payment_provider_id' => $paymentProvider->id,
-                'trial_ends_at' => $trialEndsAt,
-                'cancelled_at' => $cancelledAt,
-            ]);
+            DB::transaction(function () use ($subscriptionUuid, $event, $paymentProvider) {
+                // subscription events can arrive at same time, so we need to make sure we lock the subscription to maintain sequential processing
+                $subscription = Subscription::query()->where('uuid', $subscriptionUuid)->lockForUpdate()->firstOrFail();
+
+                if ($this->isSuperfluousEvent($subscription, $event->type)) {
+                    return;
+                }
+
+                $stripeSubscriptionStatus = $event->data->object->status;
+                $subscriptionStatus = $this->mapStripeSubscriptionStatusToSubscriptionStatus($stripeSubscriptionStatus);
+                $endsAt = $event->data->object->current_period_end;
+                $endsAt = Carbon::createFromTimestampUTC($endsAt)->toDateTimeString();
+                $trialEndsAt = $event->data->object->trial_end ? Carbon::createFromTimestampUTC($event->data->object->trial_end)->toDateTimeString() : null;
+                $cancelledAt = $event->data->object->canceled_at ? Carbon::createFromTimestampUTC($event->data->object->canceled_at)->toDateTimeString() : null;
+
+                $this->subscriptionManager->updateSubscription($subscription, [
+                    'type' => SubscriptionType::PAYMENT_PROVIDER_MANAGED,
+                    'status' => $subscriptionStatus,
+                    'ends_at' => $endsAt,
+                    'payment_provider_subscription_id' => $event->data->object->id,
+                    'payment_provider_status' => $event->data->object->status,
+                    'payment_provider_id' => $paymentProvider->id,
+                    'trial_ends_at' => $trialEndsAt,
+                    'cancelled_at' => $cancelledAt,
+                ]);
+            });
+
         } elseif ($event->type == 'customer.subscription.trial_will_end') {
             // TODO send email to user
 
@@ -324,5 +335,20 @@ class StripeWebhookHandler
         ]);
 
         return $paymentIntent?->latest_charge?->balance_transaction?->fee ?? 0;
+    }
+
+    private function isSuperfluousEvent(Subscription $subscription, string $eventType): bool
+    {
+        // Stripe events can arrive out of order, so the "updated" event can arrive before the "created" event, so we want to make
+        // sure that if the subscription is already active, we need to skip the "created" event.
+
+        if ($subscription->type === SubscriptionType::PAYMENT_PROVIDER_MANAGED &&
+            $subscription->status == SubscriptionStatus::ACTIVE->value &&
+            $eventType == 'customer.subscription.created'
+        ) {
+            return true;
+        }
+
+        return false;
     }
 }
