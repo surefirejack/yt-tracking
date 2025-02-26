@@ -15,13 +15,12 @@ use App\Models\UserSubscriptionTrial;
 use App\Services\SubscriptionManager;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Str;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\Feature\FeatureTest;
 
 class SubscriptionManagerTest extends FeatureTest
 {
-    /**
-     * @dataProvider nonDeadSubscriptionProvider
-     */
+    #[DataProvider('nonDeadSubscriptionProvider')]
     public function test_can_only_create_subscription_if_no_other_non_dead_subscription_exists($status)
     {
         $user = $this->createUser();
