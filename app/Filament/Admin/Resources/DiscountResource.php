@@ -15,9 +15,12 @@ class DiscountResource extends Resource
 {
     protected static ?string $model = Discount::class;
 
-    protected static ?string $navigationGroup = 'Product Management';
-
     protected static ?int $navigationSort = 3;
+
+    public static function getNavigationGroup(): ?string
+    {
+        return __('Product Management');
+    }
 
     public static function form(Form $form): Form
     {

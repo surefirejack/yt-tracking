@@ -19,9 +19,12 @@ class PlanResource extends Resource
 {
     protected static ?string $model = Plan::class;
 
-    protected static ?string $navigationGroup = 'Product Management';
-
     protected static ?int $navigationSort = 2;
+
+    public static function getNavigationGroup(): ?string
+    {
+        return __('Product Management');
+    }
 
     public static function form(Form $form): Form
     {
