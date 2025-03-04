@@ -14,7 +14,10 @@ class AnnouncementResource extends Resource
 {
     protected static ?string $model = Announcement::class;
 
-    protected static ?string $navigationGroup = 'Announcements';
+    public static function getNavigationGroup(): ?string
+    {
+        return __('Announcements');
+    }
 
     public static function form(Form $form): Form
     {

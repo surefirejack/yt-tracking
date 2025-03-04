@@ -16,7 +16,10 @@ class VerificationProviderResource extends Resource
 {
     protected static ?string $model = VerificationProvider::class;
 
-    protected static ?string $navigationGroup = 'Settings';
+    public static function getNavigationGroup(): ?string
+    {
+        return __('Settings');
+    }
 
     public static function form(Form $form): Form
     {

@@ -17,7 +17,10 @@ class OneTimeProductResource extends Resource
 {
     protected static ?string $model = OneTimeProduct::class;
 
-    protected static ?string $navigationGroup = 'Product Management';
+    public static function getNavigationGroup(): ?string
+    {
+        return __('Product Management');
+    }
 
     public static function form(Form $form): Form
     {

@@ -33,9 +33,12 @@ class SubscriptionResource extends Resource
 {
     protected static ?string $model = Subscription::class;
 
-    protected static ?string $navigationGroup = 'Revenue';
-
     protected static array $cachedSubscriptionHistoryComponents = [];
+
+    public static function getNavigationGroup(): ?string
+    {
+        return __('Revenue');
+    }
 
     public static function form(Form $form): Form
     {

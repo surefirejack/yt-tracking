@@ -30,7 +30,7 @@
                     <x-link.social-icon name="instagram" title="{{ __('Instagram page') }}" link="{{config('app.social_links.instagram')}}" class="text-primary-100 border-primary-200 hover:text-primary-50"/>
                 @endif
                 @if (!empty(config('app.social_links.youtube')))
-                    <x-link.social-icon name="youtube" title="{{ __('YouTube page') }}" link="{{config('app.social_links.youtube')}}" class="text-primary-100 border-primary-200 hover:text-primary-50"/>
+                    <x-link.social-icon name="youtube" title="{{ __('YouTube channel') }}" link="{{config('app.social_links.youtube')}}" class="text-primary-100 border-primary-200 hover:text-primary-50"/>
                 @endif
                 @if (!empty(config('app.social_links.x')))
                     <x-link.social-icon name="x" title="{{ __('Twitter page') }}" link="{{config('app.social_links.x')}}" class="text-primary-100 border-primary-200 hover:text-primary-50"/>
