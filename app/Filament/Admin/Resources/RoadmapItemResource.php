@@ -19,9 +19,12 @@ class RoadmapItemResource extends Resource
 {
     protected static ?string $model = RoadmapItem::class;
 
-    protected static ?string $navigationGroup = 'Roadmap';
-
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+
+    public static function getNavigationGroup(): ?string
+    {
+        return __('Roadmap');
+    }
 
     public static function form(Form $form): Form
     {
