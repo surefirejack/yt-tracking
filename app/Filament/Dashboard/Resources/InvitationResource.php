@@ -23,7 +23,10 @@ class InvitationResource extends Resource
 {
     protected static ?string $model = Invitation::class;
 
-    protected static ?string $navigationGroup = 'Team';
+    public static function getNavigationGroup(): ?string
+    {
+        return __('Team');
+    }
 
     public static function form(Form $form): Form
     {

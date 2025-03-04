@@ -9,9 +9,12 @@ use Filament\Pages\Page;
 
 class Team extends Page
 {
-    protected static ?string $navigationGroup = 'Team';
-
     protected static string $view = 'filament.dashboard.pages.team';
+
+    public static function getNavigationGroup(): ?string
+    {
+        return __('Team');
+    }
 
     public static function getNavigationLabel(): string
     {

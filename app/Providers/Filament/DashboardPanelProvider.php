@@ -97,7 +97,7 @@ class DashboardPanelProvider extends PanelProvider
             })
             ->navigationGroups([
                 NavigationGroup::make()
-                    ->label('Team')
+                    ->label(__('Team'))
                     ->icon('heroicon-s-users')
                     ->collapsed(),
             ])
