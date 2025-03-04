@@ -65,35 +65,35 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->navigationGroups([
                 NavigationGroup::make()
-                    ->label('Revenue')
+                    ->label(__('Revenue'))
                     ->icon('heroicon-s-rocket-launch')
                     ->collapsed(),
                 NavigationGroup::make()
-                    ->label('Tenancy')
+                    ->label(__('Tenancy'))
                     ->icon('heroicon-s-home')
                     ->collapsed(),
                 NavigationGroup::make()
-                    ->label('Product Management')
+                    ->label(__('Product Management'))
                     ->icon('heroicon-s-shopping-cart')
                     ->collapsed(),
                 NavigationGroup::make()
-                    ->label('User Management')
+                    ->label(__('User Management'))
                     ->icon('heroicon-s-users')
                     ->collapsed(),
                 NavigationGroup::make()
-                    ->label('Settings')
+                    ->label(__('Settings'))
                     ->icon('heroicon-s-cog')
                     ->collapsed(),
                 NavigationGroup::make()
-                    ->label('Announcements')
+                    ->label(__('Announcements'))
                     ->icon('heroicon-s-megaphone')
                     ->collapsed(),
                 NavigationGroup::make()
-                    ->label('Blog')
+                    ->label(__('Blog'))
                     ->icon('heroicon-s-newspaper')
                     ->collapsed(),
                 NavigationGroup::make()
-                    ->label('Roadmap')
+                    ->label(__('Roadmap'))
                     ->icon('heroicon-s-bug-ant')
                     ->collapsed(),
             ])

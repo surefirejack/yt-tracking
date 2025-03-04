@@ -16,7 +16,10 @@ class PaymentProviderResource extends Resource
 {
     protected static ?string $model = PaymentProvider::class;
 
-    protected static ?string $navigationGroup = 'Settings';
+    public static function getNavigationGroup(): ?string
+    {
+        return __('Settings');
+    }
 
     public static function form(Form $form): Form
     {
