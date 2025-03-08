@@ -3,9 +3,9 @@
 namespace Tests\Feature\Services;
 
 use App\Constants\TenancyPermissionConstants;
+use App\Models\Permission;
+use App\Models\Role;
 use App\Services\TenantPermissionManager;
-use Spatie\Permission\Models\Permission;
-use Spatie\Permission\Models\Role;
 use Tests\Feature\FeatureTest;
 
 class TenantPermissionManagerTest extends FeatureTest

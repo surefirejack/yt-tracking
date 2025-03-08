@@ -3,14 +3,14 @@
 namespace App\Filament\Admin\Resources;
 
 use App\Constants\TenancyPermissionConstants;
+use App\Models\Permission;
+use App\Models\Role;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Model;
-use Spatie\Permission\Models\Permission;
-use Spatie\Permission\Models\Role;
 
 class RoleResource extends Resource
 {
