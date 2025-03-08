@@ -18,6 +18,7 @@ class Tenant extends Model
         'uuid',
         'is_name_auto_generated',
         'created_by',
+        'domain',
     ];
 
     public function invitations(): HasMany

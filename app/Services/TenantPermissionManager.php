@@ -3,11 +3,11 @@
 namespace App\Services;
 
 use App\Constants\TenancyPermissionConstants;
+use App\Models\Role;
 use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
-use Spatie\Permission\Models\Role;
 
 class TenantPermissionManager
 {
