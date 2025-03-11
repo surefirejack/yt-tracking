@@ -8,8 +8,6 @@ document.addEventListener('DOMContentLoaded', function () {
     assignTabSliderEvents();
 });
 
-Alpine.start();
-
 function assignTabSliderEvents() {
     // do that for each .tab-slider
     let tabSliders = document.querySelectorAll(".tab-slider")
