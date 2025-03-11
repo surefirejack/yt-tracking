@@ -26,3 +26,4 @@
 
 @stack('head')
 
+@livewireStyles
