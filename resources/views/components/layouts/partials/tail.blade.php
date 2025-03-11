@@ -10,3 +10,4 @@
     @include('cookie-consent::index')
 @endif
 
+@livewireScripts
