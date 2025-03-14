@@ -15,6 +15,7 @@ use App\Models\Subscription;
 use App\Models\User;
 use App\Services\PlanManager;
 use App\Services\SubscriptionManager;
+use App\Services\TenantCreationManager;
 use Carbon\Carbon;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -161,14 +162,17 @@ class SubscriptionResource extends Resource
                             ->helperText(__('The date when the subscription will end.'))
                             ->required(),
                     ])
-                    ->action(function (array $data, SubscriptionManager $subscriptionManager, PlanManager $planManager) {
+                    ->action(function (array $data, SubscriptionManager $subscriptionManager, PlanManager $planManager, TenantCreationManager $tenantCreationManager) {
                         $user = User::find($data['user_id']);
                         $plan = $planManager->getActivePlanById($data['plan_id']);
+                        $tenant = $tenantCreationManager->createTenant($user);
 
                         try {
                             $subscriptionManager->create(
                                 $plan->slug,
                                 $user->id,
+                                quantity: 1,
+                                tenant: $tenant,
                                 localSubscription: true,
                                 endsAt: Carbon::parse($data['ends_at'])
                             );
