@@ -5,7 +5,7 @@ namespace App\Services;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 
-class UserManager
+class UserService
 {
     public function createUser(array $data): User
     {

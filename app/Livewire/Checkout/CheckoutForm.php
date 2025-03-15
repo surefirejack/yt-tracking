@@ -5,9 +5,9 @@ namespace App\Livewire\Checkout;
 use App\Exceptions\LoginException;
 use App\Exceptions\NoPaymentProvidersAvailableException;
 use App\Models\User;
-use App\Services\LoginManager;
-use App\Services\PaymentProviders\PaymentManager;
-use App\Services\UserManager;
+use App\Services\LoginService;
+use App\Services\PaymentProviders\PaymentService;
+use App\Services\UserService;
 use App\Validator\LoginValidator;
 use App\Validator\RegisterValidator;
 use Illuminate\Validation\ValidationException;
@@ -34,25 +34,25 @@ class CheckoutForm extends Component
         $this->intro = $intro;
     }
 
-    public function render(PaymentManager $paymentManager)
+    public function render(PaymentService $paymentService)
     {
         return view('livewire.checkout.checkout-form', [
             'userExists' => $this->userExists($this->email),
-            'paymentProviders' => $this->getPaymentProviders($paymentManager),
+            'paymentProviders' => $this->getPaymentProviders($paymentService),
         ]);
     }
 
     public function handleLoginOrRegistration(
         LoginValidator $loginValidator,
         RegisterValidator $registerValidator,
-        UserManager $userManager,
-        LoginManager $loginManager,
+        UserService $userService,
+        LoginService $loginService,
     ) {
         if (! auth()->check()) {
             if ($this->userExists($this->email)) {
-                $this->loginUser($loginValidator, $loginManager);
+                $this->loginUser($loginValidator, $loginService);
             } else {
-                $this->registerUser($registerValidator, $userManager);
+                $this->registerUser($registerValidator, $userService);
             }
         }
 
@@ -70,7 +70,7 @@ class CheckoutForm extends Component
 
     }
 
-    protected function loginUser(LoginValidator $loginValidator, LoginManager $loginManager)
+    protected function loginUser(LoginValidator $loginValidator, LoginService $loginService)
     {
         $fields = [
             'email' => $this->email,
@@ -89,7 +89,7 @@ class CheckoutForm extends Component
         }
 
         try {
-            $result = $loginManager->attempt([
+            $result = $loginService->attempt([
                 'email' => $this->email,
                 'password' => $this->password,
             ], true);
@@ -105,7 +105,7 @@ class CheckoutForm extends Component
         }
     }
 
-    protected function registerUser(RegisterValidator $registerValidator, UserManager $userManager)
+    protected function registerUser(RegisterValidator $registerValidator, UserService $userService)
     {
         $fields = [
             'name' => $this->name,
@@ -124,7 +124,7 @@ class CheckoutForm extends Component
             throw new ValidationException($validator);
         }
 
-        $user = $userManager->createUser([
+        $user = $userService->createUser([
             'name' => $this->name,
             'email' => $this->email,
             'password' => $this->password,
@@ -144,13 +144,13 @@ class CheckoutForm extends Component
         return User::where('email', $email)->exists();
     }
 
-    protected function getPaymentProviders(PaymentManager $paymentManager)
+    protected function getPaymentProviders(PaymentService $paymentService)
     {
         if (count($this->paymentProviders) > 0) {
             return $this->paymentProviders;
         }
 
-        $this->paymentProviders = $paymentManager->getActivePaymentProviders();
+        $this->paymentProviders = $paymentService->getActivePaymentProviders();
 
         if (empty($this->paymentProviders)) {
             logger()->error('No payment providers available');

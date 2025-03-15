@@ -3,12 +3,12 @@
 namespace Tests\Feature\Services;
 
 use App\Constants\ConfigConstants;
-use App\Services\ConfigManager;
+use App\Services\ConfigService;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Config;
 use Tests\Feature\FeatureTest;
 
-class ConfigManagerTest extends FeatureTest
+class ConfigServiceTest extends FeatureTest
 {
     public function test_load_configs()
     {
@@ -22,27 +22,27 @@ class ConfigManagerTest extends FeatureTest
             'app.support_email' => 'test@test.com',
         ]);
 
-        $configManager = new ConfigManager;
+        $configService = new ConfigService;
 
-        $configManager->loadConfigs();
+        $configService->loadConfigs();
     }
 
     public function test_set_not_allowed()
     {
-        $configManager = new ConfigManager;
+        $configService = new ConfigService;
 
         $this->expectException(\Exception::class);
 
-        $configManager->set('not_allowed_key', 'http://localhost');
+        $configService->set('not_allowed_key', 'http://localhost');
     }
 
     public function test_set()
     {
-        $configManager = new ConfigManager;
+        $configService = new ConfigService;
 
         Cache::shouldReceive('forever')->once()->with('app.name', 'SaaSyKit');
 
-        $configManager->set('app.name', 'SaaSyKit');
+        $configService->set('app.name', 'SaaSyKit');
 
         $configInDb = \App\Models\Config::where('key', 'app.name')->first();
 
@@ -51,11 +51,11 @@ class ConfigManagerTest extends FeatureTest
 
     public function test_set_encrypted_config()
     {
-        $configManager = new ConfigManager;
+        $configService = new ConfigService;
 
         Cache::shouldReceive('forever')->once()->with('services.ses.secret', 'secret');
 
-        $configManager->set('services.ses.secret', 'secret');
+        $configService->set('services.ses.secret', 'secret');
 
         $configInDb = \App\Models\Config::where('key', 'services.ses.secret')->first();
 
@@ -64,19 +64,19 @@ class ConfigManagerTest extends FeatureTest
 
     public function test_get()
     {
-        $configManager = new ConfigManager;
+        $configService = new ConfigService;
 
-        $configManager->set('app.default_currency', 'EUR');
+        $configService->set('app.default_currency', 'EUR');
 
-        $this->assertEquals('EUR', $configManager->get('app.default_currency'));
+        $this->assertEquals('EUR', $configService->get('app.default_currency'));
     }
 
     public function test_get_encrypted_config()
     {
-        $configManager = new ConfigManager;
+        $configService = new ConfigService;
 
-        $configManager->set('services.ses.secret', 'secret');
+        $configService->set('services.ses.secret', 'secret');
 
-        $this->assertEquals('secret', $configManager->get('services.ses.secret'));
+        $this->assertEquals('secret', $configService->get('services.ses.secret'));
     }
 }

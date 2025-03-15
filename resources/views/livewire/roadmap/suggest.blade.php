@@ -7,7 +7,6 @@
 
         <div>
             <select class="select select-bordered w-full max-w-xs" wire:model="form.type">
-                // loop over the RoadmapItem::TYPES
                 @foreach(\App\Constants\RoadmapItemType::cases() as $type)
                     <option value="{{ $type }}">{{ \App\Mapper\RoadmapMapper::mapTypeForDisplay($type) }}</option>
                 @endforeach

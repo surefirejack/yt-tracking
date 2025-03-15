@@ -14,10 +14,10 @@ use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
-class OrderManager
+class OrderService
 {
     public function __construct(
-        private CalculationManager $calculationManager,
+        private CalculationService $calculationService,
     ) {}
 
     public function create(
@@ -156,7 +156,7 @@ class OrderManager
 
             $order->refresh();
 
-            $this->calculationManager->calculateOrderTotals($order, auth()->user(), $cartDto->discountCode);
+            $this->calculationService->calculateOrderTotals($order, auth()->user(), $cartDto->discountCode);
 
             $order->save();
         });

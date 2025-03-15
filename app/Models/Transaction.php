@@ -3,7 +3,7 @@
 namespace App\Models;
 
 use App\Constants\TransactionStatus;
-use App\Services\InvoiceManager;
+use App\Services\InvoiceService;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -40,11 +40,11 @@ class Transaction extends Model
         // in a chronological order with invoice serial number is important, so we make sure a placeholder is created
         // even if the invoice is not rendered yet
         static::created(function (Transaction $transaction) {
-            /** @var InvoiceManager $invoiceManager */
-            $invoiceManager = app(InvoiceManager::class);
+            /** @var InvoiceService $invoiceService */
+            $invoiceService = app(InvoiceService::class);
             if ($transaction->status == TransactionStatus::SUCCESS->value) {
                 try {
-                    $invoiceManager->addInvoicePlaceholderForTransaction($transaction);
+                    $invoiceService->addInvoicePlaceholderForTransaction($transaction);
                 } catch (\Exception $e) {
                     Log::error($e->getMessage());
                 }
@@ -52,11 +52,11 @@ class Transaction extends Model
         });
 
         static::updated(function (Transaction $transaction) {
-            /** @var InvoiceManager $invoiceManager */
-            $invoiceManager = app(InvoiceManager::class);
+            /** @var InvoiceService $invoiceService */
+            $invoiceService = app(InvoiceService::class);
             if ($transaction->status == TransactionStatus::SUCCESS->value) {
                 try {
-                    $invoiceManager->addInvoicePlaceholderForTransaction($transaction);
+                    $invoiceService->addInvoicePlaceholderForTransaction($transaction);
                 } catch (\Exception $e) {
                     Log::error($e->getMessage());
                 }

@@ -5,9 +5,9 @@ namespace App\Livewire\Checkout;
 use App\Dto\CartDto;
 use App\Dto\TotalsDto;
 use App\Models\OneTimeProduct;
-use App\Services\CalculationManager;
-use App\Services\DiscountManager;
-use App\Services\SessionManager;
+use App\Services\CalculationService;
+use App\Services\DiscountService;
+use App\Services\SessionService;
 use Livewire\Attributes\On;
 use Livewire\Component;
 
@@ -27,17 +27,17 @@ class ProductTotals extends Component
 
     public $code;
 
-    private DiscountManager $discountManager;
+    private DiscountService $discountService;
 
-    private CalculationManager $calculationManager;
+    private CalculationService $calculationService;
 
-    private SessionManager $sessionManager;
+    private SessionService $sessionService;
 
-    public function boot(DiscountManager $discountManager, CalculationManager $calculationManager, SessionManager $sessionManager)
+    public function boot(DiscountService $discountService, CalculationService $calculationService, SessionService $sessionService)
     {
-        $this->discountManager = $discountManager;
-        $this->calculationManager = $calculationManager;
-        $this->sessionManager = $sessionManager;
+        $this->discountService = $discountService;
+        $this->calculationService = $calculationService;
+        $this->sessionService = $sessionService;
     }
 
     public function mount(TotalsDto $totals, OneTimeProduct $product, $page)
@@ -52,12 +52,12 @@ class ProductTotals extends Component
 
     private function getCartDto(): ?CartDto
     {
-        return $this->sessionManager->getCartDto();
+        return $this->sessionService->getCartDto();
     }
 
     private function saveCartDto(CartDto $cartDto): void
     {
-        $this->sessionManager->saveCartDto($cartDto);
+        $this->sessionService->saveCartDto($cartDto);
     }
 
     public function add()
@@ -70,7 +70,7 @@ class ProductTotals extends Component
             return;
         }
 
-        $isRedeemable = $this->discountManager->isCodeRedeemableForOneTimeProduct($code, auth()->user(), $this->product);
+        $isRedeemable = $this->discountService->isCodeRedeemableForOneTimeProduct($code, auth()->user(), $this->product);
 
         if (! $isRedeemable) {
             session()->flash('error', __('This discount code is invalid.'));
@@ -102,7 +102,7 @@ class ProductTotals extends Component
     #[On('calculations-updated')]
     public function updateTotals()
     {
-        $totals = $this->calculationManager->calculateCartTotals(
+        $totals = $this->calculationService->calculateCartTotals(
             $this->getCartDto(),
             auth()->user()
         );

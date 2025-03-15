@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
-use App\Services\LoginManager;
+use App\Services\LoginService;
 use App\Validator\LoginValidator;
 use Illuminate\Foundation\Auth\AuthenticatesUsers;
 use Illuminate\Http\Request;
@@ -33,7 +33,7 @@ class LoginController extends Controller
 
     public function __construct(
         private LoginValidator $loginValidator,
-        private LoginManager $loginManager,
+        private LoginService $loginService,
     ) {
         $this->middleware('guest')->except('logout');
     }
@@ -70,6 +70,6 @@ class LoginController extends Controller
 
     protected function attemptLogin(Request $request)
     {
-        return $this->loginManager->attempt($this->credentials($request), $request->boolean('remember'));
+        return $this->loginService->attempt($this->credentials($request), $request->boolean('remember'));
     }
 }

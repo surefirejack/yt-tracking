@@ -3,7 +3,7 @@
 namespace App\Filament\Admin\Widgets;
 
 use App\Models\Currency;
-use App\Services\MetricsManager;
+use App\Services\MetricsService;
 use Filament\Support\RawJs;
 use Filament\Widgets\ChartWidget;
 use Filament\Widgets\Concerns\InteractsWithPageFilters;
@@ -28,9 +28,9 @@ class MonthlyRecurringRevenueChart extends ChartWidget
         $startDate = $startDate ? Carbon::parse($startDate) : null;
         $endDate = $endDate ? Carbon::parse($endDate) : null;
 
-        $metricsManager = resolve(MetricsManager::class);
+        $metricsService = resolve(MetricsService::class);
 
-        $data = $metricsManager->calculateMRRChart($period, $startDate, $endDate);
+        $data = $metricsService->calculateMRRChart($period, $startDate, $endDate);
 
         return [
             'datasets' => [

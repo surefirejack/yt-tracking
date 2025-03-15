@@ -2,7 +2,7 @@
 
 namespace App\Livewire\Roadmap;
 
-use App\Services\RoadmapManager;
+use App\Services\RoadmapService;
 use Livewire\Attributes\Url;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -14,28 +14,28 @@ class All extends Component
     #[Url]
     public $done = false;
 
-    public function render(RoadmapManager $roadmapManager)
+    public function render(RoadmapService $roadmapService)
     {
         return view('livewire.roadmap.all', [
-            'items' => $this->done ? $roadmapManager->getCompleted() : $roadmapManager->getAll(),
+            'items' => $this->done ? $roadmapService->getCompleted() : $roadmapService->getAll(),
         ]);
     }
 
-    public function upvote(int $id, RoadmapManager $roadmapManager)
+    public function upvote(int $id, RoadmapService $roadmapService)
     {
         if (! auth()->check()) {
             return redirect()->route('login');
         }
 
-        $roadmapManager->upvote($id);
+        $roadmapService->upvote($id);
     }
 
-    public function removeUpvote(int $id, RoadmapManager $roadmapManager)
+    public function removeUpvote(int $id, RoadmapService $roadmapService)
     {
         if (! auth()->check()) {
             return redirect()->route('login');
         }
 
-        $roadmapManager->removeUpvote($id);
+        $roadmapService->removeUpvote($id);
     }
 }

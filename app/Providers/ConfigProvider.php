@@ -2,7 +2,7 @@
 
 namespace App\Providers;
 
-use App\Services\ConfigManager;
+use App\Services\ConfigService;
 use Illuminate\Support\ServiceProvider;
 
 class ConfigProvider extends ServiceProvider
@@ -18,10 +18,10 @@ class ConfigProvider extends ServiceProvider
     /**
      * Bootstrap services.
      */
-    public function boot(ConfigManager $configManager): void
+    public function boot(ConfigService $configService): void
     {
         try {
-            $configManager->loadConfigs();
+            $configService->loadConfigs();
         } catch (\Exception $e) {
             // We don't want to throw an exception if the database is not yet migrated
         }

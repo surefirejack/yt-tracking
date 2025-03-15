@@ -2,26 +2,26 @@
 
 namespace App\Http\Controllers;
 
-use App\Services\CalculationManager;
-use App\Services\PaymentProviders\PaymentManager;
-use App\Services\PlanManager;
-use App\Services\SubscriptionManager;
+use App\Services\CalculationService;
+use App\Services\PaymentProviders\PaymentService;
+use App\Services\PlanService;
+use App\Services\SubscriptionService;
 use Illuminate\Http\Request;
 
 class SubscriptionController extends Controller
 {
     public function __construct(
-        private PlanManager $planManager,
-        private SubscriptionManager $subscriptionManager,
-        private PaymentManager $paymentManager,
-        private CalculationManager $calculationManager,
+        private PlanService $planService,
+        private SubscriptionService $subscriptionService,
+        private PaymentService $paymentService,
+        private CalculationService $calculationService,
     ) {}
 
     public function changePlan(string $subscriptionUuid, string $newPlanSlug, Request $request)
     {
         $user = auth()->user();
 
-        $userSubscription = $this->subscriptionManager->findActiveByUserAndSubscriptionUuid($user->id, $subscriptionUuid);
+        $userSubscription = $this->subscriptionService->findActiveByUserAndSubscriptionUuid($user->id, $subscriptionUuid);
 
         if (! $userSubscription) {
             return redirect()->back()->with('error', __('You do not have an active subscription.'));
@@ -37,22 +37,22 @@ class SubscriptionController extends Controller
             return redirect()->back()->with('error', __('Error finding payment provider.'));
         }
 
-        $paymentProviderStrategy = $this->paymentManager->getPaymentProviderBySlug(
+        $paymentProviderStrategy = $this->paymentService->getPaymentProviderBySlug(
             $paymentProvider->slug
         );
 
-        $newPlan = $this->planManager->getActivePlanBySlug($newPlanSlug);
+        $newPlan = $this->planService->getActivePlanBySlug($newPlanSlug);
 
         $isProrated = config('app.payment.proration_enabled', true);
 
-        $totals = $this->calculationManager->calculateNewPlanTotals(
+        $totals = $this->calculationService->calculateNewPlanTotals(
             $user,
             $newPlanSlug,
             $isProrated,
         );
 
         if ($request->isMethod('post')) {
-            $result = $this->subscriptionManager->changePlan($userSubscription, $paymentProviderStrategy, $newPlanSlug, $isProrated);
+            $result = $this->subscriptionService->changePlan($userSubscription, $paymentProviderStrategy, $newPlanSlug, $isProrated);
 
             if ($result) {
                 return redirect()->route('subscription.change-plan.thank-you');

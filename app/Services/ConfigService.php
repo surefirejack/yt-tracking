@@ -5,7 +5,7 @@ namespace App\Services;
 use App\Constants\ConfigConstants;
 use App\Models\Config;
 
-class ConfigManager
+class ConfigService
 {
     public function loadConfigs()
     {

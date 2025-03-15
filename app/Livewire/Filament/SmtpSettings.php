@@ -2,7 +2,7 @@
 
 namespace App\Livewire\Filament;
 
-use App\Services\ConfigManager;
+use App\Services\ConfigService;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Concerns\InteractsWithForms;
@@ -13,7 +13,7 @@ use Livewire\Component;
 
 class SmtpSettings extends Component implements HasForms
 {
-    private ConfigManager $configManager;
+    private ConfigService $configService;
 
     protected string $slug = 'smtp';
 
@@ -21,9 +21,9 @@ class SmtpSettings extends Component implements HasForms
 
     public ?array $data = [];
 
-    public function boot(ConfigManager $configManager): void
+    public function boot(ConfigService $configService): void
     {
-        $this->configManager = $configManager;
+        $this->configService = $configService;
     }
 
     public function render()
@@ -34,10 +34,10 @@ class SmtpSettings extends Component implements HasForms
     public function mount(): void
     {
         $this->form->fill([
-            'host' => $this->configManager->get('mail.mailers.smtp.host'),
-            'port' => $this->configManager->get('mail.mailers.smtp.port'),
-            'username' => $this->configManager->get('mail.mailers.smtp.username'),
-            'password' => $this->configManager->get('mail.mailers.smtp.password'),
+            'host' => $this->configService->get('mail.mailers.smtp.host'),
+            'port' => $this->configService->get('mail.mailers.smtp.port'),
+            'username' => $this->configService->get('mail.mailers.smtp.username'),
+            'password' => $this->configService->get('mail.mailers.smtp.password'),
         ]);
     }
 
@@ -65,10 +65,10 @@ class SmtpSettings extends Component implements HasForms
     {
         $data = $this->form->getState();
 
-        $this->configManager->set('mail.mailers.smtp.host', $data['host']);
-        $this->configManager->set('mail.mailers.smtp.port', $data['port']);
-        $this->configManager->set('mail.mailers.smtp.username', $data['username']);
-        $this->configManager->set('mail.mailers.smtp.password', $data['password']);
+        $this->configService->set('mail.mailers.smtp.host', $data['host']);
+        $this->configService->set('mail.mailers.smtp.port', $data['port']);
+        $this->configService->set('mail.mailers.smtp.username', $data['username']);
+        $this->configService->set('mail.mailers.smtp.password', $data['password']);
 
         Notification::make()
             ->title(__('Settings Saved'))

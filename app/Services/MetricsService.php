@@ -15,7 +15,7 @@ use App\Models\User;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
-class MetricsManager
+class MetricsService
 {
     public function beat()
     {

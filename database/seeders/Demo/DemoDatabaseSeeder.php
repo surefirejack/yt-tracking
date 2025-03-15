@@ -15,7 +15,7 @@ use App\Models\PaymentProvider;
 use App\Models\Plan;
 use App\Models\Product;
 use App\Models\User;
-use App\Services\MetricsManager;
+use App\Services\MetricsService;
 use Carbon\Carbon;
 use Database\Seeders\DatabaseSeeder;
 use Illuminate\Database\Seeder;
@@ -24,7 +24,7 @@ use Illuminate\Support\Str;
 class DemoDatabaseSeeder extends Seeder
 {
     public function __construct(
-        private MetricsManager $metricsManager
+        private MetricsService $metricsManager
     ) {}
 
     private array $blogPostTitles = [

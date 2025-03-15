@@ -2,7 +2,7 @@
 
 namespace App\Livewire\Filament;
 
-use App\Services\ConfigManager;
+use App\Services\ConfigService;
 use Filament\Forms\Components\Actions;
 use Filament\Forms\Components\Actions\Action;
 use Filament\Forms\Components\Section;
@@ -17,7 +17,7 @@ use Livewire\Component;
 
 class InvoiceSettings extends Component implements HasForms
 {
-    private ConfigManager $configManager;
+    private ConfigService $configService;
 
     use InteractsWithForms;
 
@@ -28,21 +28,21 @@ class InvoiceSettings extends Component implements HasForms
         return view('livewire.filament.invoice-settings');
     }
 
-    public function boot(ConfigManager $configManager): void
+    public function boot(ConfigService $configService): void
     {
-        $this->configManager = $configManager;
+        $this->configService = $configService;
     }
 
     public function mount(): void
     {
         $this->form->fill([
-            'invoices_enabled' => $this->configManager->get('invoices.enabled', false),
-            'serial_number_series' => $this->configManager->get('invoices.serial_number.series', 'INV'),
-            'seller_name' => $this->configManager->get('invoices.seller.attributes.name'),
-            'seller_address' => $this->configManager->get('invoices.seller.attributes.address'),
-            'seller_code' => $this->configManager->get('invoices.seller.attributes.code'),
-            'seller_tax_number' => $this->configManager->get('invoices.seller.attributes.vat'),
-            'seller_phone' => $this->configManager->get('invoices.seller.attributes.phone'),
+            'invoices_enabled' => $this->configService->get('invoices.enabled', false),
+            'serial_number_series' => $this->configService->get('invoices.serial_number.series', 'INV'),
+            'seller_name' => $this->configService->get('invoices.seller.attributes.name'),
+            'seller_address' => $this->configService->get('invoices.seller.attributes.address'),
+            'seller_code' => $this->configService->get('invoices.seller.attributes.code'),
+            'seller_tax_number' => $this->configService->get('invoices.seller.attributes.vat'),
+            'seller_phone' => $this->configService->get('invoices.seller.attributes.phone'),
         ]);
     }
 
@@ -108,13 +108,13 @@ class InvoiceSettings extends Component implements HasForms
     {
         $data = $this->form->getState();
 
-        $this->configManager->set('invoices.enabled', $data['invoices_enabled']);
-        $this->configManager->set('invoices.serial_number.series', $data['serial_number_series']);
-        $this->configManager->set('invoices.seller.attributes.name', $data['seller_name']);
-        $this->configManager->set('invoices.seller.attributes.address', $data['seller_address']);
-        $this->configManager->set('invoices.seller.attributes.code', $data['seller_code']);
-        $this->configManager->set('invoices.seller.attributes.vat', $data['seller_tax_number']);
-        $this->configManager->set('invoices.seller.attributes.phone', $data['seller_phone']);
+        $this->configService->set('invoices.enabled', $data['invoices_enabled']);
+        $this->configService->set('invoices.serial_number.series', $data['serial_number_series']);
+        $this->configService->set('invoices.seller.attributes.name', $data['seller_name']);
+        $this->configService->set('invoices.seller.attributes.address', $data['seller_address']);
+        $this->configService->set('invoices.seller.attributes.code', $data['seller_code']);
+        $this->configService->set('invoices.seller.attributes.vat', $data['seller_tax_number']);
+        $this->configService->set('invoices.seller.attributes.phone', $data['seller_phone']);
 
         Notification::make()
             ->title(__('Settings Saved'))

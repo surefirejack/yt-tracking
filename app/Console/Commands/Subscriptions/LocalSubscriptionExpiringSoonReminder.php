@@ -4,14 +4,14 @@ namespace App\Console\Commands\Subscriptions;
 
 use App\Mail\Subscription\LocalSubscriptionExpiringSoon;
 use App\Models\User;
-use App\Services\SubscriptionManager;
+use App\Services\SubscriptionService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Mail;
 
 class LocalSubscriptionExpiringSoonReminder extends Command
 {
     public function __construct(
-        private SubscriptionManager $subscriptionManager
+        private SubscriptionService $subscriptionService
     ) {
         parent::__construct();
     }
@@ -41,7 +41,7 @@ class LocalSubscriptionExpiringSoonReminder extends Command
         $secondReminderEnabled = config('app.trial_without_payment.second_reminder_enabled');
 
         if ($firstReminderEnabled) {
-            $subscriptions = $this->subscriptionManager->getLocalSubscriptionExpiringIn($firstReminderDays);
+            $subscriptions = $this->subscriptionService->getLocalSubscriptionExpiringIn($firstReminderDays);
 
             foreach ($subscriptions as $subscription) {
                 $user = User::find($subscription->user_id);
@@ -50,7 +50,7 @@ class LocalSubscriptionExpiringSoonReminder extends Command
         }
 
         if ($secondReminderEnabled) {
-            $subscriptions = $this->subscriptionManager->getLocalSubscriptionExpiringIn($secondReminderDays);
+            $subscriptions = $this->subscriptionService->getLocalSubscriptionExpiringIn($secondReminderDays);
 
             foreach ($subscriptions as $subscription) {
                 $user = User::find($subscription->user_id);

@@ -8,7 +8,7 @@ use App\Models\RoadmapItem;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
-class RoadmapManager
+class RoadmapService
 {
     public function getItemBySlug(string $slug)
     {

@@ -4,22 +4,22 @@ namespace App\Filament\Dashboard\Resources\SubscriptionResource\ActionHandlers;
 
 use App\Filament\Dashboard\Resources\SubscriptionResource;
 use App\Models\Subscription;
-use App\Services\PaymentProviders\PaymentManager;
-use App\Services\SubscriptionManager;
+use App\Services\PaymentProviders\PaymentService;
+use App\Services\SubscriptionService;
 use Filament\Notifications\Notification;
 
 class DiscardSubscriptionCancellationActionHandler
 {
     public function __construct(
-        private SubscriptionManager $subscriptionManager,
-        private PaymentManager $paymentManager
+        private SubscriptionService $subscriptionService,
+        private PaymentService $paymentService
     ) {}
 
     public function handle(Subscription $record)
     {
         $user = auth()->user();
 
-        $userSubscription = $this->subscriptionManager->findActiveByUserAndSubscriptionUuid($user->id, $record->uuid);
+        $userSubscription = $this->subscriptionService->findActiveByUserAndSubscriptionUuid($user->id, $record->uuid);
 
         if (! $userSubscription) {
             Notification::make()
@@ -32,11 +32,11 @@ class DiscardSubscriptionCancellationActionHandler
 
         $paymentProvider = $userSubscription->paymentProvider()->first();
 
-        $paymentProviderStrategy = $this->paymentManager->getPaymentProviderBySlug(
+        $paymentProviderStrategy = $this->paymentService->getPaymentProviderBySlug(
             $paymentProvider->slug
         );
 
-        $this->subscriptionManager->discardSubscriptionCancellation($userSubscription, $paymentProviderStrategy);
+        $this->subscriptionService->discardSubscriptionCancellation($userSubscription, $paymentProviderStrategy);
 
         Notification::make()
             ->title(__('Subscription cancellation discarded'))

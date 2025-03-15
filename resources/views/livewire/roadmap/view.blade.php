@@ -1,5 +1,5 @@
 <div>
-    @inject('roadmapManager', 'App\Services\RoadmapManager')
+    @inject('roadmapService', 'App\Services\RoadmapService')
 
     <div class="border border-neutral-200 rounded-lg p-4">
         <div class="flex gap-3">
@@ -23,7 +23,7 @@
         </div>
         <div class="flex flex-col gap-1">
             <p class="py-4 text-neutral-500">
-                {!!  $roadmapManager->prepareForDisplay($item->description) ?? __('No extra description.') !!}
+                {!!  $roadmapService->prepareForDisplay($item->description) ?? __('No extra description.') !!}
             </p>
 
         </div>

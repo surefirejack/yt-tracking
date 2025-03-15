@@ -2,7 +2,7 @@
 
 namespace App\Console\Commands\Configs;
 
-use App\Services\ConfigManager;
+use App\Services\ConfigService;
 use Illuminate\Console\Command;
 
 class ExportConfigs extends Command
@@ -24,9 +24,9 @@ class ExportConfigs extends Command
     /**
      * Execute the console command.
      */
-    public function handle(ConfigManager $configManager)
+    public function handle(ConfigService $configService)
     {
-        $configManager->exportAllConfigs();
+        $configService->exportAllConfigs();
 
         $this->info('Configs exported to cache successfully.');
     }
