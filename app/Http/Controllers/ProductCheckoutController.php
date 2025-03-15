@@ -3,21 +3,21 @@
 namespace App\Http\Controllers;
 
 use App\Dto\CartItemDto;
-use App\Services\DiscountManager;
-use App\Services\OneTimeProductManager;
-use App\Services\SessionManager;
+use App\Services\DiscountService;
+use App\Services\OneTimeProductService;
+use App\Services\SessionService;
 
 class ProductCheckoutController extends Controller
 {
     public function __construct(
-        private DiscountManager $discountManager,
-        private OneTimeProductManager $productManager,
-        private SessionManager $sessionManager,
+        private DiscountService $discountService,
+        private OneTimeProductService $productService,
+        private SessionService $sessionService,
     ) {}
 
     public function productCheckout()
     {
-        $cartDto = $this->sessionManager->getCartDto();
+        $cartDto = $this->sessionService->getCartDto();
 
         if (empty($cartDto->items)) {
             return redirect()->route('home');
@@ -28,9 +28,9 @@ class ProductCheckoutController extends Controller
 
     public function addToCart(string $productSlug, int $quantity = 1)
     {
-        $cartDto = $this->sessionManager->clearCartDto();  // use getCartDto() instead of clearCartDto() when allowing full cart checkout with multiple items
+        $cartDto = $this->sessionService->clearCartDto();  // use getCartDto() instead of clearCartDto() when allowing full cart checkout with multiple items
 
-        $product = $this->productManager->getProductWithPriceBySlug($productSlug);
+        $product = $this->productService->getProductWithPriceBySlug($productSlug);
 
         if ($product === null) {
             abort(404);
@@ -53,7 +53,7 @@ class ProductCheckoutController extends Controller
             if ($item->productId == $product->id) {
                 $item->quantity += $quantity;
                 $item->quantity = min($item->quantity, $product->max_quantity);
-                $this->sessionManager->saveCartDto($cartDto);
+                $this->sessionService->saveCartDto($cartDto);
 
                 return redirect()->route('checkout.product');
             }
@@ -65,24 +65,24 @@ class ProductCheckoutController extends Controller
 
         $cartDto->items[] = $cartItem;
 
-        $this->sessionManager->saveCartDto($cartDto);
+        $this->sessionService->saveCartDto($cartDto);
 
         return redirect()->route('checkout.product');
     }
 
     public function productCheckoutSuccess()
     {
-        $cartDto = $this->sessionManager->getCartDto();
+        $cartDto = $this->sessionService->getCartDto();
 
         if ($cartDto->orderId === null) {
             return redirect()->route('home');
         }
 
         if ($cartDto->discountCode !== null) {
-            $this->discountManager->redeemCodeForOrder($cartDto->discountCode, auth()->user(), $cartDto->orderId);
+            $this->discountService->redeemCodeForOrder($cartDto->discountCode, auth()->user(), $cartDto->orderId);
         }
 
-        $this->sessionManager->clearCartDto();
+        $this->sessionService->clearCartDto();
 
         return view('checkout.product-thank-you');
     }

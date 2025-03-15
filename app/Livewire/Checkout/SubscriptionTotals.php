@@ -5,9 +5,9 @@ namespace App\Livewire\Checkout;
 use App\Dto\SubscriptionCheckoutDto;
 use App\Dto\TotalsDto;
 use App\Models\Plan;
-use App\Services\CalculationManager;
-use App\Services\DiscountManager;
-use App\Services\SessionManager;
+use App\Services\CalculationService;
+use App\Services\DiscountService;
+use App\Services\SessionService;
 use Livewire\Attributes\On;
 use Livewire\Component;
 
@@ -41,20 +41,20 @@ class SubscriptionTotals extends Component
 
     public bool $canAddDiscount = true;
 
-    private DiscountManager $discountManager;
+    private DiscountService $discountService;
 
-    private CalculationManager $calculationManager;
+    private CalculationService $calculationService;
 
-    private SessionManager $sessionManager;
+    private SessionService $sessionService;
 
     public function boot(
-        DiscountManager $discountManager,
-        CalculationManager $calculationManager,
-        SessionManager $sessionManager,
+        DiscountService $discountService,
+        CalculationService $calculationService,
+        SessionService $sessionService,
     ) {
-        $this->discountManager = $discountManager;
-        $this->calculationManager = $calculationManager;
-        $this->sessionManager = $sessionManager;
+        $this->discountService = $discountService;
+        $this->calculationService = $calculationService;
+        $this->sessionService = $sessionService;
     }
 
     public function mount(TotalsDto $totals, Plan $plan, $page, bool $canAddDiscount = true, bool $isTrailSkipped = false)
@@ -76,7 +76,7 @@ class SubscriptionTotals extends Component
 
     public function getCodeFromSession(): ?string
     {
-        return $this->sessionManager->getSubscriptionCheckoutDto()->discountCode;
+        return $this->sessionService->getSubscriptionCheckoutDto()->discountCode;
     }
 
     public function add()
@@ -91,7 +91,7 @@ class SubscriptionTotals extends Component
 
         $plan = Plan::where('slug', $this->planSlug)->where('is_active', true)->firstOrFail();
 
-        $isRedeemable = $this->discountManager->isCodeRedeemableForPlan($code, auth()->user(), $plan);
+        $isRedeemable = $this->discountService->isCodeRedeemableForPlan($code, auth()->user(), $plan);
 
         if (! $isRedeemable) {
             session()->flash('error', __('This discount code is invalid.'));
@@ -100,12 +100,12 @@ class SubscriptionTotals extends Component
         }
 
         /** @var SubscriptionCheckoutDto $subscriptionCheckoutDto */
-        $subscriptionCheckoutDto = $this->sessionManager->getSubscriptionCheckoutDto();
+        $subscriptionCheckoutDto = $this->sessionService->getSubscriptionCheckoutDto();
 
         $subscriptionCheckoutDto->discountCode = $code;
         $subscriptionCheckoutDto->planSlug = $this->planSlug;
 
-        $this->sessionManager->saveSubscriptionCheckoutDto($subscriptionCheckoutDto);
+        $this->sessionService->saveSubscriptionCheckoutDto($subscriptionCheckoutDto);
 
         $this->updateTotals();
 
@@ -114,11 +114,11 @@ class SubscriptionTotals extends Component
 
     public function remove()
     {
-        $subscriptionCheckoutDto = $this->sessionManager->getSubscriptionCheckoutDto();
+        $subscriptionCheckoutDto = $this->sessionService->getSubscriptionCheckoutDto();
 
         $subscriptionCheckoutDto->discountCode = null;
 
-        $this->sessionManager->saveSubscriptionCheckoutDto($subscriptionCheckoutDto);
+        $this->sessionService->saveSubscriptionCheckoutDto($subscriptionCheckoutDto);
 
         session()->flash('success', __('The discount code has been removed.'));
 
@@ -128,9 +128,9 @@ class SubscriptionTotals extends Component
     #[On('calculations-updated')]
     public function updateTotals()
     {
-        $subscriptionCheckoutDto = $this->sessionManager->getSubscriptionCheckoutDto();
+        $subscriptionCheckoutDto = $this->sessionService->getSubscriptionCheckoutDto();
 
-        $totals = $this->calculationManager->calculatePlanTotals(
+        $totals = $this->calculationService->calculatePlanTotals(
             auth()->user(),
             $this->planSlug,
             $subscriptionCheckoutDto->discountCode,

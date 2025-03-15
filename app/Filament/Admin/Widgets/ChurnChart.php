@@ -2,7 +2,7 @@
 
 namespace App\Filament\Admin\Widgets;
 
-use App\Services\MetricsManager;
+use App\Services\MetricsService;
 use Filament\Support\RawJs;
 use Filament\Widgets\ChartWidget;
 use Filament\Widgets\Concerns\InteractsWithPageFilters;
@@ -27,9 +27,9 @@ class ChurnChart extends ChartWidget
         $startDate = $startDate ? Carbon::parse($startDate) : null;
         $endDate = $endDate ? Carbon::parse($endDate) : null;
 
-        $metricsManager = resolve(MetricsManager::class);
+        $metricsService = resolve(MetricsService::class);
 
-        $data = $metricsManager->calculateSubscriptionChurnRateChart($period, $startDate, $endDate);
+        $data = $metricsService->calculateSubscriptionChurnRateChart($period, $startDate, $endDate);
 
         return [
             'datasets' => [

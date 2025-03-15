@@ -16,12 +16,12 @@ use App\Models\PlanPrice;
 use App\Models\Subscription;
 use App\Models\User;
 
-class CalculationManager
+class CalculationService
 {
     public function __construct(
-        private PlanManager $planManager,
-        private DiscountManager $discountManager,
-        private OneTimeProductManager $oneTimeProductManager,
+        private PlanService           $planService,
+        private DiscountService       $discountService,
+        private OneTimeProductService $oneTimeProductService,
     ) {}
 
     /**
@@ -47,13 +47,13 @@ class CalculationManager
 
     public function calculatePlanTotals(?User $user, string $planSlug, ?string $discountCode = null, ?int $quantity = 1, string $actionType = DiscountConstants::ACTION_TYPE_ANY): TotalsDto
     {
-        $plan = $this->planManager->getActivePlanBySlug($planSlug);
+        $plan = $this->planService->getActivePlanBySlug($planSlug);
 
         if ($plan === null) {
             throw new \Exception('Plan not found');
         }
 
-        if ($discountCode !== null && ! $this->discountManager->isCodeRedeemableForPlan($discountCode, $user, $plan, $actionType)) {
+        if ($discountCode !== null && ! $this->discountService->isCodeRedeemableForPlan($discountCode, $user, $plan, $actionType)) {
             throw new \Exception('Discount code is not redeemable');
         }
 
@@ -71,7 +71,7 @@ class CalculationManager
 
         $totalsDto->discountAmount = 0;
         if ($discountCode !== null) {
-            $totalsDto->discountAmount = $this->discountManager->getDiscountAmount($discountCode, $totalsDto->subtotal);
+            $totalsDto->discountAmount = $this->discountService->getDiscountAmount($discountCode, $totalsDto->subtotal);
         }
 
         $totalsDto->amountDue = max(0, $totalsDto->subtotal - $totalsDto->discountAmount);
@@ -85,7 +85,7 @@ class CalculationManager
 
     public function calculateNewPlanTotals(Subscription $subscription, string $planSlug, bool $withProration = false): TotalsDto
     {
-        $newPlan = $this->planManager->getActivePlanBySlug($planSlug);
+        $newPlan = $this->planService->getActivePlanBySlug($planSlug);
 
         if ($newPlan === null) {
             throw new \Exception('Plan not found');
@@ -126,15 +126,15 @@ class CalculationManager
 
         foreach ($cart->items as $item) {
 
-            $product = $this->oneTimeProductManager->getOneTimeProductById($item->productId);
+            $product = $this->oneTimeProductService->getOneTimeProductById($item->productId);
             $productPrice = $product->prices()->where('currency_id', $currency->id)->firstOrFail();
 
             $totalAmount += $productPrice->price * $item->quantity;
 
             $itemDiscountedPrice = $productPrice->price;
             $discountCode = $cart->discountCode;
-            if ($discountCode !== null && $this->discountManager->isCodeRedeemableForOneTimeProduct($discountCode, $user, $product)) {
-                $discountAmount = $this->discountManager->getDiscountAmount($discountCode, $productPrice->price);
+            if ($discountCode !== null && $this->discountService->isCodeRedeemableForOneTimeProduct($discountCode, $user, $product)) {
+                $discountAmount = $this->discountService->getDiscountAmount($discountCode, $productPrice->price);
                 $itemDiscountedPrice = max(0, $productPrice->price - $discountAmount);
             }
 
@@ -167,8 +167,8 @@ class CalculationManager
             $totalAmount += $orderItem->price_per_unit * $orderItem->quantity;
 
             $itemDiscountedPrice = $orderItem->price_per_unit;
-            if ($discountCode !== null && $this->discountManager->isCodeRedeemableForOneTimeProduct($discountCode, $user, $product)) {
-                $discountAmount = $this->discountManager->getDiscountAmount($discountCode, $orderItem->price_per_unit);
+            if ($discountCode !== null && $this->discountService->isCodeRedeemableForOneTimeProduct($discountCode, $user, $product)) {
+                $discountAmount = $this->discountService->getDiscountAmount($discountCode, $orderItem->price_per_unit);
                 $itemDiscountedPrice = max(0, $orderItem->price_per_unit - $discountAmount);
             }
 

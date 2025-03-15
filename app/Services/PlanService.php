@@ -15,7 +15,7 @@ use App\Models\PlanPricePaymentProviderData;
 use App\Models\Product;
 use Illuminate\Support\Collection;
 
-class PlanManager
+class PlanService
 {
     public function getPaymentProviderProductId(Plan $plan, PaymentProvider $paymentProvider): ?string
     {

@@ -4,47 +4,47 @@ namespace App\Livewire\Checkout;
 
 use App\Exceptions\LoginException;
 use App\Exceptions\SubscriptionCreationNotAllowedException;
-use App\Services\CalculationManager;
-use App\Services\CheckoutManager;
-use App\Services\LoginManager;
-use App\Services\PaymentProviders\PaymentManager;
-use App\Services\PlanManager;
-use App\Services\SessionManager;
-use App\Services\SubscriptionManager;
-use App\Services\UserManager;
+use App\Services\CalculationService;
+use App\Services\CheckoutService;
+use App\Services\LoginService;
+use App\Services\PaymentProviders\PaymentService;
+use App\Services\PlanService;
+use App\Services\SessionService;
+use App\Services\SubscriptionService;
+use App\Services\UserService;
 use App\Validator\LoginValidator;
 use App\Validator\RegisterValidator;
 
 class LocalSubscriptionCheckoutForm extends CheckoutForm
 {
-    private PlanManager $planManager;
+    private PlanService $planService;
 
-    private SessionManager $sessionManager;
+    private SessionService $sessionService;
 
-    private CalculationManager $calculationManager;
+    private CalculationService $calculationService;
 
-    private SubscriptionManager $subscriptionManager;
+    private SubscriptionService $subscriptionService;
 
     public function boot(
-        PlanManager $planManager,
-        SessionManager $sessionManager,
-        CalculationManager $calculationManager,
-        SubscriptionManager $subscriptionManager,
+        PlanService $planService,
+        SessionService $sessionService,
+        CalculationService $calculationService,
+        SubscriptionService $subscriptionService,
     ) {
-        $this->planManager = $planManager;
-        $this->sessionManager = $sessionManager;
-        $this->calculationManager = $calculationManager;
-        $this->subscriptionManager = $subscriptionManager;
+        $this->planService = $planService;
+        $this->sessionService = $sessionService;
+        $this->calculationService = $calculationService;
+        $this->subscriptionService = $subscriptionService;
     }
 
-    public function render(PaymentManager $paymentManager)
+    public function render(PaymentService $paymentService)
     {
-        $subscriptionCheckoutDto = $this->sessionManager->getSubscriptionCheckoutDto();
+        $subscriptionCheckoutDto = $this->sessionService->getSubscriptionCheckoutDto();
         $planSlug = $subscriptionCheckoutDto->planSlug;
 
-        $plan = $this->planManager->getActivePlanBySlug($planSlug);
+        $plan = $this->planService->getActivePlanBySlug($planSlug);
 
-        $totals = $this->calculationManager->calculatePlanTotals(
+        $totals = $this->calculationService->calculatePlanTotals(
             auth()->user(),
             $planSlug,
             $subscriptionCheckoutDto?->discountCode,
@@ -61,43 +61,43 @@ class LocalSubscriptionCheckoutForm extends CheckoutForm
     public function checkout(
         LoginValidator $loginValidator,
         RegisterValidator $registerValidator,
-        CheckoutManager $checkoutManager,
-        UserManager $userManager,
-        LoginManager $loginManager,
+        CheckoutService $checkoutService,
+        UserService $userService,
+        LoginService $loginService,
     ) {
         if (! config('app.trial_without_payment.enabled')) {
             return redirect()->route('home');
         }
 
         try {
-            parent::handleLoginOrRegistration($loginValidator, $registerValidator, $userManager, $loginManager);
+            parent::handleLoginOrRegistration($loginValidator, $registerValidator, $userService, $loginService);
         } catch (LoginException $exception) { // 2fa is enabled, user has to go through typical login flow to enter 2fa code
             return redirect()->route('login');
         }
 
-        if (! $this->subscriptionManager->canUserHaveSubscriptionTrial(auth()->user())) {
+        if (! $this->subscriptionService->canUserHaveSubscriptionTrial(auth()->user())) {
             return redirect()->route('home');
         }
 
-        $subscriptionCheckoutDto = $this->sessionManager->getSubscriptionCheckoutDto();
+        $subscriptionCheckoutDto = $this->sessionService->getSubscriptionCheckoutDto();
         $planSlug = $subscriptionCheckoutDto->planSlug;
 
-        $plan = $this->planManager->getActivePlanBySlug($planSlug);
+        $plan = $this->planService->getActivePlanBySlug($planSlug);
 
         if ($plan === null) {
             return redirect()->route('home');
         }
 
         try {
-            $subscription = $checkoutManager->initLocalSubscriptionCheckout($planSlug, $subscriptionCheckoutDto->tenantUuid, $subscriptionCheckoutDto->quantity);
+            $subscription = $checkoutService->initLocalSubscriptionCheckout($planSlug, $subscriptionCheckoutDto->tenantUuid, $subscriptionCheckoutDto->quantity);
         } catch (SubscriptionCreationNotAllowedException $e) {
             return redirect()->route('checkout.subscription.already-subscribed');
         }
 
         $subscriptionCheckoutDto->subscriptionId = $subscription->id;
-        $this->sessionManager->saveSubscriptionCheckoutDto($subscriptionCheckoutDto);
+        $this->sessionService->saveSubscriptionCheckoutDto($subscriptionCheckoutDto);
 
-        if ($this->subscriptionManager->shouldUserVerifyPhoneNumberForTrial(auth()->user())) {
+        if ($this->subscriptionService->shouldUserVerifyPhoneNumberForTrial(auth()->user())) {
             $this->redirect(route('user.phone-verify'));
 
             return;

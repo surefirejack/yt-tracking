@@ -1,6 +1,6 @@
-@inject('roadmapManager', 'App\Services\RoadmapManager')
+@inject('roadmapService', 'App\Services\RoadmapService')
 
-@if ($roadmapManager->hasUserUpvoted($item) && $item->status !== \App\Constants\RoadmapItemStatus::COMPLETED->value)
+@if ($roadmapService->hasUserUpvoted($item) && $item->status !== \App\Constants\RoadmapItemStatus::COMPLETED->value)
     <div class="text-primary-500 border border-neutral-200 h-16 flex flex-col text-center justify-center items-center px-6 py-2 rounded-lg hover:border-primary-200 transition bg-primary-50">
         <a href="#" class="text-primary-500 flex flex-col text-center justify-center items-center" wire:click.prevent="removeUpvote({{$item->id}})" >
             <span>
@@ -15,7 +15,7 @@
         </a>
     </div>
 @else
-    @if ($roadmapManager->isUpvotable($item))
+    @if ($roadmapService->isUpvotable($item))
         <div class="text-primary-500 border border-neutral-200 h-16 flex flex-col text-center justify-center items-center px-6 py-2 rounded-lg hover:border-primary-200 transition">
             <a href="#" class="text-primary-500 flex flex-col text-center justify-center items-center" wire:click.prevent="upvote({{$item->id}})">
                 <span>

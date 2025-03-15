@@ -7,7 +7,7 @@ use App\Dto\CartDto;
 use App\Dto\SmsVerificationDto;
 use App\Dto\SubscriptionCheckoutDto;
 
-class SessionManager
+class SessionService
 {
     public function saveSubscriptionCheckoutDto(SubscriptionCheckoutDto $subscriptionCheckoutDto): void
     {

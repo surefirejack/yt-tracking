@@ -2,13 +2,13 @@
 
 namespace App\Console\Commands\Subscriptions;
 
-use App\Services\SubscriptionManager;
+use App\Services\SubscriptionService;
 use Illuminate\Console\Command;
 
 class CleanupLocalSubscriptionStatuses extends Command
 {
     public function __construct(
-        private SubscriptionManager $subscriptionManager
+        private SubscriptionService $subscriptionService
     ) {
         parent::__construct();
     }
@@ -32,6 +32,6 @@ class CleanupLocalSubscriptionStatuses extends Command
      */
     public function handle()
     {
-        $this->subscriptionManager->cleanupLocalSubscriptionStatuses();
+        $this->subscriptionService->cleanupLocalSubscriptionStatuses();
     }
 }

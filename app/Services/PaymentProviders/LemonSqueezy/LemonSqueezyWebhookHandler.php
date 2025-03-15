@@ -12,12 +12,12 @@ use App\Exceptions\SubscriptionCreationNotAllowedException;
 use App\Models\Currency;
 use App\Models\PaymentProvider;
 use App\Models\User;
-use App\Services\OneTimeProductManager;
-use App\Services\OrderManager;
-use App\Services\PlanManager;
-use App\Services\SubscriptionManager;
+use App\Services\OneTimeProductService;
+use App\Services\OrderService;
+use App\Services\PlanService;
+use App\Services\SubscriptionService;
 use App\Services\TenantCreationManager;
-use App\Services\TransactionManager;
+use App\Services\TransactionService;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -27,11 +27,11 @@ use Illuminate\Support\Str;
 class LemonSqueezyWebhookHandler
 {
     public function __construct(
-        private SubscriptionManager $subscriptionManager,
-        private TransactionManager $transactionManager,
-        private OrderManager $orderManager,
-        private PlanManager $planManager,
-        private OneTimeProductManager $oneTimeProductManager,
+        private SubscriptionService $subscriptionService,
+        private TransactionService $transactionService,
+        private OrderService $orderService,
+        private PlanService $planService,
+        private OneTimeProductService $oneTimeProductService,
         private TenantCreationManager $tenantCreationManager,
     ) {}
 
@@ -71,7 +71,7 @@ class LemonSqueezyWebhookHandler
 
             if ($orderUuid === null && $eventName === 'order_created') {
 
-                $order = $this->orderManager->findByPaymentProviderOrderId($paymentProvider, $data['id']);
+                $order = $this->orderService->findByPaymentProviderOrderId($paymentProvider, $data['id']);
 
                 if ($order === null) {
                     $order = $this->createOrder($attributes, $paymentProvider, $data['id']);
@@ -82,9 +82,9 @@ class LemonSqueezyWebhookHandler
                 }
             } else {
                 if ($orderUuid) {
-                    $order = $this->orderManager->findByUuidOrFail($orderUuid);
+                    $order = $this->orderService->findByUuidOrFail($orderUuid);
                 } else {
-                    $order = $this->orderManager->findByPaymentProviderOrderId($paymentProvider, $data['id']);
+                    $order = $this->orderService->findByPaymentProviderOrderId($paymentProvider, $data['id']);
                 }
             }
 
@@ -94,18 +94,18 @@ class LemonSqueezyWebhookHandler
             $discount = $attributes['discount_total'] ?? 0;
             $tax = $attributes['tax'] ?? 0;
 
-            $transaction = $this->transactionManager->getTransactionByPaymentProviderTxId($data['id']);
+            $transaction = $this->transactionService->getTransactionByPaymentProviderTxId($data['id']);
 
             $mappedStatus = $this->mapOrderStatusToTransactionStatus($providerOrderStatus);
 
             if ($transaction) {
-                $this->transactionManager->updateTransactionByPaymentProviderTxId(
+                $this->transactionService->updateTransactionByPaymentProviderTxId(
                     $data['id'],
                     $providerOrderStatus,
                     $mappedStatus,
                 );
             } else {
-                $this->transactionManager->createForOrder(
+                $this->transactionService->createForOrder(
                     $order,
                     $attributes['total'],
                     $tax,
@@ -122,7 +122,7 @@ class LemonSqueezyWebhookHandler
             $orderStatus = ($mappedStatus === TransactionStatus::SUCCESS) ?
                 OrderStatus::SUCCESS : ($mappedStatus === TransactionStatus::REFUNDED ? OrderStatus::REFUNDED : OrderStatus::FAILED);
 
-            $this->orderManager->updateOrder($order, [
+            $this->orderService->updateOrder($order, [
                 'status' => $orderStatus,
                 'payment_provider_id' => $paymentProvider->id,
                 'payment_provider_order_id' => $data['id'],
@@ -133,7 +133,7 @@ class LemonSqueezyWebhookHandler
     private function createOrder(array $attributes, PaymentProvider $paymentProvider, string $providerOrderId)
     {
         $variantId = $attributes['first_order_item']['variant_id'] ?? null;
-        $orderProduct = $this->oneTimeProductManager->findByPaymentProviderProductId($paymentProvider, $variantId);
+        $orderProduct = $this->oneTimeProductService->findByPaymentProviderProductId($paymentProvider, $variantId);
 
         if (! $orderProduct) {
             // can be a subscription order (because order_created event is also fired for subscriptions)
@@ -165,7 +165,7 @@ class LemonSqueezyWebhookHandler
 
         $tenant = $this->tenantCreationManager->createTenant($user);
 
-        $order = $this->orderManager->create(
+        $order = $this->orderService->create(
             $user,
             $tenant,
             $paymentProvider,
@@ -197,7 +197,7 @@ class LemonSqueezyWebhookHandler
                 }
 
             } else {
-                $subscription = $this->subscriptionManager->findByUuidOrFail($subscriptionUuid);
+                $subscription = $this->subscriptionService->findByUuidOrFail($subscriptionUuid);
             }
 
             $lemonSqueezySubscriptionStatus = $attributes['status'];
@@ -211,7 +211,7 @@ class LemonSqueezyWebhookHandler
                 $extraPaymentProviderData[LemonSqueezyConstants::SUBSCRIPTION_ITEM_ID] = $attributes['first_subscription_item']['id'];
             }
 
-            $this->subscriptionManager->updateSubscription($subscription, [
+            $this->subscriptionService->updateSubscription($subscription, [
                 'type' => SubscriptionType::PAYMENT_PROVIDER_MANAGED,
                 'status' => $subscriptionStatus,
                 'ends_at' => $endsAt,
@@ -229,7 +229,7 @@ class LemonSqueezyWebhookHandler
             $eventName === 'subscription_paused' ||
             $eventName === 'subscription_unpaused'
         ) {
-            $subscription = $this->subscriptionManager->findByPaymentProviderId($paymentProvider, $data['id']);
+            $subscription = $this->subscriptionService->findByPaymentProviderId($paymentProvider, $data['id']);
             $lemonSqueezySubscriptionStatus = $attributes['status'];
             $subscriptionStatus = $this->mapLemonSqueezySubscriptionStatusToSubscriptionStatus($lemonSqueezySubscriptionStatus);
             $endsAt = Carbon::parse($attributes['renews_at'])->toDateTimeString();
@@ -242,7 +242,7 @@ class LemonSqueezyWebhookHandler
                 $extraPaymentProviderData[LemonSqueezyConstants::SUBSCRIPTION_ITEM_ID] = $attributes['first_subscription_item']['id'];
             }
 
-            $this->subscriptionManager->updateSubscription($subscription, [
+            $this->subscriptionService->updateSubscription($subscription, [
                 'type' => SubscriptionType::PAYMENT_PROVIDER_MANAGED,
                 'status' => $subscriptionStatus,
                 'ends_at' => $endsAt,
@@ -257,24 +257,24 @@ class LemonSqueezyWebhookHandler
             ]);
 
         } elseif ($eventName === 'subscription_payment_success' || $eventName === 'subscription_payment_failed') {
-            $subscription = $this->subscriptionManager->findByPaymentProviderId($paymentProvider, $attributes['subscription_id']);
+            $subscription = $this->subscriptionService->findByPaymentProviderId($paymentProvider, $attributes['subscription_id']);
             $currency = Currency::where('code', strtoupper($attributes['currency']))->firstOrFail();
             $invoiceStatus = $attributes['status'];
 
             $discount = $attributes['discount_total'] ?? 0;
             $tax = $attributes['tax'] ?? 0;
 
-            $transaction = $this->transactionManager->getTransactionByPaymentProviderTxId($data['id']);
+            $transaction = $this->transactionService->getTransactionByPaymentProviderTxId($data['id']);
             $mappedStatus = $this->mapOrderStatusToTransactionStatus($invoiceStatus);
 
             if ($transaction) {
-                $this->transactionManager->updateTransactionByPaymentProviderTxId(
+                $this->transactionService->updateTransactionByPaymentProviderTxId(
                     $data['id'],
                     $invoiceStatus,
                     $mappedStatus,
                 );
             } else {
-                $this->transactionManager->createForSubscription(
+                $this->transactionService->createForSubscription(
                     $subscription,
                     $attributes['total'],
                     $tax,
@@ -289,7 +289,7 @@ class LemonSqueezyWebhookHandler
             }
 
             if ($mappedStatus === TransactionStatus::FAILED) {
-                $this->subscriptionManager->handleInvoicePaymentFailed($subscription);
+                $this->subscriptionService->handleInvoicePaymentFailed($subscription);
             }
         }
     }
@@ -308,7 +308,7 @@ class LemonSqueezyWebhookHandler
             ]);
         }
 
-        $plan = $this->planManager->findByPaymentProviderProductId($paymentProvider, $attributes['variant_id']);
+        $plan = $this->planService->findByPaymentProviderProductId($paymentProvider, $attributes['variant_id']);
 
         if (! $plan) {
             Log::error('Plan not found for subscription', [
@@ -323,7 +323,7 @@ class LemonSqueezyWebhookHandler
 
         $tenant = $this->tenantCreationManager->createTenant($user);
 
-        return $this->subscriptionManager->create($plan->slug, $user->id, $quantity, $tenant, $paymentProvider, $providerSubscriptionId);
+        return $this->subscriptionService->create($plan->slug, $user->id, $quantity, $tenant, $paymentProvider, $providerSubscriptionId);
     }
 
     private function mapOrderStatusToTransactionStatus(string $providerOrderStatus): TransactionStatus

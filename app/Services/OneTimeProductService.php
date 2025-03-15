@@ -10,7 +10,7 @@ use App\Models\OneTimeProductPricePaymentProviderData;
 use App\Models\PaymentProvider;
 use Illuminate\Support\Collection;
 
-class OneTimeProductManager
+class OneTimeProductService
 {
     public function getOneTimeProductById(?int $id): OneTimeProduct
     {

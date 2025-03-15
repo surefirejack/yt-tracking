@@ -13,13 +13,13 @@ use App\Models\Plan;
 use App\Models\PlanPrice;
 use App\Models\Subscription;
 use App\Models\UserSubscriptionTrial;
-use App\Services\SubscriptionManager;
+use App\Services\SubscriptionService;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Str;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\Feature\FeatureTest;
 
-class SubscriptionManagerTest extends FeatureTest
+class SubscriptionServiceTest extends FeatureTest
 {
     #[DataProvider('nonDeadSubscriptionProvider')]
     public function test_can_only_create_subscription_if_no_other_non_dead_subscription_exists($status)
@@ -40,16 +40,16 @@ class SubscriptionManagerTest extends FeatureTest
             'tenant_id' => $tenant->id,
         ])->save();
 
-        /** @var SubscriptionManager $manager */
-        $manager = app()->make(SubscriptionManager::class);
+        /** @var SubscriptionService $service */
+        $service = app()->make(SubscriptionService::class);
 
         $this->expectException(SubscriptionCreationNotAllowedException::class);
-        $manager->create($slug, $user->id, 1, $tenant);
+        $service->create($slug, $user->id, 1, $tenant);
     }
 
     public function test_calculate_subscription_trial_days()
     {
-        $manager = app()->make(SubscriptionManager::class);
+        $service = app()->make(SubscriptionService::class);
 
         $plan = Plan::factory()->create([
             'slug' => Str::random(),
@@ -58,7 +58,7 @@ class SubscriptionManagerTest extends FeatureTest
             'trial_interval_id' => Interval::where('slug', 'day')->first()->id,
         ]);
 
-        $this->assertEquals(1, $manager->calculateSubscriptionTrialDays($plan));
+        $this->assertEquals(1, $service->calculateSubscriptionTrialDays($plan));
 
         $plan = Plan::factory()->create([
             'slug' => Str::random(),
@@ -67,7 +67,7 @@ class SubscriptionManagerTest extends FeatureTest
             'trial_interval_id' => Interval::where('slug', 'week')->first()->id,
         ]);
 
-        $this->assertEquals(7, $manager->calculateSubscriptionTrialDays($plan));
+        $this->assertEquals(7, $service->calculateSubscriptionTrialDays($plan));
 
         $plan = Plan::factory()->create([
             'slug' => Str::random(),
@@ -76,7 +76,7 @@ class SubscriptionManagerTest extends FeatureTest
             'trial_interval_id' => Interval::where('slug', 'week')->first()->id,
         ]);
 
-        $this->assertEquals(14, $manager->calculateSubscriptionTrialDays($plan));
+        $this->assertEquals(14, $service->calculateSubscriptionTrialDays($plan));
 
         $plan = Plan::factory()->create([
             'slug' => Str::random(),
@@ -85,7 +85,7 @@ class SubscriptionManagerTest extends FeatureTest
             'trial_interval_id' => Interval::where('slug', 'month')->first()->id,
         ]);
 
-        $this->assertContains($manager->calculateSubscriptionTrialDays($plan), [28, 29, 30, 31]);
+        $this->assertContains($service->calculateSubscriptionTrialDays($plan), [28, 29, 30, 31]);
 
         $plan = Plan::factory()->create([
             'slug' => Str::random(),
@@ -94,7 +94,7 @@ class SubscriptionManagerTest extends FeatureTest
             'trial_interval_id' => Interval::where('slug', 'year')->first()->id,
         ]);
 
-        $this->assertContains($manager->calculateSubscriptionTrialDays($plan), [365, 366]);
+        $this->assertContains($service->calculateSubscriptionTrialDays($plan), [365, 366]);
     }
 
     public function test_create_subscription_in_case_new_subscription_exists()
@@ -121,10 +121,10 @@ class SubscriptionManagerTest extends FeatureTest
             'tenant_id' => $tenant->id,
         ])->save();
 
-        /** @var SubscriptionManager $manager */
-        $manager = app()->make(SubscriptionManager::class);
+        /** @var SubscriptionService $service */
+        $service = app()->make(SubscriptionService::class);
 
-        $subscription = $manager->create($slug, $user->id, 1, $tenant);
+        $subscription = $service->create($slug, $user->id, 1, $tenant);
 
         $this->assertNotNull($subscription);
     }
@@ -148,12 +148,12 @@ class SubscriptionManagerTest extends FeatureTest
             'tenant_id' => $tenant->id,
         ]);
 
-        /** @var SubscriptionManager $manager */
-        $manager = app()->make(SubscriptionManager::class);
+        /** @var SubscriptionService $service */
+        $service = app()->make(SubscriptionService::class);
 
         Event::fake();
 
-        $subscription = $manager->updateSubscription($subscription, [
+        $subscription = $service->updateSubscription($subscription, [
             'status' => SubscriptionStatus::ACTIVE->value,
         ]);
 
@@ -179,12 +179,12 @@ class SubscriptionManagerTest extends FeatureTest
             'tenant_id' => $tenant->id,
         ]);
 
-        /** @var SubscriptionManager $manager */
-        $manager = app()->make(SubscriptionManager::class);
+        /** @var SubscriptionService $service */
+        $service = app()->make(SubscriptionService::class);
 
         Event::fake();
 
-        $subscription = $manager->updateSubscription($subscription, [
+        $subscription = $service->updateSubscription($subscription, [
             'status' => SubscriptionStatus::CANCELED->value,
         ]);
 
@@ -211,12 +211,12 @@ class SubscriptionManagerTest extends FeatureTest
             'tenant_id' => $tenant->id,
         ]);
 
-        /** @var SubscriptionManager $manager */
-        $manager = app()->make(SubscriptionManager::class);
+        /** @var SubscriptionService $service */
+        $service = app()->make(SubscriptionService::class);
 
         Event::fake();
 
-        $subscription = $manager->updateSubscription($subscription, [
+        $subscription = $service->updateSubscription($subscription, [
             'status' => SubscriptionStatus::ACTIVE->value,
             'ends_at' => now()->addDays(30),
         ]);
@@ -230,9 +230,9 @@ class SubscriptionManagerTest extends FeatureTest
         config()->set('app.limit_user_trials.enabled', true);
         config()->set('app.limit_user_trials.max_count', 1);
 
-        $manager = app()->make(SubscriptionManager::class);
+        $service = app()->make(SubscriptionService::class);
 
-        $this->assertTrue($manager->canUserHaveSubscriptionTrial(null));
+        $this->assertTrue($service->canUserHaveSubscriptionTrial(null));
 
         $user = $this->createUser();
         $this->actingAs($user);
@@ -254,7 +254,7 @@ class SubscriptionManagerTest extends FeatureTest
             'tenant_id' => $tenant->id,
         ]);
 
-        $this->assertTrue($manager->canUserHaveSubscriptionTrial($user));
+        $this->assertTrue($service->canUserHaveSubscriptionTrial($user));
     }
 
     public function test_can_user_have_subscription_trial_not_allowed()
@@ -262,7 +262,7 @@ class SubscriptionManagerTest extends FeatureTest
         config()->set('app.limit_user_trials.enabled', true);
         config()->set('app.limit_user_trials.max_count', 1);
 
-        $manager = app()->make(SubscriptionManager::class);
+        $service = app()->make(SubscriptionService::class);
 
         $user = $this->createUser();
         $this->actingAs($user);
@@ -290,7 +290,7 @@ class SubscriptionManagerTest extends FeatureTest
             'trial_ends_at' => now()->addDays(7),
         ]);
 
-        $this->assertFalse($manager->canUserHaveSubscriptionTrial($user));
+        $this->assertFalse($service->canUserHaveSubscriptionTrial($user));
     }
 
     public static function nonDeadSubscriptionProvider()

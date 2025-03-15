@@ -4,7 +4,7 @@ namespace App\Services;
 
 use App\Models\User;
 
-class AddressManager
+class AddressService
 {
     public function userHasAddressInfo(User $user): bool
     {

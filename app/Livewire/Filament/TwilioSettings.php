@@ -2,7 +2,7 @@
 
 namespace App\Livewire\Filament;
 
-use App\Services\ConfigManager;
+use App\Services\ConfigService;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\ViewField;
@@ -14,15 +14,15 @@ use Livewire\Component;
 
 class TwilioSettings extends Component implements HasForms
 {
-    private ConfigManager $configManager;
+    private ConfigService $configService;
 
     use InteractsWithForms;
 
     public ?array $data = [];
 
-    public function boot(ConfigManager $configManager): void
+    public function boot(ConfigService $configService): void
     {
-        $this->configManager = $configManager;
+        $this->configService = $configService;
     }
 
     public function render()
@@ -33,9 +33,9 @@ class TwilioSettings extends Component implements HasForms
     public function mount(): void
     {
         $this->form->fill([
-            'sid' => $this->configManager->get('services.twilio.sid'),
-            'token' => $this->configManager->get('services.twilio.token'),
-            'from' => $this->configManager->get('services.twilio.from'),
+            'sid' => $this->configService->get('services.twilio.sid'),
+            'token' => $this->configService->get('services.twilio.token'),
+            'from' => $this->configService->get('services.twilio.from'),
         ]);
     }
 
@@ -79,9 +79,9 @@ class TwilioSettings extends Component implements HasForms
     {
         $data = $this->form->getState();
 
-        $this->configManager->set('services.twilio.sid', $data['sid']);
-        $this->configManager->set('services.twilio.token', $data['token']);
-        $this->configManager->set('services.twilio.from', $data['from']);
+        $this->configService->set('services.twilio.sid', $data['sid']);
+        $this->configService->set('services.twilio.token', $data['token']);
+        $this->configService->set('services.twilio.from', $data['from']);
 
         Notification::make()
             ->title(__('Settings Saved'))

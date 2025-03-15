@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Transaction;
-use App\Services\InvoiceManager;
+use App\Services\InvoiceService;
 use Illuminate\Http\Request;
 use LaravelDaily\Invoices\Classes\Buyer;
 use LaravelDaily\Invoices\Classes\InvoiceItem;
@@ -13,7 +13,7 @@ use LaravelDaily\Invoices\Invoice;
 class InvoiceController extends Controller
 {
     public function __construct(
-        private InvoiceManager $invoiceManager
+        private InvoiceService $invoiceService
     ) {}
 
     public function generate(string $transactionUuid)
@@ -22,7 +22,7 @@ class InvoiceController extends Controller
 
         $forceRegenerate = request()->boolean('regenerate', false) && auth()->user()->isAdmin();
 
-        $result = $this->invoiceManager->generate($transaction, $forceRegenerate);
+        $result = $this->invoiceService->generate($transaction, $forceRegenerate);
 
         if ($result === null) {
             abort(404);

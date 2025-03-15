@@ -4,52 +4,48 @@ namespace App\Livewire\Checkout;
 
 use App\Exceptions\LoginException;
 use App\Exceptions\NoPaymentProvidersAvailableException;
-use App\Services\CalculationManager;
-use App\Services\DiscountManager;
-use App\Services\LoginManager;
-use App\Services\PaymentProviders\PaymentManager;
-use App\Services\PlanManager;
-use App\Services\SessionManager;
-use App\Services\SubscriptionManager;
+use App\Services\CalculationService;
+use App\Services\PlanService;
+use App\Services\SessionService;
+use App\Services\SubscriptionService;
 use App\Services\TenantSubscriptionManager;
-use App\Services\UserManager;
 use App\Validator\LoginValidator;
 use App\Validator\RegisterValidator;
 
 class ConvertLocalSubscriptionCheckoutForm extends CheckoutForm
 {
-    private PlanManager $planManager;
+    private PlanService $planService;
 
-    private SessionManager $sessionManager;
+    private SessionService $sessionService;
 
-    private CalculationManager $calculationManager;
+    private CalculationService $calculationService;
 
-    private SubscriptionManager $subscriptionManager;
+    private SubscriptionService $subscriptionService;
 
     private TenantSubscriptionManager $tenantSubscriptionManager;
 
     public function boot(
-        PlanManager $planManager,
-        SessionManager $sessionManager,
-        CalculationManager $calculationManager,
-        SubscriptionManager $subscriptionManager,
+        PlanService $planService,
+        SessionService $sessionService,
+        CalculationService $calculationService,
+        SubscriptionService $subscriptionService,
         TenantSubscriptionManager $tenantSubscriptionManager
     ) {
-        $this->planManager = $planManager;
-        $this->sessionManager = $sessionManager;
-        $this->calculationManager = $calculationManager;
-        $this->subscriptionManager = $subscriptionManager;
+        $this->planService = $planService;
+        $this->sessionService = $sessionService;
+        $this->calculationService = $calculationService;
+        $this->subscriptionService = $subscriptionService;
         $this->tenantSubscriptionManager = $tenantSubscriptionManager;
     }
 
-    public function render(PaymentManager $paymentManager)
+    public function render(PaymentService $paymentService)
     {
-        $subscriptionCheckoutDto = $this->sessionManager->getSubscriptionCheckoutDto();
+        $subscriptionCheckoutDto = $this->sessionService->getSubscriptionCheckoutDto();
         $planSlug = $subscriptionCheckoutDto->planSlug;
 
-        $plan = $this->planManager->getActivePlanBySlug($planSlug);
+        $plan = $this->planService->getActivePlanBySlug($planSlug);
 
-        $totals = $this->calculationManager->calculatePlanTotals(
+        $totals = $this->calculationService->calculatePlanTotals(
             auth()->user(),
             $planSlug,
             $subscriptionCheckoutDto?->discountCode,
@@ -60,7 +56,7 @@ class ConvertLocalSubscriptionCheckoutForm extends CheckoutForm
             'plan' => $plan,
             'totals' => $totals,
             'userExists' => $this->userExists($this->email),
-            'paymentProviders' => $this->getPaymentProviders($paymentManager),
+            'paymentProviders' => $this->getPaymentProviders($paymentService),
             'isTenantPickerEnabled' => false,
         ]);
     }
@@ -68,27 +64,27 @@ class ConvertLocalSubscriptionCheckoutForm extends CheckoutForm
     public function checkout(
         LoginValidator $loginValidator,
         RegisterValidator $registerValidator,
-        PaymentManager $paymentManager,
-        DiscountManager $discountManager,
-        UserManager $userManager,
-        LoginManager $loginManager,
+        PaymentService $paymentService,
+        DiscountService $discountService,
+        UserService $userService,
+        LoginService $loginService,
     ) {
         try {
-            parent::handleLoginOrRegistration($loginValidator, $registerValidator, $userManager, $loginManager);
+            parent::handleLoginOrRegistration($loginValidator, $registerValidator, $userService, $loginService);
         } catch (LoginException $exception) { // 2fa is enabled, user has to go through typical login flow to enter 2fa code
             return redirect()->route('login');
         }
 
-        $subscriptionCheckoutDto = $this->sessionManager->getSubscriptionCheckoutDto();
+        $subscriptionCheckoutDto = $this->sessionService->getSubscriptionCheckoutDto();
         $planSlug = $subscriptionCheckoutDto->planSlug;
 
-        $plan = $this->planManager->getActivePlanBySlug($planSlug);
+        $plan = $this->planService->getActivePlanBySlug($planSlug);
 
         if ($plan === null) {
             return redirect()->route('home');
         }
 
-        $paymentProvider = $paymentManager->getPaymentProviderBySlug(
+        $paymentProvider = $paymentService->getPaymentProviderBySlug(
             $this->paymentProvider
         );
 
@@ -96,9 +92,9 @@ class ConvertLocalSubscriptionCheckoutForm extends CheckoutForm
 
         $discount = null;
         if ($subscriptionCheckoutDto->discountCode !== null) {
-            $discount = $discountManager->getActiveDiscountByCode($subscriptionCheckoutDto->discountCode);
+            $discount = $discountService->getActiveDiscountByCode($subscriptionCheckoutDto->discountCode);
 
-            if (! $discountManager->isCodeRedeemableForPlan($subscriptionCheckoutDto->discountCode, $user, $plan)) {
+            if (! $discountService->isCodeRedeemableForPlan($subscriptionCheckoutDto->discountCode, $user, $plan)) {
                 // this is to handle the case when user adds discount code that has max redemption limit per customer,
                 // then logs-in during the checkout process and the discount code is not valid anymore
                 $subscriptionCheckoutDto->discountCode = null;
@@ -107,7 +103,7 @@ class ConvertLocalSubscriptionCheckoutForm extends CheckoutForm
             }
         }
 
-        $subscription = $this->subscriptionManager->findById($subscriptionCheckoutDto->subscriptionId);
+        $subscription = $this->subscriptionService->findById($subscriptionCheckoutDto->subscriptionId);
 
         if (! $subscription) {
             return redirect()->route('home');
@@ -121,7 +117,7 @@ class ConvertLocalSubscriptionCheckoutForm extends CheckoutForm
 
         $initData = $paymentProvider->initSubscriptionCheckout($plan, $subscription, $discount, $quantity);
 
-        $this->sessionManager->saveSubscriptionCheckoutDto($subscriptionCheckoutDto);
+        $this->sessionService->saveSubscriptionCheckoutDto($subscriptionCheckoutDto);
 
         if ($paymentProvider->isRedirectProvider()) {
             $link = $paymentProvider->createSubscriptionCheckoutRedirectLink(
@@ -143,18 +139,18 @@ class ConvertLocalSubscriptionCheckoutForm extends CheckoutForm
         );
     }
 
-    protected function getPaymentProviders(PaymentManager $paymentManager)
+    protected function getPaymentProviders(PaymentService $paymentService)
     {
         if (count($this->paymentProviders) > 0) {
             return $this->paymentProviders;
         }
 
-        $subscriptionCheckoutDto = $this->sessionManager->getSubscriptionCheckoutDto();
+        $subscriptionCheckoutDto = $this->sessionService->getSubscriptionCheckoutDto();
         $planSlug = $subscriptionCheckoutDto->planSlug;
 
-        $plan = $this->planManager->getActivePlanBySlug($planSlug);
+        $plan = $this->planService->getActivePlanBySlug($planSlug);
 
-        $this->paymentProviders = $paymentManager->getActivePaymentProvidersForPlan($plan, true);
+        $this->paymentProviders = $paymentService->getActivePaymentProvidersForPlan($plan, true);
 
         if (empty($this->paymentProviders)) {
             logger()->error('No payment providers available for plan', [

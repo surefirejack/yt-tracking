@@ -6,11 +6,11 @@ use App\Constants\OrderStatus;
 use App\Constants\PlanType;
 use App\Dto\CartDto;
 
-class CheckoutManager
+class CheckoutService
 {
     public function __construct(
-        private SubscriptionManager $subscriptionManager,
-        private OrderManager $orderManager,
+        private SubscriptionService $subscriptionService,
+        private OrderService        $orderService,
         private TenantCreationManager $tenantCreationManager,
     ) {}
 
@@ -22,9 +22,9 @@ class CheckoutManager
             $tenant = $this->tenantCreationManager->createTenant(auth()->user());
         }
 
-        $subscription = $this->subscriptionManager->findNewByPlanSlugAndTenant($planSlug, $tenant);
+        $subscription = $this->subscriptionService->findNewByPlanSlugAndTenant($planSlug, $tenant);
         if ($subscription === null) {
-            $subscription = $this->subscriptionManager->create(
+            $subscription = $this->subscriptionService->create(
                 planSlug: $planSlug,
                 userId: auth()->id(),
                 quantity: $quantity,
@@ -49,9 +49,9 @@ class CheckoutManager
             $tenant = $this->tenantCreationManager->createTenant(auth()->user());
         }
 
-        $subscription = $this->subscriptionManager->findNewByPlanSlugAndTenant($planSlug, $tenant);
+        $subscription = $this->subscriptionService->findNewByPlanSlugAndTenant($planSlug, $tenant);
         if ($subscription === null) {
-            $subscription = $this->subscriptionManager->create(
+            $subscription = $this->subscriptionService->create(
                 $planSlug,
                 auth()->id(),
                 quantity: $quantity,
@@ -80,14 +80,14 @@ class CheckoutManager
 
         $order = null;
         if ($cartDto->orderId !== null) {
-            $order = $this->orderManager->findNewByIdForUser($cartDto->orderId, $user);
+            $order = $this->orderService->findNewByIdForUser($cartDto->orderId, $user);
         }
 
         if ($order === null) {
-            $order = $this->orderManager->create($user, $tenant);
+            $order = $this->orderService->create($user, $tenant);
         }
 
-        $this->orderManager->refreshOrder($cartDto, $order);
+        $this->orderService->refreshOrder($cartDto, $order);
 
         $order->status = OrderStatus::PENDING->value;
         $order->save();

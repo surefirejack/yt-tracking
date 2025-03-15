@@ -2,37 +2,37 @@
 
 namespace App\Livewire\Roadmap;
 
-use App\Services\RoadmapManager;
+use App\Services\RoadmapService;
 use Livewire\Component;
 
 class View extends Component
 {
     public $slug;
 
-    public function render(RoadmapManager $roadmapManager)
+    public function render(RoadmapService $roadmapService)
     {
         return view(
             'livewire.roadmap.view', [
-                'item' => $roadmapManager->getItemBySlug($this->slug),
+                'item' => $roadmapService->getItemBySlug($this->slug),
             ]
         );
     }
 
-    public function upvote(int $id, RoadmapManager $roadmapManager)
+    public function upvote(int $id, RoadmapService $roadmapService)
     {
         if (! auth()->check()) {
             return redirect()->route('login');
         }
 
-        $roadmapManager->upvote($id);
+        $roadmapService->upvote($id);
     }
 
-    public function removeUpvote(int $id, RoadmapManager $roadmapManager)
+    public function removeUpvote(int $id, RoadmapService $roadmapService)
     {
         if (! auth()->check()) {
             return redirect()->route('login');
         }
 
-        $roadmapManager->removeUpvote($id);
+        $roadmapService->removeUpvote($id);
     }
 }

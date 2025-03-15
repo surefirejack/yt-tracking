@@ -3,70 +3,70 @@
 namespace App\Livewire\Checkout;
 
 use App\Exceptions\LoginException;
-use App\Services\CalculationManager;
-use App\Services\CheckoutManager;
-use App\Services\DiscountManager;
-use App\Services\LoginManager;
-use App\Services\OneTimeProductManager;
-use App\Services\PaymentProviders\PaymentManager;
-use App\Services\SessionManager;
-use App\Services\UserManager;
+use App\Services\CalculationService;
+use App\Services\CheckoutService;
+use App\Services\DiscountService;
+use App\Services\LoginService;
+use App\Services\OneTimeProductService;
+use App\Services\PaymentProviders\PaymentService;
+use App\Services\SessionService;
+use App\Services\UserService;
 use App\Validator\LoginValidator;
 use App\Validator\RegisterValidator;
 
 class ProductCheckoutForm extends CheckoutForm
 {
-    private OneTimeProductManager $productManager;
+    private OneTimeProductService $productService;
 
-    private SessionManager $sessionManager;
+    private SessionService $sessionService;
 
-    private CalculationManager $calculationManager;
+    private CalculationService $calculationService;
 
-    private OneTimeProductManager $oneTimeProductManager;
+    private OneTimeProductService $oneTimeProductService;
 
     public function boot(
-        OneTimeProductManager $productManager,
-        SessionManager $sessionManager,
-        CalculationManager $calculationManager,
-        OneTimeProductManager $oneTimeProductManager,
+        OneTimeProductService $productService,
+        SessionService $sessionService,
+        CalculationService $calculationService,
+        OneTimeProductService $oneTimeProductService,
     ) {
-        $this->productManager = $productManager;
-        $this->sessionManager = $sessionManager;
-        $this->calculationManager = $calculationManager;
-        $this->oneTimeProductManager = $oneTimeProductManager;
+        $this->productService = $productService;
+        $this->sessionService = $sessionService;
+        $this->calculationService = $calculationService;
+        $this->oneTimeProductService = $oneTimeProductService;
     }
 
     public function checkout(
         LoginValidator $loginValidator,
         RegisterValidator $registerValidator,
-        CheckoutManager $checkoutManager,
-        PaymentManager $paymentManager,
-        DiscountManager $discountManager,
-        UserManager $userManager,
-        LoginManager $loginManager,
+        CheckoutService $checkoutService,
+        PaymentService $paymentService,
+        DiscountService $discountService,
+        UserService $userService,
+        LoginService $loginService,
     ) {
         try {
-            parent::handleLoginOrRegistration($loginValidator, $registerValidator, $userManager, $loginManager);
+            parent::handleLoginOrRegistration($loginValidator, $registerValidator, $userService, $loginService);
         } catch (LoginException $exception) { // 2fa is enabled, user has to go through typical login flow to enter 2fa code
             return redirect()->route('login');
         }
 
-        $cartDto = $this->sessionManager->getCartDto();
+        $cartDto = $this->sessionService->getCartDto();
 
-        $order = $checkoutManager->initProductCheckout($cartDto, $cartDto->tenantUuid);
+        $order = $checkoutService->initProductCheckout($cartDto, $cartDto->tenantUuid);
 
         $cartDto->orderId = $order->id;
 
-        $paymentProvider = $paymentManager->getPaymentProviderBySlug(
+        $paymentProvider = $paymentService->getPaymentProviderBySlug(
             $this->paymentProvider
         );
 
         $discount = null;
         if ($cartDto->discountCode !== null) {
-            $discount = $discountManager->getActiveDiscountByCode($cartDto->discountCode);
-            $product = $this->oneTimeProductManager->getOneTimeProductById($cartDto->items[0]->productId);
+            $discount = $discountService->getActiveDiscountByCode($cartDto->discountCode);
+            $product = $this->oneTimeProductService->getOneTimeProductById($cartDto->items[0]->productId);
 
-            if (! $discountManager->isCodeRedeemableForOneTimeProduct($cartDto->discountCode, auth()->user(), $product)) {
+            if (! $discountService->isCodeRedeemableForOneTimeProduct($cartDto->discountCode, auth()->user(), $product)) {
                 // this is to handle the case when user adds discount code that has max redemption limit per customer,
                 // then logs-in during the checkout process and the discount code is not valid anymore
                 $cartDto->discountCode = null;
@@ -77,7 +77,7 @@ class ProductCheckoutForm extends CheckoutForm
 
         $initData = $paymentProvider->initProductCheckout($order, $discount);
 
-        $this->sessionManager->saveCartDto($cartDto);
+        $this->sessionService->saveCartDto($cartDto);
 
         $user = auth()->user();
 
@@ -99,20 +99,20 @@ class ProductCheckoutForm extends CheckoutForm
         );
     }
 
-    public function render(PaymentManager $paymentManager)
+    public function render(PaymentService $paymentService)
     {
-        $cartDto = $this->sessionManager->getCartDto();
+        $cartDto = $this->sessionService->getCartDto();
 
-        $product = $this->productManager->getOneTimeProductById($cartDto->items[0]->productId);
+        $product = $this->productService->getOneTimeProductById($cartDto->items[0]->productId);
 
-        $totals = $this->calculationManager->calculateCartTotals($cartDto, auth()->user());
+        $totals = $this->calculationService->calculateCartTotals($cartDto, auth()->user());
 
         return view('livewire.checkout.product-checkout-form', [
             'product' => $product,
             'cartDto' => $cartDto,
             'successUrl' => route('checkout.product.success'),
             'userExists' => $this->userExists($this->email),
-            'paymentProviders' => $this->getPaymentProviders($paymentManager),
+            'paymentProviders' => $this->getPaymentProviders($paymentService),
             'totals' => $totals,
         ]);
     }

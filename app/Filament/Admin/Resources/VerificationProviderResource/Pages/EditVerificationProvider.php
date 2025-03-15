@@ -4,7 +4,7 @@ namespace App\Filament\Admin\Resources\VerificationProviderResource\Pages;
 
 use App\Filament\Admin\Resources\VerificationProviderResource;
 use App\Models\VerificationProvider;
-use App\Services\UserVerificationManager;
+use App\Services\UserVerificationService;
 use Filament\Actions;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
@@ -32,9 +32,9 @@ class EditVerificationProvider extends EditRecord
                     TextInput::make('phone')->required(),
                     Textarea::make('body')->default('This is a test sms.')->required(),
                 ])
-                ->action(function (array $data, VerificationProvider $record, UserVerificationManager $userVerificationManager) {
+                ->action(function (array $data, VerificationProvider $record, UserVerificationService $userVerificationService) {
                     try {
-                        $userVerificationManager->getProviderBySlug($record->slug)
+                        $userVerificationService->getProviderBySlug($record->slug)
                             ->sendSms($data['phone'], $data['body']);
                     } catch (\Exception $e) {
                         logger()->error($e->getMessage());

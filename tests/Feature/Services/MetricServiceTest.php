@@ -11,11 +11,11 @@ use App\Models\Plan;
 use App\Models\Subscription;
 use App\Models\Transaction;
 use App\Models\User;
-use App\Services\MetricsManager;
+use App\Services\MetricsService;
 use Illuminate\Support\Str;
 use Tests\Feature\FeatureTest;
 
-class MetricManagerTest extends FeatureTest
+class MetricServiceTest extends FeatureTest
 {
     public function test_calculate_daily_revenue()
     {
@@ -60,8 +60,8 @@ class MetricManagerTest extends FeatureTest
             'payment_provider_transaction_id' => '234',
         ]);
 
-        $metricManager = new MetricsManager;
-        $result = $metricManager->calculateDailyRevenue(now());
+        $metricService = new MetricsService;
+        $result = $metricService->calculateDailyRevenue(now());
 
         $this->assertEquals($result, 10.00);
     }
@@ -116,8 +116,8 @@ class MetricManagerTest extends FeatureTest
         $transaction->created_at = $weekAgo;
         $transaction->save();
 
-        $metricManager = new MetricsManager;
-        $result = $metricManager->calculateAverageRevenuePerUser($weekAgo);
+        $metricService = new MetricsService;
+        $result = $metricService->calculateAverageRevenuePerUser($weekAgo);
 
         $this->assertEquals($result, 10.00);
     }
@@ -145,8 +145,8 @@ class MetricManagerTest extends FeatureTest
             'interval_id' => Interval::where('slug', 'month')->firstOrFail()->id,
         ])->save();
 
-        $metricManager = new MetricsManager;
-        $result = $metricManager->calculateMRR(now());
+        $metricService = new MetricsService;
+        $result = $metricService->calculateMRR(now());
 
         $this->assertEquals($result, 50.00);
 
@@ -159,7 +159,7 @@ class MetricManagerTest extends FeatureTest
             'interval_id' => Interval::where('slug', 'year')->firstOrFail()->id,
         ])->save();
 
-        $result = $metricManager->calculateMRR(now());
+        $result = $metricService->calculateMRR(now());
 
         $this->assertEquals($result, 60.00);
 

@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
-use App\Services\UserManager;
+use App\Services\UserService;
 use App\Validator\RegisterValidator;
 use Illuminate\Foundation\Auth\RegistersUsers;
 use Illuminate\Support\Facades\Redirect;
@@ -34,7 +34,7 @@ class RegisterController extends Controller
 
     public function __construct(
         private RegisterValidator $registerValidator,
-        private UserManager $userManager,
+        private UserService $userService,
     ) {
         $this->middleware('guest');
     }
@@ -61,7 +61,7 @@ class RegisterController extends Controller
      */
     protected function create(array $data)
     {
-        return $this->userManager->createUser($data);
+        return $this->userService->createUser($data);
     }
 
     /**

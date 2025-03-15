@@ -5,7 +5,7 @@ namespace App\Services;
 use Illuminate\Support\Facades\Auth;
 use Laragear\TwoFactor\Facades\Auth2FA;
 
-class LoginManager
+class LoginService
 {
     public function attempt(array $credentials, bool $remember): bool
     {

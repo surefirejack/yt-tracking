@@ -3,26 +3,26 @@
 namespace App\Livewire\Roadmap;
 
 use App\Livewire\Forms\RoadmapItemForm;
-use App\Services\RoadmapManager;
+use App\Services\RoadmapService;
 use Livewire\Component;
 
 class Suggest extends Component
 {
     public RoadmapItemForm $form;
 
-    private RoadmapManager $roadmapManager;
+    private RoadmapService $roadmapService;
 
     // boot
-    public function boot(RoadmapManager $roadmapManager)
+    public function boot(RoadmapService $roadmapService)
     {
-        $this->roadmapManager = $roadmapManager;
+        $this->roadmapService = $roadmapService;
     }
 
     public function save()
     {
         $this->validate();
 
-        $this->roadmapManager->createItem(
+        $this->roadmapService->createItem(
             $this->form->title,
             $this->form->description,
             $this->form->type

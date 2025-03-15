@@ -2,7 +2,7 @@
 
 namespace App\Livewire\Filament;
 
-use App\Services\ConfigManager;
+use App\Services\ConfigService;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Concerns\InteractsWithForms;
@@ -13,7 +13,7 @@ use Livewire\Component;
 
 class PostmarkSettings extends Component implements HasForms
 {
-    private ConfigManager $configManager;
+    private ConfigService $configService;
 
     protected string $slug = 'postmark';
 
@@ -21,9 +21,9 @@ class PostmarkSettings extends Component implements HasForms
 
     public ?array $data = [];
 
-    public function boot(ConfigManager $configManager): void
+    public function boot(ConfigService $configService): void
     {
-        $this->configManager = $configManager;
+        $this->configService = $configService;
     }
 
     public function render()
@@ -34,7 +34,7 @@ class PostmarkSettings extends Component implements HasForms
     public function mount(): void
     {
         $this->form->fill([
-            'token' => $this->configManager->get('services.'.$this->slug.'.token'),
+            'token' => $this->configService->get('services.'.$this->slug.'.token'),
         ]);
     }
 
@@ -56,7 +56,7 @@ class PostmarkSettings extends Component implements HasForms
     {
         $data = $this->form->getState();
 
-        $this->configManager->set('services.'.$this->slug.'.token', $data['token']);
+        $this->configService->set('services.'.$this->slug.'.token', $data['token']);
 
         Notification::make()
             ->title(__('Settings Saved'))

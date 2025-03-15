@@ -2,8 +2,8 @@
 
 namespace App\View\Components\Plans;
 
-use App\Services\PlanManager;
-use App\Services\SubscriptionManager;
+use App\Services\PlanService;
+use App\Services\SubscriptionService;
 use Closure;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Collection;
@@ -12,8 +12,8 @@ use Illuminate\View\Component;
 class All extends Component
 {
     public function __construct(
-        protected PlanManager $planManager,
-        protected SubscriptionManager $subscriptionManager,
+        protected PlanService $planService,
+        protected SubscriptionService $subscriptionService,
         public array $products = [],
         public bool $isGrouped = true,
         public string $preselectedInterval = '',
@@ -32,7 +32,7 @@ class All extends Component
 
     protected function calculateViewData()
     {
-        $plans = $this->planManager->getAllPlansWithPrices(
+        $plans = $this->planService->getAllPlansWithPrices(
             $this->products,
         );
 
@@ -44,7 +44,7 @@ class All extends Component
         $viewData['plans'] = $plans;
 
         if ($this->showDefaultProduct) {
-            $defaultProduct = $this->planManager->getDefaultProduct();
+            $defaultProduct = $this->planService->getDefaultProduct();
 
             if ($defaultProduct) {
                 $viewData['defaultProduct'] = $defaultProduct;

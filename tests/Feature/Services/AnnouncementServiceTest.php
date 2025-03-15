@@ -4,10 +4,10 @@ namespace Tests\Feature\Services;
 
 use App\Constants\AnnouncementPlacement;
 use App\Models\Announcement;
-use App\Services\AnnouncementManager;
+use App\Services\AnnouncementService;
 use Tests\Feature\FeatureTest;
 
-class AnnouncementManagerTest extends FeatureTest
+class AnnouncementServiceTest extends FeatureTest
 {
     public function test_get_announcement_for_frontend()
     {
@@ -26,9 +26,9 @@ class AnnouncementManagerTest extends FeatureTest
             'show_on_user_dashboard' => false,
         ]);
 
-        $manager = app()->make(AnnouncementManager::class);
+        $service = app()->make(AnnouncementService::class);
 
-        $result = $manager->getAnnouncement(AnnouncementPlacement::FRONTEND);
+        $result = $service->getAnnouncement(AnnouncementPlacement::FRONTEND);
 
         $this->assertNotNull($result);
         $this->assertEquals($announcement->id, $result->id);
@@ -51,9 +51,9 @@ class AnnouncementManagerTest extends FeatureTest
             'show_on_user_dashboard' => true,
         ]);
 
-        $manager = app()->make(AnnouncementManager::class);
+        $service = app()->make(AnnouncementService::class);
 
-        $result = $manager->getAnnouncement(AnnouncementPlacement::USER_DASHBOARD);
+        $result = $service->getAnnouncement(AnnouncementPlacement::USER_DASHBOARD);
 
         $this->assertNotNull($result);
         $this->assertEquals($announcement->id, $result->id);
@@ -76,9 +76,9 @@ class AnnouncementManagerTest extends FeatureTest
             'show_on_user_dashboard' => true,
         ]);
 
-        $manager = app()->make(AnnouncementManager::class);
+        $service = app()->make(AnnouncementService::class);
 
-        $result = $manager->getAnnouncement(AnnouncementPlacement::FRONTEND);
+        $result = $service->getAnnouncement(AnnouncementPlacement::FRONTEND);
 
         $this->assertNull($result);
     }
@@ -100,9 +100,9 @@ class AnnouncementManagerTest extends FeatureTest
             'show_on_user_dashboard' => true,
         ]);
 
-        $manager = app()->make(AnnouncementManager::class);
+        $service = app()->make(AnnouncementService::class);
 
-        $result = $manager->getAnnouncement(AnnouncementPlacement::FRONTEND);
+        $result = $service->getAnnouncement(AnnouncementPlacement::FRONTEND);
 
         $this->assertNull($result);
     }

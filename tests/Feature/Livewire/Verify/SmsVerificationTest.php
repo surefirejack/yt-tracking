@@ -4,8 +4,8 @@ namespace Tests\Feature\Livewire\Verify;
 
 use App\Livewire\Verify\SmsVerification;
 use App\Models\VerificationProvider;
-use App\Services\SessionManager;
-use App\Services\UserVerificationManager;
+use App\Services\SessionService;
+use App\Services\UserVerificationService;
 use App\Services\VerificationProviders\VerificationProviderInterface;
 use Livewire\Livewire;
 use Mockery;
@@ -37,9 +37,9 @@ class SmsVerificationTest extends FeatureTest
             ->set('phone', '+18482560284')
             ->call('sendVerificationCode');
 
-        $sessionManager = app(SessionManager::class);
+        $sessionService = app(SessionService::class);
 
-        $dto = $sessionManager->getSmsVerificationDto();
+        $dto = $sessionService->getSmsVerificationDto();
 
         $this->assertNotNull($dto);
 
@@ -54,7 +54,7 @@ class SmsVerificationTest extends FeatureTest
         $this->assertNotNull($user->phone_number_verified_at);
         $this->assertEquals($user->phone_number, '+18482560284');
 
-        $this->assertNull($sessionManager->getSmsVerificationDto());
+        $this->assertNull($sessionService->getSmsVerificationDto());
     }
 
     public function test_invalid_phone_number()
@@ -99,9 +99,9 @@ class SmsVerificationTest extends FeatureTest
             ->set('phone', '+18482560283')
             ->call('sendVerificationCode');
 
-        $sessionManager = app(SessionManager::class);
+        $sessionService = app(SessionService::class);
 
-        $dto = $sessionManager->getSmsVerificationDto();
+        $dto = $sessionService->getSmsVerificationDto();
 
         $this->assertNotNull($dto);
 
@@ -152,8 +152,8 @@ class SmsVerificationTest extends FeatureTest
 
         $this->app->instance(VerificationProviderInterface::class, $mock);
 
-        $this->app->afterResolving(UserVerificationManager::class, function (UserVerificationManager $manager) use ($mock) {
-            $manager->setVerificationProviders($mock);
+        $this->app->afterResolving(UserVerificationService::class, function (UserVerificationService $service) use ($mock) {
+            $service->setVerificationProviders($mock);
         });
 
         config(['app.verification.default_provider' => 'verify-more']);

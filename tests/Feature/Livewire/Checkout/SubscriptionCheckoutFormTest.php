@@ -17,8 +17,8 @@ use App\Models\Subscription;
 use App\Models\Tenant;
 use App\Models\User;
 use App\Models\UserSubscriptionTrial;
-use App\Services\PaymentProviders\PaymentManager;
 use App\Services\PaymentProviders\PaymentProviderInterface;
+use App\Services\PaymentProviders\PaymentService;
 use Exception;
 use Livewire\Livewire;
 use Tests\Feature\FeatureTest;
@@ -396,8 +396,8 @@ class SubscriptionCheckoutFormTest extends FeatureTest
 
         $this->app->instance(PaymentProviderInterface::class, $mock);
 
-        $this->app->bind(PaymentManager::class, function () use ($mock) {
-            return new PaymentManager($mock);
+        $this->app->bind(PaymentService::class, function () use ($mock) {
+            return new PaymentService($mock);
         });
 
         return $mock;

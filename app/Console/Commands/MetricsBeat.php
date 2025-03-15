@@ -2,7 +2,7 @@
 
 namespace App\Console\Commands;
 
-use App\Services\MetricsManager;
+use App\Services\MetricsService;
 use Illuminate\Console\Command;
 use Illuminate\Contracts\Console\Isolatable;
 
@@ -25,8 +25,8 @@ class MetricsBeat extends Command implements Isolatable
     /**
      * Execute the console command.
      */
-    public function handle(MetricsManager $metricsManager)
+    public function handle(MetricsService $metricsService)
     {
-        $metricsManager->beat();
+        $metricsService->beat();
     }
 }

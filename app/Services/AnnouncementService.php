@@ -5,11 +5,11 @@ namespace App\Services;
 use App\Constants\AnnouncementPlacement;
 use App\Models\Announcement;
 
-class AnnouncementManager
+class AnnouncementService
 {
     public function __construct(
-        private OrderManager $orderManager,
-        private SubscriptionManager $subscriptionManager,
+        private OrderService        $orderService,
+        private SubscriptionService $subscriptionService,
     ) {}
 
     public function getAnnouncement(AnnouncementPlacement $announcementPlacement): ?Announcement
@@ -26,7 +26,7 @@ class AnnouncementManager
             $query->where('show_on_frontend', true);
         }
 
-        if ($user && ($this->subscriptionManager->isUserSubscribedViaAnyTenant($user) || $this->orderManager->hasUserOrderedViaAnyTenant($user))) {
+        if ($user && ($this->subscriptionService->isUserSubscribedViaAnyTenant($user) || $this->orderService->hasUserOrderedViaAnyTenant($user))) {
             $query->where('show_for_customers', true);
         }
 

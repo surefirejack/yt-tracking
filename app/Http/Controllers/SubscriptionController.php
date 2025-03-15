@@ -3,10 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Constants\TenancyPermissionConstants;
-use App\Services\CalculationManager;
-use App\Services\PaymentProviders\PaymentManager;
-use App\Services\PlanManager;
-use App\Services\SubscriptionManager;
+use App\Services\CalculationService;
+use App\Services\PaymentProviders\PaymentService;
+use App\Services\PlanService;
+use App\Services\SubscriptionService;
 use App\Services\TenantManager;
 use App\Services\TenantPermissionManager;
 use Illuminate\Http\Request;
@@ -14,10 +14,10 @@ use Illuminate\Http\Request;
 class SubscriptionController extends Controller
 {
     public function __construct(
-        private PlanManager $planManager,
-        private SubscriptionManager $subscriptionManager,
-        private PaymentManager $paymentManager,
-        private CalculationManager $calculationManager,
+        private PlanService $planService,
+        private SubscriptionService $subscriptionService,
+        private PaymentService $paymentService,
+        private CalculationService $calculationService,
         private TenantPermissionManager $tenantPermissionManager,
         private TenantManager $tenantManager,
     ) {}
@@ -32,7 +32,7 @@ class SubscriptionController extends Controller
             return redirect()->back()->with('error', __('You do not have permission to change plans.'));
         }
 
-        $subscription = $this->subscriptionManager->findActiveByTenantAndSubscriptionUuid($tenant, $subscriptionUuid);
+        $subscription = $this->subscriptionService->findActiveByTenantAndSubscriptionUuid($tenant, $subscriptionUuid);
 
         if (! $subscription) {
             return redirect()->back()->with('error', __('You do not have an active subscription.'));
@@ -48,22 +48,22 @@ class SubscriptionController extends Controller
             return redirect()->back()->with('error', __('Error finding payment provider.'));
         }
 
-        $paymentProviderStrategy = $this->paymentManager->getPaymentProviderBySlug(
+        $paymentProviderStrategy = $this->paymentService->getPaymentProviderBySlug(
             $paymentProvider->slug
         );
 
-        $newPlan = $this->planManager->getActivePlanBySlug($newPlanSlug);
+        $newPlan = $this->planService->getActivePlanBySlug($newPlanSlug);
 
         $isProrated = config('app.payment.proration_enabled', true);
 
-        $totals = $this->calculationManager->calculateNewPlanTotals(
+        $totals = $this->calculationService->calculateNewPlanTotals(
             $subscription,
             $newPlanSlug,
             $isProrated,
         );
 
         if ($request->isMethod('post')) {
-            $result = $this->subscriptionManager->changePlan($subscription, $paymentProviderStrategy, $newPlanSlug, $isProrated);
+            $result = $this->subscriptionService->changePlan($subscription, $paymentProviderStrategy, $newPlanSlug, $isProrated);
 
             if ($result) {
                 return redirect()->route('subscription.change-plan.thank-you');

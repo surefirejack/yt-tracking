@@ -2,14 +2,14 @@
 
 namespace App\View\Components\Products;
 
-use App\Services\OneTimeProductManager;
+use App\Services\OneTimeProductService;
 use Illuminate\Contracts\View\View;
 use Illuminate\View\Component;
 
 class All extends Component
 {
     public function __construct(
-        private OneTimeProductManager $productManager,
+        private OneTimeProductService $productService,
         private string $sortBy = 'name',
         private string $sortDirection = 'asc',
     ) {}
@@ -25,7 +25,7 @@ class All extends Component
     protected function calculateViewData()
     {
         return [
-            'products' => $this->productManager->getAllProductsWithPrices($this->sortBy, $this->sortDirection),
+            'products' => $this->productService->getAllProductsWithPrices($this->sortBy, $this->sortDirection),
         ];
     }
 }

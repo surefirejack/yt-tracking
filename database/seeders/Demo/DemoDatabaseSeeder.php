@@ -18,7 +18,7 @@ use App\Models\Plan;
 use App\Models\Product;
 use App\Models\Tenant;
 use App\Models\User;
-use App\Services\MetricsManager;
+use App\Services\MetricsService;
 use App\Services\TenantPermissionManager;
 use Carbon\Carbon;
 use Database\Seeders\DatabaseSeeder;
@@ -28,7 +28,7 @@ use Illuminate\Support\Str;
 class DemoDatabaseSeeder extends Seeder
 {
     public function __construct(
-        private MetricsManager $metricsManager,
+        private MetricsService $metricsService,
         private TenantPermissionManager $tenantPermissionManager,
     ) {}
 
@@ -406,7 +406,7 @@ class DemoDatabaseSeeder extends Seeder
 
         while ($startDate->lte($endDate)) {
             Carbon::setTestNow($startDate);
-            $this->metricsManager->beat();
+            $this->metricsService->beat();
             $startDate->addDay();
         }
     }

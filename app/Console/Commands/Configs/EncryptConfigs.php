@@ -2,7 +2,7 @@
 
 namespace App\Console\Commands\Configs;
 
-use App\Services\ConfigManager;
+use App\Services\ConfigService;
 use Illuminate\Console\Command;
 
 class EncryptConfigs extends Command
@@ -24,9 +24,9 @@ class EncryptConfigs extends Command
     /**
      * Execute the console command.
      */
-    public function handle(ConfigManager $configManager)
+    public function handle(ConfigService $configService)
     {
-        $configManager->encryptSensitiveConfigs();
+        $configService->encryptSensitiveConfigs();
 
         $this->info('Configs encrypted successfully.');
     }

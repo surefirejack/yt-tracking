@@ -4,8 +4,8 @@ namespace App\Livewire;
 
 use App\Constants\TenancyPermissionConstants;
 use App\Filament\Dashboard\Resources\SubscriptionResource;
-use App\Services\PaymentProviders\PaymentManager;
-use App\Services\SubscriptionManager;
+use App\Services\PaymentProviders\PaymentService;
+use App\Services\SubscriptionService;
 use App\Services\TenantManager;
 use App\Services\TenantPermissionManager;
 use Filament\Facades\Filament;
@@ -25,22 +25,22 @@ class CancelSubscriptionForm extends Component implements HasForms
 
     public string $subscriptionUuid;
 
-    private PaymentManager $paymentManager;
+    private PaymentService $paymentService;
 
-    private SubscriptionManager $subscriptionManager;
+    private SubscriptionService $subscriptionService;
 
     private TenantPermissionManager $tenantPermissionManager;
 
     private TenantManager $tenantManager;
 
     public function boot(
-        PaymentManager $paymentManager,
-        SubscriptionManager $subscriptionManager,
+        PaymentService $paymentService,
+        SubscriptionService $subscriptionService,
         TenantPermissionManager $tenantPermissionManager,
         TenantManager $tenantManager,
     ) {
-        $this->paymentManager = $paymentManager;
-        $this->subscriptionManager = $subscriptionManager;
+        $this->paymentService = $paymentService;
+        $this->subscriptionService = $subscriptionService;
         $this->tenantPermissionManager = $tenantPermissionManager;
         $this->tenantManager = $tenantManager;
     }
@@ -110,11 +110,11 @@ class CancelSubscriptionForm extends Component implements HasForms
 
         $paymentProvider = $subscription->paymentProvider()->first();
 
-        $paymentProviderStrategy = $this->paymentManager->getPaymentProviderBySlug(
+        $paymentProviderStrategy = $this->paymentService->getPaymentProviderBySlug(
             $paymentProvider->slug
         );
 
-        $this->subscriptionManager->cancelSubscription(
+        $this->subscriptionService->cancelSubscription(
             $subscription,
             $paymentProviderStrategy,
             $data['reason'],

@@ -6,7 +6,7 @@ use App\Constants\DiscountConstants;
 use App\Filament\Dashboard\Resources\OrderResource\Pages;
 use App\Mapper\OrderStatusMapper;
 use App\Models\Order;
-use App\Services\ConfigManager;
+use App\Services\ConfigService;
 use Filament\Facades\Filament;
 use Filament\Forms\Form;
 use Filament\Infolists\Components\Section;
@@ -194,6 +194,6 @@ class OrderResource extends Resource
 
     public static function isDiscovered(): bool
     {
-        return app()->make(ConfigManager::class)->get('app.customer_dashboard.show_orders', true);
+        return app()->make(ConfigService::class)->get('app.customer_dashboard.show_orders', true);
     }
 }
