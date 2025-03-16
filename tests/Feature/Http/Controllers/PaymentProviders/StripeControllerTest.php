@@ -10,10 +10,10 @@ use App\Models\Currency;
 use App\Models\Order;
 use App\Models\PaymentProvider;
 use App\Models\Subscription;
-use App\Services\OrderManager;
+use App\Services\OrderService;
 use App\Services\PaymentProviders\Stripe\StripeWebhookHandler;
-use App\Services\SubscriptionManager;
-use App\Services\TransactionManager;
+use App\Services\SubscriptionService;
+use App\Services\TransactionService;
 use Illuminate\Support\Str;
 use Tests\Feature\FeatureTest;
 
@@ -385,7 +385,7 @@ class StripeControllerTest extends FeatureTest
         $payloadString = json_encode($payload);
         $signature = \hash_hmac('sha256', "{$timestamp}.{$payloadString}", config('services.stripe.webhook_signing_secret'));
 
-        $mock = \Mockery::mock(StripeWebhookHandler::class, [resolve(SubscriptionManager::class), resolve(TransactionManager::class), resolve(OrderManager::class)])->makePartial()->shouldAllowMockingProtectedMethods();
+        $mock = \Mockery::mock(StripeWebhookHandler::class, [resolve(SubscriptionService::class), resolve(TransactionService::class), resolve(OrderService::class)])->makePartial()->shouldAllowMockingProtectedMethods();
         $mock->shouldReceive('calculateFees')->once()->andReturn(0);
         $this->app->instance(StripeWebhookHandler::class, $mock);
 
@@ -448,7 +448,7 @@ class StripeControllerTest extends FeatureTest
         $payloadString = json_encode($payload);
         $signature = \hash_hmac('sha256', "{$timestamp}.{$payloadString}", config('services.stripe.webhook_signing_secret'));
 
-        $mock = \Mockery::mock(StripeWebhookHandler::class, [resolve(SubscriptionManager::class), resolve(TransactionManager::class), resolve(OrderManager::class)])->makePartial()->shouldAllowMockingProtectedMethods();
+        $mock = \Mockery::mock(StripeWebhookHandler::class, [resolve(SubscriptionService::class), resolve(TransactionService::class), resolve(OrderService::class)])->makePartial()->shouldAllowMockingProtectedMethods();
         $mock->shouldReceive('calculateFees')->once()->andReturn(0);
         $this->app->instance(StripeWebhookHandler::class, $mock);
 
@@ -609,7 +609,7 @@ class StripeControllerTest extends FeatureTest
         $payloadString = json_encode($payload);
         $signature = \hash_hmac('sha256', "{$timestamp}.{$payloadString}", config('services.stripe.webhook_signing_secret'));
 
-        $mock = \Mockery::mock(StripeWebhookHandler::class, [resolve(SubscriptionManager::class), resolve(TransactionManager::class), resolve(OrderManager::class)])->makePartial()->shouldAllowMockingProtectedMethods();
+        $mock = \Mockery::mock(StripeWebhookHandler::class, [resolve(SubscriptionService::class), resolve(TransactionService::class), resolve(OrderService::class)])->makePartial()->shouldAllowMockingProtectedMethods();
         $mock->shouldReceive('calculateFees')->once()->andReturn(0);
         $this->app->instance(StripeWebhookHandler::class, $mock);
 
@@ -672,7 +672,7 @@ class StripeControllerTest extends FeatureTest
         $payloadString = json_encode($payload);
         $signature = \hash_hmac('sha256', "{$timestamp}.{$payloadString}", config('services.stripe.webhook_signing_secret'));
 
-        $mock = \Mockery::mock(StripeWebhookHandler::class, [resolve(SubscriptionManager::class), resolve(TransactionManager::class), resolve(OrderManager::class)])->makePartial()->shouldAllowMockingProtectedMethods();
+        $mock = \Mockery::mock(StripeWebhookHandler::class, [resolve(SubscriptionService::class), resolve(TransactionService::class), resolve(OrderService::class)])->makePartial()->shouldAllowMockingProtectedMethods();
         $this->app->instance(StripeWebhookHandler::class, $mock);
 
         $response = $this->postJson(route('payments-providers.stripe.webhook'), $payload, [
@@ -720,7 +720,7 @@ class StripeControllerTest extends FeatureTest
         $payloadString = json_encode($payload);
         $signature = \hash_hmac('sha256', "{$timestamp}.{$payloadString}", config('services.stripe.webhook_signing_secret'));
 
-        $mock = \Mockery::mock(StripeWebhookHandler::class, [resolve(SubscriptionManager::class), resolve(TransactionManager::class), resolve(OrderManager::class)])->makePartial()->shouldAllowMockingProtectedMethods();
+        $mock = \Mockery::mock(StripeWebhookHandler::class, [resolve(SubscriptionService::class), resolve(TransactionService::class), resolve(OrderService::class)])->makePartial()->shouldAllowMockingProtectedMethods();
         $mock->shouldReceive('calculateFees')->once()->andReturn(0);
         $this->app->instance(StripeWebhookHandler::class, $mock);
 
@@ -780,7 +780,7 @@ class StripeControllerTest extends FeatureTest
         $payloadString = json_encode($payload);
         $signature = \hash_hmac('sha256', "{$timestamp}.{$payloadString}", config('services.stripe.webhook_signing_secret'));
 
-        $mock = \Mockery::mock(StripeWebhookHandler::class, [resolve(SubscriptionManager::class), resolve(TransactionManager::class), resolve(OrderManager::class)])->makePartial()->shouldAllowMockingProtectedMethods();
+        $mock = \Mockery::mock(StripeWebhookHandler::class, [resolve(SubscriptionService::class), resolve(TransactionService::class), resolve(OrderService::class)])->makePartial()->shouldAllowMockingProtectedMethods();
         $this->app->instance(StripeWebhookHandler::class, $mock);
 
         $response = $this->postJson(route('payments-providers.stripe.webhook'), $payload, [

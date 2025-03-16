@@ -3,8 +3,8 @@
 namespace App\Models;
 
 use App\Notifications\Auth\QueuedVerifyEmail;
-use App\Services\OrderManager;
-use App\Services\SubscriptionManager;
+use App\Services\OrderService;
+use App\Services\SubscriptionService;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Models\Contracts\HasTenants;
 use Filament\Panel;
@@ -140,26 +140,26 @@ class User extends Authenticatable implements FilamentUser, HasTenants, MustVeri
 
     public function isSubscribed(?string $productSlug = null, ?Tenant $tenant = null): bool
     {
-        /** @var SubscriptionManager $subscriptionManager */
-        $subscriptionManager = app(SubscriptionManager::class);
+        /** @var SubscriptionService $subscriptionService */
+        $subscriptionService = app(SubscriptionService::class);
 
-        return $subscriptionManager->isUserSubscribed($this, $productSlug, $tenant);
+        return $subscriptionService->isUserSubscribed($this, $productSlug, $tenant);
     }
 
     public function isTrialing(?string $productSlug = null, ?Tenant $tenant = null): bool
     {
-        /** @var SubscriptionManager $subscriptionManager */
-        $subscriptionManager = app(SubscriptionManager::class);
+        /** @var SubscriptionService $subscriptionService */
+        $subscriptionService = app(SubscriptionService::class);
 
-        return $subscriptionManager->isUserTrialing($this, $productSlug, $tenant);
+        return $subscriptionService->isUserTrialing($this, $productSlug, $tenant);
     }
 
     public function hasPurchased(?string $productSlug = null, ?Tenant $tenant = null): bool
     {
-        /** @var OrderManager $orderManager */
-        $orderManager = app(OrderManager::class);
+        /** @var OrderService $orderService */
+        $orderService = app(OrderService::class);
 
-        return $orderManager->hasUserOrdered($this, $productSlug, $tenant);
+        return $orderService->hasUserOrdered($this, $productSlug, $tenant);
     }
 
     public function sendEmailVerificationNotification()

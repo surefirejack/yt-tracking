@@ -2,8 +2,8 @@
 
 namespace App\Livewire\Checkout;
 
-use App\Services\SessionManager;
-use App\Services\TenantCreationManager;
+use App\Services\SessionService;
+use App\Services\TenantCreationService;
 use Illuminate\Validation\ValidationException;
 use Livewire\Component;
 
@@ -11,35 +11,35 @@ class ProductTenantPicker extends Component
 {
     public $tenant;
 
-    private SessionManager $sessionManager;
+    private SessionService $sessionService;
 
-    private TenantCreationManager $tenantCreationManager;
+    private TenantCreationService $tenantCreationService;
 
-    public function boot(SessionManager $sessionManager, TenantCreationManager $tenantCreationManager)
+    public function boot(SessionService $sessionService, TenantCreationService $tenantCreationService)
     {
-        $this->sessionManager = $sessionManager;
-        $this->tenantCreationManager = $tenantCreationManager;
+        $this->sessionService = $sessionService;
+        $this->tenantCreationService = $tenantCreationService;
     }
 
     public function mount()
     {
-        $cartDto = $this->sessionManager->getCartDto();
+        $cartDto = $this->sessionService->getCartDto();
 
         if (! empty($cartDto->tenantUuid)) {
             $this->tenant = $cartDto->tenantUuid;
         } else {
-            $this->tenant = $this->tenantCreationManager->findUserTenantsForNewOrder(auth()->user())->first()?->uuid;
+            $this->tenant = $this->tenantCreationService->findUserTenantsForNewOrder(auth()->user())->first()?->uuid;
         }
 
         $cartDto->tenantUuid = $this->tenant;
-        $this->sessionManager->saveCartDto($cartDto);
+        $this->sessionService->saveCartDto($cartDto);
     }
 
     public function updatedTenant(string $value)
     {
         if (! empty($value)) {
 
-            $tenant = $this->tenantCreationManager->findUserTenantForNewOrderByUuid(auth()->user(), $value);
+            $tenant = $this->tenantCreationService->findUserTenantForNewOrderByUuid(auth()->user(), $value);
 
             if ($tenant === null) {
                 throw ValidationException::withMessages([
@@ -48,15 +48,15 @@ class ProductTenantPicker extends Component
             }
         }
 
-        $cartDto = $this->sessionManager->getCartDto();
+        $cartDto = $this->sessionService->getCartDto();
         $cartDto->tenantUuid = $value;
-        $this->sessionManager->saveCartDto($cartDto);
+        $this->sessionService->saveCartDto($cartDto);
     }
 
     public function render()
     {
         return view('livewire.checkout.product-tenant-picker', [
-            'userTenants' => $this->tenantCreationManager->findUserTenantsForNewOrder(auth()->user()),
+            'userTenants' => $this->tenantCreationService->findUserTenantsForNewOrder(auth()->user()),
         ]);
     }
 }

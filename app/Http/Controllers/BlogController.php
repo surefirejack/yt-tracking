@@ -3,12 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Models\BlogPostCategory;
-use App\Services\BlogManager;
+use App\Services\BlogService;
 
 class BlogController extends Controller
 {
     public function __construct(
-        private BlogManager $blogManager
+        private BlogService $blogService
     ) {}
 
     public function view(string $slug)
@@ -16,18 +16,18 @@ class BlogController extends Controller
         $user = auth()->user();
         $isPublished = $user && $user->isAdmin() ? null : true; // if user is admin, show all posts, otherwise only published posts
 
-        $post = $this->blogManager->getBlogBySlug($slug, $isPublished);
+        $post = $this->blogService->getBlogBySlug($slug, $isPublished);
 
         return view('blog.view', [
             'post' => $post,
-            'morePosts' => $this->blogManager->getMorePosts($post),
+            'morePosts' => $this->blogService->getMorePosts($post),
         ]);
     }
 
     public function all()
     {
         return view('blog.all', [
-            'posts' => $this->blogManager->getAllPosts(),
+            'posts' => $this->blogService->getAllPosts(),
         ]);
     }
 
@@ -37,7 +37,7 @@ class BlogController extends Controller
 
         return view('blog.category', [
             'category' => $category,
-            'posts' => $this->blogManager->getAllPostsForCategory($category),
+            'posts' => $this->blogService->getAllPostsForCategory($category),
         ]);
     }
 }

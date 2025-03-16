@@ -2,8 +2,8 @@
 
 namespace App\Livewire\Verify;
 
-use App\Services\SessionManager;
-use App\Services\UserVerificationManager;
+use App\Services\SessionService;
+use App\Services\UserVerificationService;
 use Illuminate\Support\Facades\RateLimiter;
 use Livewire\Component;
 
@@ -13,9 +13,9 @@ class SmsVerification extends Component
 
     public $code;
 
-    public function render(SessionManager $sessionManager)
+    public function render(SessionService $sessionService)
     {
-        $dto = $sessionManager->getSmsVerificationDto();
+        $dto = $sessionService->getSmsVerificationDto();
 
         $this->phone ??= $dto?->phoneNumber;
 
@@ -25,7 +25,7 @@ class SmsVerification extends Component
         );
     }
 
-    public function sendVerificationCode(UserVerificationManager $userVerificationManager)
+    public function sendVerificationCode(UserVerificationService $userVerificationService)
     {
         // remove spaces from phone number
         $this->phone = preg_replace('/\s+/', '', $this->phone);
@@ -41,14 +41,14 @@ class SmsVerification extends Component
         $executed = RateLimiter::attempt(
             'send-verification-code:'.$user->id,
             10,
-            function () use ($userVerificationManager, $user) {
+            function () use ($userVerificationService, $user) {
 
-                if ($userVerificationManager->phoneAlreadyExists($user, $this->phone)) {
+                if ($userVerificationService->phoneAlreadyExists($user, $this->phone)) {
                     $this->addError('phone', __('Phone number already exists.'));
 
                     return;
                 }
-                $result = $userVerificationManager->generateAndSendSmsVerificationCode($this->phone);
+                $result = $userVerificationService->generateAndSendSmsVerificationCode($this->phone);
 
                 if (! $result) {
                     $this->addError('phone', __('Failed to send verification code.'));
@@ -61,7 +61,7 @@ class SmsVerification extends Component
         }
     }
 
-    public function verifyCode(UserVerificationManager $userVerificationManager)
+    public function verifyCode(UserVerificationService $userVerificationService)
     {
         $this->validate([
             'code' => 'required|digits:6',
@@ -74,8 +74,8 @@ class SmsVerification extends Component
         $executed = RateLimiter::attempt(
             'verify-phone:'.$user->id,
             10,
-            function () use ($userVerificationManager, $user, &$result) {
-                $result = $userVerificationManager->verifyCode($user, $this->code);
+            function () use ($userVerificationService, $user, &$result) {
+                $result = $userVerificationService->verifyCode($user, $this->code);
             }
         );
 
@@ -94,9 +94,9 @@ class SmsVerification extends Component
         $this->redirect(route('user.phone-verified'));
     }
 
-    public function editPhone(SessionManager $sessionManager)
+    public function editPhone(SessionService $sessionService)
     {
-        $sessionManager->clearSmsVerificationDto();
+        $sessionService->clearSmsVerificationDto();
 
         $this->phone = null;
 

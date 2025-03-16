@@ -2,7 +2,7 @@
 
 namespace App\Livewire\Filament\Dashboard;
 
-use App\Services\TenantManager;
+use App\Services\TenantService;
 use Filament\Facades\Filament;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Concerns\InteractsWithForms;
@@ -15,7 +15,7 @@ class TenantSettings extends Component implements HasForms
 {
     use InteractsWithForms;
 
-    private TenantManager $tenantManager;
+    private TenantService $tenantService;
 
     public ?array $data = [];
 
@@ -24,9 +24,9 @@ class TenantSettings extends Component implements HasForms
         return view('livewire.filament.dashboard.tenant-settings');
     }
 
-    public function boot(TenantManager $tenantManager): void
+    public function boot(TenantService $tenantService): void
     {
-        $this->tenantManager = $tenantManager;
+        $this->tenantService = $tenantService;
     }
 
     public function mount(): void
@@ -53,7 +53,7 @@ class TenantSettings extends Component implements HasForms
     {
         $data = $this->form->getState();
 
-        $this->tenantManager->updateTenantName(Filament::getTenant(), $data['tenant_name']);
+        $this->tenantService->updateTenantName(Filament::getTenant(), $data['tenant_name']);
 
         Notification::make()
             ->title(__('Settings Saved'))

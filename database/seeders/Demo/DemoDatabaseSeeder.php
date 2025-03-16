@@ -18,8 +18,8 @@ use App\Models\Plan;
 use App\Models\Product;
 use App\Models\Tenant;
 use App\Models\User;
-use App\Services\MetricsManager;
-use App\Services\TenantPermissionManager;
+use App\Services\MetricsService;
+use App\Services\TenantPermissionService;
 use Carbon\Carbon;
 use Database\Seeders\DatabaseSeeder;
 use Illuminate\Database\Seeder;
@@ -28,8 +28,8 @@ use Illuminate\Support\Str;
 class DemoDatabaseSeeder extends Seeder
 {
     public function __construct(
-        private MetricsManager $metricsManager,
-        private TenantPermissionManager $tenantPermissionManager,
+        private MetricsService $metricsService,
+        private TenantPermissionService $tenantPermissionManager,
     ) {}
 
     private array $blogPostTitles = [
@@ -406,7 +406,7 @@ class DemoDatabaseSeeder extends Seeder
 
         while ($startDate->lte($endDate)) {
             Carbon::setTestNow($startDate);
-            $this->metricsManager->beat();
+            $this->metricsService->beat();
             $startDate->addDay();
         }
     }

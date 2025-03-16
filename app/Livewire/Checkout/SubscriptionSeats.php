@@ -3,10 +3,10 @@
 namespace App\Livewire\Checkout;
 
 use App\Models\Plan;
-use App\Services\PlanManager;
-use App\Services\SessionManager;
-use App\Services\SubscriptionManager;
-use App\Services\TenantSubscriptionManager;
+use App\Services\PlanService;
+use App\Services\SessionService;
+use App\Services\SubscriptionService;
+use App\Services\TenantSubscriptionService;
 use Livewire\Component;
 
 class SubscriptionSeats extends Component
@@ -19,50 +19,50 @@ class SubscriptionSeats extends Component
 
     public $maxQuantity;
 
-    private SessionManager $sessionManager;
+    private SessionService $sessionService;
 
-    private PlanManager $planManager;
+    private PlanService $planService;
 
-    private SubscriptionManager $subscriptionManager;
+    private SubscriptionService $subscriptionService;
 
-    private TenantSubscriptionManager $tenantSubscriptionManager;
+    private TenantSubscriptionService $tenantSubscriptionService;
 
     public function boot(
-        SessionManager $sessionManager,
-        PlanManager $planManager,
-        SubscriptionManager $subscriptionManager,
-        TenantSubscriptionManager $tenantSubscriptionManager
+        SessionService $sessionService,
+        PlanService $planService,
+        SubscriptionService $subscriptionService,
+        TenantSubscriptionService $tenantSubscriptionService
     ) {
-        $this->sessionManager = $sessionManager;
-        $this->planManager = $planManager;
-        $this->subscriptionManager = $subscriptionManager;
-        $this->tenantSubscriptionManager = $tenantSubscriptionManager;
+        $this->sessionService = $sessionService;
+        $this->planService = $planService;
+        $this->subscriptionService = $subscriptionService;
+        $this->tenantSubscriptionService = $tenantSubscriptionService;
     }
 
     public function mount(Plan $plan)
     {
         $this->planType = $plan->type;
         $this->planSlug = $plan->slug;
-        $this->quantity = $this->sessionManager->getSubscriptionCheckoutDto()->quantity;
+        $this->quantity = $this->sessionService->getSubscriptionCheckoutDto()->quantity;
         $this->maxQuantity = $plan->max_users_per_tenant;
     }
 
     public function updatedQuantity(int $value)
     {
-        $plan = $this->planManager->getActivePlanBySlug($this->planSlug);
+        $plan = $this->planService->getActivePlanBySlug($this->planSlug);
 
         $maxRule = '';
         if ($plan->max_users_per_tenant > 0) {
             $maxRule = '|max:'.$plan->max_users_per_tenant;
         }
 
-        $subscriptionCheckoutDto = $this->sessionManager->getSubscriptionCheckoutDto();
+        $subscriptionCheckoutDto = $this->sessionService->getSubscriptionCheckoutDto();
 
         $min = 1;
 
         if ($subscriptionCheckoutDto->subscriptionId !== null) {
-            $subscription = $this->subscriptionManager->findById($subscriptionCheckoutDto->subscriptionId);
-            $min = $this->tenantSubscriptionManager->calculateCurrentSubscriptionQuantity($subscription);
+            $subscription = $this->subscriptionService->findById($subscriptionCheckoutDto->subscriptionId);
+            $min = $this->tenantSubscriptionService->calculateCurrentSubscriptionQuantity($subscription);
         }
 
         $this->validate([
@@ -70,7 +70,7 @@ class SubscriptionSeats extends Component
         ]);
 
         $subscriptionCheckoutDto->quantity = $value;
-        $this->sessionManager->saveSubscriptionCheckoutDto($subscriptionCheckoutDto);
+        $this->sessionService->saveSubscriptionCheckoutDto($subscriptionCheckoutDto);
 
         $this->dispatch('calculations-updated')->to(SubscriptionTotals::class);
     }

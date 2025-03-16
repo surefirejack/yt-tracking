@@ -15,8 +15,9 @@ use App\Models\PaymentProvider;
 use App\Models\Plan;
 use App\Models\PlanPrice;
 use App\Models\Subscription;
-use App\Services\PaymentProviders\PaymentManager;
+use App\Models\User;
 use App\Services\PaymentProviders\PaymentProviderInterface;
+use App\Services\PaymentProviders\PaymentService;
 use Exception;
 use Livewire\Livewire;
 use Mockery;
@@ -520,8 +521,8 @@ class ConvertLocalSubscriptionCheckoutFormTest extends FeatureTest
 
         $this->app->instance(PaymentProviderInterface::class, $mock);
 
-        $this->app->bind(PaymentManager::class, function () use ($mock) {
-            return new PaymentManager($mock);
+        $this->app->bind(PaymentService::class, function () use ($mock) {
+            return new PaymentService($mock);
         });
 
         return $mock;

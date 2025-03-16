@@ -3,7 +3,7 @@
 namespace App\Filament\Dashboard\Pages;
 
 use App\Constants\TenancyPermissionConstants;
-use App\Services\TenantPermissionManager;
+use App\Services\TenantPermissionService;
 use Filament\Facades\Filament;
 use Filament\Pages\Page;
 
@@ -23,9 +23,9 @@ class Team extends Page
 
     public static function canAccess(): bool
     {
-        $tenantPermissionManager = app(TenantPermissionManager::class); // a bit ugly, but this is the Filament way :/
+        $tenantPermissionService = app(TenantPermissionService::class); // a bit ugly, but this is the Filament way :/
 
-        return config('app.allow_tenant_invitations', false) && $tenantPermissionManager->tenantUserHasPermissionTo(
+        return config('app.allow_tenant_invitations', false) && $tenantPermissionService->tenantUserHasPermissionTo(
             Filament::getTenant(),
             auth()->user(),
             TenancyPermissionConstants::PERMISSION_MANAGE_TEAM

@@ -14,12 +14,12 @@ use App\Models\PaymentProvider;
 use App\Models\Plan;
 use App\Models\Subscription;
 use App\Models\User;
-use App\Services\CalculationManager;
-use App\Services\DiscountManager;
-use App\Services\OneTimeProductManager;
+use App\Services\CalculationService;
+use App\Services\DiscountService;
+use App\Services\OneTimeProductService;
 use App\Services\PaymentProviders\PaymentProviderInterface;
-use App\Services\PlanManager;
-use App\Services\SubscriptionManager;
+use App\Services\PlanService;
+use App\Services\SubscriptionService;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
@@ -28,11 +28,11 @@ class LemonSqueezyProvider implements PaymentProviderInterface
 {
     public function __construct(
         private LemonSqueezyClient $client,
-        private SubscriptionManager $subscriptionManager,
-        private CalculationManager $calculationManager,
-        private PlanManager $planManager,
-        private DiscountManager $discountManager,
-        private OneTimeProductManager $oneTimeProductManager,
+        private SubscriptionService $subscriptionService,
+        private CalculationService $calculationService,
+        private PlanService $planService,
+        private DiscountService $discountService,
+        private OneTimeProductService $oneTimeProductService,
     ) {}
 
     public function createSubscriptionCheckoutRedirectLink(Plan $plan, Subscription $subscription, ?Discount $discount = null, int $quantity = 1): string
@@ -42,14 +42,14 @@ class LemonSqueezyProvider implements PaymentProviderInterface
         /** @var User $user */
         $user = auth()->user();
 
-        $variantId = $this->planManager->getPaymentProviderProductId($plan, $paymentProvider);
+        $variantId = $this->planService->getPaymentProviderProductId($plan, $paymentProvider);
 
         if ($variantId === null) {
             Log::error('Failed to find variant ID for plan: (did you forget to add it to the plan?) '.$plan->id);
             throw new \Exception('Failed to find variant ID for plan');
         }
 
-        $price = $this->calculationManager->getPlanPrice($plan);
+        $price = $this->calculationService->getPlanPrice($plan);
 
         $object = [
             'custom_price' => $price->price,
@@ -78,7 +78,7 @@ class LemonSqueezyProvider implements PaymentProviderInterface
             ],
         ];
 
-        $shouldSkipTrial = $this->subscriptionManager->shouldSkipTrial($subscription);
+        $shouldSkipTrial = $this->subscriptionService->shouldSkipTrial($subscription);
 
         if ($shouldSkipTrial) {
             $object['checkout_options']['skip_trial'] = true;
@@ -125,7 +125,7 @@ class LemonSqueezyProvider implements PaymentProviderInterface
 
         foreach ($order->items()->get() as $item) {
             $product = $item->oneTimeProduct()->firstOrFail();
-            $variantId = $this->oneTimeProductManager->getPaymentProviderProductId($product, $paymentProvider);
+            $variantId = $this->oneTimeProductService->getPaymentProviderProductId($product, $paymentProvider);
 
             if ($variantId === null) {
                 Log::error('Failed to find variant ID for product: (did you forget to add it to the product?) '.$product->id);
@@ -194,14 +194,14 @@ class LemonSqueezyProvider implements PaymentProviderInterface
 
         try {
 
-            $variantId = $this->planManager->getPaymentProviderProductId($newPlan, $paymentProvider);
+            $variantId = $this->planService->getPaymentProviderProductId($newPlan, $paymentProvider);
 
             if ($variantId === null) {
                 Log::error('Failed to find variant ID for plan while changing subscription plan: (did you forget to add it to the plan?) '.$newPlan->id);
                 throw new \Exception('Failed to find variant ID for plan while changing subscription plan');
             }
 
-            $planPrice = $this->calculationManager->getPlanPrice($newPlan);
+            $planPrice = $this->calculationService->getPlanPrice($newPlan);
 
             $response = $this->client->updateSubscription($subscription->payment_provider_subscription_id, $variantId, $withProration);
 
@@ -209,7 +209,7 @@ class LemonSqueezyProvider implements PaymentProviderInterface
                 throw new \Exception('Failed to update lemon-squeezy subscription');
             }
 
-            $subscription = $this->subscriptionManager->updateSubscription($subscription, [
+            $subscription = $this->subscriptionService->updateSubscription($subscription, [
                 'plan_id' => $newPlan->id,
                 'price' => $planPrice->price,
                 'currency_id' => $planPrice->currency_id,
@@ -348,7 +348,7 @@ class LemonSqueezyProvider implements PaymentProviderInterface
 
     private function findOrCreateLemonSqueezyDiscount(Discount $discount, PaymentProvider $paymentProvider): string
     {
-        $discountId = $this->discountManager->getPaymentProviderDiscountId($discount, $paymentProvider);
+        $discountId = $this->discountService->getPaymentProviderDiscountId($discount, $paymentProvider);
 
         if ($discountId !== null) {
             return $discountId;
@@ -389,7 +389,7 @@ class LemonSqueezyProvider implements PaymentProviderInterface
             throw new \Exception('Failed to create lemon-squeezy discount');
         }
 
-        $this->discountManager->addPaymentProviderDiscountId($discount, $paymentProvider, $code);
+        $this->discountService->addPaymentProviderDiscountId($discount, $paymentProvider, $code);
 
         return $code;
     }

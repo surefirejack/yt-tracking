@@ -40,9 +40,9 @@
 
         <div class="flex gap-4">
 
-            @inject('tenantCreationManager', 'App\Services\TenantCreationManager')
+            @inject('tenantCreationService', 'App\Services\TenantCreationService')
 
-            @if ($isTenantPickerEnabled && $tenantCreationManager->findUserTenantsForNewSubscription(auth()->user())->count() > 0)
+            @if ($isTenantPickerEnabled && $tenantCreationService->findUserTenantsForNewSubscription(auth()->user())->count() > 0)
                 <livewire:checkout.subscription-tenant-picker />
             @endif
 

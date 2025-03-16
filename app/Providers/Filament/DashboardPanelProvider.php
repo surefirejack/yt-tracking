@@ -7,7 +7,7 @@ use App\Constants\TenancyPermissionConstants;
 use App\Filament\Dashboard\Pages\TenantSettings;
 use App\Filament\Dashboard\Pages\TwoFactorAuth\TwoFactorAuth;
 use App\Models\Tenant;
-use App\Services\TenantPermissionManager;
+use App\Services\TenantPermissionService;
 use Filament\Facades\Filament;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -52,9 +52,9 @@ class DashboardPanelProvider extends PanelProvider
                     ->label(__('Workspace Settings'))
                     ->visible(
                         function () {
-                            $tenantPermissionManager = app(TenantPermissionManager::class);
+                            $tenantPermissionService = app(TenantPermissionService::class);
 
-                            return $tenantPermissionManager->tenantUserHasPermissionTo(
+                            return $tenantPermissionService->tenantUserHasPermissionTo(
                                 Filament::getTenant(),
                                 auth()->user(),
                                 TenancyPermissionConstants::PERMISSION_UPDATE_TENANT_SETTINGS

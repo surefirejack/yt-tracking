@@ -19,7 +19,7 @@ class All extends \App\View\Components\Plans\All
     {
         $subscription = null;
         if ($this->currentSubscriptionUuid !== null) {
-            $subscription = $this->subscriptionManager->findActiveByTenantAndSubscriptionUuid(Filament::getTenant(), $this->currentSubscriptionUuid);
+            $subscription = $this->subscriptionService->findActiveByTenantAndSubscriptionUuid(Filament::getTenant(), $this->currentSubscriptionUuid);
         }
 
         $planType = null;
@@ -27,7 +27,7 @@ class All extends \App\View\Components\Plans\All
             $planType = $subscription->plan->type;
         }
 
-        $plans = $this->planManager->getAllPlansWithPrices(
+        $plans = $this->planService->getAllPlansWithPrices(
             $this->products,
             $planType,
         );

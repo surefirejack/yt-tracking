@@ -2,7 +2,7 @@
 
 namespace App\Livewire\Filament;
 
-use App\Services\ConfigManager;
+use App\Services\ConfigService;
 use Filament\Forms\Components\Actions;
 use Filament\Forms\Components\Actions\Action;
 use Filament\Forms\Components\ColorPicker;
@@ -23,7 +23,7 @@ use SaaSykit\OpenGraphy\ImageGenerator;
 
 class OpenGraphImageSettings extends Component implements HasForms
 {
-    private ConfigManager $configManager;
+    private ConfigService $configService;
 
     use InteractsWithForms;
 
@@ -34,38 +34,38 @@ class OpenGraphImageSettings extends Component implements HasForms
         return view('livewire.filament.open-graph-image-settings');
     }
 
-    public function boot(ConfigManager $configManager): void
+    public function boot(ConfigService $configService): void
     {
-        $this->configManager = $configManager;
+        $this->configService = $configService;
     }
 
     public function mount(): void
     {
         $this->form->fill([
-            'open_graphy_image_enabled' => $this->configManager->get('open-graphy.enabled', false),
-            'open_graphy_logo_enabled' => $this->configManager->get('open-graphy.logo.enabled', false),
-            'open_graphy_screenshot_enabled' => $this->configManager->get('open-graphy.screenshot.enabled', false),
-            'open_graphy_template' => $this->configManager->get('open-graphy.template'),
-            'open-graphy_template_settings_strings_background' => $this->configManager->get('open-graphy.template_settings.strings.background'),
-            'open-graphy_template_settings_strings_stroke_color' => $this->configManager->get('open-graphy.template_settings.strings.stroke_color'),
-            'open-graphy_template_settings_strings_stroke_width' => $this->configManager->get('open-graphy.template_settings.strings.stroke_width'),
-            'open-graphy_template_settings_strings_text_color' => $this->configManager->get('open-graphy.template_settings.strings.text_color'),
-            'open-graphy_template_settings_stripes_start_color' => $this->configManager->get('open-graphy.template_settings.stripes.start_color'),
-            'open-graphy_template_settings_stripes_end_color' => $this->configManager->get('open-graphy.template_settings.stripes.end_color'),
-            'open-graphy_template_settings_stripes_text_color' => $this->configManager->get('open-graphy.template_settings.stripes.text_color'),
-            'open-graphy_template_settings_sunny_start_color' => $this->configManager->get('open-graphy.template_settings.sunny.start_color'),
-            'open-graphy_template_settings_sunny_end_color' => $this->configManager->get('open-graphy.template_settings.sunny.end_color'),
-            'open-graphy_template_settings_sunny_text_color' => $this->configManager->get('open-graphy.template_settings.sunny.text_color'),
-            'open-graphy_template_settings_verticals_start_color' => $this->configManager->get('open-graphy.template_settings.verticals.start_color'),
-            'open-graphy_template_settings_verticals_mid_color' => $this->configManager->get('open-graphy.template_settings.verticals.mid_color'),
-            'open-graphy_template_settings_verticals_end_color' => $this->configManager->get('open-graphy.template_settings.verticals.end_color'),
-            'open-graphy_template_settings_verticals_text_color' => $this->configManager->get('open-graphy.template_settings.verticals.text_color'),
-            'open-graphy_template_settings_nodes_background' => $this->configManager->get('open-graphy.template_settings.nodes.background'),
-            'open-graphy_template_settings_nodes_node_color' => $this->configManager->get('open-graphy.template_settings.nodes.node_color'),
-            'open-graphy_template_settings_nodes_edge_color' => $this->configManager->get('open-graphy.template_settings.nodes.edge_color'),
-            'open-graphy_template_settings_nodes_text_color' => $this->configManager->get('open-graphy.template_settings.nodes.text_color'),
+            'open_graphy_image_enabled' => $this->configService->get('open-graphy.enabled', false),
+            'open_graphy_logo_enabled' => $this->configService->get('open-graphy.logo.enabled', false),
+            'open_graphy_screenshot_enabled' => $this->configService->get('open-graphy.screenshot.enabled', false),
+            'open_graphy_template' => $this->configService->get('open-graphy.template'),
+            'open-graphy_template_settings_strings_background' => $this->configService->get('open-graphy.template_settings.strings.background'),
+            'open-graphy_template_settings_strings_stroke_color' => $this->configService->get('open-graphy.template_settings.strings.stroke_color'),
+            'open-graphy_template_settings_strings_stroke_width' => $this->configService->get('open-graphy.template_settings.strings.stroke_width'),
+            'open-graphy_template_settings_strings_text_color' => $this->configService->get('open-graphy.template_settings.strings.text_color'),
+            'open-graphy_template_settings_stripes_start_color' => $this->configService->get('open-graphy.template_settings.stripes.start_color'),
+            'open-graphy_template_settings_stripes_end_color' => $this->configService->get('open-graphy.template_settings.stripes.end_color'),
+            'open-graphy_template_settings_stripes_text_color' => $this->configService->get('open-graphy.template_settings.stripes.text_color'),
+            'open-graphy_template_settings_sunny_start_color' => $this->configService->get('open-graphy.template_settings.sunny.start_color'),
+            'open-graphy_template_settings_sunny_end_color' => $this->configService->get('open-graphy.template_settings.sunny.end_color'),
+            'open-graphy_template_settings_sunny_text_color' => $this->configService->get('open-graphy.template_settings.sunny.text_color'),
+            'open-graphy_template_settings_verticals_start_color' => $this->configService->get('open-graphy.template_settings.verticals.start_color'),
+            'open-graphy_template_settings_verticals_mid_color' => $this->configService->get('open-graphy.template_settings.verticals.mid_color'),
+            'open-graphy_template_settings_verticals_end_color' => $this->configService->get('open-graphy.template_settings.verticals.end_color'),
+            'open-graphy_template_settings_verticals_text_color' => $this->configService->get('open-graphy.template_settings.verticals.text_color'),
+            'open-graphy_template_settings_nodes_background' => $this->configService->get('open-graphy.template_settings.nodes.background'),
+            'open-graphy_template_settings_nodes_node_color' => $this->configService->get('open-graphy.template_settings.nodes.node_color'),
+            'open-graphy_template_settings_nodes_edge_color' => $this->configService->get('open-graphy.template_settings.nodes.edge_color'),
+            'open-graphy_template_settings_nodes_text_color' => $this->configService->get('open-graphy.template_settings.nodes.text_color'),
 
-            'open_graphy_logo_path' => $this->configManager->get('open-graphy.logo.location', config('app.logo.light')),
+            'open_graphy_logo_path' => $this->configService->get('open-graphy.logo.location', config('app.logo.light')),
             'open_graphy_preview_title' => 'Today is the most awesome day!',
             'open_graphy_preview_url' => 'https://filamentphp.com',
             'open_graphy_preview_image' => 'https://unsplash.com/photos/ndN00KmbJ1c/download?ixid=M3wxMjA3fDB8MXxzZWFyY2h8N3x8bmF0dXJlfGVufDB8fHx8MTcxNjIzNTg4Nnww&force=true&w=640',
@@ -224,9 +224,9 @@ class OpenGraphImageSettings extends Component implements HasForms
     {
         $data = $this->form->getState();
 
-        $this->configManager->set('open-graphy.enabled', $data['open_graphy_image_enabled']);
-        $this->configManager->set('open-graphy.screenshot.enabled', $data['open_graphy_screenshot_enabled']);
-        $this->configManager->set('open-graphy.template', $data['open_graphy_template']);
+        $this->configService->set('open-graphy.enabled', $data['open_graphy_image_enabled']);
+        $this->configService->set('open-graphy.screenshot.enabled', $data['open_graphy_screenshot_enabled']);
+        $this->configService->set('open-graphy.template', $data['open_graphy_template']);
         $this->saveKeyIfExists('open-graphy.template_settings.strings.background', 'open-graphy_template_settings_strings_background', $data);
         $this->saveKeyIfExists('open-graphy.template_settings.strings.stroke_color', 'open-graphy_template_settings_strings_stroke_color', $data);
         $this->saveKeyIfExists('open-graphy.template_settings.strings.stroke_width', 'open-graphy_template_settings_strings_stroke_width', $data);
@@ -246,7 +246,7 @@ class OpenGraphImageSettings extends Component implements HasForms
         $this->saveKeyIfExists('open-graphy.template_settings.nodes.edge_color', 'open-graphy_template_settings_nodes_edge_color', $data);
         $this->saveKeyIfExists('open-graphy.template_settings.nodes.text_color', 'open-graphy_template_settings_nodes_text_color', $data);
 
-        $this->configManager->set('open-graphy.logo.enabled', $data['open_graphy_logo_enabled']);
+        $this->configService->set('open-graphy.logo.enabled', $data['open_graphy_logo_enabled']);
         $this->saveKeyIfExists('open-graphy.logo.location', 'open_graphy_logo_path', $data);
 
         Notification::make()
@@ -258,7 +258,7 @@ class OpenGraphImageSettings extends Component implements HasForms
     private function saveKeyIfExists(string $configName, string $fieldName, array $data): void
     {
         if (array_key_exists($fieldName, $data)) {
-            $this->configManager->set($configName, $data[$fieldName]);
+            $this->configService->set($configName, $data[$fieldName]);
         }
     }
 }

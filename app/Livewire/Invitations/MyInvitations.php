@@ -3,25 +3,25 @@
 namespace App\Livewire\Invitations;
 
 use App\Models\Invitation;
-use App\Services\TenantManager;
-use App\Services\UserDashboardManager;
+use App\Services\TenantService;
+use App\Services\UserDashboardService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Validation\ValidationException;
 use Livewire\Component;
 
 class MyInvitations extends Component
 {
-    public function render(TenantManager $tenantManager): View
+    public function render(TenantService $tenantService): View
     {
         return view('livewire.invitations.my-invitations', [
-            'invitations' => $tenantManager->getUserInvitations(auth()->user()),
+            'invitations' => $tenantService->getUserInvitations(auth()->user()),
         ]);
     }
 
-    public function acceptInvitation(string $invitationUuid, TenantManager $tenantManager, UserDashboardManager $dashboardManager)
+    public function acceptInvitation(string $invitationUuid, TenantService $tenantService, UserDashboardService $userDashboardService)
     {
         $invitation = Invitation::where('uuid', $invitationUuid)->firstOrFail();
-        $result = $tenantManager->acceptInvitation($invitation, auth()->user());
+        $result = $tenantService->acceptInvitation($invitation, auth()->user());
 
         if ($result === false) {
             throw ValidationException::withMessages([
@@ -29,12 +29,12 @@ class MyInvitations extends Component
             ]);
         }
 
-        return redirect($dashboardManager->getUserDashboardUrl(auth()->user()));
+        return redirect($userDashboardService->getUserDashboardUrl(auth()->user()));
     }
 
-    public function rejectInvitation(string $invitationUuid, TenantManager $tenantManager)
+    public function rejectInvitation(string $invitationUuid, TenantService $tenantService)
     {
         $invitation = Invitation::where('uuid', $invitationUuid)->firstOrFail();
-        $tenantManager->rejectInvitation($invitation, auth()->user());
+        $tenantService->rejectInvitation($invitation, auth()->user());
     }
 }

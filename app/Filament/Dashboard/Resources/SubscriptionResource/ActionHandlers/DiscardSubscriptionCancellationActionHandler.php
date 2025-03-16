@@ -5,18 +5,18 @@ namespace App\Filament\Dashboard\Resources\SubscriptionResource\ActionHandlers;
 use App\Constants\TenancyPermissionConstants;
 use App\Filament\Dashboard\Resources\SubscriptionResource;
 use App\Models\Subscription;
-use App\Services\PaymentProviders\PaymentManager;
-use App\Services\SubscriptionManager;
-use App\Services\TenantPermissionManager;
+use App\Services\PaymentProviders\PaymentService;
+use App\Services\SubscriptionService;
+use App\Services\TenantPermissionService;
 use Filament\Facades\Filament;
 use Filament\Notifications\Notification;
 
 class DiscardSubscriptionCancellationActionHandler
 {
     public function __construct(
-        private SubscriptionManager $subscriptionManager,
-        private PaymentManager $paymentManager,
-        private TenantPermissionManager $tenantPermissionManager,
+        private SubscriptionService $subscriptionService,
+        private PaymentService $paymentService,
+        private TenantPermissionService $tenantPermissionService,
     ) {}
 
     public function handle(Subscription $record)
@@ -25,7 +25,7 @@ class DiscardSubscriptionCancellationActionHandler
 
         $tenant = Filament::getTenant();
 
-        if (! $this->tenantPermissionManager->tenantUserHasPermissionTo($tenant, $user, TenancyPermissionConstants::PERMISSION_UPDATE_SUBSCRIPTIONS)) {
+        if (! $this->tenantPermissionService->tenantUserHasPermissionTo($tenant, $user, TenancyPermissionConstants::PERMISSION_UPDATE_SUBSCRIPTIONS)) {
             Notification::make()
                 ->title(__('You do not have permission to cancel subscriptions.'))
                 ->danger()
@@ -34,7 +34,7 @@ class DiscardSubscriptionCancellationActionHandler
             return redirect()->to(SubscriptionResource::getUrl());
         }
 
-        $subscription = $this->subscriptionManager->findActiveByTenantAndSubscriptionUuid($tenant, $record->uuid);
+        $subscription = $this->subscriptionService->findActiveByTenantAndSubscriptionUuid($tenant, $record->uuid);
 
         if (! $subscription) {
             Notification::make()
@@ -47,11 +47,11 @@ class DiscardSubscriptionCancellationActionHandler
 
         $paymentProvider = $subscription->paymentProvider()->first();
 
-        $paymentProviderStrategy = $this->paymentManager->getPaymentProviderBySlug(
+        $paymentProviderStrategy = $this->paymentService->getPaymentProviderBySlug(
             $paymentProvider->slug
         );
 
-        $this->subscriptionManager->discardSubscriptionCancellation($subscription, $paymentProviderStrategy);
+        $this->subscriptionService->discardSubscriptionCancellation($subscription, $paymentProviderStrategy);
 
         Notification::make()
             ->title(__('Subscription cancellation discarded'))

@@ -3,9 +3,9 @@
 namespace App\Livewire;
 
 use App\Filament\Dashboard\Resources\SubscriptionResource;
-use App\Services\DiscountManager;
-use App\Services\SubscriptionDiscountManager;
-use App\Services\SubscriptionManager;
+use App\Services\DiscountService;
+use App\Services\SubscriptionDiscountService;
+use App\Services\SubscriptionService;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
@@ -21,20 +21,20 @@ class AddSubscriptionDiscountForm extends Component implements HasForms
 
     public string $subscriptionUuid;
 
-    private SubscriptionManager $subscriptionManager;
+    private SubscriptionService $subscriptionService;
 
-    private DiscountManager $discountManager;
+    private DiscountService $discountService;
 
-    private SubscriptionDiscountManager $subscriptionDiscountManager;
+    private SubscriptionDiscountService $subscriptionDiscountService;
 
     public function boot(
-        SubscriptionManager $subscriptionManager,
-        DiscountManager $discountManager,
-        SubscriptionDiscountManager $subscriptionDiscountManager,
+        SubscriptionService $subscriptionService,
+        DiscountService $discountService,
+        SubscriptionDiscountService $subscriptionDiscountService,
     ) {
-        $this->subscriptionManager = $subscriptionManager;
-        $this->discountManager = $discountManager;
-        $this->subscriptionDiscountManager = $subscriptionDiscountManager;
+        $this->subscriptionService = $subscriptionService;
+        $this->discountService = $discountService;
+        $this->subscriptionDiscountService = $subscriptionDiscountService;
     }
 
     public function render()
@@ -66,9 +66,9 @@ class AddSubscriptionDiscountForm extends Component implements HasForms
         $code = $data['code'];
         $user = auth()->user();
 
-        $subscription = $this->subscriptionManager->findByUuidOrFail($this->subscriptionUuid);
+        $subscription = $this->subscriptionService->findByUuidOrFail($this->subscriptionUuid);
 
-        $result = $this->subscriptionDiscountManager->applyDiscount($subscription, $code, $user);
+        $result = $this->subscriptionDiscountService->applyDiscount($subscription, $code, $user);
 
         if (! $result) {
 

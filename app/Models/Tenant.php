@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-use App\Services\SubscriptionManager;
+use App\Services\SubscriptionService;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -48,9 +48,9 @@ class Tenant extends Model
 
     public function subscriptionProductMetadata()
     {
-        /** @var SubscriptionManager $subscriptionManager */
-        $subscriptionManager = app(SubscriptionManager::class);
+        /** @var SubscriptionService $subscriptionService */
+        $subscriptionService = app(SubscriptionService::class);
 
-        return $subscriptionManager->getTenantSubscriptionProductMetadata($this);
+        return $subscriptionService->getTenantSubscriptionProductMetadata($this);
     }
 }
