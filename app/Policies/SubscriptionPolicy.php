@@ -5,13 +5,13 @@ namespace App\Policies;
 use App\Constants\TenancyPermissionConstants;
 use App\Models\Subscription;
 use App\Models\User;
-use App\Services\TenantPermissionManager;
+use App\Services\TenantPermissionService;
 use Filament\Facades\Filament;
 
 class SubscriptionPolicy
 {
     public function __construct(
-        private TenantPermissionManager $tenantPermissionManager
+        private TenantPermissionService $tenantPermissionService
     ) {}
 
     /**
@@ -19,7 +19,7 @@ class SubscriptionPolicy
      */
     public function viewAny(User $user): bool
     {
-        return $user->hasPermissionTo('view subscriptions') || $this->tenantPermissionManager->tenantUserHasPermissionTo(
+        return $user->hasPermissionTo('view subscriptions') || $this->tenantPermissionService->tenantUserHasPermissionTo(
             Filament::getTenant(),
             $user,
             TenancyPermissionConstants::PERMISSION_VIEW_SUBSCRIPTIONS,
@@ -31,7 +31,7 @@ class SubscriptionPolicy
      */
     public function view(User $user, Subscription $subscription): bool
     {
-        return $user->hasPermissionTo('view subscriptions') || $this->tenantPermissionManager->tenantUserHasPermissionTo(
+        return $user->hasPermissionTo('view subscriptions') || $this->tenantPermissionService->tenantUserHasPermissionTo(
             $subscription->tenant,
             $user,
             TenancyPermissionConstants::PERMISSION_VIEW_SUBSCRIPTIONS,
@@ -51,7 +51,7 @@ class SubscriptionPolicy
      */
     public function update(User $user, Subscription $subscription): bool
     {
-        return $user->hasPermissionTo('update subscriptions') || $this->tenantPermissionManager->tenantUserHasPermissionTo(
+        return $user->hasPermissionTo('update subscriptions') || $this->tenantPermissionService->tenantUserHasPermissionTo(
             $subscription->tenant,
             $user,
             TenancyPermissionConstants::PERMISSION_UPDATE_SUBSCRIPTIONS,
@@ -63,7 +63,7 @@ class SubscriptionPolicy
      */
     public function delete(User $user, Subscription $subscription): bool
     {
-        return $user->hasPermissionTo('delete subscriptions') || $this->tenantPermissionManager->tenantUserHasPermissionTo(
+        return $user->hasPermissionTo('delete subscriptions') || $this->tenantPermissionService->tenantUserHasPermissionTo(
             $subscription->tenant,
             $user,
             TenancyPermissionConstants::PERMISSION_DELETE_SUBSCRIPTIONS,

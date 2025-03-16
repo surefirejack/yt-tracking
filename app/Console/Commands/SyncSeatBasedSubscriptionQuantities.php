@@ -2,13 +2,13 @@
 
 namespace App\Console\Commands;
 
-use App\Services\TenantSubscriptionManager;
+use App\Services\TenantSubscriptionService;
 use Illuminate\Console\Command;
 
 class SyncSeatBasedSubscriptionQuantities extends Command
 {
     public function __construct(
-        private TenantSubscriptionManager $tenantSubscriptionManager,
+        private TenantSubscriptionService $tenantSubscriptionService,
     ) {
         parent::__construct();
     }
@@ -32,6 +32,6 @@ class SyncSeatBasedSubscriptionQuantities extends Command
      */
     public function handle()
     {
-        $this->tenantSubscriptionManager->syncSubscriptionQuantities();
+        $this->tenantSubscriptionService->syncSubscriptionQuantities();
     }
 }

@@ -4,7 +4,7 @@ namespace App\Services;
 
 use App\Models\User;
 
-class UserDashboardManager
+class UserDashboardService
 {
     public function getUserDashboardUrl(User $user)
     {

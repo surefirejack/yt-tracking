@@ -15,7 +15,7 @@ use App\Models\Subscription;
 use App\Models\User;
 use App\Services\PlanService;
 use App\Services\SubscriptionService;
-use App\Services\TenantCreationManager;
+use App\Services\TenantCreationService;
 use Carbon\Carbon;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -162,10 +162,10 @@ class SubscriptionResource extends Resource
                             ->helperText(__('The date when the subscription will end.'))
                             ->required(),
                     ])
-                    ->action(function (array $data, SubscriptionService $subscriptionService, PlanService $planService, TenantCreationManager $tenantCreationManager) {
+                    ->action(function (array $data, SubscriptionService $subscriptionService, PlanService $planService, TenantCreationService $tenantCreationService) {
                         $user = User::find($data['user_id']);
                         $plan = $planService->getActivePlanById($data['plan_id']);
-                        $tenant = $tenantCreationManager->createTenant($user);
+                        $tenant = $tenantCreationService->createTenant($user);
 
                         try {
                             $subscriptionService->create(

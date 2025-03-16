@@ -175,9 +175,9 @@ class PaddleProvider implements PaymentProviderInterface
 
         $plan = $subscription->plan()->firstOrFail();
 
-        $planPrice = $this->calculationManager->getPlanPrice($plan);
+        $planPrice = $this->calculationService->getPlanPrice($plan);
 
-        $priceId = $this->planManager->getPaymentProviderPriceId($planPrice, $paymentProvider);
+        $priceId = $this->planService->getPaymentProviderPriceId($planPrice, $paymentProvider);
 
         $isTrialing = $subscription->trial_ends_at !== null && Carbon::parse($subscription->trial_ends_at)->isFuture();
 

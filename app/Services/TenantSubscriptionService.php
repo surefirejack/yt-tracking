@@ -7,12 +7,12 @@ use App\Constants\SubscriptionStatus;
 use App\Constants\SubscriptionType;
 use App\Models\Subscription;
 use App\Models\Tenant;
-use App\Services\PaymentProviders\PaymentManager;
+use App\Services\PaymentProviders\PaymentService;
 
-class TenantSubscriptionManager
+class TenantSubscriptionService
 {
     public function __construct(
-        private PaymentManager $paymentManager,
+        private PaymentService $paymentService,
     ) {}
 
     public function getTenantSubscriptions(Tenant $tenant)
@@ -39,7 +39,7 @@ class TenantSubscriptionManager
 
         $isProrated = config('app.payment.proration_enabled', true);
 
-        $paymentProvider = $this->paymentManager->getPaymentProviderBySlug(
+        $paymentProvider = $this->paymentService->getPaymentProviderBySlug(
             $subscription->paymentProvider->slug
         );
 

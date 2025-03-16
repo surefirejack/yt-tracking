@@ -3,7 +3,7 @@
 namespace App\Filament\Dashboard\Resources\InvitationResource\Pages;
 
 use App\Filament\Dashboard\Resources\InvitationResource;
-use App\Services\TenantManager;
+use App\Services\TenantService;
 use Filament\Facades\Filament;
 use Filament\Resources\Pages\CreateRecord;
 use Illuminate\Support\Str;
@@ -25,8 +25,8 @@ class CreateInvitation extends CreateRecord
 
     protected function afterCreate(): void
     {
-        /** @var TenantManager $tenantManager */
-        $tenantManager = app(TenantManager::class);
-        $tenantManager->handleAfterInvitationCreated($this->getRecord());
+        /** @var TenantService $tenantService */
+        $tenantService = app(TenantService::class);
+        $tenantService->handleAfterInvitationCreated($this->getRecord());
     }
 }

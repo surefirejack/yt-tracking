@@ -7,8 +7,8 @@ use App\Constants\TenancyPermissionConstants;
 use App\Filament\Dashboard\Resources\InvitationResource\Pages;
 use App\Mapper\InvitationStatusMapper;
 use App\Models\Invitation;
-use App\Services\TenantManager;
-use App\Services\TenantPermissionManager;
+use App\Services\TenantPermissionService;
+use App\Services\TenantService;
 use Filament\Facades\Filament;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -52,18 +52,18 @@ class InvitationResource extends Resource
                                 $fail(__('This user is already in the team.'));
                             }
 
-                            /** @var TenantManager $tenantManager */
-                            $tenantManager = app(TenantManager::class);
+                            /** @var TenantService $tenantService */
+                            $tenantService = app(TenantService::class);
 
-                            if (! $tenantManager->canInviteUser(Filament::getTenant(), auth()->user())) {
+                            if (! $tenantService->canInviteUser(Filament::getTenant(), auth()->user())) {
                                 $fail(__('You have reached the maximum number of users allowed for your subscription.'));
                             }
                         },
                     ])
                     ->maxLength(255),
                 Forms\Components\Select::make('role')
-                    ->options(function (TenantPermissionManager $tenantPermissionManager) {
-                        return $tenantPermissionManager->getAllAvailableTenantRolesForDisplay();
+                    ->options(function (TenantPermissionService $tenantPermissionService) {
+                        return $tenantPermissionService->getAllAvailableTenantRolesForDisplay();
                     })
                     ->default(TenancyPermissionConstants::ROLE_USER)
                     ->required()
@@ -129,10 +129,10 @@ class InvitationResource extends Resource
 
     public static function canAccess(): bool
     {
-        /** @var TenantPermissionManager $tenantPermissionManager */
-        $tenantPermissionManager = app(TenantPermissionManager::class); // a bit ugly, but this is the Filament way :/
+        /** @var TenantPermissionService $tenantPermissionService */
+        $tenantPermissionService = app(TenantPermissionService::class); // a bit ugly, but this is the Filament way :/
 
-        return config('app.allow_tenant_invitations', false) && $tenantPermissionManager->tenantUserHasPermissionTo(
+        return config('app.allow_tenant_invitations', false) && $tenantPermissionService->tenantUserHasPermissionTo(
             Filament::getTenant(),
             auth()->user(),
             TenancyPermissionConstants::PERMISSION_INVITE_MEMBERS,

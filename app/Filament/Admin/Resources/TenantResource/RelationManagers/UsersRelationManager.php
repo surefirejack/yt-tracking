@@ -5,8 +5,8 @@ namespace App\Filament\Admin\Resources\TenantResource\RelationManagers;
 use App\Constants\TenancyPermissionConstants;
 use App\Filament\Admin\Resources\UserResource\Pages\EditUser;
 use App\Models\User;
-use App\Services\TenantManager;
-use App\Services\TenantPermissionManager;
+use App\Services\TenantPermissionService;
+use App\Services\TenantService;
 use Filament\Forms\Form;
 use Filament\Notifications\Notification;
 use Filament\Resources\RelationManagers\RelationManager;
@@ -34,18 +34,18 @@ class UsersRelationManager extends RelationManager
             ->columns([
                 Tables\Columns\TextColumn::make('name'),
                 Tables\Columns\SelectColumn::make('role')
-                    ->getStateUsing(function (User $user, TenantPermissionManager $tenantPermissionManager) {
-                        return $tenantPermissionManager->getTenantUserRoles($this->ownerRecord, $user)[0] ?? null;
+                    ->getStateUsing(function (User $user, TenantPermissionService $tenantPermissionService) {
+                        return $tenantPermissionService->getTenantUserRoles($this->ownerRecord, $user)[0] ?? null;
                     })
-                    ->options(function (TenantPermissionManager $tenantPermissionManager) {
-                        return $tenantPermissionManager->getAllAvailableTenantRolesForDisplay();
+                    ->options(function (TenantPermissionService $tenantPermissionService) {
+                        return $tenantPermissionService->getAllAvailableTenantRolesForDisplay();
                     })
-                    ->updateStateUsing(function (User $user, ?string $state, TenantPermissionManager $tenantPermissionManager) {
+                    ->updateStateUsing(function (User $user, ?string $state, TenantPermissionService $tenantPermissionService) {
                         if ($state === null) {
                             return;
                         }
 
-                        $tenantPermissionManager->assignTenantUserRole($this->ownerRecord, $user, $state);
+                        $tenantPermissionService->assignTenantUserRole($this->ownerRecord, $user, $state);
 
                         Notification::make()
                             ->title(__('User role has been updated.'))
@@ -64,7 +64,7 @@ class UsersRelationManager extends RelationManager
             ])
             ->headerActions([
                 Tables\Actions\AttachAction::make()
-                    ->action(function (array $arguments, array $data, Form $form, Table $table, TenantManager $tenantManager): void {
+                    ->action(function (array $arguments, array $data, Form $form, Table $table, TenantService $tenantService): void {
                         // overwritten from the parent action definition from AttachAction
 
                         /** @var BelongsToMany $relationship */
@@ -78,7 +78,7 @@ class UsersRelationManager extends RelationManager
                             ->{$isMultiple ? 'whereIn' : 'where'}($relationship->getQualifiedRelatedKeyName(), $data['recordId'])
                             ->{$isMultiple ? 'get' : 'first'}();
 
-                        $result = $tenantManager->addUserToTenant($this->ownerRecord, $record, TenancyPermissionConstants::ROLE_USER);
+                        $result = $tenantService->addUserToTenant($this->ownerRecord, $record, TenancyPermissionConstants::ROLE_USER);
 
                         if ($result === false) {
                             Notification::make()
@@ -97,8 +97,8 @@ class UsersRelationManager extends RelationManager
             ])
             ->actions([
                 Tables\Actions\DetachAction::make()
-                    ->action(function (User $record, TenantManager $tenantManager): void {
-                        $result = $tenantManager->removeUser($this->ownerRecord, $record);
+                    ->action(function (User $record, TenantService $tenantService): void {
+                        $result = $tenantService->removeUser($this->ownerRecord, $record);
 
                         if ($result === false) {
                             Notification::make()

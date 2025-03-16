@@ -15,11 +15,11 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
-class TenantManager
+class TenantService
 {
     public function __construct(
-        private TenantPermissionManager $tenantPermissionManager,
-        private TenantSubscriptionManager $tenantSubscriptionManager,
+        private TenantPermissionService   $tenantPermissionService,
+        private TenantSubscriptionService $tenantSubscriptionService,
     ) {}
 
     public function acceptInvitation(Invitation $invitation, User $user): bool
@@ -32,7 +32,7 @@ class TenantManager
             return false;
         }
 
-        $tenantSubscriptions = $this->tenantSubscriptionManager->getTenantSubscriptions($invitation->tenant);
+        $tenantSubscriptions = $this->tenantSubscriptionService->getTenantSubscriptions($invitation->tenant);
         $tenantUserCount = $invitation->tenant->users->count();
         $tenantLockKey = $this->getTenantLockName($invitation->tenant);
 
@@ -44,7 +44,7 @@ class TenantManager
                     if ($subscription->plan->type === PlanType::SEAT_BASED->value &&
                         $subscription->quantity < $tenantUserCount + 1
                     ) {
-                        $result = $this->tenantSubscriptionManager->updateSubscriptionQuantity($subscription, $tenantUserCount + 1);
+                        $result = $this->tenantSubscriptionService->updateSubscriptionQuantity($subscription, $tenantUserCount + 1);
 
                         if ($result === false) {
                             return false;
@@ -65,7 +65,7 @@ class TenantManager
                     $roleName = $invitation->role;
 
                     if ($roleName) {
-                        $this->tenantPermissionManager->assignTenantUserRole($invitation->tenant, $user, $roleName);
+                        $this->tenantPermissionService->assignTenantUserRole($invitation->tenant, $user, $roleName);
                     }
 
                     $invitation->update([
@@ -93,7 +93,7 @@ class TenantManager
             return false;
         }
 
-        $tenantSubscriptions = $this->tenantSubscriptionManager->getTenantSubscriptions($tenant);
+        $tenantSubscriptions = $this->tenantSubscriptionService->getTenantSubscriptions($tenant);
         $tenantUserCount = $tenant->users->count();
         $tenantLockKey = $this->getTenantLockName($tenant);
 
@@ -105,7 +105,7 @@ class TenantManager
                     if ($subscription->plan->type === PlanType::SEAT_BASED->value &&
                         $subscription->quantity < $tenantUserCount + 1
                     ) {
-                        $result = $this->tenantSubscriptionManager->updateSubscriptionQuantity($subscription, $tenantUserCount + 1);
+                        $result = $this->tenantSubscriptionService->updateSubscriptionQuantity($subscription, $tenantUserCount + 1);
 
                         if ($result === false) {
                             return false;
@@ -124,7 +124,7 @@ class TenantManager
                     $user->tenants()->updateExistingPivot($tenant->id, ['is_default' => true]);
 
                     if ($roleName) {
-                        $this->tenantPermissionManager->assignTenantUserRole($tenant, $user, $roleName);
+                        $this->tenantPermissionService->assignTenantUserRole($tenant, $user, $roleName);
                     }
                 });
 
@@ -157,7 +157,7 @@ class TenantManager
                 if ($subscription->plan->type === PlanType::SEAT_BASED->value &&
                     $subscription->quantity != $tenantUserCount
                 ) {
-                    return $this->tenantSubscriptionManager->updateSubscriptionQuantity($subscription, $tenantUserCount);
+                    return $this->tenantSubscriptionService->updateSubscriptionQuantity($subscription, $tenantUserCount);
                 }
             }
         } catch (\Exception $e) {
@@ -227,7 +227,7 @@ class TenantManager
 
         $tenantLockKey = $this->getTenantLockName($tenant);
         $lock = Cache::lock($tenantLockKey, 30);
-        $tenantSubscriptions = $this->tenantSubscriptionManager->getTenantSubscriptions($tenant);
+        $tenantSubscriptions = $this->tenantSubscriptionService->getTenantSubscriptions($tenant);
         $tenantUserCount = $tenant->users->count();
 
         try {
@@ -238,7 +238,7 @@ class TenantManager
                     if ($subscription->plan->type === PlanType::SEAT_BASED->value &&
                         $subscription->quantity != $tenantUserCount - 1
                     ) {
-                        $result = $this->tenantSubscriptionManager->updateSubscriptionQuantity($subscription, $tenantUserCount - 1);
+                        $result = $this->tenantSubscriptionService->updateSubscriptionQuantity($subscription, $tenantUserCount - 1);
 
                         if ($result === false) {
                             return false;
@@ -247,7 +247,7 @@ class TenantManager
                 }
 
                 DB::transaction(function () use ($tenant, $user) {
-                    $this->tenantPermissionManager->removeAllTenantUserRoles($tenant, $user);
+                    $this->tenantPermissionService->removeAllTenantUserRoles($tenant, $user);
                     $tenant->users()->detach($user);
                 });
 

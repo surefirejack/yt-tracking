@@ -13,16 +13,16 @@ use App\Models\PaymentProvider;
 use App\Models\Plan;
 use App\Models\PlanPrice;
 use App\Models\Subscription;
-use App\Services\PaymentProviders\PaymentManager;
 use App\Services\PaymentProviders\PaymentProviderInterface;
-use App\Services\TenantManager;
-use App\Services\TenantPermissionManager;
-use App\Services\TenantSubscriptionManager;
+use App\Services\PaymentProviders\PaymentService;
+use App\Services\TenantService;
+use App\Services\TenantPermissionService;
+use App\Services\TenantSubscriptionService;
 use Illuminate\Support\Facades\Event;
 use Mockery\MockInterface;
 use Tests\Feature\FeatureTest;
 
-class TenantManagerTest extends FeatureTest
+class TenantServiceTest extends FeatureTest
 {
     public function test_accept_invitation_seat_based_plan()
     {
@@ -67,24 +67,24 @@ class TenantManagerTest extends FeatureTest
             ->andReturn(true);
 
         // get from the container
-        $paymentManager = app(PaymentManager::class);
+        $paymentService = app(PaymentService::class);
 
-        $permissionManager = new TenantPermissionManager;
-        $tenantManager = new TenantManager(
-            $permissionManager,
-            new TenantSubscriptionManager($paymentManager),
+        $permissionService = new TenantPermissionService;
+        $tenantService = new TenantService(
+            $permissionService,
+            new TenantSubscriptionService($paymentService),
         );
 
         Event::fake();
 
-        $result = $tenantManager->acceptInvitation($invitation, $invited);
+        $result = $tenantService->acceptInvitation($invitation, $invited);
 
         $this->assertTrue($result);
 
         $tenantUsers = $tenant->users()->get();
         $this->assertEquals(2, $tenantUsers->count());
 
-        $userRoles = $permissionManager->getTenantUserRoles($tenant, $invited);
+        $userRoles = $permissionService->getTenantUserRoles($tenant, $invited);
         $this->assertContains(TenancyPermissionConstants::ROLE_ADMIN, $userRoles);
 
         // make sure that the UserJoinedTenant event was dispatched
@@ -131,24 +131,24 @@ class TenantManagerTest extends FeatureTest
         $paymentProvider->shouldNotReceive('updateSubscriptionQuantity');
 
         // get from the container
-        $paymentManager = app(PaymentManager::class);
+        $paymentService = app(PaymentService::class);
 
-        $permissionManager = new TenantPermissionManager;
-        $tenantManager = new TenantManager(
-            $permissionManager,
-            new TenantSubscriptionManager($paymentManager),
+        $permissionService = new TenantPermissionService;
+        $tenantService = new TenantService(
+            $permissionService,
+            new TenantSubscriptionService($paymentService),
         );
 
         Event::fake();
 
-        $result = $tenantManager->acceptInvitation($invitation, $invited);
+        $result = $tenantService->acceptInvitation($invitation, $invited);
 
         $this->assertTrue($result);
 
         $tenantUsers = $tenant->users()->get();
         $this->assertEquals(2, $tenantUsers->count());
 
-        $userRoles = $permissionManager->getTenantUserRoles($tenant, $invited);
+        $userRoles = $permissionService->getTenantUserRoles($tenant, $invited);
         $this->assertContains(TenancyPermissionConstants::ROLE_ADMIN, $userRoles);
 
         // make sure that the UserJoinedTenant event was dispatched
@@ -196,17 +196,17 @@ class TenantManagerTest extends FeatureTest
         $paymentProvider->shouldNotReceive('updateSubscriptionQuantity');
 
         // get from the container
-        $paymentManager = app(PaymentManager::class);
+        $paymentService = app(PaymentService::class);
 
-        $permissionManager = new TenantPermissionManager;
-        $tenantManager = new TenantManager(
-            $permissionManager,
-            new TenantSubscriptionManager($paymentManager),
+        $permissionService = new TenantPermissionService;
+        $tenantService = new TenantService(
+            $permissionService,
+            new TenantSubscriptionService($paymentService),
         );
 
         Event::fake();
 
-        $result = $tenantManager->acceptInvitation($invitation, $invited);
+        $result = $tenantService->acceptInvitation($invitation, $invited);
 
         $this->assertFalse($result);
 
@@ -249,24 +249,24 @@ class TenantManagerTest extends FeatureTest
         $paymentProvider->shouldReceive('updateSubscriptionQuantity');
 
         // get from the container
-        $paymentManager = app(PaymentManager::class);
+        $paymentService = app(PaymentService::class);
 
-        $permissionManager = new TenantPermissionManager;
-        $tenantManager = new TenantManager(
-            $permissionManager,
-            new TenantSubscriptionManager($paymentManager),
+        $permissionService = new TenantPermissionService;
+        $tenantService = new TenantService(
+            $permissionService,
+            new TenantSubscriptionService($paymentService),
         );
 
         Event::fake();
 
-        $result = $tenantManager->addUserToTenant($tenant, $user, TenancyPermissionConstants::ROLE_ADMIN);
+        $result = $tenantService->addUserToTenant($tenant, $user, TenancyPermissionConstants::ROLE_ADMIN);
 
         $this->assertTrue($result);
 
         $tenantUsers = $tenant->users()->get();
         $this->assertEquals(1, $tenantUsers->count());
 
-        $userRoles = $permissionManager->getTenantUserRoles($tenant, $user);
+        $userRoles = $permissionService->getTenantUserRoles($tenant, $user);
         $this->assertContains(TenancyPermissionConstants::ROLE_ADMIN, $userRoles);
 
         // make sure that the UserJoinedTenant event was dispatched
@@ -310,24 +310,24 @@ class TenantManagerTest extends FeatureTest
             ->andReturn(true);
 
         // get from the container
-        $paymentManager = app(PaymentManager::class);
+        $paymentService = app(PaymentService::class);
 
-        $permissionManager = new TenantPermissionManager;
-        $tenantManager = new TenantManager(
-            $permissionManager,
-            new TenantSubscriptionManager($paymentManager),
+        $permissionService = new TenantPermissionService;
+        $tenantService = new TenantService(
+            $permissionService,
+            new TenantSubscriptionService($paymentService),
         );
 
         Event::fake();
 
-        $result = $tenantManager->removeUser($tenant, $user2);
+        $result = $tenantService->removeUser($tenant, $user2);
 
         $this->assertTrue($result);
 
         $tenantUsers = $tenant->users()->get();
         $this->assertEquals(1, $tenantUsers->count());
 
-        $userRoles = $permissionManager->getTenantUserRoles($tenant, $user2);
+        $userRoles = $permissionService->getTenantUserRoles($tenant, $user2);
         $this->assertEmpty($userRoles);
 
         Event::assertDispatched(UserRemovedFromTenant::class);
@@ -365,17 +365,17 @@ class TenantManagerTest extends FeatureTest
         $paymentProvider->shouldNotReceive('updateSubscriptionQuantity');
 
         // get from the container
-        $paymentManager = app(PaymentManager::class);
+        $paymentService = app(PaymentService::class);
 
-        $permissionManager = new TenantPermissionManager;
-        $tenantManager = new TenantManager(
-            $permissionManager,
-            new TenantSubscriptionManager($paymentManager),
+        $permissionService = new TenantPermissionService;
+        $tenantService = new TenantService(
+            $permissionService,
+            new TenantSubscriptionService($paymentService),
         );
 
         Event::fake();
 
-        $result = $tenantManager->removeUser($tenant, $user1);
+        $result = $tenantService->removeUser($tenant, $user1);
 
         $this->assertFalse($result);
 
@@ -403,8 +403,8 @@ class TenantManagerTest extends FeatureTest
 
         $this->app->instance(PaymentProviderInterface::class, $mock);
 
-        $this->app->bind(PaymentManager::class, function () use ($mock) {
-            return new PaymentManager($mock);
+        $this->app->bind(PaymentService::class, function () use ($mock) {
+            return new PaymentService($mock);
         });
 
         return $mock;

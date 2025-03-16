@@ -5,10 +5,14 @@ namespace App\Livewire\Checkout;
 use App\Exceptions\LoginException;
 use App\Exceptions\NoPaymentProvidersAvailableException;
 use App\Services\CalculationService;
+use App\Services\DiscountService;
+use App\Services\LoginService;
+use App\Services\PaymentProviders\PaymentService;
 use App\Services\PlanService;
 use App\Services\SessionService;
 use App\Services\SubscriptionService;
-use App\Services\TenantSubscriptionManager;
+use App\Services\TenantSubscriptionService;
+use App\Services\UserService;
 use App\Validator\LoginValidator;
 use App\Validator\RegisterValidator;
 
@@ -22,20 +26,20 @@ class ConvertLocalSubscriptionCheckoutForm extends CheckoutForm
 
     private SubscriptionService $subscriptionService;
 
-    private TenantSubscriptionManager $tenantSubscriptionManager;
+    private TenantSubscriptionService $tenantSubscriptionService;
 
     public function boot(
         PlanService $planService,
         SessionService $sessionService,
         CalculationService $calculationService,
         SubscriptionService $subscriptionService,
-        TenantSubscriptionManager $tenantSubscriptionManager
+        TenantSubscriptionService $tenantSubscriptionService
     ) {
         $this->planService = $planService;
         $this->sessionService = $sessionService;
         $this->calculationService = $calculationService;
         $this->subscriptionService = $subscriptionService;
-        $this->tenantSubscriptionManager = $tenantSubscriptionManager;
+        $this->tenantSubscriptionService = $tenantSubscriptionService;
     }
 
     public function render(PaymentService $paymentService)
@@ -113,7 +117,7 @@ class ConvertLocalSubscriptionCheckoutForm extends CheckoutForm
             return redirect()->route('home');
         }
 
-        $quantity = max($subscriptionCheckoutDto->quantity, $this->tenantSubscriptionManager->calculateCurrentSubscriptionQuantity($subscription));
+        $quantity = max($subscriptionCheckoutDto->quantity, $this->tenantSubscriptionService->calculateCurrentSubscriptionQuantity($subscription));
 
         $initData = $paymentProvider->initSubscriptionCheckout($plan, $subscription, $discount, $quantity);
 

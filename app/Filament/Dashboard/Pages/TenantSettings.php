@@ -3,7 +3,7 @@
 namespace App\Filament\Dashboard\Pages;
 
 use App\Constants\TenancyPermissionConstants;
-use App\Services\TenantPermissionManager;
+use App\Services\TenantPermissionService;
 use Filament\Facades\Filament;
 use Filament\Pages\Page;
 use Illuminate\Contracts\Support\Htmlable;
@@ -24,9 +24,9 @@ class TenantSettings extends Page
 
     public static function canAccess(): bool
     {
-        $tenantPermissionManager = app(TenantPermissionManager::class); // a bit ugly, but this is the Filament way :/
+        $tenantPermissionService = app(TenantPermissionService::class); // a bit ugly, but this is the Filament way :/
 
-        return $tenantPermissionManager->tenantUserHasPermissionTo(
+        return $tenantPermissionService->tenantUserHasPermissionTo(
             Filament::getTenant(),
             auth()->user(),
             TenancyPermissionConstants::PERMISSION_UPDATE_TENANT_SETTINGS

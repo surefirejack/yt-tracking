@@ -5,13 +5,13 @@ namespace App\Policies;
 use App\Constants\TenancyPermissionConstants;
 use App\Models\Order;
 use App\Models\User;
-use App\Services\TenantPermissionManager;
+use App\Services\TenantPermissionService;
 use Filament\Facades\Filament;
 
 class OrderPolicy
 {
     public function __construct(
-        private TenantPermissionManager $tenantPermissionManager
+        private TenantPermissionService $tenantPermissionService
     ) {}
 
     /**
@@ -19,7 +19,7 @@ class OrderPolicy
      */
     public function viewAny(User $user): bool
     {
-        return $user->hasPermissionTo('view orders') || $this->tenantPermissionManager->tenantUserHasPermissionTo(
+        return $user->hasPermissionTo('view orders') || $this->tenantPermissionService->tenantUserHasPermissionTo(
             Filament::getTenant(),
             $user,
             TenancyPermissionConstants::PERMISSION_VIEW_ORDERS,
@@ -31,7 +31,7 @@ class OrderPolicy
      */
     public function view(User $user, Order $order): bool
     {
-        return $user->hasPermissionTo('view orders') || $this->tenantPermissionManager->tenantUserHasPermissionTo(
+        return $user->hasPermissionTo('view orders') || $this->tenantPermissionService->tenantUserHasPermissionTo(
             $order->tenant,
             $user,
             TenancyPermissionConstants::PERMISSION_VIEW_ORDERS,
@@ -51,7 +51,7 @@ class OrderPolicy
      */
     public function update(User $user, Order $order): bool
     {
-        return $user->hasPermissionTo('update orders') || $this->tenantPermissionManager->tenantUserHasPermissionTo(
+        return $user->hasPermissionTo('update orders') || $this->tenantPermissionService->tenantUserHasPermissionTo(
             $order->tenant,
             $user,
             TenancyPermissionConstants::PERMISSION_UPDATE_ORDERS,
@@ -63,7 +63,7 @@ class OrderPolicy
      */
     public function delete(User $user, Order $order): bool
     {
-        return $user->hasPermissionTo('delete orders') || $this->tenantPermissionManager->tenantUserHasPermissionTo(
+        return $user->hasPermissionTo('delete orders') || $this->tenantPermissionService->tenantUserHasPermissionTo(
             $order->tenant,
             $user,
             TenancyPermissionConstants::PERMISSION_DELETE_ORDERS,

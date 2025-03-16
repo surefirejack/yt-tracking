@@ -10,16 +10,16 @@ class CheckoutService
 {
     public function __construct(
         private SubscriptionService $subscriptionService,
-        private OrderService        $orderService,
-        private TenantCreationManager $tenantCreationManager,
+        private OrderService $orderService,
+        private TenantCreationService $tenantCreationService,
     ) {}
 
     public function initSubscriptionCheckout(string $planSlug, ?string $tenantUuid, int $quantity = 1)
     {
-        $tenant = $this->tenantCreationManager->findUserTenantForNewSubscriptionByUuid(auth()->user(), $tenantUuid);
+        $tenant = $this->tenantCreationService->findUserTenantForNewSubscriptionByUuid(auth()->user(), $tenantUuid);
 
         if ($tenant === null) {
-            $tenant = $this->tenantCreationManager->createTenant(auth()->user());
+            $tenant = $this->tenantCreationService->createTenant(auth()->user());
         }
 
         $subscription = $this->subscriptionService->findNewByPlanSlugAndTenant($planSlug, $tenant);
@@ -43,10 +43,10 @@ class CheckoutService
 
     public function initLocalSubscriptionCheckout(string $planSlug, ?string $tenantUuid, int $quantity = 1)
     {
-        $tenant = $this->tenantCreationManager->findUserTenantForNewSubscriptionByUuid(auth()->user(), $tenantUuid);
+        $tenant = $this->tenantCreationService->findUserTenantForNewSubscriptionByUuid(auth()->user(), $tenantUuid);
 
         if ($tenant === null) {
-            $tenant = $this->tenantCreationManager->createTenant(auth()->user());
+            $tenant = $this->tenantCreationService->createTenant(auth()->user());
         }
 
         $subscription = $this->subscriptionService->findNewByPlanSlugAndTenant($planSlug, $tenant);
@@ -72,10 +72,10 @@ class CheckoutService
     {
         $user = auth()->user();
 
-        $tenant = $this->tenantCreationManager->findUserTenantForNewOrderByUuid($user, $tenantUuid);
+        $tenant = $this->tenantCreationService->findUserTenantForNewOrderByUuid($user, $tenantUuid);
 
         if ($tenant === null) {
-            $tenant = $this->tenantCreationManager->createTenant($user);
+            $tenant = $this->tenantCreationService->createTenant($user);
         }
 
         $order = null;

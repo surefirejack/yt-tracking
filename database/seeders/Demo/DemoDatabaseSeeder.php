@@ -19,7 +19,7 @@ use App\Models\Product;
 use App\Models\Tenant;
 use App\Models\User;
 use App\Services\MetricsService;
-use App\Services\TenantPermissionManager;
+use App\Services\TenantPermissionService;
 use Carbon\Carbon;
 use Database\Seeders\DatabaseSeeder;
 use Illuminate\Database\Seeder;
@@ -29,7 +29,7 @@ class DemoDatabaseSeeder extends Seeder
 {
     public function __construct(
         private MetricsService $metricsService,
-        private TenantPermissionManager $tenantPermissionManager,
+        private TenantPermissionService $tenantPermissionManager,
     ) {}
 
     private array $blogPostTitles = [

@@ -10,7 +10,7 @@ use App\Services\PaymentProviders\PaymentService;
 use App\Services\PlanService;
 use App\Services\SubscriptionDiscountService;
 use App\Services\SubscriptionService;
-use App\Services\TenantManager;
+use App\Services\TenantService;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ViewRecord;
 
@@ -28,8 +28,8 @@ class ViewSubscription extends ViewRecord
                     ->visible(function (Subscription $record): bool {
                         return $record->plan->type === PlanType::SEAT_BASED->value && $record->status === SubscriptionStatus::ACTIVE->value;
                     })
-                    ->action(function (TenantManager $tenantManager, Subscription $record) {
-                        $tenantManager->syncSubscriptionQuantity($record);
+                    ->action(function (TenantService $tenantService, Subscription $record) {
+                        $tenantService->syncSubscriptionQuantity($record);
                     }),
                 \Filament\Actions\Action::make('change-plan')
                     ->label(__('Change Plan'))

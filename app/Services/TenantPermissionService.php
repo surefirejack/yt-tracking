@@ -9,7 +9,7 @@ use App\Models\User;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 
-class TenantPermissionManager
+class TenantPermissionService
 {
     private static $permissionCache = [];
 

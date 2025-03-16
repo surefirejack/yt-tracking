@@ -5,13 +5,13 @@ namespace App\Policies;
 use App\Constants\TenancyPermissionConstants;
 use App\Models\Transaction;
 use App\Models\User;
-use App\Services\TenantPermissionManager;
+use App\Services\TenantPermissionService;
 use Filament\Facades\Filament;
 
 class TransactionPolicy
 {
     public function __construct(
-        private TenantPermissionManager $tenantPermissionManager
+        private TenantPermissionService $tenantPermissionService
     ) {}
 
     /**
@@ -19,7 +19,7 @@ class TransactionPolicy
      */
     public function viewAny(User $user): bool
     {
-        return $user->hasPermissionTo('view transactions') || $this->tenantPermissionManager->tenantUserHasPermissionTo(
+        return $user->hasPermissionTo('view transactions') || $this->tenantPermissionService->tenantUserHasPermissionTo(
             Filament::getTenant(),
             $user,
             TenancyPermissionConstants::PERMISSION_VIEW_TRANSACTIONS,
@@ -31,7 +31,7 @@ class TransactionPolicy
      */
     public function view(User $user, Transaction $transaction): bool
     {
-        return $user->hasPermissionTo('view transactions') || $this->tenantPermissionManager->tenantUserHasPermissionTo(
+        return $user->hasPermissionTo('view transactions') || $this->tenantPermissionService->tenantUserHasPermissionTo(
             $transaction->tenant,
             $user,
             TenancyPermissionConstants::PERMISSION_VIEW_TRANSACTIONS,

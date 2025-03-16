@@ -16,7 +16,7 @@ use App\Services\OneTimeProductService;
 use App\Services\OrderService;
 use App\Services\PlanService;
 use App\Services\SubscriptionService;
-use App\Services\TenantCreationManager;
+use App\Services\TenantCreationService;
 use App\Services\TransactionService;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
@@ -32,7 +32,7 @@ class LemonSqueezyWebhookHandler
         private OrderService $orderService,
         private PlanService $planService,
         private OneTimeProductService $oneTimeProductService,
-        private TenantCreationManager $tenantCreationManager,
+        private TenantCreationService $tenantCreationService,
     ) {}
 
     public function handleWebhook(Request $request): JsonResponse
@@ -163,7 +163,7 @@ class LemonSqueezyWebhookHandler
             'currency_id' => $currency->id,
         ];
 
-        $tenant = $this->tenantCreationManager->createTenant($user);
+        $tenant = $this->tenantCreationService->createTenant($user);
 
         $order = $this->orderService->create(
             $user,
@@ -321,7 +321,7 @@ class LemonSqueezyWebhookHandler
 
         $quantity = $attributes['first_subscription_item']['quantity'] ?? 1;
 
-        $tenant = $this->tenantCreationManager->createTenant($user);
+        $tenant = $this->tenantCreationService->createTenant($user);
 
         return $this->subscriptionService->create($plan->slug, $user->id, $quantity, $tenant, $paymentProvider, $providerSubscriptionId);
     }

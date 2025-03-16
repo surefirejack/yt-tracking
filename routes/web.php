@@ -5,9 +5,9 @@ use App\Http\Controllers\BlogController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\PaymentProviders\PaddleController;
 use App\Http\Controllers\RoadmapController;
-use App\Services\SessionManager;
-use App\Services\TenantCreationManager;
-use App\Services\UserDashboardManager;
+use App\Services\SessionService;
+use App\Services\TenantCreationService;
+use App\Services\UserDashboardService;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
@@ -29,20 +29,20 @@ Route::get('/', function () {
     return view('home');
 })->name('home')->middleware('sitemapped');
 
-Route::get('/dashboard', function (UserDashboardManager $dashboardManager) {
-    return redirect($dashboardManager->getUserDashboardUrl(Auth::user()));
+Route::get('/dashboard', function (UserDashboardService $dashboardService) {
+    return redirect($dashboardService->getUserDashboardUrl(Auth::user()));
 })->name('dashboard')->middleware('auth');
 
 Auth::routes();
 
 Route::get('/plan/start', function (
-    TenantCreationManager $tenantCreationManager,
-    SessionManager $sessionManager
+    TenantCreationService $tenantCreationService,
+    SessionService $sessionService
 ) {
     if (! auth()->check()) {
-        $sessionManager->setCreateTenantForFreePlanUser(true);
+        $sessionService->setCreateTenantForFreePlanUser(true);
     } else {
-        $tenantCreationManager->createTenantForFreePlanUser(auth()->user());
+        $tenantCreationService->createTenantForFreePlanUser(auth()->user());
     }
 
     return redirect()->route('register');

@@ -6,8 +6,8 @@ use App\Constants\TenancyPermissionConstants;
 use App\Filament\Dashboard\Resources\SubscriptionResource;
 use App\Services\PaymentProviders\PaymentService;
 use App\Services\SubscriptionService;
-use App\Services\TenantManager;
-use App\Services\TenantPermissionManager;
+use App\Services\TenantPermissionService;
+use App\Services\TenantService;
 use Filament\Facades\Filament;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
@@ -29,20 +29,20 @@ class CancelSubscriptionForm extends Component implements HasForms
 
     private SubscriptionService $subscriptionService;
 
-    private TenantPermissionManager $tenantPermissionManager;
+    private TenantPermissionService $tenantPermissionService;
 
-    private TenantManager $tenantManager;
+    private TenantService $tenantService;
 
     public function boot(
         PaymentService $paymentService,
         SubscriptionService $subscriptionService,
-        TenantPermissionManager $tenantPermissionManager,
-        TenantManager $tenantManager,
+        TenantPermissionService $tenantPermissionService,
+        TenantService $tenantService,
     ) {
         $this->paymentService = $paymentService;
         $this->subscriptionService = $subscriptionService;
-        $this->tenantPermissionManager = $tenantPermissionManager;
-        $this->tenantManager = $tenantManager;
+        $this->tenantPermissionService = $tenantPermissionService;
+        $this->tenantService = $tenantService;
     }
 
     public function mount(string $subscriptionUuid): void
@@ -82,9 +82,9 @@ class CancelSubscriptionForm extends Component implements HasForms
 
         $user = auth()->user();
 
-        $tenant = $this->tenantManager->getTenantByUuid(Filament::getTenant()->uuid);
+        $tenant = $this->tenantService->getTenantByUuid(Filament::getTenant()->uuid);
 
-        if (! $this->tenantPermissionManager->tenantUserHasPermissionTo($tenant, $user, TenancyPermissionConstants::PERMISSION_UPDATE_SUBSCRIPTIONS)) {
+        if (! $this->tenantPermissionService->tenantUserHasPermissionTo($tenant, $user, TenancyPermissionConstants::PERMISSION_UPDATE_SUBSCRIPTIONS)) {
             Notification::make()
                 ->title(__('You do not have permission to cancel subscriptions.'))
                 ->danger()
@@ -95,7 +95,7 @@ class CancelSubscriptionForm extends Component implements HasForms
             return;
         }
 
-        $subscription = $this->subscriptionManager->findActiveByTenantAndSubscriptionUuid($tenant, $this->subscriptionUuid);
+        $subscription = $this->subscriptionService->findActiveByTenantAndSubscriptionUuid($tenant, $this->subscriptionUuid);
 
         if (! $subscription) {
             Notification::make()

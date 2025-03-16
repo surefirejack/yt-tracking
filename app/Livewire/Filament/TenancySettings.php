@@ -2,7 +2,7 @@
 
 namespace App\Livewire\Filament;
 
-use App\Services\ConfigManager;
+use App\Services\ConfigService;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Toggle;
 use Filament\Forms\Concerns\InteractsWithForms;
@@ -13,7 +13,7 @@ use Livewire\Component;
 
 class TenancySettings extends Component implements HasForms
 {
-    private ConfigManager $configManager;
+    private ConfigService $configService;
 
     use InteractsWithForms;
 
@@ -24,15 +24,15 @@ class TenancySettings extends Component implements HasForms
         return view('livewire.filament.tenancy-settings');
     }
 
-    public function boot(ConfigManager $configManager): void
+    public function boot(ConfigService $configService): void
     {
-        $this->configManager = $configManager;
+        $this->configService = $configService;
     }
 
     public function mount(): void
     {
         $this->form->fill([
-            'allow_tenant_invitations' => $this->configManager->get('app.allow_tenant_invitations', false),
+            'allow_tenant_invitations' => $this->configService->get('app.allow_tenant_invitations', false),
         ]);
     }
 
@@ -56,7 +56,7 @@ class TenancySettings extends Component implements HasForms
     {
         $data = $this->form->getState();
 
-        $this->configManager->set('app.allow_tenant_invitations', $data['allow_tenant_invitations']);
+        $this->configService->set('app.allow_tenant_invitations', $data['allow_tenant_invitations']);
 
         Notification::make()
             ->title(__('Settings Saved'))

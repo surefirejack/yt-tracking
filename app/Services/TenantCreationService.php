@@ -9,10 +9,10 @@ use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Support\Str;
 
-class TenantCreationManager
+class TenantCreationService
 {
     public function __construct(
-        private TenantPermissionManager $tenantPermissionManager,
+        private TenantPermissionService $tenantPermissionService,
     ) {}
 
     public function findUserTenantsForNewOrder(?User $user)
@@ -21,7 +21,7 @@ class TenantCreationManager
             return collect();
         }
 
-        return $this->tenantPermissionManager->filterTenantsWhereUserHasPermission(
+        return $this->tenantPermissionService->filterTenantsWhereUserHasPermission(
             $user->tenants()->get(),
             TenancyPermissionConstants::PERMISSION_CREATE_ORDERS
         );
@@ -33,7 +33,7 @@ class TenantCreationManager
             return null;
         }
 
-        return $this->tenantPermissionManager->filterTenantsWhereUserHasPermission(
+        return $this->tenantPermissionService->filterTenantsWhereUserHasPermission(
             $user->tenants()->where('uuid', $tenantUuid)->get(),
             TenancyPermissionConstants::PERMISSION_CREATE_ORDERS
         )->first();
@@ -46,7 +46,7 @@ class TenantCreationManager
         }
 
         // where doesn't have any subscriptions with status other than New
-        return $this->tenantPermissionManager->filterTenantsWhereUserHasPermission(
+        return $this->tenantPermissionService->filterTenantsWhereUserHasPermission(
             $user->tenants()->whereDoesntHave('subscriptions', function ($query) {
                 $query->where('status', '!=', SubscriptionStatus::NEW->value);
             })->get(),
@@ -60,7 +60,7 @@ class TenantCreationManager
             return null;
         }
 
-        return $this->tenantPermissionManager->filterTenantsWhereUserHasPermission(
+        return $this->tenantPermissionService->filterTenantsWhereUserHasPermission(
             $user->tenants()->whereDoesntHave('subscriptions', function ($query) {
                 $query->where('status', '!=', SubscriptionStatus::NEW->value);
             })->where('uuid', $tenantUuid)->get(),
@@ -96,7 +96,7 @@ class TenantCreationManager
 
         $tenant->users()->attach($user);
 
-        $this->tenantPermissionManager->assignTenantUserRole($tenant, $user, TenancyPermissionConstants::TENANT_CREATOR_ROLE);
+        $this->tenantPermissionService->assignTenantUserRole($tenant, $user, TenancyPermissionConstants::TENANT_CREATOR_ROLE);
 
         return $tenant;
     }

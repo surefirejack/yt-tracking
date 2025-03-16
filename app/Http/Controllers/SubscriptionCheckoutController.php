@@ -8,7 +8,7 @@ use App\Services\CalculationService;
 use App\Services\DiscountService;
 use App\Services\SessionService;
 use App\Services\SubscriptionService;
-use App\Services\TenantSubscriptionManager;
+use App\Services\TenantSubscriptionService;
 
 class SubscriptionCheckoutController extends Controller
 {
@@ -17,7 +17,7 @@ class SubscriptionCheckoutController extends Controller
         private CalculationService $calculationService,
         private SubscriptionService $subscriptionService,
         private SessionService $sessionService,
-        private TenantSubscriptionManager $tenantSubscriptionManager,
+        private TenantSubscriptionService $tenantSubscriptionService,
     ) {}
 
     public function subscriptionCheckout(string $planSlug)
@@ -62,7 +62,7 @@ class SubscriptionCheckoutController extends Controller
             $checkoutDto = $this->sessionService->resetSubscriptionCheckoutDto();
         }
 
-        $checkoutDto->quantity = max($checkoutDto->quantity, $this->tenantSubscriptionManager->calculateCurrentSubscriptionQuantity($subscription));
+        $checkoutDto->quantity = max($checkoutDto->quantity, $this->tenantSubscriptionService->calculateCurrentSubscriptionQuantity($subscription));
         $checkoutDto->planSlug = $planSlug;
         $checkoutDto->subscriptionId = $subscription->id;
 

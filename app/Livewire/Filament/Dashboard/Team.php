@@ -3,8 +3,8 @@
 namespace App\Livewire\Filament\Dashboard;
 
 use App\Models\User;
-use App\Services\TenantManager;
-use App\Services\TenantPermissionManager;
+use App\Services\TenantPermissionService;
+use App\Services\TenantService;
 use Filament\Facades\Filament;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
@@ -39,21 +39,21 @@ class Team extends Component implements HasForms, HasTable
                 Tables\Columns\TextColumn::make('email')
                     ->searchable(),
                 Tables\Columns\SelectColumn::make('role')
-                    ->getStateUsing(function (User $user, TenantPermissionManager $tenantPermissionManager) {
-                        return $tenantPermissionManager->getTenantUserRoles(Filament::getTenant(), $user)[0] ?? null;
+                    ->getStateUsing(function (User $user, TenantPermissionService $tenantPermissionService) {
+                        return $tenantPermissionService->getTenantUserRoles(Filament::getTenant(), $user)[0] ?? null;
                     })
-                    ->options(function (TenantPermissionManager $tenantPermissionManager) {
-                        return $tenantPermissionManager->getAllAvailableTenantRolesForDisplay();
+                    ->options(function (TenantPermissionService $tenantPermissionService) {
+                        return $tenantPermissionService->getAllAvailableTenantRolesForDisplay();
                     })
                     ->disabled(function (User $user) {
                         return $user->id === auth()->user()->id;
                     })
-                    ->updateStateUsing(function (User $user, ?string $state, TenantPermissionManager $tenantPermissionManager) {
+                    ->updateStateUsing(function (User $user, ?string $state, TenantPermissionService $tenantPermissionService) {
                         if ($state === null) {
                             return;
                         }
 
-                        $tenantPermissionManager->assignTenantUserRole(Filament::getTenant(), $user, $state);
+                        $tenantPermissionService->assignTenantUserRole(Filament::getTenant(), $user, $state);
 
                         Notification::make()
                             ->title(__('User role has been updated.'))
@@ -78,11 +78,11 @@ class Team extends Component implements HasForms, HasTable
                     ->label(__('Remove User'))
                     ->color('danger')
                     ->requiresConfirmation(true)
-                    ->visible(function (User $user, TenantManager $tenantManager) {
-                        return $tenantManager->canRemoveUser(Filament::getTenant(), $user);
+                    ->visible(function (User $user, TenantService $tenantService) {
+                        return $tenantService->canRemoveUser(Filament::getTenant(), $user);
                     })
-                    ->action(function (User $user, TenantManager $tenantManager) {
-                        $result = $tenantManager->removeUser(Filament::getTenant(), $user);
+                    ->action(function (User $user, TenantService $tenantService) {
+                        $result = $tenantService->removeUser(Filament::getTenant(), $user);
 
                         if ($result) {
                             Notification::make()

@@ -7,8 +7,8 @@ use App\Services\CalculationService;
 use App\Services\PaymentProviders\PaymentService;
 use App\Services\PlanService;
 use App\Services\SubscriptionService;
-use App\Services\TenantManager;
-use App\Services\TenantPermissionManager;
+use App\Services\TenantPermissionService;
+use App\Services\TenantService;
 use Illuminate\Http\Request;
 
 class SubscriptionController extends Controller
@@ -18,17 +18,17 @@ class SubscriptionController extends Controller
         private SubscriptionService $subscriptionService,
         private PaymentService $paymentService,
         private CalculationService $calculationService,
-        private TenantPermissionManager $tenantPermissionManager,
-        private TenantManager $tenantManager,
+        private TenantPermissionService $tenantPermissionService,
+        private TenantService $tenantService,
     ) {}
 
     public function changePlan(string $subscriptionUuid, string $newPlanSlug, string $tenantUuid, Request $request)
     {
         $user = auth()->user();
 
-        $tenant = $this->tenantManager->getTenantByUuid($tenantUuid);
+        $tenant = $this->tenantService->getTenantByUuid($tenantUuid);
 
-        if (! $this->tenantPermissionManager->tenantUserHasPermissionTo($tenant, $user, TenancyPermissionConstants::PERMISSION_UPDATE_SUBSCRIPTIONS)) {
+        if (! $this->tenantPermissionService->tenantUserHasPermissionTo($tenant, $user, TenancyPermissionConstants::PERMISSION_UPDATE_SUBSCRIPTIONS)) {
             return redirect()->back()->with('error', __('You do not have permission to change plans.'));
         }
 

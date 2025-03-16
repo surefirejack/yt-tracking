@@ -7,7 +7,7 @@ use App\Filament\Dashboard\Resources\SubscriptionResource;
 use App\Models\Subscription;
 use App\Services\PaymentProviders\PaymentService;
 use App\Services\SubscriptionService;
-use App\Services\TenantPermissionManager;
+use App\Services\TenantPermissionService;
 use Filament\Facades\Filament;
 use Filament\Notifications\Notification;
 
@@ -16,7 +16,7 @@ class DiscardSubscriptionCancellationActionHandler
     public function __construct(
         private SubscriptionService $subscriptionService,
         private PaymentService $paymentService,
-        private TenantPermissionManager $tenantPermissionManager,
+        private TenantPermissionService $tenantPermissionService,
     ) {}
 
     public function handle(Subscription $record)
@@ -25,7 +25,7 @@ class DiscardSubscriptionCancellationActionHandler
 
         $tenant = Filament::getTenant();
 
-        if (! $this->tenantPermissionManager->tenantUserHasPermissionTo($tenant, $user, TenancyPermissionConstants::PERMISSION_UPDATE_SUBSCRIPTIONS)) {
+        if (! $this->tenantPermissionService->tenantUserHasPermissionTo($tenant, $user, TenancyPermissionConstants::PERMISSION_UPDATE_SUBSCRIPTIONS)) {
             Notification::make()
                 ->title(__('You do not have permission to cancel subscriptions.'))
                 ->danger()

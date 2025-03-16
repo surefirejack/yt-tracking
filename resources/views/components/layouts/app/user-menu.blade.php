@@ -1,4 +1,4 @@
-@inject('tenantManager', 'App\Services\TenantManager')
+@inject('tenantService', 'App\Services\TenantService')
 
 <div class="flex-none gap-2 text-primary-500">
     <div class="dropdown dropdown-end">
@@ -39,8 +39,8 @@
                                 <div>
                                     {{ __('My Invitations') }}
                                     @php
-                                        /** @var \App\Services\TenantManager $tenantManager */
-                                        $invitationsCount = $tenantManager->getUserInvitationCount(auth()->user());
+                                        /** @var \App\Services\TenantService $tenantService */
+                                        $invitationsCount = $tenantService->getUserInvitationCount(auth()->user());
                                     @endphp
                                     @if ($invitationsCount > 0)
                                         <span class="border bg-primary-50 rounded-full px-2 text-xxs">
@@ -53,7 +53,8 @@
                     @endauth
                 </li>
                 <li class="">
-                    <x-link href="{{ route('logout') }}" class="!px-2" onclick="event.preventDefault(); this.closest('form').submit();">
+                    <x-link href="{{ route('logout') }}" class="!px-2"
+                            onclick="event.preventDefault(); this.closest('form').submit();">
                         <div class="flex flex-row gap-1">
                             @svg('logout', 'h-4 m-1 stroke-primary-500')
                             {{ __('Logout') }}
