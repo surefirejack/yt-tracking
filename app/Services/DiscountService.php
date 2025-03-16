@@ -14,7 +14,7 @@ use App\Models\SubscriptionDiscount;
 use App\Models\User;
 use Carbon\Carbon;
 
-class DiscountManager
+class DiscountService
 {
     public function isCodeRedeemableForPlan(string $code, ?User $user, Plan $plan, string $actionType = DiscountConstants::ACTION_TYPE_ANY)
     {

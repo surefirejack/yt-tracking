@@ -2,7 +2,7 @@
 
 namespace App\Livewire\Filament;
 
-use App\Services\ConfigManager;
+use App\Services\ConfigService;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\ViewField;
@@ -14,7 +14,7 @@ use Livewire\Component;
 
 abstract class OauthProviderSettings extends Component implements HasForms
 {
-    private ConfigManager $configManager;
+    private ConfigService $configService;
 
     protected string $slug = '';
 
@@ -22,9 +22,9 @@ abstract class OauthProviderSettings extends Component implements HasForms
 
     public ?array $data = [];
 
-    public function boot(ConfigManager $configManager): void
+    public function boot(ConfigService $configService): void
     {
-        $this->configManager = $configManager;
+        $this->configService = $configService;
     }
 
     public function render()
@@ -35,8 +35,8 @@ abstract class OauthProviderSettings extends Component implements HasForms
     public function mount(): void
     {
         $this->form->fill([
-            'client_id' => $this->configManager->get('services.'.$this->slug.'.client_id'),
-            'client_secret' => $this->configManager->get('services.'.$this->slug.'.client_secret'),
+            'client_id' => $this->configService->get('services.'.$this->slug.'.client_id'),
+            'client_secret' => $this->configService->get('services.'.$this->slug.'.client_secret'),
         ]);
     }
 
@@ -75,8 +75,8 @@ abstract class OauthProviderSettings extends Component implements HasForms
     {
         $data = $this->form->getState();
 
-        $this->configManager->set('services.'.$this->slug.'.client_id', $data['client_id']);
-        $this->configManager->set('services.'.$this->slug.'.client_secret', $data['client_secret']);
+        $this->configService->set('services.'.$this->slug.'.client_id', $data['client_id']);
+        $this->configService->set('services.'.$this->slug.'.client_secret', $data['client_secret']);
 
         Notification::make()
             ->title(__('Settings Saved'))

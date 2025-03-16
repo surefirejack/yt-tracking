@@ -2,14 +2,14 @@
 
 namespace App\View\Components\Products;
 
-use App\Services\OneTimeProductManager;
+use App\Services\OneTimeProductService;
 use Illuminate\Contracts\View\View;
 use Illuminate\View\Component;
 
 class One extends Component
 {
     public function __construct(
-        private OneTimeProductManager $productManager,
+        private OneTimeProductService $productService,
         public string $slug,
     ) {}
 
@@ -23,7 +23,7 @@ class One extends Component
 
     protected function calculateViewData()
     {
-        $product = $this->productManager->getProductWithPriceBySlug($this->slug);
+        $product = $this->productService->getProductWithPriceBySlug($this->slug);
 
         return [
             'product' => $product,

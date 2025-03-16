@@ -3,8 +3,8 @@
 namespace App\Livewire;
 
 use App\Filament\Dashboard\Resources\SubscriptionResource;
-use App\Services\PaymentProviders\PaymentManager;
-use App\Services\SubscriptionManager;
+use App\Services\PaymentProviders\PaymentService;
+use App\Services\SubscriptionService;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Concerns\InteractsWithForms;
@@ -21,16 +21,16 @@ class CancelSubscriptionForm extends Component implements HasForms
 
     public string $subscriptionUuid;
 
-    private PaymentManager $paymentManager;
+    private PaymentService $paymentService;
 
-    private SubscriptionManager $subscriptionManager;
+    private SubscriptionService $subscriptionService;
 
     public function boot(
-        PaymentManager $paymentManager,
-        SubscriptionManager $subscriptionManager,
+        PaymentService $paymentService,
+        SubscriptionService $subscriptionService,
     ) {
-        $this->paymentManager = $paymentManager;
-        $this->subscriptionManager = $subscriptionManager;
+        $this->paymentService = $paymentService;
+        $this->subscriptionService = $subscriptionService;
     }
 
     public function mount(string $subscriptionUuid): void
@@ -70,7 +70,7 @@ class CancelSubscriptionForm extends Component implements HasForms
 
         $user = auth()->user();
 
-        $userSubscription = $this->subscriptionManager->findActiveByUserAndSubscriptionUuid($user->id, $this->subscriptionUuid);
+        $userSubscription = $this->subscriptionService->findActiveByUserAndSubscriptionUuid($user->id, $this->subscriptionUuid);
 
         if (! $userSubscription) {
             Notification::make()
@@ -85,11 +85,11 @@ class CancelSubscriptionForm extends Component implements HasForms
 
         $paymentProvider = $userSubscription->paymentProvider()->first();
 
-        $paymentProviderStrategy = $this->paymentManager->getPaymentProviderBySlug(
+        $paymentProviderStrategy = $this->paymentService->getPaymentProviderBySlug(
             $paymentProvider->slug
         );
 
-        $this->subscriptionManager->cancelSubscription(
+        $this->subscriptionService->cancelSubscription(
             $userSubscription,
             $paymentProviderStrategy,
             $data['reason'],

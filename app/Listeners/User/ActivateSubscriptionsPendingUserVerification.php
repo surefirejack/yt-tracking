@@ -3,7 +3,7 @@
 namespace App\Listeners\User;
 
 use App\Events\User\UserPhoneVerified;
-use App\Services\SubscriptionManager;
+use App\Services\SubscriptionService;
 use Illuminate\Contracts\Queue\ShouldQueue;
 
 class ActivateSubscriptionsPendingUserVerification implements ShouldQueue
@@ -12,7 +12,7 @@ class ActivateSubscriptionsPendingUserVerification implements ShouldQueue
      * Create the event listener.
      */
     public function __construct(
-        private SubscriptionManager $subscriptionManager
+        private SubscriptionService $subscriptionService
     ) {}
 
     /**
@@ -20,6 +20,6 @@ class ActivateSubscriptionsPendingUserVerification implements ShouldQueue
      */
     public function handle(UserPhoneVerified $event): void
     {
-        $this->subscriptionManager->activateSubscriptionsPendingUserVerification($event->user);
+        $this->subscriptionService->activateSubscriptionsPendingUserVerification($event->user);
     }
 }

@@ -5,42 +5,42 @@ namespace App\Http\Controllers;
 use App\Constants\SubscriptionType;
 use App\Exceptions\SubscriptionCreationNotAllowedException;
 use App\Models\Plan;
-use App\Services\CalculationManager;
-use App\Services\DiscountManager;
-use App\Services\SessionManager;
-use App\Services\SubscriptionManager;
+use App\Services\CalculationService;
+use App\Services\DiscountService;
+use App\Services\SessionService;
+use App\Services\SubscriptionService;
 
 class SubscriptionCheckoutController extends Controller
 {
     public function __construct(
-        private DiscountManager $discountManager,
-        private CalculationManager $calculationManager,
-        private SubscriptionManager $subscriptionManager,
-        private SessionManager $sessionManager,
+        private DiscountService $discountService,
+        private CalculationService $calculationService,
+        private SubscriptionService $subscriptionService,
+        private SessionService $sessionService,
     ) {}
 
     public function subscriptionCheckout(string $planSlug)
     {
         $plan = Plan::where('slug', $planSlug)->where('is_active', true)->firstOrFail();
-        $checkoutDto = $this->sessionManager->getSubscriptionCheckoutDto();
+        $checkoutDto = $this->sessionService->getSubscriptionCheckoutDto();
 
         $user = auth()->user();
 
-        if ($user && ! $this->subscriptionManager->canCreateSubscription($user->id)) {
+        if ($user && ! $this->subscriptionService->canCreateSubscription($user->id)) {
             throw new SubscriptionCreationNotAllowedException(__('You already have subscription.'));
         }
 
         if ($checkoutDto->planSlug !== $planSlug) {
-            $checkoutDto = $this->sessionManager->resetSubscriptionCheckoutDto();
+            $checkoutDto = $this->sessionService->resetSubscriptionCheckoutDto();
         }
 
         $checkoutDto->planSlug = $planSlug;
 
-        $this->sessionManager->saveSubscriptionCheckoutDto($checkoutDto);
+        $this->sessionService->saveSubscriptionCheckoutDto($checkoutDto);
 
         if ($plan->has_trial &&
             config('app.trial_without_payment.enabled') &&
-            $this->subscriptionManager->canUserHaveSubscriptionTrial($user)
+            $this->subscriptionService->canUserHaveSubscriptionTrial($user)
         ) {
             return view('checkout.local-subscription');
         }
@@ -50,27 +50,27 @@ class SubscriptionCheckoutController extends Controller
 
     public function convertLocalSubscriptionCheckout(?string $subscriptionUuid = null)
     {
-        $subscription = $this->subscriptionManager->findByUuidOrFail($subscriptionUuid);
+        $subscription = $this->subscriptionService->findByUuidOrFail($subscriptionUuid);
 
-        if (! $this->subscriptionManager->isLocalSubscription($subscription)) {
+        if (! $this->subscriptionService->isLocalSubscription($subscription)) {
             return redirect()->route('home');
         }
 
         $planSlug = $subscription->plan->slug;
         $plan = Plan::where('slug', $planSlug)->where('is_active', true)->firstOrFail();
 
-        $checkoutDto = $this->sessionManager->getSubscriptionCheckoutDto();
+        $checkoutDto = $this->sessionService->getSubscriptionCheckoutDto();
 
         if ($checkoutDto->planSlug !== $planSlug) {
-            $checkoutDto = $this->sessionManager->resetSubscriptionCheckoutDto();
+            $checkoutDto = $this->sessionService->resetSubscriptionCheckoutDto();
         }
 
         $checkoutDto->planSlug = $planSlug;
         $checkoutDto->subscriptionId = $subscription->id;
 
-        $this->sessionManager->saveSubscriptionCheckoutDto($checkoutDto);
+        $this->sessionService->saveSubscriptionCheckoutDto($checkoutDto);
 
-        $totals = $this->calculationManager->calculatePlanTotals(
+        $totals = $this->calculationService->calculatePlanTotals(
             auth()->user(),
             $planSlug,
             $checkoutDto?->discountCode,
@@ -91,10 +91,10 @@ class SubscriptionCheckoutController extends Controller
             return redirect()->route('home');
         }
 
-        $checkoutDto = $this->sessionManager->getSubscriptionCheckoutDto();
-        $subscription = $this->subscriptionManager->findById($checkoutDto->subscriptionId);
+        $checkoutDto = $this->sessionService->getSubscriptionCheckoutDto();
+        $subscription = $this->subscriptionService->findById($checkoutDto->subscriptionId);
 
-        $this->sessionManager->resetSubscriptionCheckoutDto();
+        $this->sessionService->resetSubscriptionCheckoutDto();
 
         if ($subscription && $subscription->type === SubscriptionType::LOCALLY_MANAGED) {
             return view('checkout.local-subscription-thank-you');
@@ -111,24 +111,24 @@ class SubscriptionCheckoutController extends Controller
             return redirect()->route('home');
         }
 
-        $this->sessionManager->resetSubscriptionCheckoutDto();
+        $this->sessionService->resetSubscriptionCheckoutDto();
 
         return view('checkout.convert-local-subscription-thank-you');
     }
 
     private function handleSubscriptionSuccess(): bool
     {
-        $checkoutDto = $this->sessionManager->getSubscriptionCheckoutDto();
+        $checkoutDto = $this->sessionService->getSubscriptionCheckoutDto();
 
         if ($checkoutDto->subscriptionId === null) {
             return false;
         }
 
-        $this->subscriptionManager->setAsPending($checkoutDto->subscriptionId);
-        $this->subscriptionManager->updateUserSubscriptionTrials($checkoutDto->subscriptionId);
+        $this->subscriptionService->setAsPending($checkoutDto->subscriptionId);
+        $this->subscriptionService->updateUserSubscriptionTrials($checkoutDto->subscriptionId);
 
         if ($checkoutDto->discountCode !== null) {
-            $this->discountManager->redeemCodeForSubscription($checkoutDto->discountCode, auth()->user(), $checkoutDto->subscriptionId);
+            $this->discountService->redeemCodeForSubscription($checkoutDto->discountCode, auth()->user(), $checkoutDto->subscriptionId);
         }
 
         return true;

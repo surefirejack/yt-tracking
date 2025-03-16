@@ -23,11 +23,11 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
-class SubscriptionManager
+class SubscriptionService
 {
     public function __construct(
-        private CalculationManager $calculationManager,
-        private PlanManager $planManager,
+        private CalculationService $calculationService,
+        private PlanService        $planService,
     ) {}
 
     public function canCreateSubscription(int $userId): bool
@@ -59,7 +59,7 @@ class SubscriptionManager
         DB::transaction(function () use ($plan, $userId, &$newSubscription, $paymentProvider, $paymentProviderSubscriptionId, $localSubscription, $endsAt) {
             $this->deleteAllNewSubscriptions($userId);
 
-            $planPrice = $this->calculationManager->getPlanPrice($plan);
+            $planPrice = $this->calculationService->getPlanPrice($plan);
 
             $subscriptionAttributes = [
                 'uuid' => (string) Str::uuid(),
@@ -312,11 +312,11 @@ class SubscriptionManager
             return false;
         }
 
-        if (! $this->planManager->isPlanChangeable($subscription->plan)) {
+        if (! $this->planService->isPlanChangeable($subscription->plan)) {
             return false;
         }
 
-        $newPlan = $this->planManager->getActivePlanBySlug($newPlanSlug);
+        $newPlan = $this->planService->getActivePlanBySlug($newPlanSlug);
 
         if (! $newPlan) {
             return false;
@@ -474,7 +474,7 @@ class SubscriptionManager
     public function canChangeSubscriptionPlan(Subscription $subscription)
     {
         return $subscription->type === SubscriptionType::PAYMENT_PROVIDER_MANAGED &&
-            $this->planManager->isPlanChangeable($subscription->plan) &&
+            $this->planService->isPlanChangeable($subscription->plan) &&
             $subscription->status === SubscriptionStatus::ACTIVE->value;
     }
 

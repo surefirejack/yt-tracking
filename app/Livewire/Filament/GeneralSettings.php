@@ -5,7 +5,7 @@ namespace App\Livewire\Filament;
 use App\Models\Currency;
 use App\Models\EmailProvider;
 use App\Models\VerificationProvider;
-use App\Services\ConfigManager;
+use App\Services\ConfigService;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Tabs;
@@ -21,7 +21,7 @@ use Livewire\Component;
 
 class GeneralSettings extends Component implements HasForms
 {
-    private ConfigManager $configManager;
+    private ConfigService $configService;
 
     use InteractsWithForms;
 
@@ -32,52 +32,52 @@ class GeneralSettings extends Component implements HasForms
         return view('livewire.filament.general-settings');
     }
 
-    public function boot(ConfigManager $configManager): void
+    public function boot(ConfigService $configService): void
     {
-        $this->configManager = $configManager;
+        $this->configService = $configService;
     }
 
     public function mount(): void
     {
         $this->form->fill([
-            'site_name' => $this->configManager->get('app.name'),
-            'description' => $this->configManager->get('app.description'),
-            'support_email' => $this->configManager->get('app.support_email'),
-            'date_format' => $this->configManager->get('app.date_format'),
-            'datetime_format' => $this->configManager->get('app.datetime_format'),
-            'default_currency' => $this->configManager->get('app.default_currency'),
-            'google_tracking_id' => $this->configManager->get('app.google_tracking_id'),
-            'tracking_scripts' => $this->configManager->get('app.tracking_scripts'),
-            'payment_proration_enabled' => $this->configManager->get('app.payment.proration_enabled'),
-            'default_email_provider' => $this->configManager->get('mail.default'),
-            'default_email_from_name' => $this->configManager->get('mail.from.name'),
-            'default_email_from_email' => $this->configManager->get('mail.from.address'),
-            'show_subscriptions' => $this->configManager->get('app.customer_dashboard.show_subscriptions', true),
-            'show_orders' => $this->configManager->get('app.customer_dashboard.show_orders', true),
-            'show_transactions' => $this->configManager->get('app.customer_dashboard.show_transactions', true),
-            'social_links_facebook' => $this->configManager->get('app.social_links.facebook') ?? '',
-            'social_links_x' => $this->configManager->get('app.social_links.x') ?? '',
-            'social_links_linkedin' => $this->configManager->get('app.social_links.linkedin-openid') ?? '',
-            'social_links_instagram' => $this->configManager->get('app.social_links.instagram') ?? '',
-            'social_links_youtube' => $this->configManager->get('app.social_links.youtube') ?? '',
-            'social_links_github' => $this->configManager->get('app.social_links.github') ?? '',
-            'social_links_discord' => $this->configManager->get('app.social_links.discord') ?? '',
-            'roadmap_enabled' => $this->configManager->get('app.roadmap_enabled', true),
-            'recaptcha_enabled' => $this->configManager->get('app.recaptcha_enabled', false),
-            'recaptcha_api_site_key' => $this->configManager->get('recaptcha.api_site_key', ''),
-            'recaptcha_api_secret_key' => $this->configManager->get('recaptcha.api_secret_key', ''),
-            'multiple_subscriptions_enabled' => $this->configManager->get('app.multiple_subscriptions_enabled', false),
-            'cookie_consent_enabled' => $this->configManager->get('cookie-consent.enabled', false),
-            'two_factor_auth_enabled' => $this->configManager->get('app.two_factor_auth_enabled', false),
-            'trial_without_payment_enabled' => $this->configManager->get('app.trial_without_payment.enabled', false),
-            'trial_first_reminder_enabled' => $this->configManager->get('app.trial_without_payment.first_reminder_enabled', true),
-            'trial_second_reminder_enabled' => $this->configManager->get('app.trial_without_payment.second_reminder_enabled', true),
-            'trial_first_reminder_days' => $this->configManager->get('app.trial_without_payment.first_reminder_days'),
-            'trial_without_payment_sms_verification_enabled' => $this->configManager->get('app.trial_without_payment.sms_verification_enabled'),
-            'trial_second_reminder_days' => $this->configManager->get('app.trial_without_payment.second_reminder_days'),
-            'limit_user_trials_enabled' => $this->configManager->get('app.limit_user_trials.enabled'),
-            'limit_user_trials_max_count' => $this->configManager->get('app.limit_user_trials.max_count'),
-            'default_verification_provider' => $this->configManager->get('app.verification.default_provider'),
+            'site_name' => $this->configService->get('app.name'),
+            'description' => $this->configService->get('app.description'),
+            'support_email' => $this->configService->get('app.support_email'),
+            'date_format' => $this->configService->get('app.date_format'),
+            'datetime_format' => $this->configService->get('app.datetime_format'),
+            'default_currency' => $this->configService->get('app.default_currency'),
+            'google_tracking_id' => $this->configService->get('app.google_tracking_id'),
+            'tracking_scripts' => $this->configService->get('app.tracking_scripts'),
+            'payment_proration_enabled' => $this->configService->get('app.payment.proration_enabled'),
+            'default_email_provider' => $this->configService->get('mail.default'),
+            'default_email_from_name' => $this->configService->get('mail.from.name'),
+            'default_email_from_email' => $this->configService->get('mail.from.address'),
+            'show_subscriptions' => $this->configService->get('app.customer_dashboard.show_subscriptions', true),
+            'show_orders' => $this->configService->get('app.customer_dashboard.show_orders', true),
+            'show_transactions' => $this->configService->get('app.customer_dashboard.show_transactions', true),
+            'social_links_facebook' => $this->configService->get('app.social_links.facebook') ?? '',
+            'social_links_x' => $this->configService->get('app.social_links.x') ?? '',
+            'social_links_linkedin' => $this->configService->get('app.social_links.linkedin-openid') ?? '',
+            'social_links_instagram' => $this->configService->get('app.social_links.instagram') ?? '',
+            'social_links_youtube' => $this->configService->get('app.social_links.youtube') ?? '',
+            'social_links_github' => $this->configService->get('app.social_links.github') ?? '',
+            'social_links_discord' => $this->configService->get('app.social_links.discord') ?? '',
+            'roadmap_enabled' => $this->configService->get('app.roadmap_enabled', true),
+            'recaptcha_enabled' => $this->configService->get('app.recaptcha_enabled', false),
+            'recaptcha_api_site_key' => $this->configService->get('recaptcha.api_site_key', ''),
+            'recaptcha_api_secret_key' => $this->configService->get('recaptcha.api_secret_key', ''),
+            'multiple_subscriptions_enabled' => $this->configService->get('app.multiple_subscriptions_enabled', false),
+            'cookie_consent_enabled' => $this->configService->get('cookie-consent.enabled', false),
+            'two_factor_auth_enabled' => $this->configService->get('app.two_factor_auth_enabled', false),
+            'trial_without_payment_enabled' => $this->configService->get('app.trial_without_payment.enabled', false),
+            'trial_first_reminder_enabled' => $this->configService->get('app.trial_without_payment.first_reminder_enabled', true),
+            'trial_second_reminder_enabled' => $this->configService->get('app.trial_without_payment.second_reminder_enabled', true),
+            'trial_first_reminder_days' => $this->configService->get('app.trial_without_payment.first_reminder_days'),
+            'trial_without_payment_sms_verification_enabled' => $this->configService->get('app.trial_without_payment.sms_verification_enabled'),
+            'trial_second_reminder_days' => $this->configService->get('app.trial_without_payment.second_reminder_days'),
+            'limit_user_trials_enabled' => $this->configService->get('app.limit_user_trials.enabled'),
+            'limit_user_trials_max_count' => $this->configService->get('app.limit_user_trials.max_count'),
+            'default_verification_provider' => $this->configService->get('app.verification.default_provider'),
         ]);
     }
 
@@ -332,44 +332,44 @@ class GeneralSettings extends Component implements HasForms
     {
         $data = $this->form->getState();
 
-        $this->configManager->set('app.name', $data['site_name']);
-        $this->configManager->set('app.description', $data['description']);
-        $this->configManager->set('app.support_email', $data['support_email']);
-        $this->configManager->set('app.date_format', $data['date_format']);
-        $this->configManager->set('app.datetime_format', $data['datetime_format']);
-        $this->configManager->set('app.default_currency', $data['default_currency']);
-        $this->configManager->set('app.google_tracking_id', $data['google_tracking_id'] ?? '');
-        $this->configManager->set('app.tracking_scripts', $data['tracking_scripts'] ?? '');
-        $this->configManager->set('app.payment.proration_enabled', $data['payment_proration_enabled']);
-        $this->configManager->set('mail.default', $data['default_email_provider']);
-        $this->configManager->set('mail.from.name', $data['default_email_from_name']);
-        $this->configManager->set('mail.from.address', $data['default_email_from_email']);
-        $this->configManager->set('app.customer_dashboard.show_subscriptions', $data['show_subscriptions']);
-        $this->configManager->set('app.customer_dashboard.show_orders', $data['show_orders']);
-        $this->configManager->set('app.customer_dashboard.show_transactions', $data['show_transactions']);
-        $this->configManager->set('app.social_links.facebook', $data['social_links_facebook']);
-        $this->configManager->set('app.social_links.x', $data['social_links_x']);
-        $this->configManager->set('app.social_links.linkedin-openid', $data['social_links_linkedin']);
-        $this->configManager->set('app.social_links.instagram', $data['social_links_instagram']);
-        $this->configManager->set('app.social_links.youtube', $data['social_links_youtube']);
-        $this->configManager->set('app.social_links.github', $data['social_links_github']);
-        $this->configManager->set('app.social_links.discord', $data['social_links_discord']);
-        $this->configManager->set('app.roadmap_enabled', $data['roadmap_enabled']);
-        $this->configManager->set('app.recaptcha_enabled', $data['recaptcha_enabled']);
-        $this->configManager->set('recaptcha.api_site_key', $data['recaptcha_api_site_key']);
-        $this->configManager->set('recaptcha.api_secret_key', $data['recaptcha_api_secret_key']);
-        $this->configManager->set('app.multiple_subscriptions_enabled', $data['multiple_subscriptions_enabled']);
-        $this->configManager->set('cookie-consent.enabled', $data['cookie_consent_enabled']);
-        $this->configManager->set('app.two_factor_auth_enabled', $data['two_factor_auth_enabled']);
-        $this->configManager->set('app.trial_without_payment.enabled', $data['trial_without_payment_enabled']);
-        $this->configManager->set('app.trial_without_payment.first_reminder_days', $data['trial_first_reminder_days'] ?? 3);
-        $this->configManager->set('app.trial_without_payment.second_reminder_days', $data['trial_second_reminder_days'] ?? 1);
-        $this->configManager->set('app.trial_without_payment.first_reminder_enabled', $data['trial_first_reminder_enabled']);
-        $this->configManager->set('app.trial_without_payment.second_reminder_enabled', $data['trial_second_reminder_enabled']);
-        $this->configManager->set('app.trial_without_payment.sms_verification_enabled', $data['trial_without_payment_sms_verification_enabled']);
-        $this->configManager->set('app.limit_user_trials.enabled', $data['limit_user_trials_enabled']);
-        $this->configManager->set('app.limit_user_trials.max_count', $data['limit_user_trials_max_count'] ?? 1);
-        $this->configManager->set('app.verification.default_provider', $data['default_verification_provider']);
+        $this->configService->set('app.name', $data['site_name']);
+        $this->configService->set('app.description', $data['description']);
+        $this->configService->set('app.support_email', $data['support_email']);
+        $this->configService->set('app.date_format', $data['date_format']);
+        $this->configService->set('app.datetime_format', $data['datetime_format']);
+        $this->configService->set('app.default_currency', $data['default_currency']);
+        $this->configService->set('app.google_tracking_id', $data['google_tracking_id'] ?? '');
+        $this->configService->set('app.tracking_scripts', $data['tracking_scripts'] ?? '');
+        $this->configService->set('app.payment.proration_enabled', $data['payment_proration_enabled']);
+        $this->configService->set('mail.default', $data['default_email_provider']);
+        $this->configService->set('mail.from.name', $data['default_email_from_name']);
+        $this->configService->set('mail.from.address', $data['default_email_from_email']);
+        $this->configService->set('app.customer_dashboard.show_subscriptions', $data['show_subscriptions']);
+        $this->configService->set('app.customer_dashboard.show_orders', $data['show_orders']);
+        $this->configService->set('app.customer_dashboard.show_transactions', $data['show_transactions']);
+        $this->configService->set('app.social_links.facebook', $data['social_links_facebook']);
+        $this->configService->set('app.social_links.x', $data['social_links_x']);
+        $this->configService->set('app.social_links.linkedin-openid', $data['social_links_linkedin']);
+        $this->configService->set('app.social_links.instagram', $data['social_links_instagram']);
+        $this->configService->set('app.social_links.youtube', $data['social_links_youtube']);
+        $this->configService->set('app.social_links.github', $data['social_links_github']);
+        $this->configService->set('app.social_links.discord', $data['social_links_discord']);
+        $this->configService->set('app.roadmap_enabled', $data['roadmap_enabled']);
+        $this->configService->set('app.recaptcha_enabled', $data['recaptcha_enabled']);
+        $this->configService->set('recaptcha.api_site_key', $data['recaptcha_api_site_key']);
+        $this->configService->set('recaptcha.api_secret_key', $data['recaptcha_api_secret_key']);
+        $this->configService->set('app.multiple_subscriptions_enabled', $data['multiple_subscriptions_enabled']);
+        $this->configService->set('cookie-consent.enabled', $data['cookie_consent_enabled']);
+        $this->configService->set('app.two_factor_auth_enabled', $data['two_factor_auth_enabled']);
+        $this->configService->set('app.trial_without_payment.enabled', $data['trial_without_payment_enabled']);
+        $this->configService->set('app.trial_without_payment.first_reminder_days', $data['trial_first_reminder_days'] ?? 3);
+        $this->configService->set('app.trial_without_payment.second_reminder_days', $data['trial_second_reminder_days'] ?? 1);
+        $this->configService->set('app.trial_without_payment.first_reminder_enabled', $data['trial_first_reminder_enabled']);
+        $this->configService->set('app.trial_without_payment.second_reminder_enabled', $data['trial_second_reminder_enabled']);
+        $this->configService->set('app.trial_without_payment.sms_verification_enabled', $data['trial_without_payment_sms_verification_enabled']);
+        $this->configService->set('app.limit_user_trials.enabled', $data['limit_user_trials_enabled']);
+        $this->configService->set('app.limit_user_trials.max_count', $data['limit_user_trials_max_count'] ?? 1);
+        $this->configService->set('app.verification.default_provider', $data['default_verification_provider']);
 
         Notification::make()
             ->title(__('Settings Saved'))

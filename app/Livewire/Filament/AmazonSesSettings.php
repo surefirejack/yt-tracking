@@ -2,7 +2,7 @@
 
 namespace App\Livewire\Filament;
 
-use App\Services\ConfigManager;
+use App\Services\ConfigService;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Concerns\InteractsWithForms;
@@ -13,7 +13,7 @@ use Livewire\Component;
 
 class AmazonSesSettings extends Component implements HasForms
 {
-    private ConfigManager $configManager;
+    private ConfigService $configService;
 
     protected string $slug = 'ses';
 
@@ -21,9 +21,9 @@ class AmazonSesSettings extends Component implements HasForms
 
     public ?array $data = [];
 
-    public function boot(ConfigManager $configManager): void
+    public function boot(ConfigService $configService): void
     {
-        $this->configManager = $configManager;
+        $this->configService = $configService;
     }
 
     public function render()
@@ -34,9 +34,9 @@ class AmazonSesSettings extends Component implements HasForms
     public function mount(): void
     {
         $this->form->fill([
-            'key' => $this->configManager->get('services.'.$this->slug.'.key'),
-            'secret' => $this->configManager->get('services.'.$this->slug.'.secret'),
-            'region' => $this->configManager->get('services.'.$this->slug.'.region'),
+            'key' => $this->configService->get('services.'.$this->slug.'.key'),
+            'secret' => $this->configService->get('services.'.$this->slug.'.secret'),
+            'region' => $this->configService->get('services.'.$this->slug.'.region'),
         ]);
     }
 
@@ -65,9 +65,9 @@ class AmazonSesSettings extends Component implements HasForms
     {
         $data = $this->form->getState();
 
-        $this->configManager->set('services.'.$this->slug.'.key', $data['key']);
-        $this->configManager->set('services.'.$this->slug.'.secret', $data['secret']);
-        $this->configManager->set('services.'.$this->slug.'.region', $data['region']);
+        $this->configService->set('services.'.$this->slug.'.key', $data['key']);
+        $this->configService->set('services.'.$this->slug.'.secret', $data['secret']);
+        $this->configService->set('services.'.$this->slug.'.region', $data['region']);
 
         Notification::make()
             ->title(__('Settings Saved'))

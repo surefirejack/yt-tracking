@@ -3,24 +3,24 @@
 namespace Tests\Feature\Services;
 
 use App\Models\RoadmapItem;
-use App\Services\RoadmapManager;
+use App\Services\RoadmapService;
 use Illuminate\Support\Str;
 use Tests\Feature\FeatureTest;
 
-class RoadmapManagerTest extends FeatureTest
+class RoadmapServiceTest extends FeatureTest
 {
     public function test_create(): void
     {
         $user = $this->createUser();
         $this->actingAs($user);
 
-        $roadmapManager = app()->make(RoadmapManager::class);
+        $roadmapService = app()->make(RoadmapService::class);
 
         $title = 'New Roadmap Item';
         $description = 'Description of the new roadmap item';
         $type = 'feature';
 
-        $roadmapItem = $roadmapManager->createItem($title, $description, $type);
+        $roadmapItem = $roadmapService->createItem($title, $description, $type);
 
         $this->assertDatabaseHas('roadmap_items', [
             'title' => $title,
@@ -42,24 +42,24 @@ class RoadmapManagerTest extends FeatureTest
         $user = $this->createUser();
         $this->actingAs($user);
 
-        $roadmapManager = app()->make(RoadmapManager::class);
+        $roadmapService = app()->make(RoadmapService::class);
 
         $title = 'New Roadmap Item';
         $description = 'Description of the new roadmap item';
         $type = 'feature';
 
-        $roadmapItem = $roadmapManager->createItem($title, $description, $type);
+        $roadmapItem = $roadmapService->createItem($title, $description, $type);
 
-        $this->assertTrue($roadmapManager->isUpvotable($roadmapItem));
+        $this->assertTrue($roadmapService->isUpvotable($roadmapItem));
 
         $roadmapItem->status = 'completed';
         $roadmapItem->save();
 
-        $this->assertFalse($roadmapManager->isUpvotable($roadmapItem));
+        $this->assertFalse($roadmapService->isUpvotable($roadmapItem));
 
         $roadmapItem->status = 'cancelled';
 
-        $this->assertFalse($roadmapManager->isUpvotable($roadmapItem));
+        $this->assertFalse($roadmapService->isUpvotable($roadmapItem));
 
     }
 
@@ -68,18 +68,18 @@ class RoadmapManagerTest extends FeatureTest
         $user1 = $this->createUser();
         $this->actingAs($user1);
 
-        $roadmapManager = app()->make(RoadmapManager::class);
+        $roadmapService = app()->make(RoadmapService::class);
 
         $title = 'New Roadmap Item';
         $description = 'Description of the new roadmap item';
         $type = 'feature';
 
-        $roadmapItem = $roadmapManager->createItem($title, $description, $type);
+        $roadmapItem = $roadmapService->createItem($title, $description, $type);
 
         $user2 = $this->createUser();
         $this->actingAs($user2);
 
-        $roadmapManager->upvote($roadmapItem->id);
+        $roadmapService->upvote($roadmapItem->id);
 
         $this->assertDatabaseHas('roadmap_item_user_upvotes', [
             'user_id' => $user2->id,
@@ -95,7 +95,7 @@ class RoadmapManagerTest extends FeatureTest
 
         // make sure the user can't upvote the same item twice
 
-        $roadmapManager->upvote($roadmapItem->id);
+        $roadmapService->upvote($roadmapItem->id);
 
         $this->assertEquals(2, $roadmapItem->userUpvotes()->count());
     }
@@ -104,7 +104,7 @@ class RoadmapManagerTest extends FeatureTest
     {
         $user1 = $this->createUser();
 
-        $roadmapManager = app()->make(RoadmapManager::class);
+        $roadmapService = app()->make(RoadmapService::class);
 
         $title = 'New Roadmap Item';
         $description = 'Description of the new roadmap item';
@@ -120,7 +120,7 @@ class RoadmapManagerTest extends FeatureTest
             'status' => 'approved',
         ]);
 
-        $roadmapManager->upvote($roadmapItem->id);
+        $roadmapService->upvote($roadmapItem->id);
 
         $this->assertDatabaseHas('roadmap_items', [
             'id' => $roadmapItem->id,
@@ -133,7 +133,7 @@ class RoadmapManagerTest extends FeatureTest
     {
         $user1 = $this->createUser();
 
-        $roadmapManager = app()->make(RoadmapManager::class);
+        $roadmapService = app()->make(RoadmapService::class);
 
         $title = 'New Roadmap Item';
         $description = 'Description of the new roadmap item';
@@ -149,7 +149,7 @@ class RoadmapManagerTest extends FeatureTest
             'status' => 'approved',
         ]);
 
-        $roadmapManager->removeUpvote($roadmapItem->id);
+        $roadmapService->removeUpvote($roadmapItem->id);
 
         $this->assertDatabaseHas('roadmap_items', [
             'id' => $roadmapItem->id,
@@ -163,18 +163,18 @@ class RoadmapManagerTest extends FeatureTest
         $user1 = $this->createUser();
         $this->actingAs($user1);
 
-        $roadmapManager = app()->make(RoadmapManager::class);
+        $roadmapService = app()->make(RoadmapService::class);
 
         $title = 'New Roadmap Item';
         $description = 'Description of the new roadmap item';
         $type = 'feature';
 
-        $roadmapItem = $roadmapManager->createItem($title, $description, $type);
+        $roadmapItem = $roadmapService->createItem($title, $description, $type);
 
         $user2 = $this->createUser();
         $this->actingAs($user2);
 
-        $roadmapManager->upvote($roadmapItem->id);
+        $roadmapService->upvote($roadmapItem->id);
 
         $this->assertDatabaseHas('roadmap_item_user_upvotes', [
             'user_id' => $user2->id,
@@ -188,7 +188,7 @@ class RoadmapManagerTest extends FeatureTest
             'upvotes' => 2,
         ]);
 
-        $roadmapManager->removeUpvote($roadmapItem->id);
+        $roadmapService->removeUpvote($roadmapItem->id);
 
         $this->assertEquals(1, $roadmapItem->userUpvotes()->count());
 
@@ -209,25 +209,25 @@ class RoadmapManagerTest extends FeatureTest
         $user1 = $this->createUser();
         $this->actingAs($user1);
 
-        $roadmapManager = app()->make(RoadmapManager::class);
+        $roadmapService = app()->make(RoadmapService::class);
 
         $title = 'New Roadmap Item';
         $description = 'Description of the new roadmap item';
         $type = 'feature';
 
-        $roadmapItem = $roadmapManager->createItem($title, $description, $type);
+        $roadmapItem = $roadmapService->createItem($title, $description, $type);
 
         $user2 = $this->createUser();
         $this->actingAs($user2);
 
-        $roadmapManager->upvote($roadmapItem->id);
+        $roadmapService->upvote($roadmapItem->id);
 
-        $this->assertTrue($roadmapManager->hasUserUpvoted($roadmapItem));
+        $this->assertTrue($roadmapService->hasUserUpvoted($roadmapItem));
 
         $user3 = $this->createUser();
         $this->actingAs($user3);
 
-        $this->assertFalse($roadmapManager->hasUserUpvoted($roadmapItem));
+        $this->assertFalse($roadmapService->hasUserUpvoted($roadmapItem));
 
     }
 }

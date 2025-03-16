@@ -12,8 +12,8 @@ use App\Filament\Admin\Resources\UserResource\Pages\EditUser;
 use App\Mapper\SubscriptionStatusMapper;
 use App\Models\Subscription;
 use App\Models\User;
-use App\Services\PlanManager;
-use App\Services\SubscriptionManager;
+use App\Services\PlanService;
+use App\Services\SubscriptionService;
 use Carbon\Carbon;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -144,8 +144,8 @@ class SubscriptionResource extends Resource
                             ->required(),
                         \Filament\Forms\Components\Select::make('plan_id')
                             ->label(__('Plan'))
-                            ->options(function (PlanManager $planManager) {
-                                return $planManager->getAllActivePlans()->mapWithKeys(function ($plan) {
+                            ->options(function (PlanService $planService) {
+                                return $planService->getAllActivePlans()->mapWithKeys(function ($plan) {
                                     return [$plan->id => $plan->name];
                                 });
                             })
@@ -156,12 +156,12 @@ class SubscriptionResource extends Resource
                             ->helperText(__('The date when the subscription will end.'))
                             ->required(),
                     ])
-                    ->action(function (array $data, SubscriptionManager $subscriptionManager, PlanManager $planManager) {
+                    ->action(function (array $data, SubscriptionService $subscriptionService, PlanService $planService) {
                         $user = User::find($data['user_id']);
-                        $plan = $planManager->getActivePlanById($data['plan_id']);
+                        $plan = $planService->getActivePlanById($data['plan_id']);
 
                         try {
-                            $subscriptionManager->create(
+                            $subscriptionService->create(
                                 $plan->slug,
                                 $user->id,
                                 localSubscription: true,
@@ -356,7 +356,7 @@ class SubscriptionResource extends Resource
                                             }),
                                         TextEntry::make('is_canceled_at_end_of_cycle')
                                             ->label(__('Renews automatically'))
-                                            ->visible(fn (Subscription $record, SubscriptionManager $subscriptionManager): bool => $subscriptionManager->canCancelSubscription($record))
+                                            ->visible(fn (Subscription $record, SubscriptionService $subscriptionService): bool => $subscriptionService->canCancelSubscription($record))
                                             ->icon(function ($state) {
                                                 $state = boolval($state);
 

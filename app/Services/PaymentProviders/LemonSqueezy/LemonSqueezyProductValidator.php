@@ -7,13 +7,13 @@ use App\Constants\PlanPriceTierConstants;
 use App\Constants\PlanPriceType;
 use App\Models\OneTimeProduct;
 use App\Models\Plan;
-use App\Services\CalculationManager;
+use App\Services\CalculationService;
 
 class LemonSqueezyProductValidator
 {
     public function __construct(
         private LemonSqueezyClient $client,
-        private CalculationManager $calculationManager,
+        private CalculationService $calculationService,
     ) {}
 
     public function validatePlan(string $variantId, Plan $plan): bool
@@ -30,7 +30,7 @@ class LemonSqueezyProductValidator
             throw new \Exception('Failed to retrieve variant price model from Lemon Squeezy.');
         }
 
-        $planPrice = $this->calculationManager->getPlanPrice($plan);
+        $planPrice = $this->calculationService->getPlanPrice($plan);
 
         if ($variantPriceModelResponse['data']['attributes']['scheme'] === 'standard') {
             if ($planPrice->price != $response['data']['attributes']['price']) {
@@ -116,7 +116,7 @@ class LemonSqueezyProductValidator
     {
         $response = $this->client->getVariant($variantId);
 
-        $price = $this->calculationManager->getOneTimeProductPrice($oneTimeProduct);
+        $price = $this->calculationService->getOneTimeProductPrice($oneTimeProduct);
 
         if (! $response->successful()) {
             throw new \Exception('Failed to validate product with Lemon Squeezy.');

@@ -2,7 +2,7 @@
 
 namespace App\Filament\Admin\Widgets;
 
-use App\Services\MetricsManager;
+use App\Services\MetricsService;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
 use Illuminate\Support\Carbon;
@@ -15,11 +15,11 @@ class MetricsOverview extends BaseWidget
 
     protected function getStats(): array
     {
-        /** @var MetricsManager $metricsManager */
-        $metricsManager = resolve(MetricsManager::class);
+        /** @var MetricsService $metricsService */
+        $metricsService = resolve(MetricsService::class);
 
-        $currentMrr = $metricsManager->calculateMRR(now());
-        $previewMrr = $metricsManager->calculateMRR(Carbon::yesterday());
+        $currentMrr = $metricsService->calculateMRR(now());
+        $previewMrr = $metricsService->calculateMRR(Carbon::yesterday());
         $mrrDescription = '';
         $mrrIcon = '';
         $color = 'gray';
@@ -45,24 +45,24 @@ class MetricsOverview extends BaseWidget
             ,
             Stat::make(
                 __('Active Subscriptions'),
-                $metricsManager->getActiveSubscriptions()
+                $metricsService->getActiveSubscriptions()
             ),
             Stat::make(
                 __('Total revenue'),
-                $metricsManager->getTotalRevenue()
+                $metricsService->getTotalRevenue()
             ),
             Stat::make(
                 __('Total user subscription conversion'),
-                $metricsManager->getTotalCustomerConversion()
+                $metricsService->getTotalCustomerConversion()
             )->description(__('subscribed / total users')),
             Stat::make(
                 __('Total Transactions'),
-                $metricsManager->getTotalTransactions()
+                $metricsService->getTotalTransactions()
             ),
 
             Stat::make(
                 __('Total Users'),
-                $metricsManager->getTotalUsers()
+                $metricsService->getTotalUsers()
             ),
         ];
     }

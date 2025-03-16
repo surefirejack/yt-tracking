@@ -17,30 +17,30 @@ use App\Models\PaymentProvider;
 use App\Models\Plan;
 use App\Models\PlanPrice;
 use App\Models\Subscription;
-use App\Services\CalculationManager;
-use App\Services\DiscountManager;
-use App\Services\OneTimeProductManager;
+use App\Services\CalculationService;
+use App\Services\DiscountService;
+use App\Services\OneTimeProductService;
 use App\Services\PaymentProviders\PaymentProviderInterface;
-use App\Services\PlanManager;
-use App\Services\SubscriptionManager;
+use App\Services\PlanService;
+use App\Services\SubscriptionService;
 use Carbon\Carbon;
 
 class PaddleProvider implements PaymentProviderInterface
 {
     public function __construct(
-        private SubscriptionManager $subscriptionManager,
+        private SubscriptionService $subscriptionService,
         private PaddleClient $paddleClient,
-        private PlanManager $planManager,
-        private CalculationManager $calculationManager,
-        private DiscountManager $discountManager,
-        private OneTimeProductManager $oneTimeProductManager,
+        private PlanService $planService,
+        private CalculationService $calculationService,
+        private DiscountService $discountService,
+        private OneTimeProductService $oneTimeProductService,
     ) {}
 
     public function initSubscriptionCheckout(Plan $plan, Subscription $subscription, ?Discount $discount = null): array
     {
         $paymentProvider = $this->assertProviderIsActive();
 
-        $paddleProductId = $this->planManager->getPaymentProviderProductId($plan, $paymentProvider);
+        $paddleProductId = $this->planService->getPaymentProviderProductId($plan, $paymentProvider);
 
         if ($paddleProductId === null) {
             $paddleProductId = $this->createPaddleProductForPlan($plan, $paymentProvider);
@@ -48,9 +48,9 @@ class PaddleProvider implements PaymentProviderInterface
 
         $currency = $subscription->currency()->firstOrFail();
 
-        $planPrice = $this->calculationManager->getPlanPrice($plan);
+        $planPrice = $this->calculationService->getPlanPrice($plan);
 
-        $paddlePrice = $this->planManager->getPaymentProviderPriceId($planPrice, $paymentProvider);
+        $paddlePrice = $this->planService->getPaymentProviderPriceId($planPrice, $paymentProvider);
 
         if ($paddlePrice === null) {
             $paddlePrice = $this->createPaddlePriceForPlan($plan, $paddleProductId, $currency, $paymentProvider, $planPrice);
@@ -81,16 +81,16 @@ class PaddleProvider implements PaymentProviderInterface
     ): bool {
         $paymentProvider = $this->assertProviderIsActive();
 
-        $paddleProductId = $this->planManager->getPaymentProviderProductId($newPlan, $paymentProvider);
+        $paddleProductId = $this->planService->getPaymentProviderProductId($newPlan, $paymentProvider);
 
         if ($paddleProductId === null) {
             $paddleProductId = $this->createPaddleProductForPlan($newPlan, $paymentProvider);
         }
 
         $currency = $subscription->currency()->firstOrFail();
-        $planPrice = $this->calculationManager->getPlanPrice($newPlan);
+        $planPrice = $this->calculationService->getPlanPrice($newPlan);
 
-        $paddlePrice = $this->planManager->getPaymentProviderPriceId($planPrice, $paymentProvider);
+        $paddlePrice = $this->planService->getPaymentProviderPriceId($planPrice, $paymentProvider);
 
         if ($paddlePrice === null) {
             $paddlePrice = $this->createPaddlePriceForPlan($newPlan, $paddleProductId, $currency, $paymentProvider, $planPrice);
@@ -107,7 +107,7 @@ class PaddleProvider implements PaymentProviderInterface
             throw new \Exception('Failed to update paddle subscription: '.$response->body());
         }
 
-        $this->subscriptionManager->updateSubscription($subscription, [
+        $this->subscriptionService->updateSubscription($subscription, [
             'plan_id' => $newPlan->id,
             'price' => $planPrice->price,
             'currency_id' => $planPrice->currency_id,
@@ -180,15 +180,15 @@ class PaddleProvider implements PaymentProviderInterface
 
         foreach ($order->items()->get() as $item) {
             $product = $item->oneTimeProduct()->firstOrFail();
-            $paddleProductId = $this->oneTimeProductManager->getPaymentProviderProductId($product, $paymentProvider);
+            $paddleProductId = $this->oneTimeProductService->getPaymentProviderProductId($product, $paymentProvider);
 
             if ($paddleProductId === null) {
                 $paddleProductId = $this->createPaddleProductForOneTimeProduct($product, $paymentProvider);
             }
 
-            $oneTimeProductPrice = $this->calculationManager->getOneTimeProductPrice($product);
+            $oneTimeProductPrice = $this->calculationService->getOneTimeProductPrice($product);
 
-            $paddlePrice = $this->oneTimeProductManager->getPaymentProviderPriceId($oneTimeProductPrice, $paymentProvider);
+            $paddlePrice = $this->oneTimeProductService->getPaymentProviderPriceId($oneTimeProductPrice, $paymentProvider);
 
             if ($paddlePrice === null) {
                 $paddlePrice = $this->createPaddlePriceForOneTimeProduct($product, $paddleProductId, $currency, $paymentProvider, $oneTimeProductPrice);
@@ -241,7 +241,7 @@ class PaddleProvider implements PaymentProviderInterface
 
     private function findOrCreatePaddleDiscount(Discount $discount, PaymentProvider $paymentProvider, string $currencyCode)
     {
-        $paddleDiscountId = $this->discountManager->getPaymentProviderDiscountId($discount, $paymentProvider);
+        $paddleDiscountId = $this->discountService->getPaymentProviderDiscountId($discount, $paymentProvider);
 
         if ($paddleDiscountId !== null) {
             return $paddleDiscountId;
@@ -268,7 +268,7 @@ class PaddleProvider implements PaymentProviderInterface
 
         $paddleDiscountId = $response->json()['data']['id'];
 
-        $this->discountManager->addPaymentProviderDiscountId($discount, $paymentProvider, $paddleDiscountId);
+        $this->discountService->addPaymentProviderDiscountId($discount, $paymentProvider, $paddleDiscountId);
 
         return $paddleDiscountId;
     }
@@ -287,7 +287,7 @@ class PaddleProvider implements PaymentProviderInterface
 
         $paddleProductId = $createProductResponse->json()['data']['id'];
 
-        $this->planManager->addPaymentProviderProductId($plan, $paymentProvider, $paddleProductId);
+        $this->planService->addPaymentProviderProductId($plan, $paymentProvider, $paddleProductId);
 
         return $paddleProductId;
     }
@@ -306,7 +306,7 @@ class PaddleProvider implements PaymentProviderInterface
 
         $paddleProductId = $createProductResponse->json()['data']['id'];
 
-        $this->oneTimeProductManager->addPaymentProviderProductId($oneTimeProduct, $paymentProvider, $paddleProductId);
+        $this->oneTimeProductService->addPaymentProviderProductId($oneTimeProduct, $paymentProvider, $paddleProductId);
 
         return $paddleProductId;
     }
@@ -342,7 +342,7 @@ class PaddleProvider implements PaymentProviderInterface
 
         $paddlePrice = $response->json()['data']['id'];
 
-        $this->planManager->addPaymentProviderPriceId($planPrice, $paymentProvider, $paddlePrice);
+        $this->planService->addPaymentProviderPriceId($planPrice, $paymentProvider, $paddlePrice);
 
         return $paddlePrice;
     }
@@ -368,7 +368,7 @@ class PaddleProvider implements PaymentProviderInterface
 
         $paddlePrice = $response->json()['data']['id'];
 
-        $this->oneTimeProductManager->addPaymentProviderPriceId($oneTimeProductPrice, $paymentProvider, $paddlePrice);
+        $this->oneTimeProductService->addPaymentProviderPriceId($oneTimeProductPrice, $paymentProvider, $paddlePrice);
 
         return $paddlePrice;
     }

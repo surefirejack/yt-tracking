@@ -2,7 +2,7 @@
 
 namespace App\Livewire\Filament;
 
-use App\Services\ConfigManager;
+use App\Services\ConfigService;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\ViewField;
@@ -15,15 +15,15 @@ use Livewire\Component;
 
 class StripeSettings extends Component implements HasForms
 {
-    private ConfigManager $configManager;
+    private ConfigService $configService;
 
     use InteractsWithForms;
 
     public ?array $data = [];
 
-    public function boot(ConfigManager $configManager): void
+    public function boot(ConfigService $configService): void
     {
-        $this->configManager = $configManager;
+        $this->configService = $configService;
     }
 
     public function render()
@@ -34,9 +34,9 @@ class StripeSettings extends Component implements HasForms
     public function mount(): void
     {
         $this->form->fill([
-            'secret_key' => $this->configManager->get('services.stripe.secret_key'),
-            'publishable_key' => $this->configManager->get('services.stripe.publishable_key'),
-            'webhook_signing_secret' => $this->configManager->get('services.stripe.webhook_signing_secret'),
+            'secret_key' => $this->configService->get('services.stripe.secret_key'),
+            'publishable_key' => $this->configService->get('services.stripe.publishable_key'),
+            'webhook_signing_secret' => $this->configService->get('services.stripe.webhook_signing_secret'),
         ]);
     }
 
@@ -78,9 +78,9 @@ class StripeSettings extends Component implements HasForms
     {
         $data = $this->form->getState();
 
-        $this->configManager->set('services.stripe.secret_key', $data['secret_key']);
-        $this->configManager->set('services.stripe.publishable_key', $data['publishable_key']);
-        $this->configManager->set('services.stripe.webhook_signing_secret', $data['webhook_signing_secret']);
+        $this->configService->set('services.stripe.secret_key', $data['secret_key']);
+        $this->configService->set('services.stripe.publishable_key', $data['publishable_key']);
+        $this->configService->set('services.stripe.webhook_signing_secret', $data['webhook_signing_secret']);
 
         Notification::make()
             ->title(__('Settings Saved'))

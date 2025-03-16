@@ -7,12 +7,12 @@ use App\Events\User\UserPhoneVerified;
 use App\Models\User;
 use App\Services\VerificationProviders\VerificationProviderInterface;
 
-class UserVerificationManager
+class UserVerificationService
 {
     private array $verificationProviders = [];
 
     public function __construct(
-        private SessionManager $sessionManager
+        private SessionService $sessionService
     ) {}
 
     public function setVerificationProviders(VerificationProviderInterface ...$verificationProviders): void
@@ -48,14 +48,14 @@ class UserVerificationManager
         $verificationDto->code = $code;
         $verificationDto->generatedAt = now();
 
-        $this->sessionManager->saveSmsVerificationDto($verificationDto);
+        $this->sessionService->saveSmsVerificationDto($verificationDto);
 
         return $this->sendSmsVerificationCode($verificationDto->phoneNumber, $code);
     }
 
     public function verifyCode(User $user, string $code)
     {
-        $dto = $this->sessionManager->getSmsVerificationDto();
+        $dto = $this->sessionService->getSmsVerificationDto();
         if (! $dto) {
             return false;
         }
@@ -72,7 +72,7 @@ class UserVerificationManager
         $user->phone_number_verified_at = now();
         $user->save();
 
-        $this->sessionManager->clearSmsVerificationDto();
+        $this->sessionService->clearSmsVerificationDto();
 
         UserPhoneVerified::dispatch($user);
 

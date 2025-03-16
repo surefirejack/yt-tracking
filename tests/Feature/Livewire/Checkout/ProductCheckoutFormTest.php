@@ -11,9 +11,9 @@ use App\Models\OneTimeProductPrice;
 use App\Models\Order;
 use App\Models\PaymentProvider;
 use App\Models\User;
-use App\Services\PaymentProviders\PaymentManager;
 use App\Services\PaymentProviders\PaymentProviderInterface;
-use App\Services\SessionManager;
+use App\Services\PaymentProviders\PaymentService;
+use App\Services\SessionService;
 use Livewire\Livewire;
 use Mockery;
 use Mockery\MockInterface;
@@ -36,7 +36,7 @@ class ProductCheckoutFormTest extends FeatureTest
 
         $this->addPaymentProvider();
 
-        $this->instance(SessionManager::class, Mockery::mock(SessionManager::class, function (MockInterface $mock) use ($product) {
+        $this->instance(SessionService::class, Mockery::mock(SessionService::class, function (MockInterface $mock) use ($product) {
             $cartDto = new CartDto;
             $cartItem = new CartItemDto;
             $cartItem->productId = $product->id;
@@ -90,7 +90,7 @@ class ProductCheckoutFormTest extends FeatureTest
 
         $this->addPaymentProvider();
 
-        $this->instance(SessionManager::class, Mockery::mock(SessionManager::class, function (MockInterface $mock) use ($product) {
+        $this->instance(SessionService::class, Mockery::mock(SessionService::class, function (MockInterface $mock) use ($product) {
             $cartDto = new CartDto;
             $cartItem = new CartItemDto;
             $cartItem->productId = $product->id;
@@ -154,8 +154,8 @@ class ProductCheckoutFormTest extends FeatureTest
 
         $this->app->instance(PaymentProviderInterface::class, $mock);
 
-        $this->app->bind(PaymentManager::class, function () use ($mock) {
-            return new PaymentManager($mock);
+        $this->app->bind(PaymentService::class, function () use ($mock) {
+            return new PaymentService($mock);
         });
     }
 
@@ -174,7 +174,7 @@ class ProductCheckoutFormTest extends FeatureTest
 
         $this->addPaymentProvider(false);
 
-        $this->instance(SessionManager::class, Mockery::mock(SessionManager::class, function (MockInterface $mock) use ($product) {
+        $this->instance(SessionService::class, Mockery::mock(SessionService::class, function (MockInterface $mock) use ($product) {
             $cartDto = new CartDto;
             $cartItem = new CartItemDto;
             $cartItem->productId = $product->id;

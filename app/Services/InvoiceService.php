@@ -15,7 +15,7 @@ use LaravelDaily\Invoices\Classes\InvoiceItem;
 use LaravelDaily\Invoices\Invoice;
 use Parfaitementweb\FilamentCountryField\CountryResolver;
 
-class InvoiceManager
+class InvoiceService
 {
     public function __construct(
         private CountryResolver $countryResolver,

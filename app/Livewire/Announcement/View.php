@@ -3,7 +3,7 @@
 namespace App\Livewire\Announcement;
 
 use App\Constants\AnnouncementPlacement;
-use App\Services\AnnouncementManager;
+use App\Services\AnnouncementService;
 use Livewire\Attributes\Lazy;
 use Livewire\Component;
 
@@ -17,13 +17,13 @@ class View extends Component
         $this->placement = $placement;
     }
 
-    public function render(AnnouncementManager $announcementManager)
+    public function render(AnnouncementService $announcementService)
     {
         $placement = AnnouncementPlacement::tryFrom($this->placement) ?? AnnouncementPlacement::FRONTEND;
 
         return view(
             'livewire.announcement.view', [
-                'announcement' => $announcementManager->getAnnouncement($placement),
+                'announcement' => $announcementService->getAnnouncement($placement),
             ]
         );
     }

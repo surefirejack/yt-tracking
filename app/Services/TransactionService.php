@@ -10,7 +10,7 @@ use App\Models\Subscription;
 use App\Models\Transaction;
 use Illuminate\Support\Str;
 
-class TransactionManager
+class TransactionService
 {
     public function createForSubscription(
         Subscription $subscription,

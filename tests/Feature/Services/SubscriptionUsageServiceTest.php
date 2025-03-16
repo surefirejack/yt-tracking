@@ -11,20 +11,20 @@ use App\Models\PaymentProvider;
 use App\Models\Plan;
 use App\Models\PlanPrice;
 use App\Models\Subscription;
-use App\Services\PaymentProviders\PaymentManager;
+use App\Services\PaymentProviders\PaymentService;
 use App\Services\PaymentProviders\PaymentProviderInterface;
-use App\Services\SubscriptionManager;
-use App\Services\SubscriptionUsageManager;
+use App\Services\SubscriptionService;
+use App\Services\SubscriptionUsageService;
 use Illuminate\Support\Str;
 use Tests\Feature\FeatureTest;
 
-class SubscriptionUsageManagerTest extends FeatureTest
+class SubscriptionUsageServiceTest extends FeatureTest
 {
     public function test_report_usage()
     {
-        $paymentManager = $this->createMock(PaymentManager::class);
-        $subscriptionManager = $this->createMock(SubscriptionManager::class);
-        $subscriptionUsageManager = new SubscriptionUsageManager($paymentManager, $subscriptionManager);
+        $paymentService = $this->createMock(PaymentService::class);
+        $subscriptionService = $this->createMock(SubscriptionService::class);
+        $subscriptionUsageService = new SubscriptionUsageService($paymentService, $subscriptionService);
 
         $paymentProviderModel = PaymentProvider::updateOrCreate([
             'slug' => 'paymore-'.Str::random(10),
@@ -38,8 +38,8 @@ class SubscriptionUsageManagerTest extends FeatureTest
 
         $this->app->instance(PaymentProviderInterface::class, $paymentProvider);
 
-        $this->app->bind(PaymentManager::class, function () use ($paymentProvider) {
-            return new PaymentManager($paymentProvider);
+        $this->app->bind(PaymentService::class, function () use ($paymentProvider) {
+            return new PaymentService($paymentProvider);
         });
 
         $plan = Plan::factory()->create([
@@ -67,9 +67,9 @@ class SubscriptionUsageManagerTest extends FeatureTest
             ->with($subscription, 10)
             ->andReturn(true);
 
-        $paymentManager->method('getPaymentProviderBySlug')->willReturn($paymentProvider);
+        $paymentService->method('getPaymentProviderBySlug')->willReturn($paymentProvider);
 
-        $result = $subscriptionUsageManager->reportUsage(10, $subscription);
+        $result = $subscriptionUsageService->reportUsage(10, $subscription);
 
         $this->assertTrue($result);
         $this->assertDatabaseHas('subscription_usages', [

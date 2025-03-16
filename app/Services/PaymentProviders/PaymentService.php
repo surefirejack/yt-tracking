@@ -5,7 +5,7 @@ namespace App\Services\PaymentProviders;
 use App\Models\PaymentProvider;
 use App\Models\Plan;
 
-class PaymentManager
+class PaymentService
 {
     private array $paymentProviders;
 

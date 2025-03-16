@@ -6,18 +6,18 @@ use App\Constants\PlanType;
 use App\Constants\SubscriptionType;
 use App\Models\Subscription;
 use App\Models\SubscriptionUsage;
-use App\Services\PaymentProviders\PaymentManager;
+use App\Services\PaymentProviders\PaymentService;
 
-class SubscriptionUsageManager
+class SubscriptionUsageService
 {
     public function __construct(
-        private PaymentManager $paymentManager,
-        private SubscriptionManager $subscriptionManager,
+        private PaymentService      $paymentService,
+        private SubscriptionService $subscriptionService,
     ) {}
 
     public function reportUsage(int $unitCount, ?Subscription $subscription = null): bool
     {
-        $subscription = $subscription ?? $this->subscriptionManager->findActiveUserSubscriptionWithPlanType(auth()->id(), PlanType::USAGE_BASED);
+        $subscription = $subscription ?? $this->subscriptionService->findActiveUserSubscriptionWithPlanType(auth()->id(), PlanType::USAGE_BASED);
 
         if (! $subscription) {
             return false;
@@ -29,7 +29,7 @@ class SubscriptionUsageManager
 
         $result = true;
         if ($subscription->type === SubscriptionType::PAYMENT_PROVIDER_MANAGED) {
-            $paymentProvider = $this->paymentManager->getPaymentProviderBySlug(
+            $paymentProvider = $this->paymentService->getPaymentProviderBySlug(
                 $subscription->paymentProvider->slug
             );
 

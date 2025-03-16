@@ -6,11 +6,11 @@ use App\Models\Discount;
 use App\Models\OneTimeProduct;
 use App\Models\Plan;
 use App\Models\User;
-use App\Services\DiscountManager;
+use App\Services\DiscountService;
 use Illuminate\Support\Str;
 use Tests\Feature\FeatureTest;
 
-class DiscountManagerTest extends FeatureTest
+class DiscountServiceTest extends FeatureTest
 {
     public function test_is_code_redeemable_for_plan()
     {
@@ -39,9 +39,9 @@ class DiscountManagerTest extends FeatureTest
         // find plan from database
         $plan = Plan::take(1)->first();
 
-        $discountManager = app()->make(DiscountManager::class);
+        $discountService = app()->make(DiscountService::class);
 
-        $this->assertTrue($discountManager->isCodeRedeemableForPlan($code, $user, $plan));
+        $this->assertTrue($discountService->isCodeRedeemableForPlan($code, $user, $plan));
     }
 
     public function test_is_code_redeemable_for_one_time_product()
@@ -70,9 +70,9 @@ class DiscountManagerTest extends FeatureTest
 
         $oneTimeProduct = OneTimeProduct::factory()->create();
 
-        $discountManager = app()->make(DiscountManager::class);
+        $discountService = app()->make(DiscountService::class);
 
-        $this->assertTrue($discountManager->isCodeRedeemableForOneTimeProduct($code, $user, $oneTimeProduct));
+        $this->assertTrue($discountService->isCodeRedeemableForOneTimeProduct($code, $user, $oneTimeProduct));
     }
 
     public function test_is_code_not_redeemable_for_one_time_product_because_product_is_not_included_in_list()
@@ -105,9 +105,9 @@ class DiscountManagerTest extends FeatureTest
 
         $user = User::factory()->create();
 
-        $discountManager = app()->make(DiscountManager::class);
+        $discountService = app()->make(DiscountService::class);
 
-        $this->assertFalse($discountManager->isCodeRedeemableForOneTimeProduct($code, $user, $oneTimeProduct2));
+        $this->assertFalse($discountService->isCodeRedeemableForOneTimeProduct($code, $user, $oneTimeProduct2));
     }
 
     public function test_is_code_not_redeemable_for_plan_because_of_valid_until()
@@ -137,9 +137,9 @@ class DiscountManagerTest extends FeatureTest
         // find plan from database
         $plan = Plan::take(1)->first();
 
-        $discountManager = app()->make(DiscountManager::class);
+        $discountService = app()->make(DiscountService::class);
 
-        $this->assertFalse($discountManager->isCodeRedeemableForPlan($code, $user, $plan));
+        $this->assertFalse($discountService->isCodeRedeemableForPlan($code, $user, $plan));
     }
 
     public function test_is_code_not_redeemable_for_plan_because_of_max_redemptions()
@@ -169,9 +169,9 @@ class DiscountManagerTest extends FeatureTest
         // find plan from database
         $plan = Plan::take(1)->first();
 
-        $discountManager = app()->make(DiscountManager::class);
+        $discountService = app()->make(DiscountService::class);
 
-        $this->assertFalse($discountManager->isCodeRedeemableForPlan($code, $user, $plan));
+        $this->assertFalse($discountService->isCodeRedeemableForPlan($code, $user, $plan));
     }
 
     public function test_is_code_not_redeemable_for_plan_because_of_is_active()
@@ -201,9 +201,9 @@ class DiscountManagerTest extends FeatureTest
         // find plan from database
         $plan = Plan::take(1)->first();
 
-        $discountManager = app()->make(DiscountManager::class);
+        $discountService = app()->make(DiscountService::class);
 
-        $this->assertFalse($discountManager->isCodeRedeemableForPlan($code, $user, $plan));
+        $this->assertFalse($discountService->isCodeRedeemableForPlan($code, $user, $plan));
     }
 
     public function test_is_code_not_redeemable_for_plan_because_of_max_redemptions_per_user()
@@ -233,13 +233,13 @@ class DiscountManagerTest extends FeatureTest
         // find plan from database
         $plan = Plan::take(1)->first();
 
-        $discountManager = app()->make(DiscountManager::class);
+        $discountService = app()->make(DiscountService::class);
 
         $discountCode->redemptions()->create([
             'user_id' => $user->id,
         ]);
 
-        $this->assertFalse($discountManager->isCodeRedeemableForPlan($code, $user, $plan));
+        $this->assertFalse($discountService->isCodeRedeemableForPlan($code, $user, $plan));
     }
 
     public function test_is_code_not_redeemable_because_of_plan()
@@ -273,8 +273,8 @@ class DiscountManagerTest extends FeatureTest
 
         $plan2 = Plan::where('slug', 'pro')->first();
 
-        $discountManager = app()->make(DiscountManager::class);
+        $discountService = app()->make(DiscountService::class);
 
-        $this->assertFalse($discountManager->isCodeRedeemableForPlan($code, $user, $plan2));
+        $this->assertFalse($discountService->isCodeRedeemableForPlan($code, $user, $plan2));
     }
 }

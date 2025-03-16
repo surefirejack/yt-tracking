@@ -2,7 +2,7 @@
 
 namespace App\Livewire\Filament;
 
-use App\Services\ConfigManager;
+use App\Services\ConfigService;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
@@ -15,15 +15,15 @@ use Livewire\Component;
 
 class PaddleSettings extends Component implements HasForms
 {
-    private ConfigManager $configManager;
+    private ConfigService $configService;
 
     use InteractsWithForms;
 
     public ?array $data = [];
 
-    public function boot(ConfigManager $configManager): void
+    public function boot(ConfigService $configService): void
     {
-        $this->configManager = $configManager;
+        $this->configService = $configService;
     }
 
     public function render()
@@ -34,11 +34,11 @@ class PaddleSettings extends Component implements HasForms
     public function mount(): void
     {
         $this->form->fill([
-            'vendor_id' => $this->configManager->get('services.paddle.vendor_id'),
-            'client_side_token' => $this->configManager->get('services.paddle.client_side_token'),
-            'vendor_auth_code' => $this->configManager->get('services.paddle.vendor_auth_code'),
-            'webhook_secret' => $this->configManager->get('services.paddle.webhook_secret'),
-            'is_sandbox' => $this->configManager->get('services.paddle.is_sandbox'),
+            'vendor_id' => $this->configService->get('services.paddle.vendor_id'),
+            'client_side_token' => $this->configService->get('services.paddle.client_side_token'),
+            'vendor_auth_code' => $this->configService->get('services.paddle.vendor_auth_code'),
+            'webhook_secret' => $this->configService->get('services.paddle.webhook_secret'),
+            'is_sandbox' => $this->configService->get('services.paddle.is_sandbox'),
         ]);
     }
 
@@ -82,11 +82,11 @@ class PaddleSettings extends Component implements HasForms
     {
         $data = $this->form->getState();
 
-        $this->configManager->set('services.paddle.vendor_id', $data['vendor_id']);
-        $this->configManager->set('services.paddle.client_side_token', $data['client_side_token']);
-        $this->configManager->set('services.paddle.vendor_auth_code', $data['vendor_auth_code']);
-        $this->configManager->set('services.paddle.webhook_secret', $data['webhook_secret']);
-        $this->configManager->set('services.paddle.is_sandbox', $data['is_sandbox']);
+        $this->configService->set('services.paddle.vendor_id', $data['vendor_id']);
+        $this->configService->set('services.paddle.client_side_token', $data['client_side_token']);
+        $this->configService->set('services.paddle.vendor_auth_code', $data['vendor_auth_code']);
+        $this->configService->set('services.paddle.webhook_secret', $data['webhook_secret']);
+        $this->configService->set('services.paddle.is_sandbox', $data['is_sandbox']);
 
         Notification::make()
             ->title(__('Settings Saved'))

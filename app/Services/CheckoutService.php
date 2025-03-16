@@ -5,18 +5,18 @@ namespace App\Services;
 use App\Constants\OrderStatus;
 use App\Dto\CartDto;
 
-class CheckoutManager
+class CheckoutService
 {
     public function __construct(
-        private SubscriptionManager $subscriptionManager,
-        private OrderManager $orderManager,
+        private SubscriptionService $subscriptionService,
+        private OrderService        $orderService,
     ) {}
 
     public function initSubscriptionCheckout(string $planSlug)
     {
-        $subscription = $this->subscriptionManager->findNewByPlanSlugAndUser($planSlug, auth()->id());
+        $subscription = $this->subscriptionService->findNewByPlanSlugAndUser($planSlug, auth()->id());
         if ($subscription === null) {
-            $subscription = $this->subscriptionManager->create($planSlug, auth()->id());
+            $subscription = $this->subscriptionService->create($planSlug, auth()->id());
         }
 
         return $subscription;
@@ -24,9 +24,9 @@ class CheckoutManager
 
     public function initLocalSubscriptionCheckout(string $planSlug)
     {
-        $subscription = $this->subscriptionManager->findNewByPlanSlugAndUser($planSlug, auth()->id());
+        $subscription = $this->subscriptionService->findNewByPlanSlugAndUser($planSlug, auth()->id());
         if ($subscription === null) {
-            $subscription = $this->subscriptionManager->create($planSlug, auth()->id(), localSubscription: true);
+            $subscription = $this->subscriptionService->create($planSlug, auth()->id(), localSubscription: true);
         }
 
         return $subscription;
@@ -38,14 +38,14 @@ class CheckoutManager
 
         $order = null;
         if ($cartDto->orderId !== null) {
-            $order = $this->orderManager->findNewByIdForUser($cartDto->orderId, $user);
+            $order = $this->orderService->findNewByIdForUser($cartDto->orderId, $user);
         }
 
         if ($order === null) {
-            $order = $this->orderManager->create($user);
+            $order = $this->orderService->create($user);
         }
 
-        $this->orderManager->refreshOrder($cartDto, $order);
+        $this->orderService->refreshOrder($cartDto, $order);
 
         $order->status = OrderStatus::PENDING->value;
         $order->save();

@@ -11,9 +11,9 @@ use App\Models\Currency;
 use App\Models\PaymentProvider;
 use App\Models\Subscription;
 use App\Models\UserStripeData;
-use App\Services\OrderManager;
-use App\Services\SubscriptionManager;
-use App\Services\TransactionManager;
+use App\Services\OrderService;
+use App\Services\SubscriptionService;
+use App\Services\TransactionService;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -22,9 +22,9 @@ use Illuminate\Support\Facades\DB;
 class StripeWebhookHandler
 {
     public function __construct(
-        private SubscriptionManager $subscriptionManager,
-        private TransactionManager $transactionManager,
-        private OrderManager $orderManager,
+        private SubscriptionService $subscriptionService,
+        private TransactionService $transactionService,
+        private OrderService $orderService,
     ) {}
 
     public function handleWebhook(Request $request): JsonResponse
@@ -64,7 +64,7 @@ class StripeWebhookHandler
                 $trialEndsAt = $event->data->object->trial_end ? Carbon::createFromTimestampUTC($event->data->object->trial_end)->toDateTimeString() : null;
                 $cancelledAt = $event->data->object->canceled_at ? Carbon::createFromTimestampUTC($event->data->object->canceled_at)->toDateTimeString() : null;
 
-                $this->subscriptionManager->updateSubscription($subscription, [
+                $this->subscriptionService->updateSubscription($subscription, [
                     'type' => SubscriptionType::PAYMENT_PROVIDER_MANAGED,
                     'status' => $subscriptionStatus,
                     'ends_at' => $endsAt,
@@ -81,7 +81,7 @@ class StripeWebhookHandler
 
         } elseif ($event->type == 'invoice.created') {
             $subscriptionUuid = $event->data->object->subscription_details->metadata->subscription_uuid;
-            $subscription = $this->subscriptionManager->findByUuidOrFail($subscriptionUuid);
+            $subscription = $this->subscriptionService->findByUuidOrFail($subscriptionUuid);
             $currency = Currency::where('code', strtoupper($event->data->object->currency))->firstOrFail();
             $invoiceStatus = $event->data->object->status;
 
@@ -90,7 +90,7 @@ class StripeWebhookHandler
 
             // create transaction
 
-            $this->transactionManager->createForSubscription(
+            $this->transactionService->createForSubscription(
                 $subscription,
                 $event->data->object->amount_due,
                 $tax,
@@ -111,7 +111,7 @@ class StripeWebhookHandler
             $fees = $this->calculateFees($paymentIntent);
             // update transaction
 
-            $this->transactionManager->updateTransactionByPaymentProviderTxId(
+            $this->transactionService->updateTransactionByPaymentProviderTxId(
                 $event->data->object->id,
                 $invoiceStatus,
                 $this->mapInvoiceStatusToTransactionStatus($invoiceStatus),
@@ -128,7 +128,7 @@ class StripeWebhookHandler
 
             $errorReason = $event->data->object->last_payment_error->message ?? null;
 
-            $this->transactionManager->updateTransactionByPaymentProviderTxId(
+            $this->transactionService->updateTransactionByPaymentProviderTxId(
                 $event->data->object->id,
                 $invoiceStatus,
                 $this->mapInvoiceStatusToTransactionStatus($invoiceStatus),
@@ -136,9 +136,9 @@ class StripeWebhookHandler
             );
 
             $subscriptionUuid = $event->data->object->subscription_details->metadata->subscription_uuid;
-            $subscription = $this->subscriptionManager->findByUuidOrFail($subscriptionUuid);
+            $subscription = $this->subscriptionService->findByUuidOrFail($subscriptionUuid);
 
-            $this->subscriptionManager->handleInvoicePaymentFailed($subscription);
+            $this->subscriptionService->handleInvoicePaymentFailed($subscription);
 
         } elseif ($event->type == 'customer.updated') {
             $defaultPaymentMethodId = $event->data->object->invoice_settings->default_payment_method;
@@ -153,17 +153,17 @@ class StripeWebhookHandler
             $orderUuid = $event->data->object->metadata?->order_uuid;
 
             if (! empty($orderUuid)) {
-                $order = $this->orderManager->findByUuidOrFail($orderUuid);
+                $order = $this->orderService->findByUuidOrFail($orderUuid);
                 $fees = $this->calculateFees($paymentIntentId);
                 $currency = Currency::where('code', strtoupper($event->data->object->currency))->firstOrFail();
 
-                $transaction = $this->transactionManager->getTransactionByPaymentProviderTxId($paymentIntentId);
+                $transaction = $this->transactionService->getTransactionByPaymentProviderTxId($paymentIntentId);
 
                 $transactionStatus = $event->type == 'payment_intent.succeeded' ? TransactionStatus::SUCCESS : TransactionStatus::FAILED;
 
                 DB::transaction(function () use ($order, $event, $transaction, $transactionStatus, $fees, $currency, $paymentProvider, $paymentIntentId) {
                     if ($transaction) {
-                        $this->transactionManager->updateTransaction(
+                        $this->transactionService->updateTransaction(
                             $transaction,
                             $event->data->object->status,
                             $transactionStatus,
@@ -172,7 +172,7 @@ class StripeWebhookHandler
                             $fees,
                         );
                     } else {
-                        $this->transactionManager->createForOrder(
+                        $this->transactionService->createForOrder(
                             $order,
                             $event->data->object->amount,
                             0,
@@ -188,7 +188,7 @@ class StripeWebhookHandler
 
                     $orderStatus = $event->type == 'payment_intent.succeeded' ? OrderStatus::SUCCESS : OrderStatus::FAILED;
 
-                    $this->orderManager->updateOrder($order, [
+                    $this->orderService->updateOrder($order, [
                         'status' => $orderStatus->value,
                         'total_amount_after_discount' => $event->data->object->amount,
                         'payment_provider_id' => $paymentProvider->id,
@@ -202,17 +202,17 @@ class StripeWebhookHandler
 
             if (! empty($orderUuid)) {
 
-                $transaction = $this->transactionManager->getTransactionByPaymentProviderTxId($paymentIntentId);
+                $transaction = $this->transactionService->getTransactionByPaymentProviderTxId($paymentIntentId);
 
                 if ($transaction) {
-                    $this->transactionManager->updateTransaction(
+                    $this->transactionService->updateTransaction(
                         $transaction,
                         'refunded',
                         TransactionStatus::REFUNDED,
                     );
 
                     if ($transaction->order) {
-                        $this->orderManager->updateOrder($transaction->order, [
+                        $this->orderService->updateOrder($transaction->order, [
                             'status' => OrderStatus::REFUNDED,
                         ]);
                     }
@@ -221,17 +221,17 @@ class StripeWebhookHandler
         } elseif (str_starts_with($event->type, 'charge.dispute.')) { // order event
             $paymentIntentId = $event->data->object->payment_intent;
 
-            $transaction = $this->transactionManager->getTransactionByPaymentProviderTxId($paymentIntentId);
+            $transaction = $this->transactionService->getTransactionByPaymentProviderTxId($paymentIntentId);
 
             if ($transaction) {
-                $this->transactionManager->updateTransaction(
+                $this->transactionService->updateTransaction(
                     $transaction,
                     $event->data->object->status,
                     TransactionStatus::DISPUTED,
                 );
 
                 if ($transaction->order) {
-                    $this->orderManager->updateOrder($transaction->order, [
+                    $this->orderService->updateOrder($transaction->order, [
                         'status' => OrderStatus::DISPUTED,
                     ]);
                 }
