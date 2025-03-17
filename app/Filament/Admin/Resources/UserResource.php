@@ -8,6 +8,7 @@ use App\Filament\Admin\Resources\UserResource\RelationManagers\SubscriptionsRela
 use App\Models\User;
 use Filament\Forms;
 use Filament\Forms\Form;
+use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -96,6 +97,19 @@ class UserResource extends Resource
             ->actions([
                 Tables\Actions\EditAction::make(),
                 Impersonate::make()->redirectTo(route('home')),
+                Tables\Actions\Action::make('resend_verification_email')
+                    ->iconButton()
+                    ->label(__('Resend Verification Email'))
+                    ->icon('heroicon-s-envelope-open')
+                    ->requiresConfirmation()
+                    ->action(function (User $record) {
+                        $record->sendEmailVerificationNotification();
+
+                        Notification::make()
+                            ->success()
+                            ->body(__('A verification link has been queued to be sent to this user.'))
+                            ->send();
+                    }),
             ])
             ->bulkActions([
                 Tables\Actions\DeleteBulkAction::make(),
