@@ -145,7 +145,7 @@ class SubscriptionResource extends Resource
                         \Filament\Forms\Components\Select::make('plan_id')
                             ->label(__('Plan'))
                             ->options(function (PlanService $planService) {
-                                return $planService->getAllActivePlans()->mapWithKeys(function ($plan) {
+                                return $planService->getAllPlansWithPrices()->mapWithKeys(function ($plan) {
                                     return [$plan->id => $plan->name];
                                 });
                             })
