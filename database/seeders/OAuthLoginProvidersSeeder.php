@@ -5,7 +5,7 @@ namespace Database\Seeders;
 use App\Models\OauthLoginProvider;
 use Illuminate\Database\Seeder;
 
-class OAuthLoginProviderSeeder extends Seeder
+class OAuthLoginProvidersSeeder extends Seeder
 {
     /**
      * Run the database seeds.

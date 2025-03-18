@@ -15,10 +15,10 @@ class DatabaseSeeder extends Seeder
         $this->callOnce([
             IntervalsSeeder::class,
             CurrenciesSeeder::class,
-            OAuthLoginProviderSeeder::class,
+            OAuthLoginProvidersSeeder::class,
             PaymentProvidersSeeder::class,
             RolesAndPermissionsSeeder::class,
-            EmailProviderSeeder::class,
+            EmailProvidersSeeder::class,
             VerificationProvidersSeeder::class,
         ]);
     }
