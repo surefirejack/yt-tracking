@@ -9,9 +9,9 @@ use App\Services\PaymentProviders\PaymentService;
 class SubscriptionDiscountService
 {
     public function __construct(
-        private DiscountService     $discountService,
+        private DiscountService $discountService,
         private SubscriptionService $subscriptionService,
-        private PaymentService      $paymentService,
+        private PaymentService $paymentService,
     ) {}
 
     public function applyDiscount(Subscription $subscription, string $discountCode, User $user): bool

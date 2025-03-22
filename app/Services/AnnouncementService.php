@@ -8,7 +8,7 @@ use App\Models\Announcement;
 class AnnouncementService
 {
     public function __construct(
-        private OrderService        $orderService,
+        private OrderService $orderService,
         private SubscriptionService $subscriptionService,
     ) {}
 
