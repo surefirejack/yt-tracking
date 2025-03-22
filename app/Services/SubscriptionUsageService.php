@@ -11,7 +11,7 @@ use App\Services\PaymentProviders\PaymentService;
 class SubscriptionUsageService
 {
     public function __construct(
-        private PaymentService      $paymentService,
+        private PaymentService $paymentService,
         private SubscriptionService $subscriptionService,
     ) {}
 

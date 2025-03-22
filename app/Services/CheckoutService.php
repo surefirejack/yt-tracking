@@ -9,7 +9,7 @@ class CheckoutService
 {
     public function __construct(
         private SubscriptionService $subscriptionService,
-        private OrderService        $orderService,
+        private OrderService $orderService,
     ) {}
 
     public function initSubscriptionCheckout(string $planSlug)
