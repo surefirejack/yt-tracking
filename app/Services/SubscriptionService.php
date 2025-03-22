@@ -30,7 +30,7 @@ class SubscriptionService
 {
     public function __construct(
         private CalculationService $calculationService,
-        private PlanService        $planService,
+        private PlanService $planService,
     ) {}
 
     public function create(

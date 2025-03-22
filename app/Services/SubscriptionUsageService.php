@@ -6,13 +6,13 @@ use App\Constants\PlanType;
 use App\Constants\SubscriptionType;
 use App\Models\Subscription;
 use App\Models\SubscriptionUsage;
-use Filament\Facades\Filament;
 use App\Services\PaymentProviders\PaymentService;
+use Filament\Facades\Filament;
 
 class SubscriptionUsageService
 {
     public function __construct(
-        private PaymentService      $paymentService,
+        private PaymentService $paymentService,
         private SubscriptionService $subscriptionService,
     ) {}
 

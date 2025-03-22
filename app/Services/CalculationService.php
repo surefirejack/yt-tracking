@@ -19,8 +19,8 @@ use App\Models\User;
 class CalculationService
 {
     public function __construct(
-        private PlanService           $planService,
-        private DiscountService       $discountService,
+        private PlanService $planService,
+        private DiscountService $discountService,
         private OneTimeProductService $oneTimeProductService,
     ) {}
 
