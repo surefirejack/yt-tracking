@@ -132,6 +132,8 @@ class CheckoutForm extends Component
 
         auth()->login($user);
 
+        $user->sendEmailVerificationNotification();
+
         return $user;
     }
 
