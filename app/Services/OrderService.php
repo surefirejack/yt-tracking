@@ -11,6 +11,7 @@ use App\Models\OneTimeProduct;
 use App\Models\Order;
 use App\Models\PaymentProvider;
 use App\Models\User;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
@@ -204,5 +205,27 @@ class OrderService
                 });
             })
             ->exists();
+    }
+
+    public function findAllUserSuccessfulOrders(User $user): Collection
+    {
+        return $user->orders()
+            ->where('status', OrderStatus::SUCCESS)
+            ->with(['items.oneTimeProduct'])
+            ->get();
+    }
+
+    public function findAllUserOrderedProducts(User $user): array
+    {
+        $orders = $this->findAllUserSuccessfulOrders($user);
+
+        $orderedProducts = [];
+        foreach ($orders as $order) {
+            foreach ($order->items as $item) {
+                $orderedProducts[$item->oneTimeProduct->slug] = $item->oneTimeProduct;
+            }
+        }
+
+        return array_values($orderedProducts);
     }
 }

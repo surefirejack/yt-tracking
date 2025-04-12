@@ -20,6 +20,7 @@ use App\Models\User;
 use App\Models\UserSubscriptionTrial;
 use App\Services\PaymentProviders\PaymentProviderInterface;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
@@ -161,6 +162,22 @@ class SubscriptionService
         return Subscription::where('user_id', $userId)
             ->where('status', '=', SubscriptionStatus::ACTIVE->value)
             ->first();
+    }
+
+    public function findActiveUserSubscriptions(User $user): Collection
+    {
+        return Subscription::where('user_id', $user->id)
+            ->where('status', '=', SubscriptionStatus::ACTIVE->value)
+            ->where('ends_at', '>', now())
+            ->get();
+    }
+
+    public function findActiveUserSubscriptionProducts(User $user): Collection
+    {
+        return $this->findActiveUserSubscriptions($user)
+            ->map(function (Subscription $subscription) {
+                return $subscription->plan->product;
+            });
     }
 
     public function findActiveUserSubscriptionWithPlanType(int $userId, PlanType $planType): ?Subscription
