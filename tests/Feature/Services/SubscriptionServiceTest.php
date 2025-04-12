@@ -11,6 +11,7 @@ use App\Models\Currency;
 use App\Models\Interval;
 use App\Models\Plan;
 use App\Models\PlanPrice;
+use App\Models\Product;
 use App\Models\Subscription;
 use App\Models\UserSubscriptionTrial;
 use App\Services\SubscriptionService;
@@ -291,6 +292,99 @@ class SubscriptionServiceTest extends FeatureTest
         ]);
 
         $this->assertFalse($service->canUserHaveSubscriptionTrial($user));
+    }
+
+    public function test_find_active_user_subscriptions()
+    {
+        $user = $this->createUser();
+        $this->actingAs($user);
+
+        $slug = Str::random();
+        $plan = Plan::factory()->create([
+            'slug' => $slug,
+            'is_active' => true,
+        ]);
+
+        Subscription::factory()->create([
+            'user_id' => $user->id,
+            'status' => SubscriptionStatus::ACTIVE->value,
+            'plan_id' => $plan->id,
+            'ends_at' => now()->addDays(30),
+        ])->save();
+
+        Subscription::factory()->create([
+            'user_id' => $user->id,
+            'status' => SubscriptionStatus::ACTIVE->value,
+            'plan_id' => $plan->id,
+            'ends_at' => now()->addDays(30),
+        ])->save();
+
+        Subscription::factory()->create([
+            'user_id' => $user->id,
+            'status' => SubscriptionStatus::ACTIVE->value,
+            'plan_id' => $plan->id,
+            'ends_at' => now()->subDays(30),
+        ])->save();
+
+        /** @var SubscriptionService $service */
+        $service = app()->make(SubscriptionService::class);
+
+        $subscriptions = $service->findActiveUserSubscriptions($user);
+
+        $this->assertCount(2, $subscriptions);
+    }
+
+    public function test_find_active_user_subscription_products()
+    {
+        $user = $this->createUser();
+        $this->actingAs($user);
+
+        $product1Slug = Str::random();
+        $product1 = Product::factory()->create([
+            'slug' => $product1Slug,
+        ]);
+
+        $product2Slug = Str::random();
+        $product2 = Product::factory()->create([
+            'slug' => $product2Slug,
+        ]);
+
+        $plan1Slug = Str::random();
+        $plan1 = Plan::factory()->create([
+            'slug' => $plan1Slug,
+            'is_active' => true,
+            'product_id' => $product1->id,
+        ]);
+
+        $plan2Slug = Str::random();
+        $plan2 = Plan::factory()->create([
+            'slug' => $plan2Slug,
+            'is_active' => true,
+            'product_id' => $product2->id,
+        ]);
+
+        Subscription::factory()->create([
+            'user_id' => $user->id,
+            'status' => SubscriptionStatus::ACTIVE->value,
+            'plan_id' => $plan1->id,
+            'ends_at' => now()->addDays(30),
+        ])->save();
+
+        Subscription::factory()->create([
+            'user_id' => $user->id,
+            'status' => SubscriptionStatus::ACTIVE->value,
+            'plan_id' => $plan2->id,
+            'ends_at' => now()->addDays(30),
+        ])->save();
+
+        /** @var SubscriptionService $service */
+        $service = app()->make(SubscriptionService::class);
+
+        $products = $service->findActiveUserSubscriptionProducts($user);
+
+        $this->assertCount(2, $products);
+        $this->assertEquals($product1->id, $products[0]->id);
+        $this->assertEquals($product2->id, $products[1]->id);
     }
 
     public static function nonDeadSubscriptionProvider()
