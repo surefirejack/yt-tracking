@@ -248,17 +248,23 @@ class OrderService
             ->exists();
     }
 
-    public function findAllUserSuccessfulOrders(User $user): Collection
+    public function findAllTenantSuccessfulOrders(?Tenant $tenant): Collection
     {
-        return $user->orders()
+        $tenant = $tenant ?? Filament::getTenant();
+
+        if (! $tenant) {
+            return collect();
+        }
+
+        return $tenant->orders()
             ->where('status', OrderStatus::SUCCESS)
             ->with(['items.oneTimeProduct'])
             ->get();
     }
 
-    public function findAllUserOrderedProducts(User $user): array
+    public function findAllTenantOrderedProducts(?Tenant $tenant): array
     {
-        $orders = $this->findAllUserSuccessfulOrders($user);
+        $orders = $this->findAllTenantSuccessfulOrders($tenant);
 
         $orderedProducts = [];
         foreach ($orders as $order) {

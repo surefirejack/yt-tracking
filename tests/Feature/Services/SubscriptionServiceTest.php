@@ -294,10 +294,12 @@ class SubscriptionServiceTest extends FeatureTest
         $this->assertFalse($service->canUserHaveSubscriptionTrial($user));
     }
 
-    public function test_find_active_user_subscriptions()
+    public function test_find_active_tenant_subscriptions()
     {
         $user = $this->createUser();
         $this->actingAs($user);
+
+        $tenant = $this->createTenant();
 
         $slug = Str::random();
         $plan = Plan::factory()->create([
@@ -310,6 +312,7 @@ class SubscriptionServiceTest extends FeatureTest
             'status' => SubscriptionStatus::ACTIVE->value,
             'plan_id' => $plan->id,
             'ends_at' => now()->addDays(30),
+            'tenant_id' => $tenant->id,
         ])->save();
 
         Subscription::factory()->create([
@@ -317,6 +320,7 @@ class SubscriptionServiceTest extends FeatureTest
             'status' => SubscriptionStatus::ACTIVE->value,
             'plan_id' => $plan->id,
             'ends_at' => now()->addDays(30),
+            'tenant_id' => $tenant->id,
         ])->save();
 
         Subscription::factory()->create([
@@ -324,20 +328,23 @@ class SubscriptionServiceTest extends FeatureTest
             'status' => SubscriptionStatus::ACTIVE->value,
             'plan_id' => $plan->id,
             'ends_at' => now()->subDays(30),
+            'tenant_id' => $tenant->id,
         ])->save();
 
         /** @var SubscriptionService $service */
         $service = app()->make(SubscriptionService::class);
 
-        $subscriptions = $service->findActiveUserSubscriptions($user);
+        $subscriptions = $service->findActiveTenantSubscriptions($tenant);
 
         $this->assertCount(2, $subscriptions);
     }
 
-    public function test_find_active_user_subscription_products()
+    public function test_find_active_tenant_subscription_products()
     {
         $user = $this->createUser();
         $this->actingAs($user);
+
+        $tenant = $this->createTenant();
 
         $product1Slug = Str::random();
         $product1 = Product::factory()->create([
@@ -368,6 +375,7 @@ class SubscriptionServiceTest extends FeatureTest
             'status' => SubscriptionStatus::ACTIVE->value,
             'plan_id' => $plan1->id,
             'ends_at' => now()->addDays(30),
+            'tenant_id' => $tenant->id,
         ])->save();
 
         Subscription::factory()->create([
@@ -375,12 +383,13 @@ class SubscriptionServiceTest extends FeatureTest
             'status' => SubscriptionStatus::ACTIVE->value,
             'plan_id' => $plan2->id,
             'ends_at' => now()->addDays(30),
+            'tenant_id' => $tenant->id,
         ])->save();
 
         /** @var SubscriptionService $service */
         $service = app()->make(SubscriptionService::class);
 
-        $products = $service->findActiveUserSubscriptionProducts($user);
+        $products = $service->findActiveTenantSubscriptionProducts($tenant);
 
         $this->assertCount(2, $products);
         $this->assertEquals($product1->id, $products[0]->id);

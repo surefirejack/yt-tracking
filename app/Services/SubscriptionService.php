@@ -169,17 +169,23 @@ class SubscriptionService
             ->first();
     }
 
-    public function findActiveUserSubscriptions(User $user): Collection
+    public function findActiveTenantSubscriptions(?Tenant $tenant): Collection
     {
-        return Subscription::where('user_id', $user->id)
+        $tenant = $tenant ?? Filament::getTenant();
+
+        if (! $tenant) {
+            return collect();
+        }
+
+        return Subscription::where('tenant_id', $tenant->id)
             ->where('status', '=', SubscriptionStatus::ACTIVE->value)
             ->where('ends_at', '>', now())
             ->get();
     }
 
-    public function findActiveUserSubscriptionProducts(User $user): Collection
+    public function findActiveTenantSubscriptionProducts(?Tenant $tenant): Collection
     {
-        return $this->findActiveUserSubscriptions($user)
+        return $this->findActiveTenantSubscriptions($tenant)
             ->map(function (Subscription $subscription) {
                 return $subscription->plan->product;
             });

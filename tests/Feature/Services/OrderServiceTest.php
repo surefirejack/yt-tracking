@@ -12,10 +12,12 @@ use Tests\Feature\FeatureTest;
 
 class OrderServiceTest extends FeatureTest
 {
-    public function test_find_all_user_successful_orders(): void
+    public function test_find_all_tenant_successful_orders(): void
     {
         $user = $this->createUser();
         $this->actingAs($user);
+
+        $tenant = $this->createTenant();
 
         $product1Slug = Str::random(10);
         $product1 = OneTimeProduct::factory()->create([
@@ -25,6 +27,7 @@ class OrderServiceTest extends FeatureTest
         $order1 = Order::factory()->create([
             'user_id' => $user->id,
             'status' => OrderStatus::SUCCESS->value,
+            'tenant_id' => $tenant->id,
         ]);
 
         $order1->items()->createMany([
@@ -45,6 +48,7 @@ class OrderServiceTest extends FeatureTest
         $order2 = Order::factory()->create([
             'user_id' => $user->id,
             'status' => OrderStatus::SUCCESS->value,
+            'tenant_id' => $tenant->id,
         ]);
 
         $order2->items()->createMany([
@@ -59,7 +63,7 @@ class OrderServiceTest extends FeatureTest
 
         $orderService = app()->make(OrderService::class);
 
-        $orders = $orderService->findAllUserSuccessfulOrders($user);
+        $orders = $orderService->findAllTenantSuccessfulOrders($tenant);
 
         $this->assertCount(2, $orders);
 
@@ -67,10 +71,11 @@ class OrderServiceTest extends FeatureTest
         $this->assertEquals($order2->id, $orders[1]->id);
     }
 
-    public function test_find_all_user_ordered_products(): void
+    public function test_find_all_tenant_ordered_products(): void
     {
         $user = $this->createUser();
         $this->actingAs($user);
+        $tenant = $this->createTenant();
 
         $product1Slug = Str::random(10);
         $product1 = OneTimeProduct::factory()->create([
@@ -80,6 +85,7 @@ class OrderServiceTest extends FeatureTest
         $order1 = Order::factory()->create([
             'user_id' => $user->id,
             'status' => OrderStatus::SUCCESS->value,
+            'tenant_id' => $tenant->id,
         ]);
 
         $order1->items()->createMany([
@@ -100,6 +106,7 @@ class OrderServiceTest extends FeatureTest
         $order2 = Order::factory()->create([
             'user_id' => $user->id,
             'status' => OrderStatus::SUCCESS->value,
+            'tenant_id' => $tenant->id,
         ]);
 
         $order2->items()->createMany([
@@ -114,7 +121,7 @@ class OrderServiceTest extends FeatureTest
 
         $orderService = app()->make(OrderService::class);
 
-        $orderedProducts = $orderService->findAllUserOrderedProducts($user);
+        $orderedProducts = $orderService->findAllTenantOrderedProducts($tenant);
 
         $this->assertCount(2, $orderedProducts);
 
