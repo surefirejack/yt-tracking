@@ -23,6 +23,7 @@ use App\Models\UserSubscriptionTrial;
 use App\Services\PaymentProviders\PaymentProviderInterface;
 use Carbon\Carbon;
 use Filament\Facades\Filament;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
@@ -166,6 +167,28 @@ class SubscriptionService
         return Subscription::where('user_id', $userId)
             ->where('status', '=', SubscriptionStatus::ACTIVE->value)
             ->first();
+    }
+
+    public function findActiveTenantSubscriptions(?Tenant $tenant): Collection
+    {
+        $tenant = $tenant ?? Filament::getTenant();
+
+        if (! $tenant) {
+            return collect();
+        }
+
+        return Subscription::where('tenant_id', $tenant->id)
+            ->where('status', '=', SubscriptionStatus::ACTIVE->value)
+            ->where('ends_at', '>', now())
+            ->get();
+    }
+
+    public function findActiveTenantSubscriptionProducts(?Tenant $tenant): Collection
+    {
+        return $this->findActiveTenantSubscriptions($tenant)
+            ->map(function (Subscription $subscription) {
+                return $subscription->plan->product;
+            });
     }
 
     public function findActiveByTenantAndSubscriptionUuid(Tenant $tenant, string $subscriptionUuid): ?Subscription

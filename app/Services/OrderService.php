@@ -14,6 +14,7 @@ use App\Models\PaymentProvider;
 use App\Models\Tenant;
 use App\Models\User;
 use Filament\Facades\Filament;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
@@ -245,5 +246,33 @@ class OrderService
                 });
             })
             ->exists();
+    }
+
+    public function findAllTenantSuccessfulOrders(?Tenant $tenant): Collection
+    {
+        $tenant = $tenant ?? Filament::getTenant();
+
+        if (! $tenant) {
+            return collect();
+        }
+
+        return $tenant->orders()
+            ->where('status', OrderStatus::SUCCESS)
+            ->with(['items.oneTimeProduct'])
+            ->get();
+    }
+
+    public function findAllTenantOrderedProducts(?Tenant $tenant): array
+    {
+        $orders = $this->findAllTenantSuccessfulOrders($tenant);
+
+        $orderedProducts = [];
+        foreach ($orders as $order) {
+            foreach ($order->items as $item) {
+                $orderedProducts[$item->oneTimeProduct->slug] = $item->oneTimeProduct;
+            }
+        }
+
+        return array_values($orderedProducts);
     }
 }
