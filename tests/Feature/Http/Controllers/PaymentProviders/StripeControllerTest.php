@@ -52,6 +52,39 @@ class StripeControllerTest extends FeatureTest
         ]);
     }
 
+    public function test_subscription_created_webhook_with_2025_03_01_dashboard_update(): void
+    {
+        $uuid = (string) Str::uuid();
+        Subscription::create([
+            'uuid' => $uuid,
+            'user_id' => 1,
+            'price' => 10,
+            'currency_id' => 1,
+            'plan_id' => 1,
+            'interval_id' => 2,
+            'interval_count' => 1,
+            'status' => SubscriptionStatus::NEW->value,
+        ]);
+
+        $payload = $this->getStripeSubscriptionWith20250301DashboardUpdate('incomplete', 'customer.subscription.created', $uuid);
+
+        $timestamp = time();
+        $payloadString = json_encode($payload);
+        $signature = \hash_hmac('sha256', "{$timestamp}.{$payloadString}", config('services.stripe.webhook_signing_secret'));
+
+        $response = $this->postJson(route('payments-providers.stripe.webhook'), $payload, [
+            'Stripe-Signature' => 't='.$timestamp.',v1='.$signature,
+            'Content-Type' => 'application/json',
+        ]);
+
+        $response->assertStatus(200);
+
+        $this->assertDatabaseHas('subscriptions', [
+            'uuid' => $uuid,
+            'status' => SubscriptionStatus::INACTIVE->value,
+        ]);
+    }
+
     public function test_subscription_created_arrived_after_subscription_updated_webhook(): void
     {
         $uuid = (string) Str::uuid();
@@ -272,6 +305,42 @@ class StripeControllerTest extends FeatureTest
     }
 
     public function test_invoice_created_webhook(): void
+    {
+        $uuid = (string) Str::uuid();
+        $subscription = Subscription::create([
+            'uuid' => $uuid,
+            'user_id' => 1,
+            'price' => 10,
+            'currency_id' => 1,
+            'plan_id' => 1,
+            'interval_id' => 2,
+            'interval_count' => 1,
+            'status' => SubscriptionStatus::ACTIVE->value,
+        ]);
+
+        $invoiceId = Str::random();
+        $payload = $this->getStripeInvoice('open', 'invoice.created', $uuid, $invoiceId);
+
+        $timestamp = time();
+        $payloadString = json_encode($payload);
+        $signature = \hash_hmac('sha256', "{$timestamp}.{$payloadString}", config('services.stripe.webhook_signing_secret'));
+
+        $response = $this->postJson(route('payments-providers.stripe.webhook'), $payload, [
+            'Stripe-Signature' => 't='.$timestamp.',v1='.$signature,
+            'Content-Type' => 'application/json',
+        ]);
+
+        $response->assertStatus(200);
+
+        $this->assertDatabaseHas('transactions', [
+            'subscription_id' => $subscription->id,
+            'status' => TransactionStatus::NOT_STARTED->value,
+            'payment_provider_transaction_id' => $invoiceId,
+            'payment_provider_status' => 'open',
+        ]);
+    }
+
+    public function test_invoice_created_webhook_with_2025_03_01_dashboard_update(): void
     {
         $uuid = (string) Str::uuid();
         $subscription = Subscription::create([
@@ -1377,6 +1446,198 @@ JSON;
         return json_decode($json, true);
     }
 
+    private function getStripeInvoiceWith20250301DashboardUpdate(
+        string $stripeInvoiceStatus,
+        string $type,
+        string $subscriptionUuid,
+        string $invoiceId,
+    ) {
+        $json = <<<JSON
+          {
+          "type": "$type",
+          "id": "evt_1J5X2n2eZvKYlo2C0Q2Z2Z2Z",
+          "object": "event",
+          "api_version": "2020-08-27",
+          "created": 1632830000,
+          "data": {
+                "object": {
+                  "id": "$invoiceId",
+                  "object": "invoice",
+                  "account_country": "DE",
+                  "account_name": null,
+                  "account_tax_ids": null,
+                  "amount_due": 0,
+                  "amount_overpaid": 0,
+                  "amount_paid": 0,
+                  "amount_remaining": 0,
+                  "amount_shipping": 0,
+                  "application": null,
+                  "attempt_count": 0,
+                  "attempted": true,
+                  "auto_advance": false,
+                  "automatic_tax": {
+                    "disabled_reason": null,
+                    "enabled": false,
+                    "liability": null,
+                    "status": null
+                  },
+                  "automatically_finalizes_at": null,
+                  "billing_reason": "subscription_create",
+                  "collection_method": "charge_automatically",
+                  "created": 1744814026,
+                  "currency": "usd",
+                  "custom_fields": null,
+                  "customer": "cus_RSnUAW6ZWiYQMs",
+                  "customer_address": null,
+                  "customer_email": "admin@admin.com",
+                  "customer_name": "Admin",
+                  "customer_phone": null,
+                  "customer_shipping": null,
+                  "customer_tax_exempt": "none",
+                  "customer_tax_ids": [
+                  ],
+                  "default_payment_method": null,
+                  "default_source": null,
+                  "default_tax_rates": [
+                  ],
+                  "description": null,
+                  "discounts": [
+                  ],
+                  "due_date": null,
+                  "effective_at": 1744814025,
+                  "ending_balance": 0,
+                  "footer": null,
+                  "from_invoice": null,
+                  "hosted_invoice_url": "https://invoice.stripe.com/i/acct_1NheKTJQC7CL5JsV/test_YWNjdF8xTmhlS1RKUUM3Q0w1SnNWLF9TOG9mQWdtblBZMXlrR0Q5Y0NpOFF1M0pBTHNHRGFGLDEzNTM1NDgyNw0200KAQAJW9B?s=ap",
+                  "invoice_pdf": "https://pay.stripe.com/invoice/acct_1NheKTJQC7CL5JsV/test_YWNjdF8xTmhlS1RKUUM3Q0w1SnNWLF9TOG9mQWdtblBZMXlrR0Q5Y0NpOFF1M0pBTHNHRGFGLDEzNTM1NDgyNw0200KAQAJW9B/pdf?s=ap",
+                  "issuer": {
+                    "type": "self"
+                  },
+                  "last_finalization_error": null,
+                  "latest_revision": null,
+                  "lines": {
+                    "object": "list",
+                    "data": [
+                      {
+                        "id": "il_1REX25JQC7CL5JsVW7qlaSve",
+                        "object": "line_item",
+                        "amount": 0,
+                        "currency": "usd",
+                        "description": "Trial period for Basic Monthly",
+                        "discount_amounts": [
+                        ],
+                        "discountable": true,
+                        "discounts": [
+                        ],
+                        "invoice": "in_1REX26JQC7CL5JsVr00A9I6F",
+                        "livemode": false,
+                        "metadata": {
+                          "subscription_uuid": "620868fa-85b8-46e5-ab9f-a583de957599"
+                        },
+                        "parent": {
+                          "invoice_item_details": null,
+                          "subscription_item_details": {
+                            "invoice_item": null,
+                            "proration": false,
+                            "proration_details": {
+                              "credited_items": null
+                            },
+                            "subscription": "sub_1REX26JQC7CL5JsVi5Dh15TF",
+                            "subscription_item": "si_S8ofdk25vhpfF2"
+                          },
+                          "type": "subscription_item_details"
+                        },
+                        "period": {
+                          "end": 1745418825,
+                          "start": 1744814025
+                        },
+                        "pretax_credit_amounts": [
+                        ],
+                        "pricing": {
+                          "price_details": {
+                            "price": "price_1QeeCBJQC7CL5JsV6rG0bDM2",
+                            "product": "basic-monthly-dQdlLfQS8OmUtsiA"
+                          },
+                          "type": "price_details",
+                          "unit_amount_decimal": "0"
+                        },
+                        "quantity": 1,
+                        "taxes": [
+                        ]
+                      }
+                    ],
+                    "has_more": false,
+                    "total_count": 1,
+                    "url": "/v1/invoices/in_1REX26JQC7CL5JsVr00A9I6F/lines"
+                  },
+                  "livemode": false,
+                  "metadata": {
+                  },
+                  "next_payment_attempt": null,
+                  "number": "A10DDDFF-1439",
+                  "on_behalf_of": null,
+                  "parent": {
+                    "quote_details": null,
+                    "subscription_details": {
+                      "metadata": {
+                        "subscription_uuid": "$subscriptionUuid"
+                      },
+                      "subscription": "sub_1REX26JQC7CL5JsVi5Dh15TF"
+                    },
+                    "type": "subscription_details"
+                  },
+                  "payment_settings": {
+                    "default_mandate": null,
+                    "payment_method_options": {
+                      "acss_debit": null,
+                      "bancontact": null,
+                      "card": {
+                        "request_three_d_secure": "automatic"
+                      },
+                      "customer_balance": null,
+                      "konbini": null,
+                      "sepa_debit": null,
+                      "us_bank_account": null
+                    },
+                    "payment_method_types": null
+                  },
+                  "period_end": 1744814025,
+                  "period_start": 1744814025,
+                  "post_payment_credit_notes_amount": 0,
+                  "pre_payment_credit_notes_amount": 0,
+                  "receipt_number": null,
+                  "rendering": null,
+                  "shipping_cost": null,
+                  "shipping_details": null,
+                  "starting_balance": 0,
+                  "statement_descriptor": null,
+                  "status": "$stripeInvoiceStatus",
+                  "status_transitions": {
+                    "finalized_at": 1744814025,
+                    "marked_uncollectible_at": null,
+                    "paid_at": 1744814025,
+                    "voided_at": null
+                  },
+                  "subtotal": 0,
+                  "subtotal_excluding_tax": 0,
+                  "test_clock": null,
+                  "total": 0,
+                  "total_discount_amounts": [
+                  ],
+                  "total_excluding_tax": 0,
+                  "total_pretax_credit_amounts": [
+                  ],
+                  "total_taxes": [
+                  ],
+                  "webhooks_delivered_at": null
+                }
+              }
+          }
+JSON;
+
+        return json_decode($json, true);
+    }
+
     private function getStripeSubscription(
         string $stripeSubscriptionStatus,
         string $type,
@@ -1524,6 +1785,201 @@ JSON;
               }
             }
           }
+JSON;
+
+        return json_decode($json, true);
+    }
+
+    private function getStripeSubscriptionWith20250301DashboardUpdate(
+        string $stripeSubscriptionStatus,
+        string $type,
+        string $subscriptionUuid,
+    ) {
+        $json = <<<JSON
+        {
+          "type": "$type",
+          "id": "evt_1J5X2n2eZvKYlo2C0Q2Z2Z2Z",
+          "object": "event",
+          "api_version": "2020-08-27",
+          "created": 1632830000,
+          "data": {
+              "object": {
+                  "id": "sub_1REWcqJQC7CL5JsVA78I2nHQ",
+                  "object": "subscription",
+                  "application": null,
+                  "application_fee_percent": null,
+                  "automatic_tax": {
+                    "disabled_reason": null,
+                    "enabled": false,
+                    "liability": null
+                  },
+                  "billing_cycle_anchor": 1745417260,
+                  "billing_cycle_anchor_config": null,
+                  "cancel_at": null,
+                  "cancel_at_period_end": false,
+                  "canceled_at": null,
+                  "cancellation_details": {
+                    "comment": null,
+                    "feedback": null,
+                    "reason": null
+                  },
+                  "collection_method": "charge_automatically",
+                  "created": 1744812460,
+                  "currency": "usd",
+                  "customer": "cus_RSnUAW6ZWiYQMs",
+                  "days_until_due": null,
+                  "default_payment_method": "pm_1REWcnJQC7CL5JsVkBrOtDz0",
+                  "default_source": null,
+                  "default_tax_rates": [
+                  ],
+                  "description": null,
+                  "discounts": [
+                  ],
+                  "ended_at": null,
+                  "invoice_settings": {
+                    "account_tax_ids": null,
+                    "issuer": {
+                      "type": "self"
+                    }
+                  },
+                  "items": {
+                    "object": "list",
+                    "data": [
+                      {
+                        "id": "si_S8oF8gePQBQUkV",
+                        "object": "subscription_item",
+                        "created": 1744812461,
+                        "current_period_end": 1745417260,
+                        "current_period_start": 1744812460,
+                        "discounts": [
+                        ],
+                        "metadata": {
+                        },
+                        "plan": {
+                          "id": "price_1QeeCBJQC7CL5JsV6rG0bDM2",
+                          "object": "plan",
+                          "active": true,
+                          "amount": 1000,
+                          "amount_decimal": "1000",
+                          "billing_scheme": "per_unit",
+                          "created": 1736261751,
+                          "currency": "usd",
+                          "interval": "month",
+                          "interval_count": 1,
+                          "livemode": false,
+                          "metadata": {
+                          },
+                          "meter": null,
+                          "nickname": null,
+                          "product": "basic-monthly-dQdlLfQS8OmUtsiA",
+                          "tiers_mode": null,
+                          "transform_usage": null,
+                          "trial_period_days": null,
+                          "usage_type": "licensed"
+                        },
+                        "price": {
+                          "id": "price_1QeeCBJQC7CL5JsV6rG0bDM2",
+                          "object": "price",
+                          "active": true,
+                          "billing_scheme": "per_unit",
+                          "created": 1736261751,
+                          "currency": "usd",
+                          "custom_unit_amount": null,
+                          "livemode": false,
+                          "lookup_key": null,
+                          "metadata": {
+                          },
+                          "nickname": null,
+                          "product": "basic-monthly-dQdlLfQS8OmUtsiA",
+                          "recurring": {
+                            "interval": "month",
+                            "interval_count": 1,
+                            "meter": null,
+                            "trial_period_days": null,
+                            "usage_type": "licensed"
+                          },
+                          "tax_behavior": "unspecified",
+                          "tiers_mode": null,
+                          "transform_quantity": null,
+                          "type": "recurring",
+                          "unit_amount": 1000,
+                          "unit_amount_decimal": "1000"
+                        },
+                        "quantity": 1,
+                        "subscription": "sub_1REWcqJQC7CL5JsVA78I2nHQ",
+                        "tax_rates": [
+                        ]
+                      }
+                    ],
+                    "has_more": false,
+                    "total_count": 1,
+                    "url": "/v1/subscription_items?subscription=sub_1REWcqJQC7CL5JsVA78I2nHQ"
+                  },
+                  "latest_invoice": "in_1REWcrJQC7CL5JsV6RAZqQ7k",
+                  "livemode": false,
+                  "metadata": {
+                    "subscription_uuid": "$subscriptionUuid"
+                  },
+                  "next_pending_invoice_item_invoice": null,
+                  "on_behalf_of": null,
+                  "pause_collection": null,
+                  "payment_settings": {
+                    "payment_method_options": {
+                      "acss_debit": null,
+                      "bancontact": null,
+                      "card": {
+                        "network": null,
+                        "request_three_d_secure": "automatic"
+                      },
+                      "customer_balance": null,
+                      "konbini": null,
+                      "sepa_debit": null,
+                      "us_bank_account": null
+                    },
+                    "payment_method_types": null,
+                    "save_default_payment_method": "off"
+                  },
+                  "pending_invoice_item_interval": null,
+                  "pending_setup_intent": null,
+                  "pending_update": null,
+                  "plan": {
+                    "id": "price_1QeeCBJQC7CL5JsV6rG0bDM2",
+                    "object": "plan",
+                    "active": true,
+                    "amount": 1000,
+                    "amount_decimal": "1000",
+                    "billing_scheme": "per_unit",
+                    "created": 1736261751,
+                    "currency": "usd",
+                    "interval": "month",
+                    "interval_count": 1,
+                    "livemode": false,
+                    "metadata": {
+                    },
+                    "meter": null,
+                    "nickname": null,
+                    "product": "basic-monthly-dQdlLfQS8OmUtsiA",
+                    "tiers_mode": null,
+                    "transform_usage": null,
+                    "trial_period_days": null,
+                    "usage_type": "licensed"
+                  },
+                  "quantity": 1,
+                  "schedule": null,
+                  "start_date": 1744812460,
+                  "status": "$stripeSubscriptionStatus",
+                  "test_clock": null,
+                  "transfer_data": null,
+                  "trial_end": 1745417260,
+                  "trial_settings": {
+                    "end_behavior": {
+                      "missing_payment_method": "create_invoice"
+                    }
+                  },
+                  "trial_start": 1744812460
+                }
+              }
+            }
 JSON;
 
         return json_decode($json, true);
