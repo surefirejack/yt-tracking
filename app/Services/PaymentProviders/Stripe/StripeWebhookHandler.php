@@ -18,6 +18,7 @@ use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Stripe\Event;
 
 class StripeWebhookHandler
 {
@@ -59,7 +60,7 @@ class StripeWebhookHandler
 
                 $stripeSubscriptionStatus = $event->data->object->status;
                 $subscriptionStatus = $this->mapStripeSubscriptionStatusToSubscriptionStatus($stripeSubscriptionStatus);
-                $endsAt = $event->data->object->current_period_end;
+                $endsAt = $this->getSubscriptionEndsAt($event);
                 $endsAt = Carbon::createFromTimestampUTC($endsAt)->toDateTimeString();
                 $trialEndsAt = $event->data->object->trial_end ? Carbon::createFromTimestampUTC($event->data->object->trial_end)->toDateTimeString() : null;
                 $cancelledAt = $event->data->object->canceled_at ? Carbon::createFromTimestampUTC($event->data->object->canceled_at)->toDateTimeString() : null;
@@ -80,7 +81,7 @@ class StripeWebhookHandler
             // TODO send email to user
 
         } elseif ($event->type == 'invoice.created') {
-            $subscriptionUuid = $event->data->object->subscription_details->metadata->subscription_uuid;
+            $subscriptionUuid = $this->getSubscriptionUuidFromInvoiceEvent($event);
             $subscription = $this->subscriptionService->findByUuidOrFail($subscriptionUuid);
             $currency = Currency::where('code', strtoupper($event->data->object->currency))->firstOrFail();
             $invoiceStatus = $event->data->object->status;
@@ -350,5 +351,27 @@ class StripeWebhookHandler
         }
 
         return false;
+    }
+
+    private function getSubscriptionEndsAt(Event $subscriptionEvent): ?string
+    {
+        if ($subscriptionEvent->data->object->current_period_end !== null) {
+            return $subscriptionEvent->data->object->current_period_end;
+        }
+
+        if ($subscriptionEvent->data->object->items !== null) { // change introduced in the Stripe API 2025-03-01.dashboard
+            return $subscriptionEvent->data->object->items?->data[0]?->current_period_end;
+        }
+
+        return null;
+    }
+
+    private function getSubscriptionUuidFromInvoiceEvent(Event $invoiceEvent)
+    {
+        if ($invoiceEvent->data->object->subscription_details !== null) {
+            return $invoiceEvent->data->object->subscription_details->metadata->subscription_uuid;
+        }
+
+        return $invoiceEvent->data->object->parent->subscription_details->metadata->subscription_uuid;
     }
 }
