@@ -13,7 +13,7 @@ class CreateAdminUser extends Command
      *
      * @var string
      */
-    protected $signature = 'app:create-admin-user';
+    protected $signature = 'app:create-admin-user {--email=} {--password=}';
 
     /**
      * The console command description.
@@ -27,14 +27,17 @@ class CreateAdminUser extends Command
      */
     public function handle()
     {
-        if (User::where('is_admin', true)->count() > 0) {
-            $this->error('There is already an admin user created.');
+        $email = $this->option('email');
 
-            return;
+        if (! $email) {
+            $email = $this->ask('What is the email address of the admin user you want to create?');
         }
 
-        $email = $this->ask('What is the email address of the admin user you want to create?');
-        $password = Str::random();
+        $password = $this->option('password');
+
+        if (! $password) {
+            $password = Str::random();
+        }
 
         try {
             $user = User::create([
