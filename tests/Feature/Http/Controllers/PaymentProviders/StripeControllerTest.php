@@ -58,10 +58,14 @@ class StripeControllerTest extends FeatureTest
 
     public function test_subscription_created_webhook_with_2025_03_01_dashboard_update(): void
     {
+        $tenant = $this->createTenant();
+        $user = $this->createUser($tenant);
+
         $uuid = (string) Str::uuid();
         Subscription::create([
             'uuid' => $uuid,
-            'user_id' => 1,
+            'user_id' => $user->id,
+            'tenant_id' => $tenant->id,
             'price' => 10,
             'currency_id' => 1,
             'plan_id' => 1,
@@ -377,9 +381,13 @@ class StripeControllerTest extends FeatureTest
     public function test_invoice_created_webhook_with_2025_03_01_dashboard_update(): void
     {
         $uuid = (string) Str::uuid();
+        $tenant = $this->createTenant();
+        $user = $this->createUser($tenant);
+
         $subscription = Subscription::create([
             'uuid' => $uuid,
-            'user_id' => 1,
+            'user_id' => $user->id,
+            'tenant_id' => $tenant->id,
             'price' => 10,
             'currency_id' => 1,
             'plan_id' => 1,
