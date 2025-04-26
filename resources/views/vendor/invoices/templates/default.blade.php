@@ -106,9 +106,6 @@
             .text-uppercase {
                 text-transform: uppercase !important;
             }
-            * {
-                font-family: "DejaVu Sans";
-            }
             body, h1, h2, h3, h4, h5, h6, table, th, tr, td, p, div {
                 line-height: 1.1;
             }

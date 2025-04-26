@@ -3,6 +3,7 @@
 namespace App\Filament\Admin\Resources\OauthLoginProviderResource\Pages;
 
 use App\Filament\Admin\Resources\OauthLoginProviderResource;
+use App\Services\ConfigService;
 use Filament\Resources\Pages\Page;
 
 class GithubSettings extends Page
@@ -14,5 +15,12 @@ class GithubSettings extends Page
     public function mount(): void
     {
         static::authorizeResourceAccess();
+    }
+
+    public static function canAccess(array $parameters = []): bool
+    {
+        $configService = app()->make(ConfigService::class);
+
+        return $configService->isAdminSettingsEnabled();
     }
 }
