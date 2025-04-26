@@ -7,6 +7,11 @@ use App\Models\Config;
 
 class ConfigService
 {
+    public function isAdminSettingsEnabled()
+    {
+        return config('app.admin_settings.enabled') ?? false;
+    }
+
     public function loadConfigs()
     {
         $configs = cache()->many(ConfigConstants::OVERRIDABLE_CONFIGS);
