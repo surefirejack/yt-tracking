@@ -211,6 +211,10 @@ return [
         'default_provider' => env('VERIFICATION_DEFAULT_PROVIDER', 'twilio'),
     ],
 
+    'admin_settings' => [
+        'enabled' => env('ADMIN_SETTINGS_ENABLED', true),
+    ],
+
     /*
     |--------------------------------------------------------------------------
     | Class Aliases

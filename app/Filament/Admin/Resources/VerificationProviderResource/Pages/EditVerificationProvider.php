@@ -4,6 +4,7 @@ namespace App\Filament\Admin\Resources\VerificationProviderResource\Pages;
 
 use App\Filament\Admin\Resources\VerificationProviderResource;
 use App\Models\VerificationProvider;
+use App\Services\ConfigService;
 use App\Services\UserVerificationService;
 use Filament\Actions;
 use Filament\Forms\Components\Textarea;
@@ -22,6 +23,7 @@ class EditVerificationProvider extends EditRecord
             \Filament\Actions\Action::make('edit-credentials')
                 ->label(__('Edit Credentials'))
                 ->color('primary')
+                ->visible(fn (ConfigService $configService) => $configService->isAdminSettingsEnabled())
                 ->icon('heroicon-o-rocket-launch')
                 ->url(fn (VerificationProvider $record): string => VerificationProviderResource::getUrl(
                     $record->slug.'-settings'
