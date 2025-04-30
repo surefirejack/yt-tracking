@@ -82,6 +82,9 @@ class UserResource extends Resource
                     ->label(__('Email Verified'))
                     ->getStateUsing(fn (User $user) => $user->email_verified_at ? true : false)
                     ->boolean(),
+                Tables\Columns\TextColumn::make('last_seen_at')
+                    ->sortable()
+                    ->dateTime(config('app.datetime_format')),
                 Tables\Columns\TextColumn::make('updated_at')
                     ->dateTime(config('app.datetime_format')),
                 Tables\Columns\TextColumn::make('created_at')

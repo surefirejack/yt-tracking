@@ -37,6 +37,7 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail, Two
         'notes',
         'phone_number',
         'phone_number_verified_at',
+        'last_seen_at',
     ];
 
     /**
@@ -58,6 +59,7 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail, Two
         'email_verified_at' => 'datetime',
         'phone_number_verified_at' => 'datetime',
         'password' => 'hashed',
+        'last_seen_at' => 'datetime',
     ];
 
     public function roadmapItems()
