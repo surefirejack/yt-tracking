@@ -14,6 +14,7 @@ class SubscriptionStatusMapper
             SubscriptionStatus::INACTIVE->value => __('Inactive'),
             SubscriptionStatus::PAST_DUE->value => __('Past Due'),
             SubscriptionStatus::PAUSED->value => __('Paused'),
+            SubscriptionStatus::PENDING_USER_VERIFICATION->value => __('Pending User Verification'),
             default => __('Pending'),
         };
     }
