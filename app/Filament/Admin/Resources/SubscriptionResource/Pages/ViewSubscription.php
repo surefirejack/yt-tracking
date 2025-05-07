@@ -11,6 +11,11 @@ use App\Services\PlanService;
 use App\Services\SubscriptionDiscountService;
 use App\Services\SubscriptionService;
 use App\Services\TenantService;
+use Closure;
+use Filament\Actions\Action;
+use Filament\Forms\Components\DateTimePicker;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Get;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ViewRecord;
 
@@ -22,7 +27,7 @@ class ViewSubscription extends ViewRecord
     {
         return [
             \Filament\Actions\ActionGroup::make([
-                \Filament\Actions\Action::make('sync')
+                Action::make('sync')
                     ->label(__('Sync Quantity'))
                     ->icon('heroicon-o-arrow-path')
                     ->visible(function (Subscription $record): bool {
@@ -31,14 +36,14 @@ class ViewSubscription extends ViewRecord
                     ->action(function (TenantService $tenantService, Subscription $record) {
                         $tenantService->syncSubscriptionQuantity($record);
                     }),
-                \Filament\Actions\Action::make('change-plan')
+                Action::make('change-plan')
                     ->label(__('Change Plan'))
                     ->icon('heroicon-o-rocket-launch')
                     ->visible(function (Subscription $record, SubscriptionService $subscriptionService): bool {
                         return $subscriptionService->canChangeSubscriptionPlan($record);
                     })
                     ->form([
-                        \Filament\Forms\Components\Select::make('plan_id')
+                        Select::make('plan_id')
                             ->label(__('Plan'))
                             ->default($this->getRecord()->plan_id)
                             ->options(function (PlanService $planService, Subscription $record) {
@@ -84,7 +89,7 @@ class ViewSubscription extends ViewRecord
                                 ->send();
                         }
                     }),
-                \Filament\Actions\Action::make('add-discount')
+                Action::make('add-discount')
                     ->label(__('Add Discount'))
                     ->color('gray')
                     ->icon('heroicon-s-tag')
@@ -116,7 +121,7 @@ class ViewSubscription extends ViewRecord
                             ->title(__('Discount code has been applied.'))
                             ->send();
                     }),
-                \Filament\Actions\Action::make('cancel')
+                Action::make('cancel')
                     ->color('gray')
                     ->label(__('Cancel Subscription'))
                     ->requiresConfirmation()
@@ -147,7 +152,7 @@ class ViewSubscription extends ViewRecord
                         }
                     })
                     ->visible(fn (Subscription $record, SubscriptionService $subscriptionService): bool => $subscriptionService->canCancelSubscription($record)),
-                \Filament\Actions\Action::make('discard-cancellation')
+                Action::make('discard-cancellation')
                     ->color('gray')
                     ->label(__('Discard Cancellation'))
                     ->icon('heroicon-m-x-circle')
@@ -175,7 +180,54 @@ class ViewSubscription extends ViewRecord
                         }
                     })->visible(fn (Subscription $record, SubscriptionService $subscriptionService): bool => $subscriptionService->canDiscardSubscriptionCancellation($record)),
             ])->button()->icon('heroicon-s-cog')->label(__('Manage Subscription')),
-            \Filament\Actions\Action::make('end_now')
+            Action::make('update_subscription')
+                ->color('gray')
+                ->label(__('Update Subscription'))
+                ->icon('heroicon-m-pencil')
+                ->form([
+                    DateTimePicker::make('ends_at')
+                        ->label(__('Subscription End Date'))
+                        ->default($this->getRecord()->ends_at)
+                        ->helperText(__('Make sure to set the date in the future.'))
+                        ->rule(
+                            fn (Get $get): Closure => function (string $attribute, $value, Closure $fail) use ($get) {
+                                if ($get('status') === SubscriptionStatus::ACTIVE->value && $get('ends_at') < now()) {
+                                    $fail(__('The end date must be in the future when the status is active.'));
+                                }
+                            })
+                        ->required(),
+                    Select::make('status')
+                        ->label(__('Subscription Status'))
+                        ->default($this->getRecord()->status)
+                        ->options([
+                            SubscriptionStatus::ACTIVE->value => __('Active'),
+                            SubscriptionStatus::INACTIVE->value => __('Inactive'),
+                            SubscriptionStatus::CANCELED->value => __('Canceled'),
+                            SubscriptionStatus::PAUSED->value => __('Paused'),
+                        ])
+                        ->required(),
+                ])
+                ->action(function (Subscription $subscription, SubscriptionService $subscriptionService, array $data) {
+                    if (! $subscriptionService->canUpdateSubscription($subscription)) {
+                        Notification::make()
+                            ->title(__('You cannot update this subscription.'))
+                            ->danger()
+                            ->send();
+
+                        return;
+                    }
+
+                    if ($subscription->plan->has_trial) {
+                        $data['trial_ends_at'] = $data['ends_at'];
+                    }
+
+                    $subscriptionService->updateSubscription(
+                        $subscription,
+                        $data,
+                    );
+                })
+                ->visible(fn (Subscription $record, SubscriptionService $subscriptionService): bool => $subscriptionService->canUpdateSubscription($record)),
+            Action::make('end_now')
                 ->color('danger')
                 ->label(__('End Subscription Now'))
                 ->requiresConfirmation()

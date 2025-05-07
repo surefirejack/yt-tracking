@@ -585,13 +585,18 @@ class SubscriptionService
             $subscription->status === SubscriptionStatus::ACTIVE->value;
     }
 
+    public function canUpdateSubscription(Subscription $subscription)
+    {
+        return $this->isLocalSubscription($subscription);
+    }
+
     public function endSubscription(Subscription $subscription): bool
     {
         if (! $this->isLocalSubscription($subscription)) {
             return false;
         }
 
-        $subscription->update([
+        $this->updateSubscription($subscription, [
             'status' => SubscriptionStatus::INACTIVE->value,
             'ends_at' => now(),
             'trial_ends_at' => now(),
@@ -628,12 +633,12 @@ class SubscriptionService
         $user = $subscription->user;
 
         // if user already has a trial for this subscription, do not create another one
-        $user->subscriptionTrials()
-            ->where('subscription_id', $subscription->id)
-            ->firstOrCreate([
-                'subscription_id' => $subscription->id,
-                'trial_ends_at' => $subscription->trial_ends_at,
-            ]);
+        UserSubscriptionTrial::query()->firstOrCreate([
+            'user_id' => $user->id,
+            'subscription_id' => $subscription->id,
+        ], [
+            'trial_ends_at' => $subscription->trial_ends_at,
+        ]);
     }
 
     public function getUserSubscriptionTrialCount(int $userId): int

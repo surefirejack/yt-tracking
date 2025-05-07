@@ -18,7 +18,7 @@ use Illuminate\Support\Facades\Log;
 class TenantService
 {
     public function __construct(
-        private TenantPermissionService   $tenantPermissionService,
+        private TenantPermissionService $tenantPermissionService,
         private TenantSubscriptionService $tenantSubscriptionService,
     ) {}
 
