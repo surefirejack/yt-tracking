@@ -15,4 +15,10 @@ class UserService
             'password' => Hash::make($data['password']),
         ]);
     }
+
+    public function updateUserLastSeen(User $user)
+    {
+        $user->last_seen_at = now();
+        $user->save();
+    }
 }
