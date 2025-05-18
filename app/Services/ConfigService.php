@@ -9,12 +9,22 @@ class ConfigService
 {
     public function isAdminSettingsEnabled()
     {
-        return config('app.admin_settings.enabled') ?? false;
+        return config('app.admin_settings.enabled', false);
     }
 
     public function loadConfigs()
     {
+        if (! $this->isAdminSettingsEnabled()) {
+            return;
+        }
+
         $configs = cache()->many(ConfigConstants::OVERRIDABLE_CONFIGS);
+
+        if ($this->allAreNull($configs)) {  // this is to re-cache the configs if they were cleared from the cache for any reason
+            $this->exportAllConfigs();
+
+            $configs = cache()->many(ConfigConstants::OVERRIDABLE_CONFIGS);
+        }
 
         config($this->toKeyValueArray($configs));
     }
@@ -75,5 +85,16 @@ class ConfigService
         }
 
         return $result;
+    }
+
+    private function allAreNull(array $configs): bool
+    {
+        foreach ($configs as $key => $value) {
+            if (! is_null($value)) {
+                return false;
+            }
+        }
+
+        return true;
     }
 }
