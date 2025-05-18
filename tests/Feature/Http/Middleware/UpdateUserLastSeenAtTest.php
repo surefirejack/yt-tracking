@@ -1,6 +1,6 @@
 <?php
 
-namespace Feature\Http\Middleware;
+namespace Tests\Feature\Http\Middleware;
 
 use App\Events\User\UserSeen;
 use App\Models\User;

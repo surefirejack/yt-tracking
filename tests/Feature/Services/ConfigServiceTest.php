@@ -3,6 +3,7 @@
 namespace Tests\Feature\Services;
 
 use App\Constants\ConfigConstants;
+use App\Models\Config as ConfigModel;
 use App\Services\ConfigService;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Config;
@@ -17,6 +18,11 @@ class ConfigServiceTest extends FeatureTest
             'app.support_email' => 'test@test.com',
         ]);
 
+        Config::shouldReceive('get')
+            ->once()
+            ->with('app.admin_settings.enabled', false)
+            ->andReturn(true);
+
         Config::shouldReceive('set')->once()->with([
             'app.name' => 'SaaSyKit',
             'app.support_email' => 'test@test.com',
@@ -24,6 +30,19 @@ class ConfigServiceTest extends FeatureTest
 
         $configService = new ConfigService;
 
+        $configService->loadConfigs();
+    }
+
+    public function test_load_configs_only_if_enabled()
+    {
+        Config::shouldReceive('get')
+            ->once()
+            ->with('app.admin_settings.enabled', false)
+            ->andReturn(false);
+
+        Cache::expects('many')->never();
+
+        $configService = new ConfigService;
         $configService->loadConfigs();
     }
 
@@ -44,7 +63,7 @@ class ConfigServiceTest extends FeatureTest
 
         $configService->set('app.name', 'SaaSyKit');
 
-        $configInDb = \App\Models\Config::where('key', 'app.name')->first();
+        $configInDb = ConfigModel::where('key', 'app.name')->first();
 
         $this->assertEquals('SaaSyKit', $configInDb->value);
     }
@@ -57,7 +76,7 @@ class ConfigServiceTest extends FeatureTest
 
         $configService->set('services.ses.secret', 'secret');
 
-        $configInDb = \App\Models\Config::where('key', 'services.ses.secret')->first();
+        $configInDb = ConfigModel::where('key', 'services.ses.secret')->first();
 
         $this->assertEquals('secret', decrypt($configInDb->value));
     }
@@ -66,9 +85,9 @@ class ConfigServiceTest extends FeatureTest
     {
         $configService = new ConfigService;
 
-        $configService->set('app.default_currency', 'EUR');
+        $configService->set('mail.from.name', 'Alice');
 
-        $this->assertEquals('EUR', $configService->get('app.default_currency'));
+        $this->assertEquals('Alice', $configService->get('mail.from.name'));
     }
 
     public function test_get_encrypted_config()
