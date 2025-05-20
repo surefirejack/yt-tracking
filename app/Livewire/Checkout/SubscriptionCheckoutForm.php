@@ -152,7 +152,7 @@ class SubscriptionCheckoutForm extends CheckoutForm
 
         $plan = $this->planService->getActivePlanBySlug($planSlug);
 
-        $this->paymentProviders = $paymentService->getActivePaymentProvidersForPlan($plan, $shouldSupportSkippingTrial);
+        $this->paymentProviders = $paymentService->getActivePaymentProvidersForPlan($plan, $shouldSupportSkippingTrial, true);
 
         if (empty($this->paymentProviders)) {
             logger()->error('No payment providers available for plan', [
