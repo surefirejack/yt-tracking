@@ -14,11 +14,11 @@ class PaymentService
         $this->paymentProviders = $paymentProviders;
     }
 
-    public function getActivePaymentProviders(): array
+    public function getActivePaymentProviders(bool $isNewPayment = false): array
     {
         $paymentProviderInterfaceMap = $this->getPaymentProviderInterfaceMap();
 
-        $activePaymentProviders = $this->getActivePaymentProvidersFromDatabase();
+        $activePaymentProviders = $this->getActivePaymentProvidersFromDatabase($isNewPayment);
 
         $paymentProviders = [];
 
@@ -31,11 +31,14 @@ class PaymentService
         return $paymentProviders;
     }
 
-    public function getActivePaymentProvidersForPlan(Plan $plan, bool $shouldSupportSkippingTrial = false): array
-    {
+    public function getActivePaymentProvidersForPlan(
+        Plan $plan,
+        bool $shouldSupportSkippingTrial = false,
+        bool $isNewPayment = false
+    ): array {
         $paymentProviderInterfaceMap = $this->getPaymentProviderInterfaceMap();
 
-        $activePaymentProviders = $this->getActivePaymentProvidersFromDatabase();
+        $activePaymentProviders = $this->getActivePaymentProvidersFromDatabase($isNewPayment);
 
         $paymentProviders = [];
         foreach ($activePaymentProviders as $paymentProvider) {
@@ -78,8 +81,14 @@ class PaymentService
         return $paymentProviderInterfaceMap;
     }
 
-    private function getActivePaymentProvidersFromDatabase()
+    private function getActivePaymentProvidersFromDatabase(bool $isNewPayment = false)
     {
-        return PaymentProvider::where('is_active', true)->orderBy('sort', 'asc')->get();
+        $query = PaymentProvider::query()->where('is_active', true);
+
+        if ($isNewPayment) {
+            $query->where('is_enabled_for_new_payments', true);
+        }
+
+        return $query->orderBy('sort', 'asc')->get();
     }
 }
