@@ -154,7 +154,7 @@ class ConvertLocalSubscriptionCheckoutForm extends CheckoutForm
 
         $plan = $this->planService->getActivePlanBySlug($planSlug);
 
-        $this->paymentProviders = $paymentService->getActivePaymentProvidersForPlan($plan, true);
+        $this->paymentProviders = $paymentService->getActivePaymentProvidersForPlan($plan, true, true);
 
         if (empty($this->paymentProviders)) {
             logger()->error('No payment providers available for plan', [

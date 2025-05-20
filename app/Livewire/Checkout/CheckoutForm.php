@@ -152,7 +152,7 @@ class CheckoutForm extends Component
             return $this->paymentProviders;
         }
 
-        $this->paymentProviders = $paymentService->getActivePaymentProviders();
+        $this->paymentProviders = $paymentService->getActivePaymentProviders(true);
 
         if (empty($this->paymentProviders)) {
             logger()->error('No payment providers available');
