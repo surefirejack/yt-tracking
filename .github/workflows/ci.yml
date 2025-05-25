@@ -1,0 +1,105 @@
+name: Laravel CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  laravel-tests:
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: testing
+        options: >-
+          --health-cmd="mysqladmin ping --silent"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=3
+
+    env:
+      DB_CONNECTION: mysql
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_DATABASE: testing
+      DB_USERNAME: root
+      DB_PASSWORD: root
+      APP_ENV: testing
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: mbstring, bcmath, mysql
+
+      - name: Install Composer dependencies
+        run: composer install --prefer-dist --no-progress
+
+      - name: Copy .env
+        run: cp .env.example .env
+
+      - name: Generate app key
+        run: php artisan key:generate
+
+      # 1. Syntax check
+      - name: PHP Syntax Check
+        run: find . -type f -name "*.php" -exec php -l {} \;
+
+      # 2. Code style formatting
+      - name: Check code style (Pint)
+        run: ./vendor/bin/pint --test
+
+      # 3. Static analysis
+      - name: Static analysis (Larastan)
+        run: ./vendor/bin/phpstan analyse --level=max
+
+      # 4. Migrate and seed database
+      - name: Wait for MySQL to be ready
+        run: |
+          echo "Waiting for MySQL connection..."
+          for i in {1..30}; do
+            mysqladmin ping \
+              -h"mysql" \
+              -u"$DB_USERNAME" \
+              -p"$DB_PASSWORD" \
+              --silent && break
+            sleep 2
+          done
+          [ $i -eq 30 ] && echo "MySQL connection failed" && exit 1
+          echo "MySQL is ready!"
+
+      # 5. Migrate and seed database
+      - name: Run migrations and seeds
+        run: |
+          php artisan migrate --force
+          php artisan db:seed --force
+
+      # 6. Run tests
+      - name: Run tests
+        run: php artisan test --parallel
+
+      # 7. Security audit
+      - name: Run security audit
+        run: composer audit
+
+      # 8. (Optional) Deploy on push to main
+      #      - name: Deploy to production
+      #        if: github.ref == 'refs/heads/main' && success()
+      #        run: ssh user@your-server "cd /var/www/your-app && git pull origin main && php artisan migrate --force"
+
+      # 9. (Optional) Slack notification on failure
+#      - name: Notify Slack on Failure
+#        if: failure()
+#        uses: rtCamp/action-slack-notify@v2
+#        env:
+#          SLACK_COLOR: '#FF0000'
+#          SLACK_MESSAGE: '🚨 Laravel CI pipeline failed on ${{ github.ref }} by ${{ github.actor }}'
+#          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
