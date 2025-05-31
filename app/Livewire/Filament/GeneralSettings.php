@@ -2,10 +2,10 @@
 
 namespace App\Livewire\Filament;
 
-use App\Models\Currency;
 use App\Models\EmailProvider;
 use App\Models\VerificationProvider;
 use App\Services\ConfigService;
+use App\Services\CurrencyService;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Tabs;
@@ -135,9 +135,9 @@ class GeneralSettings extends Component implements HasForms
                         ->schema([
                             Select::make('default_currency')
                                 ->label(__('Default Currency'))
-                                ->options(function () {
+                                ->options(function (CurrencyService $currencyService) {
                                     $currencies = [];
-                                    foreach (Currency::all() as $currency) {
+                                    foreach ($currencyService->getAllCurrencies() as $currency) {
                                         $currencies[$currency->code] = $currency->name.' ('.$currency->code.')';
                                     }
 

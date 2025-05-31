@@ -2,6 +2,7 @@
 
 namespace App\Filament\Admin\Widgets;
 
+use App\Services\CurrencyService;
 use App\Services\MetricsService;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
@@ -15,6 +16,10 @@ class MetricsOverview extends BaseWidget
 
     protected function getStats(): array
     {
+        /** @var CurrencyService $currencyService */
+        $currencyService = resolve(CurrencyService::class);
+        $currency = $currencyService->getMetricsCurrency();
+
         /** @var MetricsService $metricsService */
         $metricsService = resolve(MetricsService::class);
 
@@ -28,7 +33,7 @@ class MetricsOverview extends BaseWidget
             $mrrDescription = $previewMrr == $currentMrr ? '' : ($previewMrr > $currentMrr ? __('decrease') : __('increase'));
 
             if (strlen($mrrDescription) > 0) {
-                $mrrDescription = money(abs($currentMrr - $previewMrr), config('app.default_currency')).' '.$mrrDescription;
+                $mrrDescription = money(abs($currentMrr - $previewMrr), $currency->code).' '.$mrrDescription;
                 $mrrIcon = $previewMrr > $currentMrr ? 'heroicon-m-arrow-down' : 'heroicon-m-arrow-up';
                 $color = $previewMrr > $currentMrr ? 'danger' : 'success';
             }
@@ -37,7 +42,7 @@ class MetricsOverview extends BaseWidget
         return [
             Stat::make(
                 __('MRR'),
-                money($currentMrr, config('app.default_currency'))
+                money($currentMrr, $currency->code)
             )->description($mrrDescription)
                 ->descriptionIcon($mrrIcon)
                 ->color($color)

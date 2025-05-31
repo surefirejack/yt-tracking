@@ -7,6 +7,7 @@ use App\Constants\PlanPriceType;
 use App\Constants\PlanType;
 use App\Mapper\PlanPriceMapper;
 use App\Models\Currency;
+use App\Services\CurrencyService;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\RelationManagers\RelationManager;
@@ -21,9 +22,16 @@ class PricesRelationManager extends RelationManager
 
     protected static ?string $recordTitleAttribute = 'id';
 
+    private CurrencyService $currencyService;
+
+    public function boot(CurrencyService $currencyService)
+    {
+        $this->currencyService = $currencyService;
+    }
+
     public function form(Form $form): Form
     {
-        $defaultCurrency = Currency::where('code', config('app.default_currency'))->first()->id;
+        $defaultCurrency = $this->currencyService->getCurrency()->id;
 
         return $form
             ->schema([
@@ -43,7 +51,7 @@ class PricesRelationManager extends RelationManager
                         ->label('Currency')
                         ->live()
                         ->options(
-                            \App\Models\Currency::all()->sortBy('name')
+                            $this->currencyService->getAllCurrencies()
                                 ->mapWithKeys(function ($currency) {
                                     return [$currency->id => $currency->name.' ('.$currency->symbol.')'];
                                 })
@@ -162,6 +170,7 @@ class PricesRelationManager extends RelationManager
                             ->integer()
                             ->label(__('Unit Quantity'))
                             ->helperText(__('Enter an example unit quantity to see how the price is calculated.'))
+                            ->dehydrated(false)
                             ->live(),
                         Forms\Components\Placeholder::make('price_preview')
                             ->label(__('Price Preview Calculation'))
