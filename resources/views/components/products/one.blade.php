@@ -1,4 +1,11 @@
 @if ($product)
+
+    @inject('productService', 'App\Services\OneTimeProductService')
+
+    @php
+        $price = $productService->getProductPrice($product);
+    @endphp
+
     <div {{ $attributes->merge(['class' => 'max-w-none md:max-w-lg border border-primary-500 rounded-2xl p-8 mt-6 mx-4 md:mx-auto']) }}>
 
         <x-heading.h4 class="text-center">
@@ -21,7 +28,7 @@
 
         <div class="text-center mx-auto">
             <p class="mt-6">
-                <span class="ms-1 text-primary-500 text-2xl font-bold">@money($product->prices[0]->price, $product->prices[0]->currency->code)</span>
+                <span class="ms-1 text-primary-500 text-2xl font-bold">@money($price->price, $price->currency->code)</span>
             </p>
 
             <x-button-link.primary href="{{route('buy.product', ['productSlug' => $product->slug])}}" class="mt-6 text-lg !py-4 px-6">

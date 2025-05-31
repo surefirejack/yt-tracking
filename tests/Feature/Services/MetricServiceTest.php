@@ -56,7 +56,7 @@ class MetricServiceTest extends FeatureTest
             'payment_provider_transaction_id' => '234',
         ]);
 
-        $metricService = new MetricsService;
+        $metricService = resolve(MetricsService::class);
         $result = $metricService->calculateDailyRevenue(now());
 
         $this->assertEquals($result, 10.00);
@@ -104,7 +104,7 @@ class MetricServiceTest extends FeatureTest
         $transaction->created_at = $weekAgo;
         $transaction->save();
 
-        $metricService = new MetricsService;
+        $metricService = resolve(MetricsService::class);
         $result = $metricService->calculateAverageRevenuePerUser($weekAgo);
 
         $this->assertEquals($result, 10.00);
@@ -131,7 +131,7 @@ class MetricServiceTest extends FeatureTest
             'interval_id' => Interval::where('slug', 'month')->firstOrFail()->id,
         ])->save();
 
-        $metricService = new MetricsService;
+        $metricService = resolve(MetricsService::class);
         $result = $metricService->calculateMRR(now());
 
         $this->assertEquals($result, 50.00);

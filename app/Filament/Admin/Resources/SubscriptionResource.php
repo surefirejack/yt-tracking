@@ -12,6 +12,7 @@ use App\Filament\Admin\Resources\UserResource\Pages\EditUser;
 use App\Mapper\SubscriptionStatusMapper;
 use App\Models\Subscription;
 use App\Models\User;
+use App\Services\CurrencyService;
 use App\Services\PlanService;
 use App\Services\SubscriptionService;
 use Carbon\Carbon;
@@ -42,6 +43,9 @@ class SubscriptionResource extends Resource
 
     public static function form(Form $form): Form
     {
+        /** @var CurrencyService $currencyService */
+        $currencyService = resolve(CurrencyService::class);
+
         return $form
             ->schema([
                 Forms\Components\Tabs::make('Subscription')
@@ -62,7 +66,7 @@ class SubscriptionResource extends Resource
                                         ->required(),
                                     Forms\Components\Select::make('currency_id')
                                         ->options(
-                                            \App\Models\Currency::all()->sortBy('name')
+                                            $currencyService->getAllCurrencies()
                                                 ->mapWithKeys(function ($currency) {
                                                     return [$currency->id => $currency->name.' ('.$currency->symbol.')'];
                                                 })
