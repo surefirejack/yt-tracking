@@ -1,5 +1,11 @@
+@inject('productService', 'App\Services\OneTimeProductService')
+
 <div {{ $attributes->merge(['class' => 'grid grid-cols-1 md:grid-cols-3 gap-6 md:max-w-6xl mx-4 p-8 mt-6 md:mx-auto']) }}>
     @foreach($products as $product)
+        @php
+            $price = $productService->getProductPrice($product);
+        @endphp
+
         <div class="border border-primary-500 rounded-2xl p-8">
 
             <x-heading.h4 class="text-center">
@@ -22,7 +28,7 @@
 
             <div class="text-center mx-auto">
                 <p class="mt-6">
-                    <span class="ms-1 text-primary-500 text-2xl font-bold">@money($product->prices[0]->price, $product->prices[0]->currency->code)</span>
+                    <span class="ms-1 text-primary-500 text-2xl font-bold">@money($price->price, $price->currency->code)</span>
                 </p>
 
                 <x-button-link.primary href="{{route('buy.product', ['productSlug' => $product->slug])}}" class="mt-6 text-lg !py-4 px-6">

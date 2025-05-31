@@ -2,7 +2,7 @@
 
 namespace App\Filament\Admin\Resources\OneTimeProductResource\RelationManagers;
 
-use App\Models\Currency;
+use App\Services\CurrencyService;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\RelationManagers\RelationManager;
@@ -14,9 +14,16 @@ class PricesRelationManager extends RelationManager
 {
     protected static string $relationship = 'prices';
 
+    private CurrencyService $currencyService;
+
+    public function boot(CurrencyService $currencyService)
+    {
+        $this->currencyService = $currencyService;
+    }
+
     public function form(Form $form): Form
     {
-        $defaultCurrency = Currency::where('code', config('app.default_currency'))->first()->id;
+        $defaultCurrency = $this->currencyService->getCurrency()->id;
 
         return $form
             ->schema([
@@ -29,7 +36,7 @@ class PricesRelationManager extends RelationManager
                     Forms\Components\Select::make('currency_id')
                         ->label('Currency')
                         ->options(
-                            \App\Models\Currency::all()->sortBy('name')
+                            $this->currencyService->getAllCurrencies()
                                 ->mapWithKeys(function ($currency) {
                                     return [$currency->id => $currency->name.' ('.$currency->symbol.')'];
                                 })

@@ -2,7 +2,7 @@
 
 namespace App\Filament\Admin\Widgets;
 
-use App\Models\Currency;
+use App\Services\CurrencyService;
 use App\Services\MetricsService;
 use Filament\Support\RawJs;
 use Filament\Widgets\ChartWidget;
@@ -60,8 +60,9 @@ class MonthlyRecurringRevenueChart extends ChartWidget
 
     protected function getOptions(): RawJs
     {
-        $currentCurrency = config('app.default_currency');
-        $currency = Currency::where('code', $currentCurrency)->first();
+        /** @var CurrencyService $currencyService */
+        $currencyService = resolve(CurrencyService::class);
+        $currency = $currencyService->getMetricsCurrency();
         $symbol = $currency->symbol;
 
         return RawJs::make(<<<JS

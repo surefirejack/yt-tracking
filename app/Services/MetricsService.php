@@ -5,7 +5,6 @@ namespace App\Services;
 use App\Constants\MetricConstants;
 use App\Constants\SubscriptionStatus;
 use App\Constants\TransactionStatus;
-use App\Models\Currency;
 use App\Models\Interval;
 use App\Models\MetricData;
 use App\Models\Metrics;
@@ -17,6 +16,10 @@ use Illuminate\Support\Facades\DB;
 
 class MetricsService
 {
+    public function __construct(
+        private CurrencyService $currencyService,
+    ) {}
+
     public function beat()
     {
         $this->storeMetricData(MetricConstants::TOTAL_USER_COUNT, $this->getTotalUsers());
@@ -128,7 +131,7 @@ class MetricsService
     {
         $date = $date ?? Carbon::yesterday()->endOfDay();
 
-        $currency = Currency::where('code', config('app.default_currency'))->firstOrFail();
+        $currency = $this->currencyService->getMetricsCurrency();
 
         $yesterdaysTotalRevenue = Transaction::where('status', TransactionStatus::SUCCESS->value)
             ->whereDate('created_at', $date)
@@ -173,7 +176,7 @@ class MetricsService
 
         $userCount = $this->getTotalUsers($date);
 
-        $currency = Currency::where('code', config('app.default_currency'))->firstOrFail();
+        $currency = $this->currencyService->getMetricsCurrency();
 
         $totalTransactionAmounts = Transaction::where('status', TransactionStatus::SUCCESS->value)
             ->where('created_at', '<=', $date)
@@ -351,7 +354,7 @@ class MetricsService
             })
             ->get();
 
-        $currency = Currency::where('code', config('app.default_currency'))->firstOrFail();
+        $currency = $this->currencyService->getMetricsCurrency();
 
         if ($results->first() === null) {
             return 0;
@@ -377,7 +380,9 @@ class MetricsService
 
     public function getTotalRevenue()
     {
-        return money(Transaction::where('status', TransactionStatus::SUCCESS->value)->sum('amount'), config('app.default_currency'));
+        $currency = $this->currencyService->getMetricsCurrency();
+
+        return money(Transaction::where('status', TransactionStatus::SUCCESS->value)->sum('amount'), $currency->code);
     }
 
     public function getActiveSubscriptions(?Carbon $date = null)
