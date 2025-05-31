@@ -1,5 +1,11 @@
 @props(['plan'])
 
+@inject('planService', 'App\Services\PlanService')
+
+@php
+    $price = $planService->getPlanPrice($plan);
+@endphp
+
 <div {{$attributes->merge(['class' => 'relative px-5 py-10 flex flex-col gap-4 mx-auto text-center border-2 border-primary-500 rounded-2xl shadow-xl hover:shadow-2xl hover:-translate-y-2 transition'])}}>
     @if ($plan->product->is_popular)
     <div class="absolute border-0 top-0 -mt-3 left-1/2 transform -translate-x-1/2 bg-primary-500 text-primary-50 mx-auto rounded z-0 text-xs px-2 py-1">
@@ -12,24 +18,24 @@
     </x-heading.h3>
 
     <div class="flex flex-col gap-1">
-        @if($plan->prices[0]->price > 0)
+        @if($price !== null)
             <div class="text-4xl">
-                @money($plan->prices[0]->price, $plan->prices[0]->currency->code)
+                @money($price->price, $price->currency->code)
             </div>
             <div class="text-neutral-400 text-sm">
                 / {{$plan->interval_count > 1 ? $plan->interval_count : '' }} {{ __($plan->interval->name) }}
             </div>
         @endif
 
-        @if($plan->prices[0]->type === \App\Constants\PlanPriceType::USAGE_BASED_PER_UNIT->value)
+        @if($price->type === \App\Constants\PlanPriceType::USAGE_BASED_PER_UNIT->value)
             <div class="text-sm mt-2">
-                + @money($plan->prices[0]->price_per_unit, $plan->prices[0]->currency->code) / {{ __($plan->meter->name) }}
+                + @money($price->price_per_unit, $price->currency->code) / {{ __($plan->meter->name) }}
             </div>
-        @elseif($plan->prices[0]->type === \App\Constants\PlanPriceType::USAGE_BASED_TIERED_GRADUATED->value
-                || $plan->prices[0]->type === \App\Constants\PlanPriceType::USAGE_BASED_TIERED_VOLUME->value)
+        @elseif($price->type === \App\Constants\PlanPriceType::USAGE_BASED_TIERED_GRADUATED->value
+                || $price->type === \App\Constants\PlanPriceType::USAGE_BASED_TIERED_VOLUME->value)
             <div class="mt-2">
                 @php $start = 0; $startingPhrase = __('From'); @endphp
-                @foreach($plan->prices[0]->tiers as $tier)
+                @foreach($price->tiers as $tier)
                     <div class="flex justify-center items-center gap-4 mt-3">
                         <span class="font-medium text-xs ">{{$startingPhrase}}</span>
                         <span class="flex flex-col">
@@ -38,15 +44,15 @@
                         </span>
                         →
                         <span class="flex flex-col">
-                            <span class=" text-sm">@money($tier[\App\Constants\PlanPriceTierConstants::PER_UNIT], $plan->prices[0]->currency->code) / {{ __($plan->meter->name) }}</span>
+                            <span class=" text-sm">@money($tier[\App\Constants\PlanPriceTierConstants::PER_UNIT], $price->currency->code) / {{ __($plan->meter->name) }}</span>
                             @if ($tier[\App\Constants\PlanPriceTierConstants::FLAT_FEE] > 0)
-                            <span class="text-neutral-400 text-xs">+ @money($tier['flat_fee'], $plan->prices[0]->currency->code)</span>
+                            <span class="text-neutral-400 text-xs">+ @money($tier['flat_fee'], $price->currency->code)</span>
                             @endif
                         </span>
                     </div>
                     @php $start = intval($tier[\App\Constants\PlanPriceTierConstants::UNTIL_UNIT]) + 1; @endphp
 
-                    @if($plan->prices[0]->type === \App\Constants\PlanPriceType::USAGE_BASED_TIERED_GRADUATED->value)
+                    @if($price->type === \App\Constants\PlanPriceType::USAGE_BASED_TIERED_GRADUATED->value)
                         @php $startingPhrase = __('Next'); @endphp
                     @endif
                 @endforeach

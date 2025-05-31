@@ -2,7 +2,6 @@
 
 namespace App\Services;
 
-use App\Models\Currency;
 use App\Models\OneTimeProduct;
 use App\Models\OneTimeProductPaymentProviderData;
 use App\Models\OneTimeProductPrice;
@@ -12,6 +11,10 @@ use Illuminate\Support\Collection;
 
 class OneTimeProductService
 {
+    public function __construct(
+        private CurrencyService $currencyService,
+    ) {}
+
     public function getOneTimeProductById(?int $id): OneTimeProduct
     {
         return OneTimeProduct::findOrFail($id);
@@ -30,23 +33,30 @@ class OneTimeProductService
         return null;
     }
 
+    public function getProductPrice(OneTimeProduct $product): ?OneTimeProductPrice
+    {
+        $currency = $this->currencyService->getCurrency();
+
+        foreach ($product->prices as $price) {
+            if ($price->currency_id === $currency->id) {
+                return $price;
+            }
+        }
+
+        return null;
+    }
+
     public function getProductWithPriceBySlug(string $slug): ?OneTimeProduct
     {
-        $defaultCurrency = config('app.default_currency');
-
-        $defaultCurrencyObject = Currency::where('code', $defaultCurrency)->first();
-
-        if (! $defaultCurrencyObject) {
-            return null;
-        }
+        $currencyObject = $this->currencyService->getCurrency();
 
         return OneTimeProduct::where('slug', $slug)
             ->where('is_active', true)
-            ->whereHas('prices', function ($query) use ($defaultCurrencyObject) {
-                $query->where('currency_id', $defaultCurrencyObject->id);
+            ->whereHas('prices', function ($query) use ($currencyObject) {
+                $query->where('currency_id', $currencyObject->id);
             })
-            ->with(['prices' => function ($query) use ($defaultCurrencyObject) {
-                $query->where('currency_id', $defaultCurrencyObject->id);
+            ->with(['prices' => function ($query) use ($currencyObject) {
+                $query->where('currency_id', $currencyObject->id);
             }])
             ->first();
     }
@@ -56,13 +66,7 @@ class OneTimeProductService
         $sortBy = in_array($sortBy, ['id', 'price', 'name', 'created_at', 'updated_at']) ? $sortBy : 'id';
         $sortDirection = in_array($sortDirection, ['asc', 'desc']) ? $sortDirection : 'asc';
 
-        $defaultCurrency = config('app.default_currency');
-
-        $defaultCurrencyObject = Currency::where('code', $defaultCurrency)->first();
-
-        if (! $defaultCurrencyObject) {
-            return collect();
-        }
+        $defaultCurrencyObject = $this->currencyService->getCurrency();
 
         $query = OneTimeProduct::where('is_active', true)
             ->whereHas('prices', function ($query) use ($defaultCurrencyObject) {

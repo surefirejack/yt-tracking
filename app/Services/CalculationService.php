@@ -19,6 +19,7 @@ class CalculationService
         private PlanService $planService,
         private DiscountService $discountService,
         private OneTimeProductService $oneTimeProductService,
+        private CurrencyService $currencyService,
     ) {}
 
     /**
@@ -26,20 +27,18 @@ class CalculationService
      */
     public function getPlanPrice(Plan $plan): PlanPrice
     {
-        $defaultCurrencyConfig = config('app.default_currency');
-        $defaultCurrency = Currency::where('code', $defaultCurrencyConfig)->firstOrFail();
+        $currency = $this->currencyService->getCurrency();
 
-        $planPrice = $plan->prices()->where('currency_id', $defaultCurrency->id)->firstOrFail();
+        $planPrice = $plan->prices()->where('currency_id', $currency->id)->firstOrFail();
 
         return $planPrice;
     }
 
     public function getOneTimeProductPrice(OneTimeProduct $oneTimeProduct): OneTimeProductPrice
     {
-        $defaultCurrencyConfig = config('app.default_currency');
-        $defaultCurrency = Currency::where('code', $defaultCurrencyConfig)->firstOrFail();
+        $currency = $this->currencyService->getCurrency();
 
-        return $oneTimeProduct->prices()->where('currency_id', $defaultCurrency->id)->firstOrFail();
+        return $oneTimeProduct->prices()->where('currency_id', $currency->id)->firstOrFail();
     }
 
     public function calculatePlanTotals(?User $user, string $planSlug, ?string $discountCode = null, string $actionType = DiscountConstants::ACTION_TYPE_ANY): TotalsDto
@@ -104,7 +103,7 @@ class CalculationService
     public function calculateCartTotals(CartDto $cart, ?User $user): TotalsDto
     {
         $totalsDto = new TotalsDto;
-        $totalsDto->currencyCode = config('app.default_currency');
+        $totalsDto->currencyCode = $this->currencyService->getCurrency()->code;
         $currency = Currency::where('code', $totalsDto->currencyCode)->firstOrFail();
 
         $totalAmount = 0;
@@ -136,7 +135,7 @@ class CalculationService
 
     public function calculateOrderTotals(Order $order, User $user, ?string $discountCode = null)
     {
-        $currency = Currency::where('code', config('app.default_currency'))->firstOrFail();
+        $currency = $this->currencyService->getCurrency();
 
         $totalAmount = 0;
         $totalAmountAfterDiscount = 0;

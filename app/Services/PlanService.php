@@ -4,7 +4,6 @@ namespace App\Services;
 
 use App\Constants\PaymentProviderPlanPriceType;
 use App\Constants\PlanType;
-use App\Models\Currency;
 use App\Models\PaymentProvider;
 use App\Models\Plan;
 use App\Models\PlanMeter;
@@ -17,6 +16,8 @@ use Illuminate\Support\Collection;
 
 class PlanService
 {
+    public function __construct(private CurrencyService $currencyService) {}
+
     public function getPaymentProviderProductId(Plan $plan, PaymentProvider $paymentProvider): ?string
     {
         $result = PlanPaymentProviderData::where('plan_id', $plan->id)
@@ -140,16 +141,10 @@ class PlanService
 
     public function getAllPlansWithPrices(array $productSlugs = [], ?string $planType = null)
     {
-        $defaultCurrency = config('app.default_currency');
-
-        $defaultCurrencyObject = Currency::where('code', $defaultCurrency)->first();
-
-        if (! $defaultCurrencyObject) {
-            return new Collection;
-        }
+        $currencyObject = $this->currencyService->getCurrency();
 
         if (count($productSlugs) > 0) {
-            // only the plans that have default currency prices
+            // only the plans that have current currency prices
             $result = Plan::where('is_active', true)
                 ->with(['product' => function ($query) use ($productSlugs) {
                     $query->whereIn('slug', $productSlugs);
@@ -157,11 +152,11 @@ class PlanService
                 ->whereHas('product', function ($query) use ($productSlugs) {
                     $query->whereIn('slug', $productSlugs);
                 })
-                ->whereHas('prices', function ($query) use ($defaultCurrencyObject) {
-                    $query->where('currency_id', $defaultCurrencyObject->id);
+                ->whereHas('prices', function ($query) use ($currencyObject) {
+                    $query->where('currency_id', $currencyObject->id);
                 })
-                ->with(['prices' => function ($query) use ($defaultCurrencyObject) {
-                    $query->where('currency_id', $defaultCurrencyObject->id);
+                ->with(['prices' => function ($query) use ($currencyObject) {
+                    $query->where('currency_id', $currencyObject->id);
                 }]);
 
             if ($planType) {
@@ -178,13 +173,13 @@ class PlanService
             return $result->get();
         }
 
-        // only the plans that have default currency prices
+        // only the plans that have current currency prices
         $result = Plan::where('is_active', true)
-            ->whereHas('prices', function ($query) use ($defaultCurrencyObject) {
-                $query->where('currency_id', $defaultCurrencyObject->id);
+            ->whereHas('prices', function ($query) use ($currencyObject) {
+                $query->where('currency_id', $currencyObject->id);
             })
-            ->with(['prices' => function ($query) use ($defaultCurrencyObject) {
-                $query->where('currency_id', $defaultCurrencyObject->id);
+            ->with(['prices' => function ($query) use ($currencyObject) {
+                $query->where('currency_id', $currencyObject->id);
             }]);
 
         if ($planType) {
@@ -199,6 +194,19 @@ class PlanService
         ]);
 
         return $result->get();
+    }
+
+    public function getPlanPrice(Plan $plan): ?PlanPrice
+    {
+        $currency = $this->currencyService->getCurrency();
+
+        foreach ($plan->prices as $price) {
+            if ($price->currency_id === $currency->id) {
+                return $price;
+            }
+        }
+
+        return null;
     }
 
     public function isPlanChangeable(Plan $plan)
