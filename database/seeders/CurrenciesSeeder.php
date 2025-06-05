@@ -59,6 +59,7 @@ class CurrenciesSeeder extends Seeder
             ['code' => 'HUF', 'name' => 'Forint', 'symbol' => 'Ft'],
             ['code' => 'IDR', 'name' => 'Rupiah', 'symbol' => 'Rp'],
             ['code' => 'ILS', 'name' => 'New Israeli Sheqel', 'symbol' => '₪'],
+            ['code' => 'INR', 'name' => 'Indian Rupee', 'symbol' => '₹'],
             ['code' => 'IRR', 'name' => 'Iranian Rial', 'symbol' => '﷼'],
             ['code' => 'ISK', 'name' => 'Iceland Krona', 'symbol' => 'kr'],
             ['code' => 'JMD', 'name' => 'Jamaican Dollar', 'symbol' => 'J$'],
