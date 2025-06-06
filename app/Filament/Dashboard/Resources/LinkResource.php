@@ -52,6 +52,13 @@ class LinkResource extends Resource
                                         // Left column (1/2 width)
                                         Grid::make(1)
                                             ->schema([
+                                                TextInput::make('short_link')
+                                                    ->label('Short Link')
+                                                    ->disabled()
+                                                    ->dehydrated(false)
+                                                    ->placeholder('Will be generated')
+                                                    ->visible(fn ($record) => $record !== null),
+
                                                 TextInput::make('original_url')
                                                     ->label('Destination URL')
                                                     ->url()
@@ -70,13 +77,6 @@ class LinkResource extends Resource
                                         // Right column (1/2 width)
                                         Grid::make(1)
                                             ->schema([
-                                                TextInput::make('short_link')
-                                                    ->label('Short Link')
-                                                    ->disabled()
-                                                    ->dehydrated(false)
-                                                    ->placeholder('Will be generated')
-                                                    ->visible(fn ($record) => $record !== null),
-                                                
                                                 TextInput::make('title')
                                                     ->label('Title')
                                                     ->maxLength(255)
