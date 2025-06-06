@@ -1,0 +1,20 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+
+Use Laravel 11+ skeleton structure.
+
+**Service Providers**: there are no other service providers except AppServiceProvider. Don't create new service providers unless absolutely necessary. Use Laravel 11+ new features, instead. Or, if you really need to create a new service provider, register it in `bootstrap/providers.php` and not `config/app.php` like it used to be before Laravel 11.
+**Event Listeners**: since Laravel 11, Listeners auto-listen for the events if they are type-hinted correctly.
+**Console Scheduler**: scheduled commands should be in `routes/console.php` and not `app/Console/Kernel.php` which doesn't exist since Laravel 11.
+**Middleware**: should be registered in `bootstrap/app.php` and not `app/Http/Kernel.php` which doesn't exist since Laravel 11.
+**Tailwind**: in new Blade pages, use Tailwind and not Bootstrap. Tailwind is already pre-configured since Laravel 11, with Vite.
+
+**Important: Location of the laravel app** The laravel app is in a directory called "saasykit-tenancy". All files for laravel and Filament are found there.
+
+**Migrations**: When creating migrations, use terminal commands so the datestamp on the migrations is accurate.
+
+
+If the code you're working on is written with Laravel Filament then please use the MCP servers like context7 or bravesearch to reference the relavant docs.

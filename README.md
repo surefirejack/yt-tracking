@@ -1,32 +1,68 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://saasykit.com/images/logo-dark.png" width="400" alt="Laravel Logo"></a></p>
+# YouTube Attribution Tracker
 
-## About SaaSykit
-**SaaSykit** is a SaaS starter kit (boilerplate) that comes packed with all components required to run a modern SaaS software.
+A powerful Laravel SaaS application built with the TALL stack to help online marketers and entrepreneurs get accurate attribution data for their YouTube marketing campaigns.
 
-**SaaSykit** is built using the beautiful Laravel framework (using [TALL](https://tallstack.dev/)) and offers an intuitive Filament admin panel that houses all the pre-built components like product, plans, discounts, payment providers, email providers, transactions, blog, user & role management, and much more.
+## 🎯 What We Do
 
-**SaaSykit** is developer-friendly, uses best coding practices, comes with an ever-growing automated tests that cover the critical components that it offers.
+This platform solves a critical problem for online marketers: **tracking the true performance of their YouTube videos**. By providing unique shortlinks for each video, marketers can finally see the complete customer journey from YouTube click to final conversion.
 
-## Features in a nutshell
+## 👥 Target Audience
 
-* Customize Styles: Customize the styles & colors, error page of your application to fit your brand.
-* Product, Plans & Pricing: Create and manage your products, plans, and pricing from a beautiful and easy-to-use admin panel.
-* Beautiful checkout process: Your customers can subscribe to your plans from a beautiful checkout process.
-* Huge list of ready-to-use components: Plans & Pricing, hero section, features section, testimonials, FAQ, Call to action, tab slider, and much more.
-* User authentication: Comes with user authentication out of the box, whether classic email/password or social login (Google, Facebook, Twitter, Github, LinkedIn, and more).
-* Discounts: Create and manage your discounts and reward your customers.
-* SaaS metric stats: View your MRR, Churn rates, ARPU, and other SaaS metrics.
-* Multiple payment providers: Stripe, Paddle, and more coming soon.
-* Multiple email providers: Mailgun, Postmark, Amazon SES, and more coming soon.
-* Blog: Create and manage your blog posts.
-* User & Role Management: Create and manage your users and roles, and assign permissions to your users.
-* Fully translatable: Translate your application to any language you want.
-* Sitemap & SEO: Sitemap and SEO optimization out of the box.
-* Admin Panel: Manage your SaaS application from a beautiful admin panel powered by [Filament](https://filamentphp.com/).
-* User Dashboard: Your customers can manage their subscriptions, change payment method, upgrade plan, cancel subscription, and more from a beautiful user dashboard powered by [Filament](https://filamentphp.com/).
-* Automated Tests: Comes with automated tests for critical components of the application.
-* One-line deployment: Provision your server and deploy your application easily with integrated [Deployer](https://deployer.org/) support.
-* Developer-friendly: Built with developers in mind, uses best coding practices.
-* And much more...
+**Online Marketers & Entrepreneurs** who:
+- Run YouTube marketing campaigns
+- Need accurate ROI data from their video content
+- Want to optimize their video marketing strategy with real data
+- Struggle with YouTube's limited attribution tracking
 
-For more details, check the [documentation](https://saasykit.com/docs).
+## 🚀 Key Features
+
+### Smart Shortlink Generation
+- Create unique, branded shortlinks for each YouTube video
+- Easy-to-remember URLs that maintain your brand identity
+- Automatic link management and organization
+
+### Comprehensive Tracking
+- **Click Tracking**: Monitor every visitor from your YouTube videos
+- **Lead Conversion Tracking**: See which videos generate the most leads
+- **Sale Conversion Tracking**: Track revenue directly back to specific videos
+- **Attribution Analysis**: Understand the complete customer journey
+
+### Performance Analytics
+- Real-time conversion data
+- Video-by-video performance breakdown
+- ROI calculations and insights
+- Conversion funnel analysis
+
+## 🛠️ Built With The TALL Stack
+
+- **[Tailwind CSS](https://tailwindcss.com/)** - Utility-first CSS framework for rapid UI development
+- **[Alpine.js](https://alpinejs.dev/)** - Lightweight JavaScript framework for interactive components  
+- **[Laravel](https://laravel.com/)** - Robust PHP framework for the backend API and business logic
+- **[Livewire](https://laravel-livewire.com/)** - Full-stack framework for dynamic interfaces without complex JavaScript
+
+## 🎬 How It Works
+
+1. **Create Your Campaign**: Set up tracking for your YouTube video
+2. **Get Your Shortlink**: Receive a unique, trackable URL
+3. **Use in Video Description**: Add the shortlink to your YouTube video
+4. **Track Performance**: Monitor clicks, leads, and sales in real-time
+5. **Optimize**: Use data insights to improve your video marketing ROI
+
+## 💼 Business Value
+
+- **Accurate Attribution**: Know exactly which videos drive your best customers
+- **ROI Optimization**: Focus your efforts on highest-performing content
+- **Data-Driven Decisions**: Make marketing choices based on real conversion data
+- **Competitive Advantage**: Outperform competitors who guess at video performance
+
+## 🎥 Perfect For
+
+- **Course Creators** tracking student sign-ups from YouTube tutorials
+- **SaaS Companies** measuring trial conversions from product demos  
+- **E-commerce Brands** attributing sales to specific product videos
+- **Coaches & Consultants** tracking booking conversions from educational content
+- **Affiliate Marketers** optimizing video campaigns for maximum commissions
+
+---
+
+*Transform your YouTube marketing from guesswork into a data-driven growth engine.*
