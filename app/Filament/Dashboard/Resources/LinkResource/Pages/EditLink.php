@@ -3,22 +3,65 @@
 namespace App\Filament\Dashboard\Resources\LinkResource\Pages;
 
 use App\Filament\Dashboard\Resources\LinkResource;
+use App\Services\TagService;
 use Filament\Actions;
 use Filament\Resources\Pages\EditRecord;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Http;
 use Filament\Notifications\Notification;
 use Illuminate\Support\Facades\Log;
+use Filament\Facades\Filament;
 
 class EditLink extends EditRecord
 {
     protected static string $resource = LinkResource::class;
+
+    protected array $tagIds = [];
 
     protected function getHeaderActions(): array
     {
         return [
             //
         ];
+    }
+
+    protected function mutateFormDataBeforeFill(array $data): array
+    {
+        // Load existing tags from the relationship
+        if ($this->record) {
+            $data['tags'] = $this->record->tagModels()->pluck('name')->toArray();
+        }
+        
+        return $data;
+    }
+
+    protected function mutateFormDataBeforeSave(array $data): array
+    {
+        // Handle tag creation and relationship management
+        if (isset($data['tags']) && is_array($data['tags'])) {
+            $tagService = new TagService();
+            $tags = $tagService->getOrCreateTags($data['tags'], Filament::getTenant()->id);
+            
+            // Store tag IDs for later relationship sync
+            $this->tagIds = collect($tags)->pluck('id')->toArray();
+        } else {
+            $this->tagIds = [];
+        }
+        
+        // Remove tags from the data as it will be handled via relationships
+        unset($data['tags']);
+        
+        return $data;
+    }
+
+    protected function afterSave(): void
+    {
+        // Sync the tag relationship
+        if (isset($this->tagIds)) {
+            $this->record->tagModels()->sync($this->tagIds);
+        } else {
+            $this->record->tagModels()->sync([]);
+        }
     }
 
     protected function handleRecordUpdate(Model $record, array $data): Model
@@ -48,7 +91,7 @@ class EditLink extends EditRecord
             $apiUrl = rtrim($baseUrl, '/') . '/' . $record->dub_id;
 
             // Build the payload from form data
-            $payload = $this->buildPayload($data);
+            $payload = $this->buildPayload($data, $record);
 
             // Make the PATCH request to Dub API
             $response = Http::withHeaders([
@@ -91,7 +134,7 @@ class EditLink extends EditRecord
         }
     }
 
-    protected function buildPayload(array $data): array
+    protected function buildPayload(array $data, Model $record = null): array
     {
         $payload = [];
 
@@ -180,9 +223,12 @@ class EditLink extends EditRecord
             }
         }
 
-        // Handle special fields
-        if (isset($data['tags']) && is_array($data['tags']) && !empty($data['tags'])) {
-            $payload['tagNames'] = $data['tags'];
+        // Handle tags - use the relationship data instead of form data
+        if ($record && $record->tagModels()->exists()) {
+            $tagNames = $record->tagModels()->pluck('name')->toArray();
+            if (!empty($tagNames)) {
+                $payload['tagNames'] = $tagNames;
+            }
         }
 
         if (isset($data['webhook_ids']) && !empty($data['webhook_ids'])) {
@@ -251,10 +297,20 @@ class EditLink extends EditRecord
             $updateData['last_clicked'] = \Carbon\Carbon::parse($responseData['lastClicked']);
         }
 
-        // Handle special fields
+        // Handle tags from Dub API response - sync with relationship and update tags column
         if (isset($responseData['tags']) && is_array($responseData['tags'])) {
             $tagNames = array_column($responseData['tags'], 'name');
-            $updateData['tags'] = $tagNames;
+            $updateData['tags'] = $tagNames; // Keep the tags column for legacy compatibility
+            
+            // Sync tag relationship
+            if (!empty($tagNames)) {
+                $tagService = new TagService();
+                $tags = $tagService->getOrCreateTags($tagNames, $record->tenant_id);
+                $tagIds = collect($tags)->pluck('id')->toArray();
+                $record->tagModels()->sync($tagIds);
+            } else {
+                $record->tagModels()->sync([]);
+            }
         }
 
         if (isset($responseData['folderId'])) {

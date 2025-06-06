@@ -54,6 +54,14 @@ class CreateLinkJob implements ShouldQueue
                 $payload['description'] = $this->link->description;
             }
 
+            // Add tags if they exist in the relationship
+            if ($this->link->tagModels()->exists()) {
+                $tagNames = $this->link->tagModels()->pluck('name')->toArray();
+                if (!empty($tagNames)) {
+                    $payload['tagNames'] = $tagNames;
+                }
+            }
+
             // Add UTM parameters if they exist
             if ($this->link->utm_source) $payload['utm_source'] = $this->link->utm_source;
             if ($this->link->utm_medium) $payload['utm_medium'] = $this->link->utm_medium;

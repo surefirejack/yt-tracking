@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Builder;
 
 class Link extends Model
@@ -90,6 +91,14 @@ class Link extends Model
     public function tenant(): BelongsTo
     {
         return $this->belongsTo(Tenant::class);
+    }
+
+    /**
+     * Tags relationship (many-to-many)
+     */
+    public function tagModels(): BelongsToMany
+    {
+        return $this->belongsToMany(Tag::class);
     }
 
     /**

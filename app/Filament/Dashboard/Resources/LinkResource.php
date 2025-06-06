@@ -4,6 +4,7 @@ namespace App\Filament\Dashboard\Resources;
 
 use App\Filament\Dashboard\Resources\LinkResource\Pages;
 use App\Models\Link;
+use App\Models\Tag;
 use App\Jobs\CreateLinkJob;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -84,7 +85,12 @@ class LinkResource extends Resource
                                                 TagsInput::make('tags')
                                                     ->label('Tags')
                                                     ->placeholder('Add tags to organize your links')
-                                                    ->helperText('Press Enter to add tags'),
+                                                    ->helperText('Press Enter to add tags')
+                                                    ->suggestions(function () {
+                                                        return Tag::forTenant(Filament::getTenant()->id)
+                                                            ->pluck('name')
+                                                            ->toArray();
+                                                    }),
                                                 
                                                 TextInput::make('folder_id')
                                                     ->label('Folder')
