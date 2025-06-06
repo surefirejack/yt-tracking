@@ -20,6 +20,7 @@ use Filament\Forms\Components\Tabs;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Toggle;
 use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\TagsInput;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Support\Colors\Color;
 use Filament\Facades\Filament;
@@ -45,45 +46,53 @@ class LinkResource extends Resource
                         Tabs\Tab::make('Main')
                             ->icon('heroicon-o-link')
                             ->schema([
-                                Grid::make(2)
+                                Grid::make(4)
                                     ->schema([
-                                        TextInput::make('original_url')
-                                            ->label('Original URL')
-                                            ->url()
-                                            ->required()
-                                            ->maxLength(2048)
-                                            ->placeholder('https://example.com')
-                                            ->columnSpanFull(),
+                                        // Left column (3/4 width)
+                                        Grid::make(1)
+                                            ->schema([
+                                                TextInput::make('original_url')
+                                                    ->label('Destination URL')
+                                                    ->url()
+                                                    ->required()
+                                                    ->maxLength(2048)
+                                                    ->placeholder('https://example.com'),
+                                                
+                                                Textarea::make('description')
+                                                    ->label('Description')
+                                                    ->maxLength(500)
+                                                    ->rows(4)
+                                                    ->placeholder('Optional description'),
+                                            ])
+                                            ->columnSpan(3),
                                         
-                                        TextInput::make('title')
-                                            ->label('Title')
-                                            ->maxLength(255)
-                                            ->placeholder('Optional title for the link'),
-                                        
-                                        Textarea::make('description')
-                                            ->label('Description')
-                                            ->maxLength(500)
-                                            ->rows(3)
-                                            ->placeholder('Optional description'),
-                                        
-                                        TextInput::make('short_link')
-                                            ->label('Short Link')
-                                            ->disabled()
-                                            ->dehydrated(false)
-                                            ->placeholder('Will be generated')
-                                            ->visible(fn ($record) => $record !== null),
-                                        
-                                        Textarea::make('tags')
-                                            ->label('Tags')
-                                            ->placeholder('JSON array of tags (e.g., ["marketing", "social"])')
-                                            ->rows(2)
-                                            ->helperText('Tags for organizing and categorizing links'),
-                                        
-                                        TextInput::make('folder_id')
-                                            ->label('Folder')
-                                            ->maxLength(255)
-                                            ->placeholder('Folder ID or name')
-                                            ->helperText('Organize links into folders'),
+                                        // Right column (1/4 width)
+                                        Grid::make(1)
+                                            ->schema([
+                                                TextInput::make('short_link')
+                                                    ->label('Short Link')
+                                                    ->disabled()
+                                                    ->dehydrated(false)
+                                                    ->placeholder('Will be generated')
+                                                    ->visible(fn ($record) => $record !== null),
+                                                
+                                                TextInput::make('title')
+                                                    ->label('Title')
+                                                    ->maxLength(255)
+                                                    ->placeholder('Optional title for the link'),
+                                                
+                                                TagsInput::make('tags')
+                                                    ->label('Tags')
+                                                    ->placeholder('Add tags to organize your links')
+                                                    ->helperText('Press Enter to add tags'),
+                                                
+                                                TextInput::make('folder_id')
+                                                    ->label('Folder')
+                                                    ->maxLength(255)
+                                                    ->placeholder('Folder ID or name')
+                                                    ->helperText('Organize links into folders'),
+                                            ])
+                                            ->columnSpan(1),
                                     ]),
                             ]),
 
