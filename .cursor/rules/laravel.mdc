@@ -18,3 +18,11 @@ Use Laravel 11+ skeleton structure.
 
 
 If the code you're working on is written with Laravel Filament then please use the MCP servers like context7 or bravesearch to reference the relavant docs.
+
+This is a multi tenant application and most of the database relationships are based on tenant id (but not all). 
+
+You get the tenant object by
+Filament::getTenant()
+
+And if you need the user
+auth()->user()
