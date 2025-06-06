@@ -3,10 +3,12 @@
 namespace App\Filament\Dashboard\Resources\LinkResource\Pages;
 
 use App\Filament\Dashboard\Resources\LinkResource;
-use App\Jobs\UpdateLinkJob;
 use Filament\Actions;
 use Filament\Resources\Pages\EditRecord;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Http;
+use Filament\Notifications\Notification;
+use Illuminate\Support\Facades\Log;
 
 class EditLink extends EditRecord
 {
@@ -21,14 +23,93 @@ class EditLink extends EditRecord
 
     protected function handleRecordUpdate(Model $record, array $data): Model
     {
-        $originalData = $record->toArray();
         $record = parent::handleRecordUpdate($record, $data);
         
-        // Check if we need to update the link via API
-        $fieldsToSync = [
+        // Only make API call if the link has a dub_id (meaning it was successfully created)
+        if ($record->dub_id) {
+            $this->updateLinkViaDubAPI($record, $data);
+        }
+        
+        return $record;
+    }
+
+    protected function updateLinkViaDubAPI(Model $record, array $data): void
+    {
+        try {
+            // Get Dub API configuration
+            $apiKey = config('services.dub.api_key');
+            $baseUrl = config('services.dub.update_link_url', 'https://api.dub.co/links');
+            
+            if (!$apiKey) {
+                throw new \Exception('Dub API key is not configured');
+            }
+
+            // Build the API URL with the link ID
+            $apiUrl = rtrim($baseUrl, '/') . '/' . $record->dub_id;
+
+            // Build the payload from form data
+            $payload = $this->buildPayload($data);
+
+            // Make the PATCH request to Dub API
+            $response = Http::withHeaders([
+                'Authorization' => 'Bearer ' . $apiKey,
+                'Content-Type' => 'application/json',
+            ])->patch($apiUrl, $payload);
+
+            if ($response->successful()) {
+                // Update local record with response data
+                $responseData = $response->json();
+                $this->updateRecordFromResponse($record, $responseData);
+
+                Notification::make()
+                    ->title('Link updated successfully!')
+                    ->body('Your link has been updated')
+                    ->success()
+                    ->send();
+
+                Log::info('Link updated via Dub API', [
+                    'link_id' => $record->id,
+                    'dub_id' => $record->dub_id,
+                    'tenant_id' => $record->tenant_id,
+                ]);
+            } else {
+                throw new \Exception('Dub API request failed: ' . $response->body());
+            }
+        } catch (\Exception $e) {
+            Log::error('Failed to update link via Dub API', [
+                'link_id' => $record->id,
+                'dub_id' => $record->dub_id,
+                'tenant_id' => $record->tenant_id,
+                'error' => $e->getMessage(),
+            ]);
+
+            Notification::make()
+                ->title('Link update failed')
+                ->body('Failed to update link in Dub: ' . $e->getMessage())
+                ->danger()
+                ->send();
+        }
+    }
+
+    protected function buildPayload(array $data): array
+    {
+        $payload = [];
+
+        // Map form fields to API fields
+        $fieldMapping = [
             'original_url' => 'url',
             'title' => 'title',
             'description' => 'description',
+            'external_id' => 'externalId',
+            'folder_id' => 'folderId',
+            'comments' => 'comments',
+            'expires_at' => 'expiresAt',
+            'expired_url' => 'expiredUrl',
+            'password' => 'password',
+            'image' => 'image',
+            'video' => 'video',
+            'ios' => 'ios',
+            'android' => 'android',
             'utm_source' => 'utm_source',
             'utm_medium' => 'utm_medium',
             'utm_campaign' => 'utm_campaign',
@@ -36,29 +117,165 @@ class EditLink extends EditRecord
             'utm_content' => 'utm_content',
         ];
 
-        $updateData = [];
-        $hasChanges = false;
-
-        foreach ($fieldsToSync as $localField => $apiField) {
-            if (isset($data[$localField]) && $originalData[$localField] !== $data[$localField]) {
-                $updateData[$apiField] = $data[$localField];
-                $hasChanges = true;
+        // Add basic fields
+        foreach ($fieldMapping as $localField => $apiField) {
+            if (isset($data[$localField]) && !empty($data[$localField])) {
+                // Handle datetime fields - convert to UTC for API
+                if (in_array($localField, ['expires_at'])) {
+                    if ($data[$localField] instanceof \DateTime) {
+                        // Convert user's local time to UTC properly
+                        $dateTime = \Carbon\Carbon::parse($data[$localField]);
+                        
+                        // Convert to UTC for API
+                        $utcDateTime = $dateTime->utc();
+                        
+                        // Log the conversion process
+                        Log::info('DateTime conversion debug', [
+                            'original_input' => $data[$localField],
+                            'parsed_datetime' => $dateTime->toString(),
+                            'user_timezone' => $dateTime->timezone->getName(),
+                            'utc_datetime' => $utcDateTime->toString(),
+                            'sending_to_dub' => $utcDateTime->toISOString(),
+                        ]);
+                        
+                        // Send proper UTC time with Z suffix
+                        $payload[$apiField] = $utcDateTime->toISOString();
+                    } elseif (is_string($data[$localField])) {
+                        // If it's a string, parse it in the application timezone and convert to UTC
+                        $dateTime = \Carbon\Carbon::createFromFormat('Y-m-d H:i:s', $data[$localField]);
+                        
+                        // Convert to UTC for API
+                        $utcDateTime = $dateTime->utc();
+                        
+                        Log::info('String DateTime conversion debug', [
+                            'original_string' => $data[$localField],
+                            'parsed_datetime' => $dateTime->toString(),
+                            'user_timezone' => $dateTime->timezone->getName(),
+                            'utc_datetime' => $utcDateTime->toString(),
+                            'sending_to_dub' => $utcDateTime->toISOString(),
+                        ]);
+                        
+                        // Send proper UTC time with Z suffix
+                        $payload[$apiField] = $utcDateTime->toISOString();
+                    }
+                } else {
+                    $payload[$apiField] = $data[$localField];
+                }
             }
         }
 
-        // Only dispatch update job if there are changes and the link has a dub_id
-        if ($hasChanges && $record->dub_id && $record->status === 'completed') {
-            UpdateLinkJob::dispatch($record, $updateData);
-            
-            // Update status to processing
-            $record->update(['status' => 'processing']);
+        // Handle boolean fields
+        $booleanFields = [
+            'track_conversion' => 'trackConversion',
+            'archived' => 'archived',
+            'public_stats' => 'publicStats',
+            'proxy' => 'proxy',
+            'rewrite' => 'rewrite',
+            'do_index' => 'doIndex',
+        ];
+
+        foreach ($booleanFields as $localField => $apiField) {
+            if (isset($data[$localField])) {
+                $payload[$apiField] = (bool) $data[$localField];
+            }
         }
-        
-        return $record;
+
+        // Handle special fields
+        if (isset($data['tags']) && is_array($data['tags']) && !empty($data['tags'])) {
+            $payload['tagNames'] = $data['tags'];
+        }
+
+        if (isset($data['webhook_ids']) && !empty($data['webhook_ids'])) {
+            // Try to decode JSON, fallback to string
+            $webhookIds = is_string($data['webhook_ids']) ? json_decode($data['webhook_ids'], true) : $data['webhook_ids'];
+            if (is_array($webhookIds)) {
+                $payload['webhookIds'] = $webhookIds;
+            }
+        }
+
+        if (isset($data['geo']) && !empty($data['geo'])) {
+            // Try to decode JSON for geo data
+            $geo = is_string($data['geo']) ? json_decode($data['geo'], true) : $data['geo'];
+            if (is_array($geo)) {
+                $payload['geo'] = $geo;
+            }
+        }
+
+        return $payload;
+    }
+
+    protected function updateRecordFromResponse(Model $record, array $responseData): void
+    {
+        $updateData = [];
+
+        // Map response fields back to local fields
+        $responseMapping = [
+            'title' => 'title',
+            'description' => 'description',
+            'url' => 'url',
+            'shortLink' => 'short_link',
+            'trackConversion' => 'track_conversion',
+            'archived' => 'archived',
+            'publicStats' => 'public_stats',
+            'proxy' => 'proxy',
+            'rewrite' => 'rewrite',
+            'doIndex' => 'do_index',
+            'image' => 'image',
+            'video' => 'video',
+            'ios' => 'ios',
+            'android' => 'android',
+            'qrCode' => 'qr_code',
+            'utm_source' => 'utm_source',
+            'utm_medium' => 'utm_medium',
+            'utm_campaign' => 'utm_campaign',
+            'utm_term' => 'utm_term',
+            'utm_content' => 'utm_content',
+            'clicks' => 'clicks',
+            'leads' => 'leads',
+            'sales' => 'sales',
+            'saleAmount' => 'sale_amount',
+        ];
+
+        foreach ($responseMapping as $apiField => $localField) {
+            if (isset($responseData[$apiField])) {
+                $updateData[$localField] = $responseData[$apiField];
+            }
+        }
+
+        // Handle datetime fields
+        if (isset($responseData['expiresAt']) && !empty($responseData['expiresAt'])) {
+            $updateData['expires_at'] = \Carbon\Carbon::parse($responseData['expiresAt']);
+        }
+
+        if (isset($responseData['lastClicked']) && !empty($responseData['lastClicked'])) {
+            $updateData['last_clicked'] = \Carbon\Carbon::parse($responseData['lastClicked']);
+        }
+
+        // Handle special fields
+        if (isset($responseData['tags']) && is_array($responseData['tags'])) {
+            $tagNames = array_column($responseData['tags'], 'name');
+            $updateData['tags'] = $tagNames;
+        }
+
+        if (isset($responseData['folderId'])) {
+            $updateData['folder_id'] = $responseData['folderId'];
+        }
+
+        if (isset($responseData['webhookIds']) && is_array($responseData['webhookIds'])) {
+            $updateData['webhook_ids'] = $responseData['webhookIds'];
+        }
+
+        if (isset($responseData['geo']) && is_array($responseData['geo'])) {
+            $updateData['geo'] = $responseData['geo'];
+        }
+
+        if (!empty($updateData)) {
+            $record->update($updateData);
+        }
     }
 
     protected function getSavedNotificationTitle(): ?string
     {
-        return 'Link updated successfully!';
+        return null; // We handle notifications in updateLinkViaDubAPI
     }
 }

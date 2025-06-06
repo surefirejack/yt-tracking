@@ -48,7 +48,7 @@ class LinkResource extends Resource
                             ->schema([
                                 Grid::make(4)
                                     ->schema([
-                                        // Left column (3/4 width)
+                                        // Left column (1/2 width)
                                         Grid::make(1)
                                             ->schema([
                                                 TextInput::make('original_url')
@@ -64,9 +64,9 @@ class LinkResource extends Resource
                                                     ->rows(4)
                                                     ->placeholder('Optional description'),
                                             ])
-                                            ->columnSpan(3),
+                                            ->columnSpan(2),
                                         
-                                        // Right column (1/4 width)
+                                        // Right column (1/2 width)
                                         Grid::make(1)
                                             ->schema([
                                                 TextInput::make('short_link')
@@ -92,7 +92,7 @@ class LinkResource extends Resource
                                                     ->placeholder('Folder ID or name')
                                                     ->helperText('Organize links into folders'),
                                             ])
-                                            ->columnSpan(1),
+                                            ->columnSpan(2),
                                     ]),
                             ]),
 
