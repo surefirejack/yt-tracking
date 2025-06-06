@@ -93,6 +93,14 @@ class EditLink extends EditRecord
             // Build the payload from form data
             $payload = $this->buildPayload($data, $record);
 
+            Log::info('Updating link via Dub API', [
+                'link_id' => $record->id,
+                'dub_id' => $record->dub_id,
+                'tenant_id' => $record->tenant_id,
+                'payload_tenant_id' => $payload['tenantId'] ?? null,
+                'payload_external_id' => $payload['externalId'] ?? null,
+            ]);
+
             // Make the PATCH request to Dub API
             $response = Http::withHeaders([
                 'Authorization' => 'Bearer ' . $apiKey,
@@ -159,6 +167,12 @@ class EditLink extends EditRecord
             'utm_term' => 'utm_term',
             'utm_content' => 'utm_content',
         ];
+
+        // Always include tenantId and externalId for identification
+        if ($record) {
+            $payload['tenantId'] = (string) $record->tenant_id;
+            $payload['externalId'] = (string) $record->id;
+        }
 
         // Add basic fields
         foreach ($fieldMapping as $localField => $apiField) {
@@ -280,6 +294,8 @@ class EditLink extends EditRecord
             'leads' => 'leads',
             'sales' => 'sales',
             'saleAmount' => 'sale_amount',
+            'externalId' => 'external_id',
+            'tenantId' => 'tenant_id_dub',
         ];
 
         foreach ($responseMapping as $apiField => $localField) {

@@ -43,6 +43,8 @@ class CreateLinkJob implements ShouldQueue
             // Prepare the payload
             $payload = [
                 'url' => $this->link->original_url,
+                'tenantId' => (string) $this->link->tenant_id, // Convert to string as Dub API expects string
+                'externalId' => (string) $this->link->id, // Convert to string as Dub might expect string
             ];
 
             // Add optional fields if they exist
@@ -74,6 +76,15 @@ class CreateLinkJob implements ShouldQueue
                 'Authorization' => 'Bearer ' . $apiKey,
                 'Content-Type' => 'application/json',
             ])->post($createLinkUrl, $payload);
+
+            Log::info('Creating link via Dub API', [
+                'link_id' => $this->link->id,
+                'tenant_id' => $this->link->tenant_id,
+                'external_id' => $this->link->id,
+                'payload_tenant_id' => $payload['tenantId'] ?? null,
+                'payload_external_id' => $payload['externalId'] ?? null,
+                'original_url' => $this->link->original_url,
+            ]);
 
             if ($response->successful()) {
                 $data = $response->json();
