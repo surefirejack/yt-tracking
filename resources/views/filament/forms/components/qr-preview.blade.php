@@ -1,11 +1,6 @@
 <div class="space-y-4">
     @if($qr_url)
         <div class="flex flex-col items-center space-y-4 p-6 bg-gray-50 dark:bg-gray-800 rounded-lg">
-            <div class="text-center">
-                <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">QR Code</h3>
-                <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">Scan to access your short link</p>
-            </div>
-            
             <div class="bg-white p-4 rounded-lg shadow-sm">
                 <img src="{{ $qr_url }}" 
                      alt="QR Code for {{ $short_link ?? 'short link' }}" 
