@@ -45,6 +45,22 @@ class CreateLinkJob implements ShouldQueue
                 'url' => $this->link->original_url,
             ];
 
+            // Add optional fields if they exist
+            if ($this->link->title) {
+                $payload['title'] = $this->link->title;
+            }
+            
+            if ($this->link->description) {
+                $payload['description'] = $this->link->description;
+            }
+
+            // Add UTM parameters if they exist
+            if ($this->link->utm_source) $payload['utm_source'] = $this->link->utm_source;
+            if ($this->link->utm_medium) $payload['utm_medium'] = $this->link->utm_medium;
+            if ($this->link->utm_campaign) $payload['utm_campaign'] = $this->link->utm_campaign;
+            if ($this->link->utm_term) $payload['utm_term'] = $this->link->utm_term;
+            if ($this->link->utm_content) $payload['utm_content'] = $this->link->utm_content;
+
             // Make the API call to Dub
             $response = Http::withHeaders([
                 'Authorization' => 'Bearer ' . $apiKey,
@@ -110,6 +126,7 @@ class CreateLinkJob implements ShouldQueue
 
                 Log::info('Link created successfully', [
                     'link_id' => $this->link->id,
+                    'tenant_id' => $this->link->tenant_id,
                     'dub_id' => $data['id'] ?? null,
                     'short_link' => $data['shortLink'] ?? null,
                 ]);
@@ -119,6 +136,7 @@ class CreateLinkJob implements ShouldQueue
         } catch (Exception $e) {
             Log::error('Failed to create link', [
                 'link_id' => $this->link->id,
+                'tenant_id' => $this->link->tenant_id,
                 'error' => $e->getMessage(),
                 'attempt' => $this->attempts(),
             ]);
@@ -141,6 +159,7 @@ class CreateLinkJob implements ShouldQueue
     {
         Log::error('CreateLinkJob permanently failed', [
             'link_id' => $this->link->id,
+            'tenant_id' => $this->link->tenant_id,
             'error' => $exception->getMessage(),
         ]);
 

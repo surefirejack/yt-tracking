@@ -18,6 +18,7 @@ use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Grid;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Support\Colors\Color;
+use Filament\Facades\Filament;
 
 class LinkResource extends Resource
 {
@@ -218,7 +219,7 @@ class LinkResource extends Resource
     public static function getEloquentQuery(): Builder
     {
         return parent::getEloquentQuery()
-            ->where('tenant_id', auth()->user()->current_tenant_id);
+            ->where('tenant_id', Filament::getTenant()->id);
     }
 
     public static function getRelations(): array

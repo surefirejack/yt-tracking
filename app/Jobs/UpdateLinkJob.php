@@ -106,6 +106,7 @@ class UpdateLinkJob implements ShouldQueue
 
                 Log::info('Link updated successfully', [
                     'link_id' => $this->link->id,
+                    'tenant_id' => $this->link->tenant_id,
                     'dub_id' => $this->link->dub_id,
                     'short_link' => $this->link->short_link,
                 ]);
@@ -115,6 +116,7 @@ class UpdateLinkJob implements ShouldQueue
         } catch (Exception $e) {
             Log::error('Failed to update link', [
                 'link_id' => $this->link->id,
+                'tenant_id' => $this->link->tenant_id,
                 'error' => $e->getMessage(),
                 'attempt' => $this->attempts(),
             ]);
@@ -137,6 +139,7 @@ class UpdateLinkJob implements ShouldQueue
     {
         Log::error('UpdateLinkJob permanently failed', [
             'link_id' => $this->link->id,
+            'tenant_id' => $this->link->tenant_id,
             'error' => $exception->getMessage(),
         ]);
 

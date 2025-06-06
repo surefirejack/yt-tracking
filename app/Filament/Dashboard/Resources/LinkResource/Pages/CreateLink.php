@@ -6,6 +6,7 @@ use App\Filament\Dashboard\Resources\LinkResource;
 use App\Jobs\CreateLinkJob;
 use Filament\Resources\Pages\CreateRecord;
 use Illuminate\Database\Eloquent\Model;
+use Filament\Facades\Filament;
 
 class CreateLink extends CreateRecord
 {
@@ -13,7 +14,7 @@ class CreateLink extends CreateRecord
 
     protected function mutateFormDataBeforeCreate(array $data): array
     {
-        $data['tenant_id'] = auth()->user()->current_tenant_id;
+        $data['tenant_id'] = Filament::getTenant()->id;
         $data['status'] = 'pending';
         
         return $data;

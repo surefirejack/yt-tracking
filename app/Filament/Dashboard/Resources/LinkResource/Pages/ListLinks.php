@@ -9,6 +9,7 @@ use Filament\Actions;
 use Filament\Resources\Pages\ListRecords;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
+use Filament\Facades\Filament;
 
 class ListLinks extends ListRecords
 {
@@ -33,7 +34,7 @@ class ListLinks extends ListRecords
                 ->action(function (array $data): void {
                     // Create the link record with pending status
                     $link = Link::create([
-                        'tenant_id' => auth()->user()->current_tenant_id,
+                        'tenant_id' => Filament::getTenant()->id,
                         'original_url' => $data['original_url'],
                         'status' => 'pending',
                     ]);
@@ -48,6 +49,46 @@ class ListLinks extends ListRecords
                         ->send();
                 })
                 ->successNotification(null), // Disable default notification since we're using custom one
+            
+            Actions\Action::make('quick_create')
+                ->label('Quick Create')
+                ->icon('heroicon-o-bolt')
+                ->color('info')
+                ->modal()
+                ->form([
+                    TextInput::make('original_url')
+                        ->label('URL to Shorten')
+                        ->url()
+                        ->required()
+                        ->maxLength(2048)
+                        ->placeholder('https://example.com')
+                        ->helperText('Enter the URL you want to create a short link for'),
+                    
+                    TextInput::make('title')
+                        ->label('Name/Title')
+                        ->required()
+                        ->maxLength(255)
+                        ->placeholder('Give your link a memorable name')
+                        ->helperText('This will help you identify the link later'),
+                ])
+                ->action(function (array $data): void {
+                    // Create the link record with pending status and title
+                    $link = Link::create([
+                        'tenant_id' => Filament::getTenant()->id,
+                        'original_url' => $data['original_url'],
+                        'title' => $data['title'],
+                        'status' => 'pending',
+                    ]);
+
+                    // Dispatch the job to create the short link
+                    CreateLinkJob::dispatch($link);
+
+                    Notification::make()
+                        ->title('Quick link created!')
+                        ->body("'{$data['title']}' is being processed and will appear in the table once completed.")
+                        ->success()
+                        ->send();
+                }),
         ];
     }
 }
