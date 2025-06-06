@@ -300,35 +300,22 @@ class LinkResource extends Resource
                     ->label('Title')
                     ->limit(30)
                     ->placeholder('No title')
-                    ->searchable(),
-
-                TextColumn::make('status')
-                    ->label('Status')
-                    ->badge()
-                    ->color(fn (string $state): string => match ($state) {
-                        'completed' => 'success',
-                        'processing' => 'warning',
-                        'pending' => 'gray',
-                        'failed' => 'danger',
-                    })
-                    ->icon(fn (string $state): string => match ($state) {
-                        'completed' => 'heroicon-m-check-circle',
-                        'processing' => 'heroicon-m-arrow-path',
-                        'pending' => 'heroicon-m-clock',
-                        'failed' => 'heroicon-m-x-circle',
-                    }),
+                    ->searchable()
+                    ->toggleable(),
 
                 TextColumn::make('clicks')
                     ->label('Clicks')
                     ->numeric()
                     ->sortable()
-                    ->alignEnd(),
+                    ->alignEnd()
+                    ->toggleable(),
 
                 TextColumn::make('leads')
                     ->label('Leads')
                     ->numeric()
                     ->sortable()
-                    ->alignEnd(),
+                    ->alignEnd()
+                    ->toggleable(),
 
                 TextColumn::make('created_at')
                     ->label('Created')
@@ -354,7 +341,6 @@ class LinkResource extends Resource
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
-                Tables\Actions\DeleteAction::make(),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
