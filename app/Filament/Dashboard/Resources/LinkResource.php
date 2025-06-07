@@ -160,14 +160,30 @@ class LinkResource extends Resource
                                             ->helperText('Enable A/B testing between two URLs')
                                             ->live()
                                             ->dehydrated(false)
-                                            ->default(fn ($record) => $record && $record->test_variants ? true : false)
+                                            ->default(function ($record) {
+                                                if (!$record || !$record->test_variants) {
+                                                    return false;
+                                                }
+                                                
+                                                // Check if test_variants is an array with actual data
+                                                $variants = is_array($record->test_variants) ? $record->test_variants : [];
+                                                return !empty($variants) && count($variants) > 0;
+                                            })
+                                            ->afterStateHydrated(function ($component, $state, $record) {
+                                                if ($record && $record->test_variants) {
+                                                    $variants = is_array($record->test_variants) ? $record->test_variants : [];
+                                                    $hasVariants = !empty($variants) && count($variants) > 0;
+                                                    $component->state($hasVariants);
+                                                }
+                                            })
                                             ->afterStateUpdated(function ($state, $set, $get) {
                                                 if (!$state) {
+                                                    // When toggle is turned off, clear test_variants
                                                     $set('test_variants', null);
                                                     $set('main_url', '');
                                                     $set('test_url', '');
                                                 } else {
-                                                    // Initialize with default split testing data
+                                                    // When toggle is turned on, initialize or maintain test_variants
                                                     $existingVariants = $get('test_variants') ?? [];
                                                     $originalUrl = $get('original_url') ?? '';
                                                     
@@ -185,7 +201,7 @@ class LinkResource extends Resource
                                                         $set('main_url', $originalUrl);
                                                         $set('test_url', '');
                                                     } else {
-                                                        // Populate form fields from existing data, but sync main_url with original_url
+                                                        // Populate form fields from existing data, sync main_url with original_url
                                                         $set('main_url', $originalUrl);
                                                         $set('test_url', $existingVariants[1]['url'] ?? '');
                                                         $set('traffic_percentage', $existingVariants[0]['percentage'] ?? 50);
