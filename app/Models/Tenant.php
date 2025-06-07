@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 
 class Tenant extends Model
 {
@@ -49,6 +50,16 @@ class Tenant extends Model
     public function customDomains(): HasMany
     {
         return $this->hasMany(TenantCustomDomain::class);
+    }
+
+    public function ytVideos(): HasManyThrough
+    {
+        return $this->hasManyThrough(YtVideo::class, YtChannel::class);
+    }
+
+    public function ytChannel(): HasOne
+    {
+        return $this->hasOne(YtChannel::class);
     }
 
     public function subscriptionProductMetadata()
