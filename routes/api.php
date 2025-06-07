@@ -27,3 +27,14 @@ Route::post('/payments-providers/lemon-squeezy/webhook', [
     App\Http\Controllers\PaymentProviders\LemonSqueezyController::class,
     'handleWebhook',
 ])->name('payments-providers.lemon-squeezy.webhook');
+
+// Dub.co conversion tracking - accessible from external client websites
+Route::options('/dub/track-conversion', [
+    App\Http\Controllers\DubController::class,
+    'trackConversion',
+])->name('dub.track-conversion.options');
+
+Route::post('/dub/track-conversion', [
+    App\Http\Controllers\DubController::class,
+    'trackConversion',
+])->name('dub.track-conversion');
