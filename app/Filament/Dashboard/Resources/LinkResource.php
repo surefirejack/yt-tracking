@@ -64,7 +64,22 @@ class LinkResource extends Resource
                                                     ->url()
                                                     ->required()
                                                     ->maxLength(2048)
-                                                    ->placeholder('https://example.com'),
+                                                    ->placeholder('https://example.com')
+                                                    ->live()
+                                                    ->afterStateUpdated(function ($state, $get, $set) {
+                                                        // Sync with split testing main URL if split testing is enabled
+                                                        $splitTestingEnabled = $get('split_testing_enabled');
+                                                        if ($splitTestingEnabled) {
+                                                            $set('main_url', $state);
+                                                            
+                                                            // Update test_variants array
+                                                            $variants = $get('test_variants') ?? [];
+                                                            if (isset($variants[0])) {
+                                                                $variants[0]['url'] = $state;
+                                                                $set('test_variants', $variants);
+                                                            }
+                                                        }
+                                                    }),
                                                 
                                                 Textarea::make('description')
                                                     ->label('Description')
@@ -102,7 +117,7 @@ class LinkResource extends Resource
                                     ]),
                             ]),
 
-                        Tabs\Tab::make('UTM Parameters')
+                        Tabs\Tab::make('UTMs')
                             ->icon('heroicon-o-chart-bar')
                             ->schema([
                                 Grid::make(2)
@@ -132,6 +147,140 @@ class LinkResource extends Resource
                                             ->maxLength(255)
                                             ->placeholder('e.g., logolink, textlink')
                                             ->columnSpanFull(),
+                                    ]),
+                            ]),
+
+                        Tabs\Tab::make('Split Testing')
+                            ->icon('heroicon-o-beaker')
+                            ->schema([
+                                Grid::make(1)
+                                    ->schema([
+                                        Toggle::make('split_testing_enabled')
+                                            ->label('Enable Split Testing')
+                                            ->helperText('Enable A/B testing between two URLs')
+                                            ->live()
+                                            ->dehydrated(false)
+                                            ->default(fn ($record) => $record && $record->test_variants ? true : false)
+                                            ->afterStateUpdated(function ($state, $set, $get) {
+                                                if (!$state) {
+                                                    $set('test_variants', null);
+                                                    $set('main_url', '');
+                                                    $set('test_url', '');
+                                                } else {
+                                                    // Initialize with default split testing data
+                                                    $existingVariants = $get('test_variants') ?? [];
+                                                    $originalUrl = $get('original_url') ?? '';
+                                                    
+                                                    if (empty($existingVariants)) {
+                                                        $set('test_variants', [
+                                                            [
+                                                                'url' => $originalUrl,
+                                                                'percentage' => 50
+                                                            ],
+                                                            [
+                                                                'url' => '',
+                                                                'percentage' => 50
+                                                            ]
+                                                        ]);
+                                                        $set('main_url', $originalUrl);
+                                                        $set('test_url', '');
+                                                    } else {
+                                                        // Populate form fields from existing data, but sync main_url with original_url
+                                                        $set('main_url', $originalUrl);
+                                                        $set('test_url', $existingVariants[1]['url'] ?? '');
+                                                        $set('traffic_percentage', $existingVariants[0]['percentage'] ?? 50);
+                                                        
+                                                        // Update the variants array to reflect the synced original_url
+                                                        $existingVariants[0]['url'] = $originalUrl;
+                                                        $set('test_variants', $existingVariants);
+                                                    }
+                                                }
+                                            }),
+
+                                        Grid::make(2)
+                                            ->schema([
+                                                TextInput::make('main_url')
+                                                    ->label('Main URL (Variant A)')
+                                                    ->maxLength(2048)
+                                                    ->placeholder('Synced with Destination URL')
+                                                    ->disabled()
+                                                    ->dehydrated(false)
+                                                    ->default(function ($record, $get) {
+                                                        // Always sync with original_url
+                                                        $originalUrl = $get('original_url') ?? '';
+                                                        return $originalUrl ?: ($record && $record->test_variants ? ($record->test_variants[0]['url'] ?? '') : '');
+                                                    })
+                                                    ->helperText('This URL is automatically synced with your Destination URL'),
+
+                                                TextInput::make('test_url')
+                                                    ->label('Test URL (Variant B)')
+                                                    ->url()
+                                                    ->maxLength(2048)
+                                                    ->placeholder('https://example.com/variant-b')
+                                                    ->dehydrated(false)
+                                                    ->default(fn ($record) => $record && $record->test_variants ? ($record->test_variants[1]['url'] ?? '') : '')
+                                                    ->live()
+                                                    ->afterStateUpdated(function ($state, $get, $set) {
+                                                        $variants = $get('test_variants') ?? [];
+                                                        if (isset($variants[1])) {
+                                                            $variants[1]['url'] = $state;
+                                                            $set('test_variants', $variants);
+                                                        }
+                                                    }),
+                                            ])
+                                            ->visible(fn ($get) => $get('split_testing_enabled')),
+
+                                        Forms\Components\ViewField::make('traffic_split')
+                                            ->label('Traffic Split')
+                                            ->view('filament.forms.components.traffic-split-slider')
+                                            ->viewData(fn ($get, $record) => [
+                                                'percentage' => $record && $record->test_variants ? ($record->test_variants[0]['percentage'] ?? 50) : ($get('test_variants.0.percentage') ?? 50),
+                                                'field_name' => 'traffic_percentage'
+                                            ])
+                                            ->visible(fn ($get) => $get('split_testing_enabled')),
+
+                                        Forms\Components\Hidden::make('traffic_percentage')
+                                            ->default(fn ($record) => $record && $record->test_variants ? ($record->test_variants[0]['percentage'] ?? 50) : 50)
+                                            ->dehydrated(false)
+                                            ->live()
+                                            ->afterStateUpdated(function ($state, $get, $set) {
+                                                $percentage = (int) $state;
+                                                $variants = $get('test_variants') ?? [];
+                                                if (count($variants) >= 2) {
+                                                    $variants[0]['percentage'] = $percentage;
+                                                    $variants[1]['percentage'] = 100 - $percentage;
+                                                    $set('test_variants', $variants);
+                                                }
+                                            }),
+
+                                        Forms\Components\Placeholder::make('split_preview')
+                                            ->label('Traffic Distribution')
+                                            ->content(function ($get, $record) {
+                                                $variants = $get('test_variants') ?? [];
+                                                if (empty($variants) && $record && $record->test_variants) {
+                                                    $variants = $record->test_variants;
+                                                }
+                                                if (count($variants) >= 2) {
+                                                    $variantA = $variants[0]['percentage'] ?? 50;
+                                                    $variantB = $variants[1]['percentage'] ?? 50;
+                                                    return "Variant A: {$variantA}% • Variant B: {$variantB}%";
+                                                }
+                                                return 'Variant A: 50% • Variant B: 50%';
+                                            })
+                                            ->visible(fn ($get) => $get('split_testing_enabled')),
+
+                                        Forms\Components\Hidden::make('test_variants')
+                                            ->afterStateHydrated(function ($component, $state, $get, $set) {
+                                                // Sync main URL with original_url on load
+                                                if ($state && is_array($state) && isset($state[0])) {
+                                                    $originalUrl = $get('original_url') ?? '';
+                                                    if ($originalUrl && $originalUrl !== $state[0]['url']) {
+                                                        $state[0]['url'] = $originalUrl;
+                                                        $component->state($state);
+                                                    }
+                                                    $set('main_url', $originalUrl);
+                                                }
+                                            }),
                                     ]),
                             ]),
 
