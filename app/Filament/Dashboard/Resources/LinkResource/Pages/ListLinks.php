@@ -77,6 +77,7 @@ class ListLinks extends ListRecords
                         'tenant_id' => Filament::getTenant()->id,
                         'original_url' => $data['original_url'],
                         'title' => $data['title'],
+                        'domain' => config('services.dub.main_domain'),
                         'status' => 'pending',
                     ]);
 

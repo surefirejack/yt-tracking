@@ -106,6 +106,7 @@ return [
     ],
 
     'dub' => [
+        'main_domain' => env('DUB_MAIN_DOMAIN'),
         'api_key' => env('DUB_API_KEY'),
         'create_link_url' => env('DUB_CREATE_LINK_URL'),
         'update_link_url' => env('DUB_UPDATE_LINK_URL'),
