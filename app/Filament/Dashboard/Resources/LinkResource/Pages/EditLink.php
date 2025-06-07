@@ -19,6 +19,23 @@ class EditLink extends EditRecord
 
     protected array $tagIds = [];
 
+    public function getBreadcrumbs(): array
+    {
+        $breadcrumbs = parent::getBreadcrumbs();
+        
+        $destinationUrl = $this->record->original_url ?? 'Unknown URL';
+        
+        // Truncate the URL if it's too long for better display
+        if (strlen($destinationUrl) > 60) {
+            $destinationUrl = substr($destinationUrl, 0, 57) . '...';
+        }
+        
+        // Add the URL to the breadcrumbs
+        $breadcrumbs[] = $destinationUrl;
+        
+        return $breadcrumbs;
+    }
+
     protected function getHeaderActions(): array
     {
         return [
