@@ -471,6 +471,15 @@ class LinkResource extends Resource
                     ->searchable()
                     ->toggleable(),
 
+                TextColumn::make('tags')
+                    ->label('Tags')
+                    ->badge()
+                    ->separator(',')
+                    ->limit(10)
+                    ->placeholder('No tags')
+                    ->searchable()
+                    ->toggleable(),
+
                 TextColumn::make('clicks')
                     ->label('Clicks')
                     ->numeric()
