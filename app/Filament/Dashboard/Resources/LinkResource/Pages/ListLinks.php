@@ -20,8 +20,8 @@ class ListLinks extends ListRecords
     {
         return [
             Actions\Action::make('quick_create')
-                ->label('Quick Create')
-                ->icon('heroicon-o-bolt')
+                ->label('Create a Link')
+                ->icon('heroicon-o-link')
                 ->color('info')
                 ->modal()
                 ->modalSubmitActionLabel('Save')
