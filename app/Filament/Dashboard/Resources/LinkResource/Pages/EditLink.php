@@ -97,8 +97,6 @@ class EditLink extends EditRecord
                 'link_id' => $record->id,
                 'dub_id' => $record->dub_id,
                 'tenant_id' => $record->tenant_id,
-                'payload_tenant_id' => $payload['tenantId'] ?? null,
-                'payload_external_id' => $payload['externalId'] ?? null,
             ]);
 
             // Make the PATCH request to Dub API
@@ -237,11 +235,20 @@ class EditLink extends EditRecord
             }
         }
 
-        // Handle tags - use the relationship data instead of form data
-        if ($record && $record->tagModels()->exists()) {
-            $tagNames = $record->tagModels()->pluck('name')->toArray();
+        // Handle tags - use the stored tagIds instead of relationship data since relationship hasn't been synced yet
+        if (isset($this->tagIds) && !empty($this->tagIds)) {
+            // Get tag names from the stored tag IDs
+            $tagNames = \App\Models\Tag::whereIn('id', $this->tagIds)->pluck('name')->toArray();
             if (!empty($tagNames)) {
                 $payload['tagNames'] = $tagNames;
+            }
+        } else {
+            // Fallback to relationship data (for cases where tags weren't modified)
+            if ($record && $record->tagModels()->exists()) {
+                $tagNames = $record->tagModels()->pluck('name')->toArray();
+                if (!empty($tagNames)) {
+                    $payload['tagNames'] = $tagNames;
+                }
             }
         }
 
