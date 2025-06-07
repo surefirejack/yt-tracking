@@ -19,38 +19,6 @@ class ListLinks extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
-            Actions\CreateAction::make()
-                ->label('Create Link')
-                ->icon('heroicon-o-plus')
-                ->modal()
-                ->form([
-                    TextInput::make('original_url')
-                        ->label('URL to Shorten')
-                        ->url()
-                        ->required()
-                        ->maxLength(2048)
-                        ->placeholder('https://example.com')
-                        ->helperText('Enter the URL you want to create a short link for'),
-                ])
-                ->action(function (array $data): void {
-                    // Create the link record with pending status
-                    $link = Link::create([
-                        'tenant_id' => Filament::getTenant()->id,
-                        'original_url' => $data['original_url'],
-                        'status' => 'pending',
-                    ]);
-
-                    // Dispatch the job to create the short link
-                    CreateLinkJob::dispatch($link);
-
-                    Notification::make()
-                        ->title('Link creation started')
-                        ->body('Your link is being processed. It will appear in the table once completed.')
-                        ->success()
-                        ->send();
-                })
-                ->successNotification(null), // Disable default notification since we're using custom one
-            
             Actions\Action::make('quick_create')
                 ->label('Quick Create')
                 ->icon('heroicon-o-bolt')
