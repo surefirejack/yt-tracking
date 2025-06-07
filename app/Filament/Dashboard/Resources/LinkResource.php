@@ -515,6 +515,26 @@ class LinkResource extends Resource
                         'completed' => 'Completed',
                         'failed' => 'Failed',
                     ]),
+
+                SelectFilter::make('tags')
+                    ->label('Tags')
+                    ->multiple()
+                    ->options(function () {
+                        return Tag::forTenant(Filament::getTenant()->id)
+                            ->pluck('name', 'name')
+                            ->toArray();
+                    })
+                    ->query(function (Builder $query, array $data): Builder {
+                        if (empty($data['values'])) {
+                            return $query;
+                        }
+                        
+                        return $query->where(function (Builder $query) use ($data) {
+                            foreach ($data['values'] as $tag) {
+                                $query->orWhereJsonContains('tags', $tag);
+                            }
+                        });
+                    }),
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
