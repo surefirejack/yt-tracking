@@ -50,6 +50,10 @@ class DashboardPanelProvider extends PanelProvider
                     ->url(fn () => route('filament.admin.pages.dashboard'))
                     ->icon('heroicon-s-cog-8-tooth'),
                 MenuItem::make()
+                    ->label(__('Settings'))
+                    ->url(fn () => \App\Filament\Dashboard\Pages\Settings::getUrl())
+                    ->icon('heroicon-s-cog-6-tooth'),
+                MenuItem::make()
                     ->label(__('Workspace Settings'))
                     ->visible(
                         function () {
