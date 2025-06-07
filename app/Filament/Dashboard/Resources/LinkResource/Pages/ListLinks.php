@@ -9,6 +9,7 @@ use Filament\Actions;
 use Filament\Resources\Pages\ListRecords;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
+use Filament\Notifications\Actions\Action as NotificationAction;
 use Filament\Facades\Filament;
 
 class ListLinks extends ListRecords
@@ -55,6 +56,7 @@ class ListLinks extends ListRecords
                 ->icon('heroicon-o-bolt')
                 ->color('info')
                 ->modal()
+                ->modalSubmitActionLabel('Save')
                 ->form([
                     TextInput::make('original_url')
                         ->label('URL to Shorten')
@@ -86,8 +88,21 @@ class ListLinks extends ListRecords
 
                     Notification::make()
                         ->title('Quick link created!')
-                        ->body("'{$data['title']}' is being processed and will appear in the table once completed.")
+                        ->body('Do you want to configure this link?')
                         ->success()
+                        ->persistent()
+                        ->actions([
+                            NotificationAction::make('yes')
+                                ->label('Yes')
+                                ->button()
+                                ->color('primary')
+                                ->url(fn () => LinkResource::getUrl('edit', ['record' => $link])),
+                            NotificationAction::make('no')
+                                ->label('No')
+                                ->button()
+                                ->color('gray')
+                                ->close(),
+                        ])
                         ->send();
                 }),
         ];
