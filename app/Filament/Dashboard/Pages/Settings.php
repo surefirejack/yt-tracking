@@ -40,9 +40,19 @@ class Settings extends Page
             ];
         })->toArray();
         
+        // Handle legacy time format conversion
+        $bestTimeForEmails = $user->best_time_for_emails ?? '9';
+        if (is_string($bestTimeForEmails) && strpos($bestTimeForEmails, ':') !== false) {
+            // Convert from HH:MM format to hour integer
+            $timeParts = explode(':', $bestTimeForEmails);
+            $bestTimeForEmails = (string) intval($timeParts[0]);
+        } elseif ($bestTimeForEmails instanceof \Carbon\Carbon) {
+            // Handle Carbon datetime objects (from the datetime cast)
+            $bestTimeForEmails = (string) $bestTimeForEmails->hour;
+        }
+        
         $this->form->fill([
-            'timezone' => $user->timezone ?? 'UTC',
-            'best_time_for_emails' => $user->best_time_for_emails ?? '09:00',
+            'best_time_for_emails' => $bestTimeForEmails,
             'custom_domains' => $customDomains,
         ]);
     }
@@ -56,32 +66,44 @@ class Settings extends Page
                         Tabs\Tab::make('General')
                             ->icon('heroicon-o-cog-6-tooth')
                             ->schema([
-                                Forms\Components\TimePicker::make('best_time_for_emails')
+                                Forms\Components\Select::make('best_time_for_emails')
                                     ->label('Best time to receive email updates')
-                                    ->helperText('Choose the time when you prefer to receive email notifications.')
-                                    ->default('09:00')
-                                    ->required(),
-                                
-                                Forms\Components\Select::make('timezone')
-                                    ->label('Timezone')
-                                    ->options($this->getTimezoneOptions())
-                                    ->searchable()
-                                    ->default('UTC')
+                                    ->helperText('Choose the time when you prefer to receive email notifications. Times are shown in your local timezone.')
+                                    ->options($this->getTimeOptions())
+                                    ->default('9')
                                     ->required()
+                                    ->live()
+                                    ->afterStateUpdated(function ($state) {
+                                        // This will be called when the time is selected
+                                        // The $state contains the selected hour in Eastern time
+                                    }),
+                                
+                                Forms\Components\Placeholder::make('timezone_note')
+                                    ->label('')
+                                    ->content('')
                                     ->extraAttributes([
                                         'x-data' => '{ 
+                                            currentTime: "loading...",
                                             init() {
-                                                if (!this.$el.value || this.$el.value === "UTC") {
-                                                    const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-                                                    if (timezone) {
-                                                        this.$el.value = timezone;
-                                                        this.$el.dispatchEvent(new Event("change"));
-                                                    }
-                                                }
+                                                this.updateCurrentTime();
+                                                // Update time every minute
+                                                setInterval(() => this.updateCurrentTime(), 60000);
+                                            },
+                                            updateCurrentTime() {
+                                                const userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+                                                const now = new Date();
+                                                
+                                                const timeFormatter = new Intl.DateTimeFormat("en-US", {
+                                                    hour: "numeric",
+                                                    minute: "numeric", 
+                                                    hour12: true,
+                                                    timeZone: userTimeZone
+                                                });
+                                                this.currentTime = timeFormatter.format(now);
                                             }
-                                        }'
+                                        }',
                                     ])
-                                    ->helperText('Your timezone will be automatically detected if not already set.'),
+                                    ->content(fn () => view('components.timezone-info')),
                             ]),
                         
                         Tabs\Tab::make('Domains')
@@ -161,10 +183,15 @@ class Settings extends Page
         $user = Auth::user();
         $tenant = Filament::getTenant();
         
+        // Convert hour integer back to time format for database storage
+        $bestTimeForEmails = $data['best_time_for_emails'];
+        if (is_numeric($bestTimeForEmails)) {
+            $bestTimeForEmails = sprintf('%02d:00', (int) $bestTimeForEmails);
+        }
+        
         // Save user settings
         $user->update([
-            'timezone' => $data['timezone'],
-            'best_time_for_emails' => $data['best_time_for_emails'],
+            'best_time_for_emails' => $bestTimeForEmails,
         ]);
 
         // Handle custom domains
@@ -237,5 +264,19 @@ class Settings extends Page
     public function getTitle(): string
     {
         return 'Settings';
+    }
+
+    protected function getTimeOptions(): array
+    {
+        // Predefined time options similar to the JavaScript version
+        return [
+            '3' => '3:00 AM',
+            '6' => '6:00 AM', 
+            '9' => '9:00 AM',
+            '12' => '12:00 PM (noon)',
+            '15' => '3:00 PM',
+            '18' => '6:00 PM',
+            '21' => '9:00 PM',
+        ];
     }
 } 
