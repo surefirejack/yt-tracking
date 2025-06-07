@@ -12,7 +12,9 @@
             value="{{ $percentage }}" 
             class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700 slider"
             id="traffic-split-slider"
+            wire:model.live="data.traffic_percentage"
             onchange="updateTrafficSplit(this.value)"
+            oninput="updateTrafficSplit(this.value)"
         >
         <div class="flex justify-between text-xs text-gray-500 mt-1">
             <span>10%</span>
@@ -33,32 +35,67 @@ function updateTrafficSplit(value) {
     const percentage = parseInt(value);
     const variantB = 100 - percentage;
     
-    // Update display
+    // Update display immediately
     document.getElementById('variant-a-percentage').textContent = percentage;
     document.getElementById('variant-b-percentage').textContent = variantB;
     
-    // Update the hidden field that Filament uses
+    // Find and update the hidden traffic_percentage field
     const hiddenField = document.querySelector('input[name="traffic_percentage"]');
     if (hiddenField) {
         hiddenField.value = percentage;
-        hiddenField.dispatchEvent(new Event('input'));
+        // Trigger change event for Livewire
+        hiddenField.dispatchEvent(new Event('change', { bubbles: true }));
+        hiddenField.dispatchEvent(new Event('input', { bubbles: true }));
     }
     
-    // Trigger Livewire update
+    // Alternative: Directly trigger Livewire component update
     if (window.Livewire) {
-        window.Livewire.find(document.querySelector('[wire\\:id]').getAttribute('wire:id')).set('data.traffic_percentage', percentage);
+        // Find the current Livewire component
+        const wireComponent = document.querySelector('[wire\\:id]');
+        if (wireComponent) {
+            const componentId = wireComponent.getAttribute('wire:id');
+            const livewireComponent = window.Livewire.find(componentId);
+            if (livewireComponent) {
+                // Update the traffic_percentage data
+                livewireComponent.set('data.traffic_percentage', percentage);
+            }
+        }
+    }
+    
+    // Force update the slider background
+    updateSliderBackground(percentage);
+}
+
+function updateSliderBackground(percentage) {
+    const slider = document.getElementById('traffic-split-slider');
+    if (slider) {
+        slider.style.background = `linear-gradient(to right, #3b82f6 0%, #3b82f6 ${percentage}%, #e5e7eb ${percentage}%, #e5e7eb 100%)`;
     }
 }
 
-// Style the slider
+// Initialize slider styling
 document.addEventListener('DOMContentLoaded', function() {
     const slider = document.getElementById('traffic-split-slider');
     if (slider) {
-        slider.style.background = `linear-gradient(to right, #3b82f6 0%, #3b82f6 ${slider.value}%, #e5e7eb ${slider.value}%, #e5e7eb 100%)`;
+        updateSliderBackground(slider.value);
         
+        // Add both input and change event listeners
         slider.addEventListener('input', function() {
-            this.style.background = `linear-gradient(to right, #3b82f6 0%, #3b82f6 ${this.value}%, #e5e7eb ${this.value}%, #e5e7eb 100%)`;
+            updateTrafficSplit(this.value);
         });
+        
+        slider.addEventListener('change', function() {
+            updateTrafficSplit(this.value);
+        });
+    }
+});
+
+// Also listen for Livewire updates to sync display
+document.addEventListener('livewire:updated', function() {
+    const slider = document.getElementById('traffic-split-slider');
+    if (slider) {
+        updateSliderBackground(slider.value);
+        updateTrafficSplit(slider.value);
     }
 });
 </script>
@@ -83,5 +120,11 @@ document.addEventListener('DOMContentLoaded', function() {
     cursor: pointer;
     border: 2px solid #fff;
     box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    border: none;
+}
+
+.slider::-moz-track {
+    height: 8px;
+    border-radius: 4px;
 }
 </style> 

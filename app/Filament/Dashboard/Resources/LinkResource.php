@@ -256,17 +256,12 @@ class LinkResource extends Resource
                                         Forms\Components\Placeholder::make('split_preview')
                                             ->label('Traffic Distribution')
                                             ->content(function ($get, $record) {
-                                                $variants = $get('test_variants') ?? [];
-                                                if (empty($variants) && $record && $record->test_variants) {
-                                                    $variants = $record->test_variants;
-                                                }
-                                                if (count($variants) >= 2) {
-                                                    $variantA = $variants[0]['percentage'] ?? 50;
-                                                    $variantB = $variants[1]['percentage'] ?? 50;
-                                                    return "Variant A: {$variantA}% • Variant B: {$variantB}%";
-                                                }
-                                                return 'Variant A: 50% • Variant B: 50%';
+                                                $trafficPercentage = $get('traffic_percentage') ?? 50;
+                                                $variantA = (int) $trafficPercentage;
+                                                $variantB = 100 - $variantA;
+                                                return "Variant A: {$variantA}% • Variant B: {$variantB}%";
                                             })
+                                            ->live()
                                             ->visible(fn ($get) => $get('split_testing_enabled')),
 
                                         Forms\Components\Hidden::make('test_variants')
