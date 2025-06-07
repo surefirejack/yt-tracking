@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Http;
 use Filament\Notifications\Notification;
 use Illuminate\Support\Facades\Log;
 use Filament\Facades\Filament;
+use Filament\Support\Enums\ActionSize;
 
 class EditLink extends EditRecord
 {
@@ -22,6 +23,21 @@ class EditLink extends EditRecord
     {
         return [
             //
+        ];
+    }
+
+    public function getHeader(): ?\Illuminate\Contracts\View\View
+    {
+        return view('filament.pages.edit-link-header', [
+            'record' => $this->record,
+            'breadcrumbs' => $this->getBreadcrumbs(),
+        ]);
+    }
+
+    protected function getHeaderWidgets(): array
+    {
+        return [
+            // Custom widget for unsaved changes badge
         ];
     }
 
