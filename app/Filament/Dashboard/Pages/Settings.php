@@ -97,8 +97,8 @@ class Settings extends Page
                                                 
                                                 Forms\Components\TextInput::make('domain')
                                                     ->label('Domain')
-                                                    ->placeholder('example.com')
-                                                    ->helperText('Enter your custom domain without http:// or https://')
+                                                    ->placeholder('go.yoursite.com')
+                                                    ->prefix('https://')
                                                     ->required()
                                                     ->regex('/^[a-zA-Z0-9][a-zA-Z0-9-]{0,61}[a-zA-Z0-9](?:\.[a-zA-Z]{2,})+$/')
                                                     ->validationMessages([
