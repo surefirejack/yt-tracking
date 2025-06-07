@@ -251,7 +251,8 @@ class LinkResource extends Resource
                                         
                                         Toggle::make('track_conversion')
                                             ->label('Track Conversions')
-                                            ->helperText('Enable conversion tracking for this link'),
+                                            ->helperText('Enable conversion tracking for this link')
+                                            ->default(true),
                                         
                                         Toggle::make('public_stats')
                                             ->label('Public Statistics')

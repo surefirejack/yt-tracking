@@ -71,6 +71,25 @@ class CreateLinkJob implements ShouldQueue
             if ($this->link->utm_term) $payload['utm_term'] = $this->link->utm_term;
             if ($this->link->utm_content) $payload['utm_content'] = $this->link->utm_content;
 
+            // Add boolean fields
+            $payload['trackConversion'] = (bool) $this->link->track_conversion;
+            $payload['archived'] = (bool) $this->link->archived;
+            $payload['publicStats'] = (bool) $this->link->public_stats;
+            $payload['proxy'] = (bool) $this->link->proxy;
+            $payload['rewrite'] = (bool) $this->link->rewrite;
+            $payload['doIndex'] = (bool) $this->link->do_index;
+
+            // Add other optional fields if they exist
+            if ($this->link->password) $payload['password'] = $this->link->password;
+            if ($this->link->expires_at) $payload['expiresAt'] = $this->link->expires_at->toISOString();
+            if ($this->link->expired_url) $payload['expiredUrl'] = $this->link->expired_url;
+            if ($this->link->image) $payload['image'] = $this->link->image;
+            if ($this->link->video) $payload['video'] = $this->link->video;
+            if ($this->link->ios) $payload['ios'] = $this->link->ios;
+            if ($this->link->android) $payload['android'] = $this->link->android;
+            if ($this->link->geo) $payload['geo'] = $this->link->geo;
+            if ($this->link->webhook_ids) $payload['webhookIds'] = $this->link->webhook_ids;
+
             // Make the API call to Dub
             $response = Http::withHeaders([
                 'Authorization' => 'Bearer ' . $apiKey,

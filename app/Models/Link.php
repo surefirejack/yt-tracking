@@ -85,6 +85,20 @@ class Link extends Model
         'webhook_ids' => 'array',
     ];
 
+    protected $attributes = [
+        'track_conversion' => true,
+        'archived' => false,
+        'proxy' => false,
+        'rewrite' => false,
+        'do_index' => false,
+        'public_stats' => false,
+        'clicks' => 0,
+        'leads' => 0,
+        'sales' => 0,
+        'sale_amount' => 0,
+        'status' => 'pending',
+    ];
+
     /**
      * Tenant relationship
      */
