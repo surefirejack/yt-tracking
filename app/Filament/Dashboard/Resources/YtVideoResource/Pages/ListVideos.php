@@ -34,13 +34,9 @@ class ListVideos extends ListRecords
     {
         $table = parent::table($table);
         
-
         if ($this->shouldShowSkeleton()) {
             return $table
-                ->emptyStateHeading('Loading your videos...')
-                ->emptyStateDescription('We\'re fetching your latest videos from YouTube. This may take a few moments.')
-                ->emptyStateIcon('heroicon-o-arrow-path')
-                ->emptyState(view('components.video-table-skeleton'))
+                ->emptyState(view('components.loading-empty-state'))
                 ->emptyStateActions([]);
         }
         
