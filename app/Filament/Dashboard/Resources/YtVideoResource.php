@@ -73,16 +73,23 @@ class YtVideoResource extends Resource
                     ->date()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('links_found')
-                    ->label('Links Found')
+                    ->label('Untracked Links')
                     ->numeric()
-                    ->sortable(),
+                    ->sortable()
+                    ->badge()
+                    ->color(fn (string $state): string => match (true) {
+                        $state <= 1 => 'success',
+                        $state <= 5 => 'info', 
+                        $state <= 10 => 'warning',
+                        default => 'danger',
+                    }),
             ])
             ->filters([
                 //
             ])
             ->actions([
                 Tables\Actions\Action::make('manageLinks')
-                    ->label('Manage Links')
+                    ->label('Convert Links')
                     ->icon('heroicon-o-link')
                     ->slideOver()
                     ->modalSubmitActionLabel('Convert These Links')
