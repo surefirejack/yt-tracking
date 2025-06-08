@@ -113,4 +113,17 @@ return [
         'create_tag_url' => env('DUB_CREATE_TAG_URL'),
     ],
 
+    'supadata' => [
+        'base_url' => env('SUPADATA_BASE_URL'),
+        'api_key' => env('SUPADATA_API_KEY'),
+    ],
+
+    'makedotcom' => [
+        'webhook_url' => [
+            'request_yt_channel_videos_supadata' => env('REQUEST_YT_CHANNEL_VIDEOS_SUPADATA_MAKEDOTCOM'),
+            'request_yt_video_details' => env('REQUEST_YT_VIDEO_DETAILS_SUPADATA_MAKEDOTCOM'),
+        ],
+        'webhook_token' => env('MAKEDOTCOM_WEBHOOK_TOKEN'),
+    ],
+
 ];
