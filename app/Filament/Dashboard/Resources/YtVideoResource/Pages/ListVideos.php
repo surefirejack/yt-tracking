@@ -32,7 +32,16 @@ class ListVideos extends ListRecords
     {
         $table = parent::table($table);
         
+<<<<<<< Updated upstream
 
+=======
+        if ($this->shouldShowSkeleton()) {
+            return $table
+                ->emptyState(view('components.loading-empty-state'))
+                ->emptyStateActions([]);
+        }
+        
+>>>>>>> Stashed changes
         return $table
             ->emptyStateHeading('No videos found')
             ->emptyStateDescription('Add your YouTube channel to start importing your videos')
