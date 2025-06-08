@@ -25,6 +25,16 @@ class YtVideoResource extends Resource
 
     protected static ?string $navigationLabel = 'Your Videos';
 
+    public static function getEloquentQuery(): Builder
+    {
+        $tenant = Filament::getTenant();
+        
+        return parent::getEloquentQuery()
+            ->whereHas('ytChannel', function (Builder $query) use ($tenant) {
+                $query->where('tenant_id', $tenant->id);
+            });
+    }
+
     public static function form(Form $form): Form
     {
         return $form
@@ -37,7 +47,35 @@ class YtVideoResource extends Resource
     {
         return $table
             ->columns([
-                //
+                Tables\Columns\ImageColumn::make('thumbnail_url')
+                    ->label('Thumbnail')
+                    ->width(100)
+                    ->height(60),
+                Tables\Columns\TextColumn::make('title')
+                    ->label('Title')
+                    ->searchable()
+                    ->sortable()
+                    ->limit(50),
+                Tables\Columns\TextColumn::make('ytChannel.name')
+                    ->label('Channel')
+                    ->searchable()
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('views')
+                    ->label('Views')
+                    ->numeric()
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('likes')
+                    ->label('Likes')
+                    ->numeric()
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('published_at')
+                    ->label('Published')
+                    ->dateTime()
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('links_found')
+                    ->label('Links Found')
+                    ->numeric()
+                    ->sortable(),
             ])
             ->filters([
                 //

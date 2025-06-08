@@ -74,6 +74,7 @@ class GetYouTubeChannelVideos implements ShouldQueue
                     ],
                     [
                         'url' => $videoUrl,
+                        'title' => 'Loading...', // Temporary title, will be updated by GetYouTubeVideoDetails job
                     ]
                 );
                 

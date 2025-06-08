@@ -57,6 +57,42 @@ class GetYouTubeChannelDetails implements ShouldQueue
             
             $data = $response->json();
             
+            // Extract handle from URL if user provided a full URL
+            $handle = $ytChannel->handle;
+            $url = $ytChannel->url;
+            
+            // If we have a URL but no handle, try to extract handle from URL
+            if (!$handle && $url) {
+                // Extract handle from various YouTube URL formats
+                // https://www.youtube.com/@channelhandle
+                // https://youtube.com/@channelhandle  
+                // https://www.youtube.com/c/channelname
+                // https://www.youtube.com/channel/UCxxxxxxxxx
+                if (preg_match('/@([^\/\?&]+)/', $url, $matches)) {
+                    $handle = '@' . $matches[1];
+                } elseif (preg_match('/\/c\/([^\/\?&]+)/', $url, $matches)) {
+                    $handle = '@' . $matches[1]; // Convert /c/ format to @handle
+                }
+            }
+            
+            // If we have a handle but no URL, construct the URL
+            if ($handle && !$url) {
+                $url = 'https://www.youtube.com/' . $handle;
+            }
+            
+            // Get the proper channel URL from API response or construct it
+            $properChannelUrl = $url;
+            if (isset($data['handle']) && $data['handle']) {
+                $properChannelUrl = 'https://www.youtube.com/@' . ltrim($data['handle'], '@');
+                // Also update the handle if we got it from API
+                if (!$handle) {
+                    $handle = '@' . ltrim($data['handle'], '@');
+                }
+            } elseif (isset($data['id']) && $data['id']) {
+                // Fallback to channel ID URL if no handle available
+                $properChannelUrl = 'https://www.youtube.com/channel/' . $data['id'];
+            }
+            
             // Update YtChannel with the retrieved data
             $ytChannel->update([
                 'channel_id' => $data['id'] ?? null,
@@ -65,6 +101,8 @@ class GetYouTubeChannelDetails implements ShouldQueue
                 'logo_image_url' => $data['thumbnail'] ?? null,
                 'subscribers_count' => $data['subscriberCount'] ?? 0,
                 'videos_count' => $data['videoCount'] ?? 0,
+                'handle' => $handle,
+                'url' => $properChannelUrl,
                 'last_update_received_date' => now(),
             ]);
             
