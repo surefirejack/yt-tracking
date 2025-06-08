@@ -32,7 +32,7 @@ class ListVideos extends ListRecords
     {
         $table = parent::table($table);
         
-        
+
         return $table
             ->emptyStateHeading('No videos found')
             ->emptyStateDescription('Add your YouTube channel to start importing your videos')
