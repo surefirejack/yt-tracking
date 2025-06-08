@@ -595,7 +595,8 @@ class LinkResource extends Resource
                     Tables\Actions\DeleteBulkAction::make(),
                 ]),
             ])
-            ->defaultSort('created_at', 'desc');
+            ->defaultSort('created_at', 'desc')
+            ->poll('1.5s');
     }
 
     public static function getEloquentQuery(): Builder
