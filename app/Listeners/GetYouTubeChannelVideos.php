@@ -7,13 +7,14 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Bus;
 use App\Models\YtVideo;
-use App\Jobs\GetYouTubeVideoDetails;
+use App\Jobs\GetYouTubeVideoDetailsSupadata;
 
 class GetYouTubeChannelVideos implements ShouldQueue
 {
 
-    public $limit = 10;
+    public $limit = 20;
 
 
     /**
@@ -61,6 +62,9 @@ class GetYouTubeChannelVideos implements ShouldQueue
             
             $data = $response->json();
             
+            // Collect jobs for batch processing
+            $jobs = [];
+            
             // Process video IDs from the response
             foreach ($data['videoIds'] as $videoId) {
                 // Create or update a YtVideo record
@@ -78,12 +82,26 @@ class GetYouTubeChannelVideos implements ShouldQueue
                     ]
                 );
                 
-                // Only dispatch job for newly created videos to avoid duplicates
+                // Only add job for newly created videos to avoid duplicates
                 if ($video->wasRecentlyCreated) {
-                    Log::info('Sending video to GetYouTubeVideoDetails: ' . $video->video_id);
-                    // Dispatch job to get more details about the video
-                    GetYouTubeVideoDetails::dispatch($video);
+                    Log::info('Adding video to batch processing: ' . $video->video_id);
+                    $jobs[] = new GetYouTubeVideoDetailsSupadata($video);
                 }
+            }
+            
+            // Dispatch jobs as a batch if we have any
+            if (!empty($jobs)) {
+                $batch = Bus::batch($jobs)
+                    ->name("YouTube Video Details - Channel: {$ytChannel->name}")
+                    ->allowFailures()
+                    ->dispatch();
+                
+                Log::info("Successfully dispatched batch of " . count($jobs) . " video detail jobs for channel: {$channelIdentifier}", [
+                    'batch_id' => $batch->id,
+                    'job_count' => count($jobs)
+                ]);
+            } else {
+                Log::info("No new videos to process for channel: {$channelIdentifier}");
             }
             
             Log::info("Successfully processed videos for YouTube channel: {$channelIdentifier}");

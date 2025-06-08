@@ -4,6 +4,7 @@ namespace App\Jobs;
 
 use App\Models\YtVideo;
 use Illuminate\Bus\Queueable;
+use Illuminate\Bus\Batchable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
@@ -14,7 +15,7 @@ use Illuminate\Support\Facades\Log;
 
 class GetYouTubeVideoDetails implements ShouldQueue
 {
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels, Batchable;
 
     protected $ytVideo;
     protected $attempts = 0;
@@ -26,11 +27,9 @@ class GetYouTubeVideoDetails implements ShouldQueue
     public function __construct(YtVideo $ytVideo)
     {
         try {
-            file_put_contents(storage_path('logs/direct-test.log'), "Direct file write test\n", FILE_APPEND);
-            
             Log::info('GetYouTubeVideoDetails job constructed', [
                 'video_id' => $ytVideo->video_id,
-                'tenant_id' => $ytVideo->tenant_id
+                'yt_channel_id' => $ytVideo->yt_channel_id
             ]);
             $this->ytVideo = $ytVideo;
         } catch (\Throwable $e) {
@@ -51,7 +50,7 @@ class GetYouTubeVideoDetails implements ShouldQueue
         try {
             Log::info('GetYouTubeVideoDetails job starting to handle', [
                 'video_id' => $this->ytVideo->video_id,
-                'tenant_id' => $this->ytVideo->tenant_id
+                'yt_channel_id' => $this->ytVideo->yt_channel_id
             ]);
 
             try {

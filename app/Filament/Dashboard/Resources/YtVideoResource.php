@@ -46,6 +46,7 @@ class YtVideoResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->poll('1.5s') // Live updates every 1.5 seconds
             ->columns([
                 Tables\Columns\ImageColumn::make('thumbnail_url')
                     ->label('Thumbnail')
