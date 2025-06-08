@@ -14,7 +14,7 @@ use App\Jobs\GetYouTubeVideoDetailsSupadata;
 class GetYouTubeChannelVideos implements ShouldQueue
 {
 
-    public $limit = 1;
+    public $limit = 15;
 
 
     /**
