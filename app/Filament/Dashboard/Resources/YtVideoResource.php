@@ -5,6 +5,8 @@ namespace App\Filament\Dashboard\Resources;
 use App\Filament\Dashboard\Resources\YtVideoResource\Pages;
 use App\Filament\Dashboard\Resources\YtVideoResource\RelationManagers;
 use App\Models\YtVideo;
+use App\Models\YtChannel;
+use App\Events\YtChannelAdded;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -64,13 +66,46 @@ class YtVideoResource extends Resource
                             ->placeholder('https://youtube.com/@channel or @channelhandle')
                             ->required()
                             ->helperText('Enter either your channel URL or your channel handle (e.g., @yourchannelname)')
+                            ->rules([
+                                function () {
+                                    return function (string $attribute, $value, \Closure $fail) {
+                                        $isYouTubeUrl = str_starts_with($value, 'https://youtube.com/') || 
+                                                       str_starts_with($value, 'https://www.youtube.com/') ||
+                                                       str_starts_with($value, 'http://youtube.com/') || 
+                                                       str_starts_with($value, 'http://www.youtube.com/');
+                                        
+                                        $isHandle = str_starts_with($value, '@') && !str_contains($value, ' ');
+                                        
+                                        if (!$isYouTubeUrl && !$isHandle) {
+                                            $fail('Please enter either a valid YouTube URL or a channel handle starting with @');
+                                        }
+                                    };
+                                }
+                            ])
                     ])
                     ->action(function (array $data) {
-                        // Here you would process the channel URL/handle
-                        // For now, we'll just show a notification
+                        $tenant = Filament::getTenant();
+                        $channelInput = $data['channel'];
+                        
+                        // Determine if it's a URL or handle
+                        $isUrl = str_starts_with($channelInput, 'http');
+                        
+                        // Create the channel record
+                        $ytChannel = YtChannel::create([
+                            'tenant_id' => $tenant->id,
+                            'name' => $isUrl ? 'YouTube Channel' : ltrim($channelInput, '@'), // Temporary name, will be updated by API
+                            'type' => 'youtube',
+                            'handle' => $isUrl ? null : $channelInput,
+                            'url' => $isUrl ? $channelInput : null,
+                            'channel_id' => 'pending', // Will be updated by API call
+                        ]);
+                        
+                        // Fire the event
+                        YtChannelAdded::dispatch($ytChannel);
+                        
                         Notification::make()
-                            ->title('Channel Added')
-                            ->body('Your YouTube channel has been added successfully!')
+                            ->title('Channel Added Successfully')
+                            ->body('Your YouTube channel has been added and is being processed!')
                             ->success()
                             ->send();
                     })
