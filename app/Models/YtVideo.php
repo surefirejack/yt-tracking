@@ -70,4 +70,77 @@ class YtVideo extends Model
             $query->where('tenant_id', $tenantId);
         });
     }
+
+    /**
+     * Extract URLs from the video description
+     */
+    public function getDescriptionUrls(): array
+    {
+        if (empty($this->description)) {
+            return [];
+        }
+        
+        // Regular expression to match URLs
+        $urlPattern = '/\b(?:https?:\/\/|www\.)[^\s<>"{}|\\^`\[\]]+/i';
+        
+        // Find all matches
+        preg_match_all($urlPattern, $this->description, $matches);
+        
+        // Get unique URLs and sort alphabetically
+        $uniqueUrls = array_unique($matches[0]);
+        sort($uniqueUrls);
+        
+        return $uniqueUrls;
+    }
+
+    /**
+     * Categorize URLs into allowed and excluded based on domains
+     */
+    public function getCategorizedUrls(): array
+    {
+        $urls = $this->getDescriptionUrls();
+        
+        $excludedDomains = [
+            'youtu.be',
+            'youtube.com',
+            'facebook.com',
+            'instagram.com',
+            'twitter.com',
+            'linkedin.com'
+        ];
+        
+        $allowed = [];
+        $excluded = [];
+        
+        foreach ($urls as $url) {
+            $isExcluded = false;
+            
+            foreach ($excludedDomains as $domain) {
+                if (stripos($url, $domain) !== false) {
+                    $excluded[] = $url;
+                    $isExcluded = true;
+                    break;
+                }
+            }
+            
+            if (!$isExcluded) {
+                $allowed[] = $url;
+            }
+        }
+        
+        return [
+            'allowed' => $allowed,
+            'excluded' => $excluded
+        ];
+    }
+
+    /**
+     * Get existing links for this video that match description URLs
+     */
+    public function getExistingLinkUrls(): array
+    {
+        return $this->links()
+            ->pluck('original_url')
+            ->toArray();
+    }
 }

@@ -39,7 +39,8 @@ class YtVideoResource extends Resource
     {
         return $form
             ->schema([
-                //
+                // This form is not used since we use slideOver in the table action
+                // All link management is handled in the EditAction slideover
             ]);
     }
 
@@ -50,28 +51,26 @@ class YtVideoResource extends Resource
             ->columns([
                 Tables\Columns\ImageColumn::make('thumbnail_url')
                     ->label('Thumbnail')
-                    ->width(100)
-                    ->height(60),
+                    ->width(75),
+                    // ->height(60),
                 Tables\Columns\TextColumn::make('title')
                     ->label('Title')
                     ->searchable()
                     ->sortable()
                     ->limit(50),
-                Tables\Columns\TextColumn::make('ytChannel.name')
-                    ->label('Channel')
-                    ->searchable()
-                    ->sortable(),
                 Tables\Columns\TextColumn::make('views')
                     ->label('Views')
                     ->numeric()
-                    ->sortable(),
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('likes')
                     ->label('Likes')
                     ->numeric()
-                    ->sortable(),
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('published_at')
                     ->label('Published')
-                    ->dateTime()
+                    ->date()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('links_found')
                     ->label('Links Found')
@@ -82,7 +81,100 @@ class YtVideoResource extends Resource
                 //
             ])
             ->actions([
-                Tables\Actions\EditAction::make(),
+                Tables\Actions\Action::make('manageLinks')
+                    ->label('Manage Links')
+                    ->icon('heroicon-o-link')
+                    ->slideOver()
+                    ->modalSubmitActionLabel('Convert These Links')
+                    ->modalSubmitAction(fn ($action) => $action->icon('heroicon-o-arrow-path-rounded-square'))
+                    ->form([
+                        Forms\Components\Section::make('Choose Links to Update')
+                            ->description('Select the links you want to create short links for')
+                            ->icon('heroicon-o-check-circle')
+                            ->schema([
+                                Forms\Components\CheckboxList::make('allowed_links')
+                                    ->label('')
+                                    ->options(function ($record) {
+                                        if (!$record) return [];
+                                        $categorized = $record->getCategorizedUrls();
+                                        $existing = $record->getExistingLinkUrls();
+                                        
+                                        $options = [];
+                                        foreach ($categorized['allowed'] as $url) {
+                                            $label = $url;
+                                            if (in_array($url, $existing)) {
+                                                $label .= ' ✓ (Already created)';
+                                            }
+                                            $options[$url] = $label;
+                                        }
+                                        return $options;
+                                    })
+                                    ->columns(1)
+                                    ->default(function ($record) {
+                                        if (!$record) return [];
+                                        return $record->getExistingLinkUrls();
+                                    })
+                            ])
+                            ->visible(function ($record) {
+                                if (!$record) return false;
+                                $categorized = $record->getCategorizedUrls();
+                                return !empty($categorized['allowed']);
+                            }),
+                            
+                        Forms\Components\Section::make('Excluded Links')
+                            ->description('These links contain social media or YouTube domains and are excluded')
+                            ->icon('heroicon-o-x-circle')
+                            ->schema([
+                                Forms\Components\Placeholder::make('excluded_links_list')
+                                    ->label('')
+                                    ->content(function ($record) {
+                                        if (!$record) return '';
+                                        $categorized = $record->getCategorizedUrls();
+                                        if (empty($categorized['excluded'])) {
+                                            return 'No excluded links found.';
+                                        }
+                                        
+                                        $html = '<div class="space-y-2">';
+                                        foreach ($categorized['excluded'] as $url) {
+                                            $html .= '<div class="flex items-center space-x-2 text-gray-500 dark:text-gray-400">';
+                                            $html .= '<span class="text-red-500">×</span>';
+                                            $html .= '<span class="break-all">' . htmlspecialchars($url) . '</span>';
+                                            $html .= '</div>';
+                                        }
+                                        $html .= '</div>';
+                                        return new \Illuminate\Support\HtmlString($html);
+                                    })
+                            ])
+                            ->visible(function ($record) {
+                                if (!$record) return false;
+                                $categorized = $record->getCategorizedUrls();
+                                return !empty($categorized['excluded']);
+                            }),
+                    ])
+                    ->action(function (array $data, $record) {
+                        // Here you can process the selected links
+                        $selectedLinks = $data['allowed_links'] ?? [];
+                        $existing = $record->getExistingLinkUrls();
+                        
+                        // Create new links for selected URLs that don't exist yet
+                        foreach ($selectedLinks as $url) {
+                            if (!in_array($url, $existing)) {
+                                \App\Models\Link::create([
+                                    'tenant_id' => \Filament\Facades\Filament::getTenant()->id,
+                                    'original_url' => $url,
+                                    'yt_video_id' => $record->id,
+                                    'title' => 'From ' . $record->title,
+                                    'status' => 'pending',
+                                ]);
+                            }
+                        }
+                        
+                        Notification::make()
+                            ->title('Links Updated')
+                            ->body('Selected links have been queued for processing.')
+                            ->success()
+                            ->send();
+                    }),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
