@@ -537,7 +537,58 @@ class LinkResource extends Resource
                     }),
             ])
             ->actions([
-                Tables\Actions\EditAction::make(),
+                Tables\Actions\ActionGroup::make([
+                    Tables\Actions\EditAction::make(),
+                    Tables\Actions\Action::make('duplicate')
+                        ->label('Duplicate')
+                        ->icon('heroicon-o-document-duplicate')
+                        ->action(function (Link $record) {
+                            $data = $record->toArray();
+                            
+                            // Remove fields that shouldn't be duplicated
+                            unset($data['id']);
+                            unset($data['short_link']);
+                            unset($data['qr_code']);
+                            unset($data['created_at']);
+                            unset($data['updated_at']);
+                            unset($data['dub_id']);
+                            unset($data['clicks']);
+                            unset($data['leads']);
+                            unset($data['last_clicked']);
+                            unset($data['domain']);
+                            unset($data['key']);
+                            unset($data['url']);
+                            unset($data['external_id']);
+                            unset($data['tenant_id_dub']);
+                            unset($data['status']);
+                            unset($data['error_message']);
+                            
+                            // Add " (Copy)" to title if it exists
+                            if ($data['title']) {
+                                $data['title'] = $data['title'] . ' (Copy)';
+                            }
+                            
+                            // Set initial status to pending
+                            $data['status'] = 'pending';
+                            
+                            // Create the new link record
+                            $newLink = Link::create($data);
+                            
+                            // Dispatch job to create the duplicate link via Dub API
+                            CreateLinkJob::dispatch($newLink);
+                            
+                            // Show success notification
+                            \Filament\Notifications\Notification::make()
+                                ->title('Link duplicated successfully!')
+                                ->body('The duplicate link is being created and will appear shortly.')
+                                ->success()
+                                ->send();
+                        })
+                        ->requiresConfirmation()
+                        ->modalHeading('Duplicate Link')
+                        ->modalDescription('Are you sure you want to duplicate this link? A new link will be created with the same settings.')
+                        ->modalSubmitActionLabel('Duplicate'),
+                ])
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
