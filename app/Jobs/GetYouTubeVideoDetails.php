@@ -3,15 +3,14 @@
 namespace App\Jobs;
 
 use App\Models\YtVideo;
-use Google_Client;
-use Google_Service_YouTube;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
-use App\Jobs\RequestYtTranscriptSupadataViaMakedotcom;
+
 
 class GetYouTubeVideoDetails implements ShouldQueue
 {
@@ -31,7 +30,7 @@ class GetYouTubeVideoDetails implements ShouldQueue
             
             Log::info('GetYouTubeVideoDetails job constructed', [
                 'video_id' => $ytVideo->video_id,
-                'channel_id' => $ytVideo->yt_channel_id
+                'tenant_id' => $ytVideo->tenant_id
             ]);
             $this->ytVideo = $ytVideo;
         } catch (\Throwable $e) {
@@ -52,15 +51,8 @@ class GetYouTubeVideoDetails implements ShouldQueue
         try {
             Log::info('GetYouTubeVideoDetails job starting to handle', [
                 'video_id' => $this->ytVideo->video_id,
-                'channel_id' => $this->ytVideo->yt_channel_id
+                'tenant_id' => $this->ytVideo->tenant_id
             ]);
-
-            // Initialize the Google client
-            $client = new Google_Client();
-            $client->setDeveloperKey(config('services.youtube.api_key'));
-
-            // Create the YouTube service
-            $youtube = new Google_Service_YouTube($client);
 
             try {
                 // Extract video ID from the stored URL or use the video_id field
@@ -83,87 +75,68 @@ class GetYouTubeVideoDetails implements ShouldQueue
                     }
                 }
                 
-                // Request the most useful parts
-                $parts = [
-                    'snippet',
-                    'contentDetails',
-                    'statistics',
-                    'status'
-                ];
+                // Make request to Supadata API
+                $response = Http::withHeaders([
+                    'x-api-key' => config('services.supadata.api_key')
+                ])->get(
+                    config('services.supadata.base_url') . 'youtube/video',
+                    [
+                        'id' => $videoId
+                    ]
+                );
                 
-                $params = [
-                    'id' => $videoId
-                ];
-
-                // Execute the videos.list request
-                $response = $youtube->videos->listVideos(implode(',', $parts), $params);
-                
-                if (empty($response->getItems())) {
-                    Log::error("Video not found for ID: {$videoId}");
+                if (!$response->successful()) {
+                    Log::error("Failed to get video details from Supadata: " . $response->body());
+                    
+                    // Retry logic for transient errors
+                    $this->attempts++;
+                    if ($this->attempts < $this->maxAttempts) {
+                        // Exponential backoff (1 min, 5 min, 15 min)
+                        $backoff = pow(5, $this->attempts);
+                        $this->release(now()->addMinutes($backoff));
+                        
+                        Log::info("Retrying video {$this->ytVideo->video_id} in {$backoff} minutes (attempt {$this->attempts} of {$this->maxAttempts})");
+                    }
                     return;
                 }
                 
-                // Get the video data
-                $videoData = $response->getItems()[0];
+                $data = $response->json();
                 
-                // Format the duration (convert ISO 8601 to seconds)
-                $duration = $this->convertDuration($videoData->getContentDetails()->getDuration());
-                
-                // Get or create thumbnail URLs
-                $thumbnails = $videoData->getSnippet()->getThumbnails();
-                $thumbnailUrl = null;
-                
-                // Try to get the highest quality thumbnail available
-                if ($thumbnails->getMaxres()) {
-                    $thumbnailUrl = $thumbnails->getMaxres()->getUrl();
-                } elseif ($thumbnails->getStandard()) {
-                    $thumbnailUrl = $thumbnails->getStandard()->getUrl();
-                } elseif ($thumbnails->getHigh()) {
-                    $thumbnailUrl = $thumbnails->getHigh()->getUrl();
-                } elseif ($thumbnails->getMedium()) {
-                    $thumbnailUrl = $thumbnails->getMedium()->getUrl();
-                } elseif ($thumbnails->getDefault()) {
-                    $thumbnailUrl = $thumbnails->getDefault()->getUrl();
-                }
+                Log::info('Video data received from Supadata', [
+                    'video_id' => $videoId,
+                    'title' => $data['title'] ?? 'No title',
+                    'duration' => $data['duration'] ?? 0,
+                    'views' => $data['viewCount'] ?? 0
+                ]);
 
-                Log::info('Description: ' . $videoData->getSnippet()->getDescription());
+                Log::info('Description: ' . ($data['description'] ?? ''));
                 
                 // Count URLs in the description
-                $description = $videoData->getSnippet()->getDescription();
+                $description = $data['description'] ?? '';
                 $urlCount = $this->countUrlsInText($description);
+                
+                // Convert uploadDate to proper format
+                $publishedAt = null;
+                if (!empty($data['uploadDate'])) {
+                    $publishedAt = date('Y-m-d H:i:s', strtotime($data['uploadDate']));
+                }
                 
                 // Update the video record with detailed information
                 $this->ytVideo->update([
-                    'title' => $videoData->getSnippet()->getTitle(),
+                    'title' => $data['title'] ?? null,
                     'description' => $description,
-                    'published_at' => date('Y-m-d H:i:s', strtotime($videoData->getSnippet()->getPublishedAt())),
-                    'thumbnail_url' => $thumbnailUrl,
-                    'length' => $duration,
-                    'views' => $videoData->getStatistics()->getViewCount() ?? 0,
-                    'likes' => $videoData->getStatistics()->getLikeCount() ?? 0,
+                    'published_at' => $publishedAt,
+                    'thumbnail_url' => $data['thumbnail'] ?? null,
+                    'length' => $data['duration'] ?? 0,
+                    'views' => $data['viewCount'] ?? 0,
+                    'likes' => $data['likeCount'] ?? 0,
                     'links_found' => $urlCount,
-                    // 'comments' => $videoData->getStatistics()->getCommentCount() ?? 0,
-                    // 'channel_title' => $videoData->getSnippet()->getChannelTitle(),
-                    // 'tags' => json_encode($videoData->getSnippet()->getTags() ?? []),
-                    // 'category_id' => $videoData->getSnippet()->getCategoryId(),
-                    // 'definition' => $videoData->getContentDetails()->getDefinition(),
-                    // 'caption' => $videoData->getContentDetails()->getCaption() == 'true',
-                    // 'licensed_content' => $videoData->getContentDetails()->getLicensedContent(),
-                    // 'dimension' => $videoData->getContentDetails()->getDimension(),
-                    // 'projection' => $videoData->getContentDetails()->getProjection(),
-                    // 'privacy_status' => $videoData->getStatus()->getPrivacyStatus(),
-                    // 'license' => $videoData->getStatus()->getLicense(),
-                    // 'embeddable' => $videoData->getStatus()->getEmbeddable(),
-                    // 'made_for_kids' => $videoData->getStatus()->getMadeForKids() ?? false,
-                    // 'processed_at' => now(),
                 ]);
                 
                 Log::info("Successfully processed video details for ID: {$videoId}");
-
-      
                 
             } catch (\Exception $e) {
-                Log::error("YouTube API Error for video ID {$this->ytVideo->video_id}: " . $e->getMessage());
+                Log::error("Supadata API Error for video ID {$this->ytVideo->video_id}: " . $e->getMessage());
                 
                 // Retry logic for transient errors
                 $this->attempts++;
@@ -209,25 +182,6 @@ class GetYouTubeVideoDetails implements ShouldQueue
         ]);
         
         return count($uniqueUrls);
-    }
-    
-    /**
-     * Convert ISO 8601 duration to seconds
-     * 
-     * @param string $duration ISO 8601 duration format (e.g. PT1H2M3S)
-     * @return int Duration in seconds
-     */
-    protected function convertDuration($duration)
-    {
-        $matches = [];
-        // Match hours, minutes, seconds
-        preg_match('/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/', $duration, $matches);
-        
-        $hours = isset($matches[1]) ? (int)$matches[1] : 0;
-        $minutes = isset($matches[2]) ? (int)$matches[2] : 0;
-        $seconds = isset($matches[3]) ? (int)$matches[3] : 0;
-        
-        return $hours * 3600 + $minutes * 60 + $seconds;
     }
 
     /**

@@ -16,7 +16,7 @@ return new class extends Migration
             $table->string('name');
             $table->string('type'); // You may want to change this to enum if you have specific values
             $table->string('handle')->nullable();
-            $table->string('url');
+            $table->string('url')->nullable();
             $table->foreignId('tenant_id')->constrained()->onDelete('cascade');
             $table->string('channel_id')->unique(); // YouTube channel ID should be unique
             $table->text('description')->nullable();

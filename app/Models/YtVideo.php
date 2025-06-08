@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class YtVideo extends Model
 {
     protected $fillable = [
-        'tenant_id',
+        'yt_channel_id',
         'title',
         'url',
         'description',
@@ -36,11 +36,11 @@ class YtVideo extends Model
     ];
 
     /**
-     * Tenant relationship for multi-tenancy
+     * YouTube Channel relationship
      */
-    public function tenant(): BelongsTo
+    public function ytChannel(): BelongsTo
     {
-        return $this->belongsTo(Tenant::class);
+        return $this->belongsTo(YtChannel::class);
     }
 
     /**

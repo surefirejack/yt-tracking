@@ -40,10 +40,10 @@ class YtChannel extends Model
     }
 
     /**
-     * Videos relationship (one-to-many)
+     * Videos relationship - one channel has many videos
      */
     public function ytVideos(): HasMany
     {
-        return $this->hasMany(YtVideo::class, 'channel_id', 'channel_id');
+        return $this->hasMany(YtVideo::class);
     }
 }

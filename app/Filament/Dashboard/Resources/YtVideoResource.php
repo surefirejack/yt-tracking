@@ -6,7 +6,7 @@ use App\Filament\Dashboard\Resources\YtVideoResource\Pages;
 use App\Filament\Dashboard\Resources\YtVideoResource\RelationManagers;
 use App\Models\YtVideo;
 use App\Models\YtChannel;
-use App\Events\YtChannelAdded;
+use App\Events\YouTubeChannelAdded;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -101,7 +101,7 @@ class YtVideoResource extends Resource
                         ]);
                         
                         // Fire the event
-                        YtChannelAdded::dispatch($ytChannel);
+                        YouTubeChannelAdded::dispatch($ytChannel);
                         
                         Notification::make()
                             ->title('Channel Added Successfully')

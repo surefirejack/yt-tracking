@@ -4,7 +4,7 @@ namespace App\Filament\Dashboard\Resources\YtVideoResource\Pages;
 
 use App\Filament\Dashboard\Resources\YtVideoResource;
 use App\Models\YtChannel;
-use App\Events\YtChannelAdded;
+use App\Events\YouTubeChannelAdded;
 use Filament\Actions;
 use Filament\Resources\Pages\ListRecords;
 use Filament\Forms;
@@ -76,7 +76,7 @@ class ListVideos extends ListRecords
                     ]);
                     
                     // Fire the event
-                    YtChannelAdded::dispatch($ytChannel);
+                    YouTubeChannelAdded::dispatch($ytChannel);
                     
                     Notification::make()
                         ->title('Channel Added Successfully')
@@ -137,7 +137,7 @@ class ListVideos extends ListRecords
                     ]);
                     
                     // Fire the event
-                    YtChannelAdded::dispatch($ytChannel);
+                    YouTubeChannelAdded::dispatch($ytChannel);
                     
                     Notification::make()
                         ->title('Channel Added Successfully')

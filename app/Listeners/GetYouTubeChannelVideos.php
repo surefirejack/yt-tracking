@@ -8,7 +8,7 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use App\Models\YtVideo;
-use App\Jobs\GetYouTubeVideoDetailsSupadata;
+use App\Jobs\GetYouTubeVideoDetails;
 
 class GetYouTubeChannelVideos implements ShouldQueue
 {
@@ -81,7 +81,7 @@ class GetYouTubeChannelVideos implements ShouldQueue
                 if ($video->wasRecentlyCreated) {
                     Log::info('Sending video to GetYouTubeVideoDetails: ' . $video->video_id);
                     // Dispatch job to get more details about the video
-                    GetYouTubeVideoDetailsSupadata::dispatch($video);
+                    GetYouTubeVideoDetails::dispatch($video);
                 }
             }
             
