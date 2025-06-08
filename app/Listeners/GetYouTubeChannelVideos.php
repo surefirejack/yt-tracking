@@ -13,7 +13,7 @@ use App\Jobs\GetYouTubeVideoDetails;
 class GetYouTubeChannelVideos implements ShouldQueue
 {
 
-    public $limit = 5;
+    public $limit = 10;
 
 
     /**
