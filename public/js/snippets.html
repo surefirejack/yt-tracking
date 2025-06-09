@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dub.co Conversion Tracking Snippets</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .snippet { 
+            background: #f5f5f5; 
+            padding: 15px; 
+            margin: 20px 0; 
+            border-left: 4px solid #007cba;
+            border-radius: 4px;
+        }
+        .snippet h3 { margin-top: 0; color: #007cba; }
+        pre { 
+            background: #282828; 
+            color: #f8f8f2; 
+            padding: 15px; 
+            border-radius: 4px; 
+            overflow-x: auto;
+            font-size: 14px;
+            line-height: 1.4;
+        }
+        .copy-btn {
+            background: #007cba;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-bottom: 10px;
+        }
+        .copy-btn:hover { background: #005a87; }
+        .note { 
+            background: #fff3cd; 
+            border: 1px solid #ffeaa7; 
+            padding: 10px; 
+            border-radius: 4px; 
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>Dub.co Conversion Tracking Snippets</h1>
+    <p>Copy and paste these snippets for your clients to implement conversion tracking.</p>
+
+    <div class="note">
+        <strong>Important:</strong> Replace <code>yourdomain.com</code> with your actual domain name in all snippets below.
+    </div>
+
+    <div class="snippet">
+        <h3>1. General Page Tracking (Add to ALL pages)</h3>
+        <p>Add this snippet to the &lt;head&gt; section of all pages where you want to track clicks:</p>
+        <button class="copy-btn" onclick="copyToClipboard('tracking-snippet')">Copy Snippet</button>
+        <pre id="tracking-snippet">&lt;!-- Dub.co Analytics Tracking --&gt;
+&lt;script&gt;
+(function(d,s,id,domain){
+    if(d.getElementById(id)) return;
+    var js=d.createElement(s),fjs=d.getElementsByTagName(s)[0];
+    js.id=id;js.async=true;
+    js.src='https://'+domain+'/js/dub-tracking.js';
+    fjs.parentNode.insertBefore(js,fjs);
+})(document,'script','dub-tracking-js','yourdomain.com');
+&lt;/script&gt;</pre>
+    </div>
+
+    <div class="snippet">
+        <h3>2. Basic Conversion Tracking (Add to thank you pages)</h3>
+        <p>Add this snippet to conversion/thank you pages:</p>
+        <button class="copy-btn" onclick="copyToClipboard('conversion-snippet')">Copy Snippet</button>
+        <pre id="conversion-snippet">&lt;!-- Dub.co Conversion Tracking --&gt;
+&lt;script&gt;
+window.DubConversionConfig = {
+    eventName: 'Sign up'  // Change this for each conversion type
+};
+&lt;/script&gt;
+&lt;script&gt;
+(function(d,s,id,domain){
+    if(d.getElementById(id)) return;
+    var js=d.createElement(s),fjs=d.getElementsByTagName(s)[0];
+    js.id=id;js.async=true;
+    js.src='https://'+domain+'/js/dub-conversion.js';
+    fjs.parentNode.insertBefore(js,fjs);
+})(document,'script','dub-conversion-js','yourdomain.com');
+&lt;/script&gt;</pre>
+    </div>
+
+    <div class="snippet">
+        <h3>3. Advanced Conversion Tracking (With customer data)</h3>
+        <p>For tracking with customer information and metadata:</p>
+        <button class="copy-btn" onclick="copyToClipboard('advanced-snippet')">Copy Snippet</button>
+        <pre id="advanced-snippet">&lt;!-- Dub.co Advanced Conversion Tracking --&gt;
+&lt;script&gt;
+window.DubConversionConfig = {
+    eventName: 'Purchase',
+    eventQuantity: 1,
+    customerName: 'John Doe',           // Optional
+    customerEmail: 'john@example.com',  // Optional  
+    externalId: 'user_12345',           // Optional: client's internal ID
+    metadata: {                         // Optional: additional data
+        product: 'Premium Plan',
+        value: 99.99,
+        currency: 'USD'
+    }
+};
+&lt;/script&gt;
+&lt;script&gt;
+(function(d,s,id,domain){
+    if(d.getElementById(id)) return;
+    var js=d.createElement(s),fjs=d.getElementsByTagName(s)[0];
+    js.id=id;js.async=true;
+    js.src='https://'+domain+'/js/dub-conversion.js';
+    fjs.parentNode.insertBefore(js,fjs);
+})(document,'script','dub-conversion-js','yourdomain.com');
+&lt;/script&gt;</pre>
+    </div>
+
+    <div class="snippet">
+        <h3>4. Complete HTML Template Example</h3>
+        <p>Example of a complete thank you page with both tracking scripts:</p>
+        <button class="copy-btn" onclick="copyToClipboard('complete-example')">Copy Template</button>
+        <pre id="complete-example">&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+&lt;head&gt;
+    &lt;meta charset="UTF-8"&gt;
+    &lt;title&gt;Thank You - Sign Up Complete&lt;/title&gt;
+    
+    &lt;!-- General page tracking --&gt;
+    &lt;script&gt;
+    (function(d,s,id,domain){
+        if(d.getElementById(id)) return;
+        var js=d.createElement(s),fjs=d.getElementsByTagName(s)[0];
+        js.id=id;js.async=true;
+        js.src='https://'+domain+'/js/dub-tracking.js';
+        fjs.parentNode.insertBefore(js,fjs);
+    })(document,'script','dub-tracking-js','yourdomain.com');
+    &lt;/script&gt;
+    
+    &lt;!-- Conversion tracking --&gt;
+    &lt;script&gt;
+    window.DubConversionConfig = {
+        eventName: 'Sign up'
+    };
+    &lt;/script&gt;
+    &lt;script&gt;
+    (function(d,s,id,domain){
+        if(d.getElementById(id)) return;
+        var js=d.createElement(s),fjs=d.getElementsByTagName(s)[0];
+        js.id=id;js.async=true;
+        js.src='https://'+domain+'/js/dub-conversion.js';
+        fjs.parentNode.insertBefore(js,fjs);
+    })(document,'script','dub-conversion-js','yourdomain.com');
+    &lt;/script&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    &lt;h1&gt;Thank You!&lt;/h1&gt;
+    &lt;p&gt;Your signup is complete.&lt;/p&gt;
+&lt;/body&gt;
+&lt;/html&gt;</pre>
+    </div>
+
+    <div class="note">
+        <h3>Testing Instructions for Clients:</h3>
+        <ol>
+            <li>Add the general tracking snippet to a test page</li>
+            <li>Visit the page with <code>?dub_id=test123</code> in the URL</li>
+            <li>Go to a page with the conversion snippet</li>
+            <li>Open browser developer tools and check the Console tab for success messages</li>
+            <li>Look for messages like "Dub Conversion: Tracked successfully"</li>
+        </ol>
+    </div>
+
+    <script>
+        function copyToClipboard(elementId) {
+            const element = document.getElementById(elementId);
+            const text = element.textContent;
+            
+            navigator.clipboard.writeText(text).then(function() {
+                const btn = event.target;
+                const originalText = btn.textContent;
+                btn.textContent = 'Copied!';
+                btn.style.background = '#28a745';
+                
+                setTimeout(function() {
+                    btn.textContent = originalText;
+                    btn.style.background = '#007cba';
+                }, 2000);
+            }).catch(function(err) {
+                console.error('Could not copy text: ', err);
+                // Fallback for older browsers
+                const textArea = document.createElement('textarea');
+                textArea.value = text;
+                document.body.appendChild(textArea);
+                textArea.focus();
+                textArea.select();
+                try {
+                    document.execCommand('copy');
+                    const btn = event.target;
+                    const originalText = btn.textContent;
+                    btn.textContent = 'Copied!';
+                    btn.style.background = '#28a745';
+                    
+                    setTimeout(function() {
+                        btn.textContent = originalText;
+                        btn.style.background = '#007cba';
+                    }, 2000);
+                } catch (err) {
+                    console.error('Fallback copy failed: ', err);
+                }
+                document.body.removeChild(textArea);
+            });
+        }
+    </script>
+</body>
+</html> 
