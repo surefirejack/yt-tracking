@@ -5,6 +5,11 @@
       debug: true
     };
   
+    // Get tenant UUID from embed snippet
+    function getTenantUuid() {
+      return window.ytTracking && window.ytTracking.tenantUuid ? window.ytTracking.tenantUuid : null;
+    }
+  
     // Function to extract relevant form data (name and email only)
     function getFormData(form) {
       const formData = new FormData(form);
@@ -85,9 +90,10 @@
     // Function to send tracking data
     function trackLead(formData, source = 'form-submit') {
       const dubId = getDubId();
+      const tenantUuid = getTenantUuid();
       
       if (config.debug) {
-        console.log('trackLead called with:', { formData, source, dubId });
+        console.log('trackLead called with:', { formData, source, dubId, tenantUuid });
       }
       
       if (!dubId) {
@@ -96,12 +102,20 @@
         }
         return;
       }
-  
+
+      if (!tenantUuid || tenantUuid === 'YOUR_TENANT_UUID') {
+        if (config.debug) {
+          console.warn('No valid tenant UUID found - lead not tracked. Make sure to replace YOUR_TENANT_UUID in the embed snippet.');
+        }
+        return;
+      }
+
       const payload = {
         dub_id: dubId,
+        tenant_uuid: tenantUuid,
         source: source
       };
-  
+
       // Only include name and email if they exist
       if (formData.name) {
         payload.name = formData.name.trim();
@@ -109,12 +123,12 @@
       if (formData.email) {
         payload.email = formData.email.trim();
       }
-  
+
       if (config.debug) {
         console.log('Sending payload to webhook:', payload);
         console.log('Payload as JSON string:', JSON.stringify(payload));
       }
-  
+
       // Send to your tracking endpoint
       fetch(config.trackingEndpoint, {
         method: 'POST',

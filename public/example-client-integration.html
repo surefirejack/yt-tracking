@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Client Integration Example</title>
+</head>
+<body>
+    <h1>Example Client Website</h1>
+    
+    <form id="testForm">
+        <div>
+            <label for="name">Name:</label>
+            <input type="text" id="name" name="name" required>
+        </div>
+        <div>
+            <label for="email">Email:</label>
+            <input type="email" id="email" name="email" required>
+        </div>
+        <button type="submit">Submit</button>
+    </form>
+
+    <!-- YouTube Tracking Script - Replace YOUR_TENANT_UUID with actual tenant UUID -->
+    <script>
+    (function() {
+      // Client embed snippet for YouTube Tracking
+      // Replace 'YOUR_TENANT_UUID' with your actual tenant UUID
+      
+      window.ytTracking = window.ytTracking || {};
+      window.ytTracking.tenantUuid = 'your-actual-tenant-uuid-here';
+      
+      // Load universal.js asynchronously
+      var script = document.createElement('script');
+      script.src = 'https://youtubetracking.test/js/universal.js';
+      script.async = true;
+      script.defer = true;
+      
+      // Insert the script
+      var firstScript = document.getElementsByTagName('script')[0];
+      firstScript.parentNode.insertBefore(script, firstScript);
+    })();
+    </script>
+</body>
+</html> 
