@@ -51,9 +51,30 @@ class Settings extends Page
             $bestTimeForEmails = (string) $bestTimeForEmails->hour;
         }
         
+        // Generate tracking code
+        $tenantUuid = $tenant->uuid ?? 'YOUR_TENANT_UUID';
+        $baseUrl = config('app.url', 'https://youtubetracking.test');
+        $trackingCode = <<<EOT
+<script>
+    (function() {
+        window.ytTracking = window.ytTracking || {};
+        window.ytTracking.tenantUuid = '{$tenantUuid}';
+        
+        var script = document.createElement('script');
+        script.src = '{$baseUrl}/js/universal.js';
+        script.async = true;
+        script.defer = true;
+        
+        var firstScript = document.getElementsByTagName('script')[0];
+        firstScript.parentNode.insertBefore(script, firstScript);
+    })();
+</script>
+EOT;
+        
         $this->form->fill([
             'best_time_for_emails' => $bestTimeForEmails,
             'custom_domains' => $customDomains,
+            'tracking_code' => $trackingCode,
         ]);
     }
 
@@ -65,6 +86,87 @@ class Settings extends Page
                     ->tabs([
                         Tabs\Tab::make('General')
                             ->icon('heroicon-o-cog-6-tooth')
+                            ->schema([
+                                Forms\Components\Section::make('Tracking Code')
+                                    ->description('Add this tracking code to your website.')
+                                    ->schema([
+                                        Forms\Components\Textarea::make('tracking_code')
+                                            ->label('Tracking Code')
+                                            ->readonly()
+                                            ->rows(10)
+                                            ->maxLength(255)
+                                            ->extraAttributes([
+                                                'id' => 'tracking-code-textarea'
+                                            ]),
+                                        
+                                        Forms\Components\Placeholder::make('copy_button')
+                                            ->label('')
+                                            ->content(new \Illuminate\Support\HtmlString('
+                                                <div class="mt-3">
+                                                    <button type="button" 
+                                                            onclick="copyTrackingCode()"
+                                                            class="inline-flex items-center px-4 py-2 bg-primary-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-primary-700 focus:bg-primary-700 active:bg-primary-900 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition ease-in-out duration-150">
+                                                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                                                        </svg>
+                                                        Copy to Clipboard
+                                                    </button>
+                                                </div>
+                                                
+                                                <script>
+                                                function copyTrackingCode() {
+                                                    console.log("Copy button clicked");
+                                                    
+                                                    setTimeout(function() {
+                                                        var selectors = [
+                                                            "#tracking-code-textarea",
+                                                            "textarea[readonly]", 
+                                                            "textarea"
+                                                        ];
+                                                        
+                                                        var element = null;
+                                                        for (var i = 0; i < selectors.length; i++) {
+                                                            element = document.querySelector(selectors[i]);
+                                                            if (element && element.value) {
+                                                                console.log("Found textarea with selector: " + selectors[i]);
+                                                                break;
+                                                            }
+                                                        }
+                                                        
+                                                        if (!element) {
+                                                            alert("Could not find textarea");
+                                                            return;
+                                                        }
+                                                        
+                                                        var textToCopy = element.value || "";
+                                                        console.log("Text length: " + textToCopy.length);
+                                                        
+                                                        if (!textToCopy.trim()) {
+                                                            alert("No text to copy");
+                                                            return;
+                                                        }
+                                                        
+                                                        if (navigator.clipboard) {
+                                                            navigator.clipboard.writeText(textToCopy).then(function() {
+                                                                alert("Copied " + textToCopy.length + " characters!");
+                                                            });
+                                                        } else {
+                                                            var temp = document.createElement("textarea");
+                                                            temp.value = textToCopy;
+                                                            document.body.appendChild(temp);
+                                                            temp.select();
+                                                            document.execCommand("copy");
+                                                            document.body.removeChild(temp);
+                                                            alert("Copied " + textToCopy.length + " characters!");
+                                                        }
+                                                    }, 100);
+                                                }
+                                                </script>
+                                            ')),
+                                    ]),
+                            ]),
+                        Tabs\Tab::make('Notifications')
+                            ->icon('heroicon-o-bell')
                             ->schema([
                                 Forms\Components\Select::make('best_time_for_emails')
                                     ->label('Best time to receive email updates')
