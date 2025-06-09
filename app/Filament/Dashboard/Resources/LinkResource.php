@@ -580,6 +580,26 @@ class LinkResource extends Resource
                             }
                         });
                     }),
+
+                SelectFilter::make('video_title')
+                    ->label('Video Title')
+                    ->searchable()
+                    ->preload()
+                    ->options(function () {
+                        return \App\Models\YtVideo::whereHas('ytChannel', function (Builder $query) {
+                                $query->where('tenant_id', Filament::getTenant()->id);
+                            })
+                            ->whereHas('links') // Only show videos that have associated links
+                            ->pluck('title', 'id')
+                            ->toArray();
+                    })
+                    ->query(function (Builder $query, array $data): Builder {
+                        if (empty($data['value'])) {
+                            return $query;
+                        }
+                        
+                        return $query->where('yt_video_id', $data['value']);
+                    }),
             ])
             ->actions([
                 Tables\Actions\ActionGroup::make([
