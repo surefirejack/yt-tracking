@@ -59,7 +59,28 @@ class LinkResource extends Resource
                                                     ->disabled()
                                                     ->dehydrated(false)
                                                     ->placeholder('Will be generated')
-                                                    ->visible(fn ($record) => $record !== null),
+                                                    ->visible(fn ($record) => $record !== null)
+                                                    ->suffixAction(
+                                                        Forms\Components\Actions\Action::make('copyShortLink')
+                                                            ->icon('heroicon-o-document-duplicate')
+                                                            ->tooltip('Click to copy')
+                                                            ->action(function ($component) {
+                                                                $value = $component->getState();
+                                                                if ($value) {
+                                                                    // Use JavaScript to copy to clipboard
+                                                                    $component->getLivewire()->js('
+                                                                        navigator.clipboard.writeText("' . $value . '");
+                                                                    ');
+                                                                    
+                                                                    // Show Filament notification
+                                                                    \Filament\Notifications\Notification::make()
+                                                                        ->title('Copied!')
+                                                                        ->body('Short link copied to clipboard')
+                                                                        ->success()
+                                                                        ->send();
+                                                                }
+                                                            })
+                                                    ),
 
                                                 TextInput::make('original_url')
                                                     ->label('Destination URL')
