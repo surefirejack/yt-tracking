@@ -62,6 +62,7 @@ class Link extends Model
         'workspace_id',
         'status',
         'error_message',
+        'yt_video_id',
     ];
 
     protected $casts = [
@@ -113,6 +114,14 @@ class Link extends Model
     public function tagModels(): BelongsToMany
     {
         return $this->belongsToMany(Tag::class);
+    }
+
+    /**
+     * YouTube Video relationship (belongs to)
+     */
+    public function ytVideo(): BelongsTo
+    {
+        return $this->belongsTo(YtVideo::class, 'yt_video_id');
     }
 
     /**

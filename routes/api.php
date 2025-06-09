@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Api\VideoDetailsController;
 
 /*
 |--------------------------------------------------------------------------
@@ -27,6 +28,7 @@ Route::post('/payments-providers/lemon-squeezy/webhook', [
     App\Http\Controllers\PaymentProviders\LemonSqueezyController::class,
     'handleWebhook',
 ])->name('payments-providers.lemon-squeezy.webhook');
+
 
 // Dub.co conversion tracking - accessible from external client websites
 Route::options('/dub/track-conversion', [
@@ -55,3 +57,7 @@ Route::post('/track-lead', function (\Illuminate\Http\Request $request) {
         ->header('Access-Control-Allow-Methods', 'POST, OPTIONS')
         ->header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
 })->name('track.lead');
+
+// Video details endpoint
+Route::post('/video-details', [VideoDetailsController::class, 'handleDetails']);
+

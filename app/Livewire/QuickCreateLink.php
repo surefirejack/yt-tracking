@@ -24,8 +24,8 @@ class QuickCreateLink extends Component implements HasForms, HasActions
     public function quickCreateAction(): Action
     {
         return Action::make('quickCreate')
-            ->label('Quick Create a Link')
-            ->icon('heroicon-o-bolt')
+            ->label('Create a Link')
+            ->icon('heroicon-o-link')
             ->color('info')
             ->size('sm')
             ->button()

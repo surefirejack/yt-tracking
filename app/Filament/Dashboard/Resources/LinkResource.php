@@ -25,6 +25,8 @@ use Filament\Forms\Components\TagsInput;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Support\Colors\Color;
 use Filament\Facades\Filament;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class LinkResource extends Resource
 {
@@ -57,14 +59,50 @@ class LinkResource extends Resource
                                                     ->disabled()
                                                     ->dehydrated(false)
                                                     ->placeholder('Will be generated')
-                                                    ->visible(fn ($record) => $record !== null),
+                                                    ->visible(fn ($record) => $record !== null)
+                                                    ->suffixAction(
+                                                        Forms\Components\Actions\Action::make('copyShortLink')
+                                                            ->icon('heroicon-o-document-duplicate')
+                                                            ->tooltip('Click to copy')
+                                                            ->action(function ($component) {
+                                                                $value = $component->getState();
+                                                                if ($value) {
+                                                                    // Use JavaScript to copy to clipboard
+                                                                    $component->getLivewire()->js('
+                                                                        navigator.clipboard.writeText("' . $value . '");
+                                                                    ');
+                                                                    
+                                                                    // Show Filament notification
+                                                                    \Filament\Notifications\Notification::make()
+                                                                        ->title('Copied!')
+                                                                        ->body('Short link copied to clipboard')
+                                                                        ->success()
+                                                                        ->send();
+                                                                }
+                                                            })
+                                                    ),
 
                                                 TextInput::make('original_url')
                                                     ->label('Destination URL')
                                                     ->url()
                                                     ->required()
                                                     ->maxLength(2048)
-                                                    ->placeholder('https://example.com'),
+                                                    ->placeholder('https://example.com')
+                                                    ->live()
+                                                    ->afterStateUpdated(function ($state, $get, $set) {
+                                                        // Sync with split testing main URL if split testing is enabled
+                                                        $splitTestingEnabled = $get('split_testing_enabled');
+                                                        if ($splitTestingEnabled) {
+                                                            $set('main_url', $state);
+                                                            
+                                                            // Update test_variants array
+                                                            $variants = $get('test_variants') ?? [];
+                                                            if (isset($variants[0])) {
+                                                                $variants[0]['url'] = $state;
+                                                                $set('test_variants', $variants);
+                                                            }
+                                                        }
+                                                    }),
                                                 
                                                 Textarea::make('description')
                                                     ->label('Description')
@@ -102,7 +140,7 @@ class LinkResource extends Resource
                                     ]),
                             ]),
 
-                        Tabs\Tab::make('UTM Parameters')
+                        Tabs\Tab::make('UTMs')
                             ->icon('heroicon-o-chart-bar')
                             ->schema([
                                 Grid::make(2)
@@ -132,6 +170,151 @@ class LinkResource extends Resource
                                             ->maxLength(255)
                                             ->placeholder('e.g., logolink, textlink')
                                             ->columnSpanFull(),
+                                    ]),
+                            ]),
+
+                        Tabs\Tab::make('Split Testing')
+                            ->icon('heroicon-o-beaker')
+                            ->schema([
+                                Grid::make(1)
+                                    ->schema([
+                                        Toggle::make('split_testing_enabled')
+                                            ->label('Enable Split Testing')
+                                            ->helperText('Enable A/B testing between two URLs')
+                                            ->live()
+                                            ->dehydrated(false)
+                                            ->default(function ($record) {
+                                                if (!$record || !$record->test_variants) {
+                                                    return false;
+                                                }
+                                                
+                                                // Check if test_variants is an array with actual data
+                                                $variants = is_array($record->test_variants) ? $record->test_variants : [];
+                                                return !empty($variants) && count($variants) > 0;
+                                            })
+                                            ->afterStateHydrated(function ($component, $state, $record) {
+                                                if ($record && $record->test_variants) {
+                                                    $variants = is_array($record->test_variants) ? $record->test_variants : [];
+                                                    $hasVariants = !empty($variants) && count($variants) > 0;
+                                                    $component->state($hasVariants);
+                                                }
+                                            })
+                                            ->afterStateUpdated(function ($state, $set, $get) {
+                                                if (!$state) {
+                                                    // When toggle is turned off, clear test_variants
+                                                    $set('test_variants', null);
+                                                    $set('main_url', '');
+                                                    $set('test_url', '');
+                                                } else {
+                                                    // When toggle is turned on, initialize or maintain test_variants
+                                                    $existingVariants = $get('test_variants') ?? [];
+                                                    $originalUrl = $get('original_url') ?? '';
+                                                    
+                                                    if (empty($existingVariants)) {
+                                                        $set('test_variants', [
+                                                            [
+                                                                'url' => $originalUrl,
+                                                                'percentage' => 50
+                                                            ],
+                                                            [
+                                                                'url' => '',
+                                                                'percentage' => 50
+                                                            ]
+                                                        ]);
+                                                        $set('main_url', $originalUrl);
+                                                        $set('test_url', '');
+                                                    } else {
+                                                        // Populate form fields from existing data, sync main_url with original_url
+                                                        $set('main_url', $originalUrl);
+                                                        $set('test_url', $existingVariants[1]['url'] ?? '');
+                                                        $set('traffic_percentage', $existingVariants[0]['percentage'] ?? 50);
+                                                        
+                                                        // Update the variants array to reflect the synced original_url
+                                                        $existingVariants[0]['url'] = $originalUrl;
+                                                        $set('test_variants', $existingVariants);
+                                                    }
+                                                }
+                                            }),
+
+                                        Grid::make(2)
+                                            ->schema([
+                                                TextInput::make('main_url')
+                                                    ->label('Main URL (Variant A)')
+                                                    ->maxLength(2048)
+                                                    ->placeholder('Synced with Destination URL')
+                                                    ->disabled()
+                                                    ->dehydrated(false)
+                                                    ->default(function ($record, $get) {
+                                                        // Always sync with original_url
+                                                        $originalUrl = $get('original_url') ?? '';
+                                                        return $originalUrl ?: ($record && $record->test_variants ? ($record->test_variants[0]['url'] ?? '') : '');
+                                                    })
+                                                    ->helperText('This URL is automatically synced with your Destination URL'),
+
+                                                TextInput::make('test_url')
+                                                    ->label('Test URL (Variant B)')
+                                                    ->url()
+                                                    ->maxLength(2048)
+                                                    ->placeholder('https://example.com/variant-b')
+                                                    ->dehydrated(false)
+                                                    ->default(fn ($record) => $record && $record->test_variants ? ($record->test_variants[1]['url'] ?? '') : '')
+                                                    ->live()
+                                                    ->afterStateUpdated(function ($state, $get, $set) {
+                                                        $variants = $get('test_variants') ?? [];
+                                                        if (isset($variants[1])) {
+                                                            $variants[1]['url'] = $state;
+                                                            $set('test_variants', $variants);
+                                                        }
+                                                    }),
+                                            ])
+                                            ->visible(fn ($get) => $get('split_testing_enabled')),
+
+                                        Forms\Components\ViewField::make('traffic_split')
+                                            ->label('Traffic Split')
+                                            ->view('filament.forms.components.traffic-split-slider')
+                                            ->viewData(fn ($get, $record) => [
+                                                'percentage' => $record && $record->test_variants ? ($record->test_variants[0]['percentage'] ?? 50) : ($get('test_variants.0.percentage') ?? 50),
+                                                'field_name' => 'traffic_percentage'
+                                            ])
+                                            ->visible(fn ($get) => $get('split_testing_enabled')),
+
+                                        Forms\Components\Hidden::make('traffic_percentage')
+                                            ->default(fn ($record) => $record && $record->test_variants ? ($record->test_variants[0]['percentage'] ?? 50) : 50)
+                                            ->dehydrated(false)
+                                            ->live()
+                                            ->afterStateUpdated(function ($state, $get, $set) {
+                                                $percentage = (int) $state;
+                                                $variants = $get('test_variants') ?? [];
+                                                if (count($variants) >= 2) {
+                                                    $variants[0]['percentage'] = $percentage;
+                                                    $variants[1]['percentage'] = 100 - $percentage;
+                                                    $set('test_variants', $variants);
+                                                }
+                                            }),
+
+                                        Forms\Components\Placeholder::make('split_preview')
+                                            ->label('Traffic Distribution')
+                                            ->content(function ($get, $record) {
+                                                $trafficPercentage = $get('traffic_percentage') ?? 50;
+                                                $variantA = (int) $trafficPercentage;
+                                                $variantB = 100 - $variantA;
+                                                return "Variant A: {$variantA}% • Variant B: {$variantB}%";
+                                            })
+                                            ->live()
+                                            ->visible(fn ($get) => $get('split_testing_enabled')),
+
+                                        Forms\Components\Hidden::make('test_variants')
+                                            ->afterStateHydrated(function ($component, $state, $get, $set) {
+                                                // Sync main URL with original_url on load
+                                                if ($state && is_array($state) && isset($state[0])) {
+                                                    $originalUrl = $get('original_url') ?? '';
+                                                    if ($originalUrl && $originalUrl !== $state[0]['url']) {
+                                                        $state[0]['url'] = $originalUrl;
+                                                        $component->state($state);
+                                                    }
+                                                    $set('main_url', $originalUrl);
+                                                }
+                                            }),
                                     ]),
                             ]),
 
@@ -283,6 +466,7 @@ class LinkResource extends Resource
                 TextColumn::make('original_url')
                     ->label('Original URL')
                     ->limit(50)
+                    ->formatStateUsing(fn (string $state): string => rtrim(preg_replace('/^https?:\/\//', '', $state), '/'))
                     ->tooltip(function (TextColumn $column): ?string {
                         $state = $column->getState();
                         if (strlen($state) <= 50) {
@@ -297,6 +481,8 @@ class LinkResource extends Resource
                 TextColumn::make('short_link')
                     ->label('Short Link')
                     ->limit(30)
+                    ->icon('heroicon-o-document-duplicate')
+                    ->tooltip('Click to Copy')
                     ->copyable()
                     ->copyMessage('Short link copied!')
                     ->url(fn ($record) => $record->short_link)
@@ -308,6 +494,15 @@ class LinkResource extends Resource
                     ->label('Title')
                     ->limit(30)
                     ->placeholder('No title')
+                    ->searchable()
+                    ->toggleable(),
+
+                TextColumn::make('tags')
+                    ->label('Tags')
+                    ->badge()
+                    ->separator(',')
+                    ->limit(10)
+                    ->placeholder('No tags')
                     ->searchable()
                     ->toggleable(),
 
@@ -346,16 +541,88 @@ class LinkResource extends Resource
                         'completed' => 'Completed',
                         'failed' => 'Failed',
                     ]),
+
+                SelectFilter::make('tags')
+                    ->label('Tags')
+                    ->multiple()
+                    ->options(function () {
+                        return Tag::forTenant(Filament::getTenant()->id)
+                            ->pluck('name', 'name')
+                            ->toArray();
+                    })
+                    ->query(function (Builder $query, array $data): Builder {
+                        if (empty($data['values'])) {
+                            return $query;
+                        }
+                        
+                        return $query->where(function (Builder $query) use ($data) {
+                            foreach ($data['values'] as $tag) {
+                                $query->orWhereJsonContains('tags', $tag);
+                            }
+                        });
+                    }),
             ])
             ->actions([
-                Tables\Actions\EditAction::make(),
+                Tables\Actions\ActionGroup::make([
+                    Tables\Actions\EditAction::make(),
+                    Tables\Actions\Action::make('duplicate')
+                        ->label('Duplicate')
+                        ->icon('heroicon-o-document-duplicate')
+                        ->action(function (Link $record) {
+                            $data = $record->toArray();
+                            
+                            // Remove fields that shouldn't be duplicated
+                            unset($data['id']);
+                            unset($data['short_link']);
+                            unset($data['qr_code']);
+                            unset($data['created_at']);
+                            unset($data['updated_at']);
+                            unset($data['dub_id']);
+                            unset($data['clicks']);
+                            unset($data['leads']);
+                            unset($data['last_clicked']);
+                            unset($data['domain']);
+                            unset($data['key']);
+                            unset($data['url']);
+                            unset($data['external_id']);
+                            unset($data['tenant_id_dub']);
+                            unset($data['status']);
+                            unset($data['error_message']);
+                            
+                            // Add " (Copy)" to title if it exists
+                            if ($data['title']) {
+                                $data['title'] = $data['title'] . ' (Copy)';
+                            }
+                            
+                            // Set initial status to pending
+                            $data['status'] = 'pending';
+                            
+                            // Create the new link record
+                            $newLink = Link::create($data);
+                            
+                            // Dispatch job to create the duplicate link via Dub API
+                            CreateLinkJob::dispatch($newLink);
+                            
+                            // Show success notification
+                            \Filament\Notifications\Notification::make()
+                                ->title('Link duplicated successfully!')
+                                ->body('The duplicate link is being created and will appear shortly.')
+                                ->success()
+                                ->send();
+                        })
+                        ->requiresConfirmation()
+                        ->modalHeading('Duplicate Link')
+                        ->modalDescription('Are you sure you want to duplicate this link? A new link will be created with the same settings.')
+                        ->modalSubmitActionLabel('Duplicate'),
+                ])
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
                 ]),
             ])
-            ->defaultSort('created_at', 'desc');
+            ->defaultSort('created_at', 'desc')
+            ->poll('1.5s');
     }
 
     public static function getEloquentQuery(): Builder

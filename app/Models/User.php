@@ -42,6 +42,8 @@ class User extends Authenticatable implements FilamentUser, HasTenants, MustVeri
         'phone_number',
         'phone_number_verified_at',
         'last_seen_at',
+        'timezone',
+        'best_time_for_emails',
     ];
 
     /**
@@ -64,6 +66,7 @@ class User extends Authenticatable implements FilamentUser, HasTenants, MustVeri
         'phone_number_verified_at' => 'datetime',
         'password' => 'hashed',
         'last_seen_at' => 'datetime',
+        'best_time_for_emails' => 'datetime:H:i',
     ];
 
     public function roadmapItems(): HasMany
