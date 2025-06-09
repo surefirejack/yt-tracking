@@ -25,6 +25,8 @@ use Filament\Forms\Components\TagsInput;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Support\Colors\Color;
 use Filament\Facades\Filament;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class LinkResource extends Resource
 {
@@ -596,7 +598,105 @@ class LinkResource extends Resource
                 ]),
             ])
             ->defaultSort('created_at', 'desc')
-            ->poll('1.5s');
+            ->poll('1.5s')
+            ->headerActions([
+                Tables\Actions\Action::make('refresh')
+                    ->label('Refresh')
+                    ->icon('heroicon-o-arrow-path')
+                    ->color('gray')
+                    ->action(function () {
+                        $tenantId = Filament::getTenant()->id;
+                        
+                        try {
+                            // Get Dub API configuration
+                            $apiKey = config('services.dub.api_key');
+                            
+                            if (!$apiKey) {
+                                \Filament\Notifications\Notification::make()
+                                    ->title('Configuration Error')
+                                    ->body('Dub API key is not configured.')
+                                    ->danger()
+                                    ->send();
+                                return;
+                            }
+                            
+                            // Make API call to Dub
+                            $response = Http::withHeaders([
+                                'Authorization' => 'Bearer ' . $apiKey,
+                                'Content-Type' => 'application/json',
+                            ])->get("https://api.dub.co/links/?tenantId={$tenantId}");
+                            
+                            if ($response->successful()) {
+                                $apiLinks = $response->json();
+                                $updatedCount = 0;
+                                
+                                // Update existing links with fresh data from API
+                                foreach ($apiLinks as $apiLink) {
+                                    $dubId = $apiLink['id'] ?? null;
+                                    
+                                    if ($dubId) {
+                                        $existingLink = Link::where('dub_id', $dubId)
+                                            ->where('tenant_id', $tenantId)
+                                            ->first();
+                                        
+                                        if ($existingLink) {
+                                            $existingLink->update([
+                                                'clicks' => $apiLink['clicks'] ?? $existingLink->clicks,
+                                                'leads' => $apiLink['leads'] ?? $existingLink->leads,
+                                                'last_clicked' => isset($apiLink['lastClicked']) ? \Carbon\Carbon::parse($apiLink['lastClicked']) : $existingLink->last_clicked,
+                                                'short_link' => $apiLink['shortLink'] ?? $existingLink->short_link,
+                                                'domain' => $apiLink['domain'] ?? $existingLink->domain,
+                                                'key' => $apiLink['key'] ?? $existingLink->key,
+                                                'url' => $apiLink['url'] ?? $existingLink->url,
+                                                'archived' => $apiLink['archived'] ?? $existingLink->archived,
+                                                'expires_at' => isset($apiLink['expiresAt']) ? \Carbon\Carbon::parse($apiLink['expiresAt']) : $existingLink->expires_at,
+                                                'qr_code' => $apiLink['qrCode'] ?? $existingLink->qr_code,
+                                                'public_stats' => $apiLink['publicStats'] ?? $existingLink->public_stats,
+                                                'title' => $apiLink['title'] ?? $existingLink->title,
+                                                'description' => $apiLink['description'] ?? $existingLink->description,
+                                                'image' => $apiLink['image'] ?? $existingLink->image,
+                                                'sales' => $apiLink['sales'] ?? $existingLink->sales,
+                                                'sale_amount' => $apiLink['saleAmount'] ?? $existingLink->sale_amount,
+                                            ]);
+                                            $updatedCount++;
+                                        }
+                                    }
+                                }
+                                
+                                \Filament\Notifications\Notification::make()
+                                    ->title('Refresh Complete')
+                                    ->body("Successfully updated {$updatedCount} links with fresh data from Dub API.")
+                                    ->success()
+                                    ->send();
+                                    
+                                Log::info('Links refreshed successfully', [
+                                    'tenant_id' => $tenantId,
+                                    'updated_count' => $updatedCount,
+                                    'total_api_links' => count($apiLinks)
+                                ]);
+                                
+                            } else {
+                                throw new \Exception('API request failed: ' . $response->body());
+                            }
+                            
+                        } catch (\Exception $e) {
+                            \Filament\Notifications\Notification::make()
+                                ->title('Refresh Failed')
+                                ->body('Failed to refresh links: ' . $e->getMessage())
+                                ->danger()
+                                ->send();
+                                
+                            Log::error('Failed to refresh links', [
+                                'tenant_id' => $tenantId,
+                                'error' => $e->getMessage()
+                            ]);
+                        }
+                    })
+                    ->extraAttributes([
+                        'wire:loading.attr' => 'disabled',
+                        'wire:loading.class' => 'opacity-50',
+                    ]),
+            ]);
     }
 
     public static function getEloquentQuery(): Builder
