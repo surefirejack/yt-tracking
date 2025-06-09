@@ -506,6 +506,25 @@ class LinkResource extends Resource
                     ->searchable()
                     ->toggleable(),
 
+                TextColumn::make('ytVideo.thumbnail_url')
+                    ->label('Video')
+                    ->formatStateUsing(function ($state, $record) {
+                        if (!$record->ytVideo || !$record->ytVideo->thumbnail_url) {
+                            return '-';
+                        }
+                        
+                        return view('filament.tables.columns.video-thumbnail', [
+                            'thumbnail_url' => $record->ytVideo->thumbnail_url,
+                            'video_title' => $record->ytVideo->title,
+                        ])->render();
+                    })
+                    ->html()
+                    ->tooltip(function ($record) {
+                        return $record->ytVideo?->title;
+                    })
+                    ->alignCenter()
+                    ->toggleable(),
+
                 TextColumn::make('clicks')
                     ->label('Clicks')
                     ->numeric()
@@ -628,6 +647,7 @@ class LinkResource extends Resource
     public static function getEloquentQuery(): Builder
     {
         return parent::getEloquentQuery()
+            ->with('ytVideo')
             ->where('tenant_id', Filament::getTenant()->id);
     }
 
