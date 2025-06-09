@@ -38,3 +38,20 @@ Route::post('/dub/track-conversion', [
     App\Http\Controllers\DubController::class,
     'trackConversion',
 ])->name('dub.track-conversion');
+
+// Lead tracking endpoint - accessible from external client websites
+Route::options('/track-lead', function () {
+    return response('')
+        ->header('Access-Control-Allow-Origin', '*')
+        ->header('Access-Control-Allow-Methods', 'POST, OPTIONS')
+        ->header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
+});
+
+Route::post('/track-lead', function (\Illuminate\Http\Request $request) {
+    \Log::info('Lead tracked:', $request->all());
+    
+    return response()->json(['status' => 'success'])
+        ->header('Access-Control-Allow-Origin', '*')
+        ->header('Access-Control-Allow-Methods', 'POST, OPTIONS')
+        ->header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
+})->name('track.lead');
