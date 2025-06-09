@@ -445,6 +445,7 @@ class LinkResource extends Resource
                 TextColumn::make('original_url')
                     ->label('Original URL')
                     ->limit(50)
+                    ->formatStateUsing(fn (string $state): string => rtrim(preg_replace('/^https?:\/\//', '', $state), '/'))
                     ->tooltip(function (TextColumn $column): ?string {
                         $state = $column->getState();
                         if (strlen($state) <= 50) {
@@ -459,6 +460,8 @@ class LinkResource extends Resource
                 TextColumn::make('short_link')
                     ->label('Short Link')
                     ->limit(30)
+                    ->icon('heroicon-o-document-duplicate')
+                    ->tooltip('Click to Copy')
                     ->copyable()
                     ->copyMessage('Short link copied!')
                     ->url(fn ($record) => $record->short_link)
