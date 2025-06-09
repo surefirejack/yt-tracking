@@ -3,6 +3,8 @@
 namespace App\Jobs;
 
 use App\Models\Link;
+use App\Models\Tag;
+use App\Services\TagService;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\Http;
@@ -56,12 +58,36 @@ class CreateLinkJob implements ShouldQueue
                 $payload['description'] = $this->link->description;
             }
 
-            // Add tags if they exist in the relationship
+            // Add tags if they exist in the relationship, plus video tag if applicable
+            $tagNames = [];
+            
+            // Get existing tags from the relationship
             if ($this->link->tagModels()->exists()) {
                 $tagNames = $this->link->tagModels()->pluck('name')->toArray();
-                if (!empty($tagNames)) {
-                    $payload['tagNames'] = $tagNames;
+            }
+            
+            // Add video tag if link is associated with a video
+            if ($this->link->yt_video_id) {
+                $videoTagName = 'yt-video-' . $this->link->yt_video_id;
+                
+                // Use TagService to create or get the video tag (this will create it in Dub if needed)
+                $tagService = new TagService();
+                $videoTag = $tagService->createTag($videoTagName, $this->link->tenant_id);
+                
+                // Associate the tag with the link if not already associated
+                if (!$this->link->tagModels()->where('tags.id', $videoTag->id)->exists()) {
+                    $this->link->tagModels()->attach($videoTag->id);
                 }
+                
+                // Add to tagNames array if not already present and only if it has a dub_id
+                if ($videoTag->dub_id && !in_array($videoTagName, $tagNames)) {
+                    $tagNames[] = $videoTagName;
+                }
+            }
+            
+            // Add tagNames to payload if we have any tags
+            if (!empty($tagNames)) {
+                $payload['tagNames'] = $tagNames;
             }
 
             // Add UTM parameters if they exist

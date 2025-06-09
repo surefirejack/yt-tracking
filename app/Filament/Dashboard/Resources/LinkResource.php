@@ -497,7 +497,7 @@ class LinkResource extends Resource
                     ->searchable()
                     ->toggleable(),
 
-                TextColumn::make('tags')
+                TextColumn::make('tagModels.name')
                     ->label('Tags')
                     ->badge()
                     ->separator(',')

@@ -163,24 +163,38 @@ class YtVideoResource extends Resource
                         $selectedLinks = $data['allowed_links'] ?? [];
                         $existing = $record->getExistingLinkUrls();
                         
+                        $newLinksCount = 0;
+                        
                         // Create new links for selected URLs that don't exist yet
                         foreach ($selectedLinks as $url) {
                             if (!in_array($url, $existing)) {
-                                \App\Models\Link::create([
+                                $link = \App\Models\Link::create([
                                     'tenant_id' => \Filament\Facades\Filament::getTenant()->id,
                                     'original_url' => $url,
                                     'yt_video_id' => $record->id,
                                     'title' => 'From ' . $record->title,
                                     'status' => 'pending',
                                 ]);
+                                
+                                // Dispatch the job to create the short link
+                                \App\Jobs\CreateLinkJob::dispatch($link);
+                                $newLinksCount++;
                             }
                         }
                         
-                        Notification::make()
-                            ->title('Links Updated')
-                            ->body('Selected links have been queued for processing.')
-                            ->success()
-                            ->send();
+                        if ($newLinksCount > 0) {
+                            Notification::make()
+                                ->title('Links Queued for Processing')
+                                ->body("$newLinksCount new links have been queued for processing and will be created shortly.")
+                                ->success()
+                                ->send();
+                        } else {
+                            Notification::make()
+                                ->title('No New Links')
+                                ->body('All selected links have already been created.')
+                                ->info()
+                                ->send();
+                        }
                     }),
             ])
             ->bulkActions([
