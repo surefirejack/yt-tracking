@@ -51,6 +51,16 @@ class Settings extends Page
             $bestTimeForEmails = (string) $bestTimeForEmails->hour;
         }
         
+        // Check YouTube connection status
+        $youtubeConnected = $user->userParameters()
+            ->where('name', 'youtube_connected')
+            ->where('value', true)
+            ->exists();
+            
+        $youtubeEmail = $user->userParameters()
+            ->where('name', 'youtube_email')
+            ->first()?->value ?? '';
+        
         // Generate tracking code
         $tenantUuid = $tenant->uuid ?? 'YOUR_TENANT_UUID';
         $baseUrl = config('app.url', 'https://youtubetracking.test');
@@ -75,13 +85,44 @@ EOT;
             'best_time_for_emails' => $bestTimeForEmails,
             'custom_domains' => $customDomains,
             'tracking_code' => $trackingCode,
+            'youtube_connected' => $youtubeConnected,
+            'youtube_email' => $youtubeEmail,
         ]);
+        
+        // Handle flash messages
+        if (session('youtube_connected')) {
+            Notification::make()
+                ->success()
+                ->title('YouTube Connected')
+                ->body('Your YouTube account has been successfully connected.')
+                ->send();
+        }
+        
+        if (session('youtube_disconnected')) {
+            Notification::make()
+                ->success()
+                ->title('YouTube Disconnected')
+                ->body('Your YouTube account has been disconnected.')
+                ->send();
+        }
+        
+        if (session('youtube_error')) {
+            Notification::make()
+                ->danger()
+                ->title('YouTube Connection Error')
+                ->body(session('youtube_error'))
+                ->send();
+        }
     }
 
     public function form(Form $form): Form
     {
         return $form
             ->schema([
+                // Hidden fields for YouTube integration
+                Forms\Components\Hidden::make('youtube_connected'),
+                Forms\Components\Hidden::make('youtube_email'),
+                
                 Tabs::make('Settings')
                     ->tabs([
                         Tabs\Tab::make('General')
@@ -262,6 +303,85 @@ EOT;
                                                     ->requiresConfirmation()
                                                     ->modalDescription('Are you sure you want to remove this domain? This action cannot be undone.')
                                             ),
+                                    ]),
+                            ]),
+                        Tabs\Tab::make('Integrations')
+                            ->icon('heroicon-o-puzzle-piece')
+                            ->schema([
+                                Forms\Components\Section::make('YouTube Integration')
+                                    ->description('Connect your YouTube account to track video analytics and performance.')
+                                    ->schema([
+                                        Forms\Components\Placeholder::make('youtube_status')
+                                            ->label('Connection Status')
+                                            ->content(function (Forms\Get $get) {
+                                                $isConnected = $get('youtube_connected');
+                                                $email = $get('youtube_email');
+                                                
+                                                if ($isConnected && $email) {
+                                                    return new \Illuminate\Support\HtmlString('
+                                                        <div class="flex items-center space-x-2">
+                                                            <div class="flex items-center space-x-2 text-green-600">
+                                                                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                                                                </svg>
+                                                                <span class="font-medium">Connected</span>
+                                                            </div>
+                                                            <span class="text-gray-600">(' . $email . ')</span>
+                                                        </div>
+                                                    ');
+                                                }
+                                                
+                                                return new \Illuminate\Support\HtmlString('
+                                                    <div class="flex items-center space-x-2 text-gray-500">
+                                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                                        </svg>
+                                                        <span>Not Connected</span>
+                                                    </div>
+                                                ');
+                                            }),
+                                            
+                                        Forms\Components\Placeholder::make('youtube_actions')
+                                            ->label('')
+                                            ->content(function (Forms\Get $get) {
+                                                $isConnected = $get('youtube_connected');
+                                                
+                                                if ($isConnected) {
+                                                    return new \Illuminate\Support\HtmlString('
+                                                        <div class="space-y-3">
+                                                            <p class="text-sm text-gray-600">
+                                                                Your YouTube account is connected and ready to track video analytics.
+                                                            </p>
+                                                            <form action="' . url('/integrations/youtube/disconnect') . '" method="POST" class="inline">
+                                                                ' . csrf_field() . '
+                                                                <button type="submit" 
+                                                                        onclick="return confirm(\'Are you sure you want to disconnect your YouTube account?\')"
+                                                                        class="inline-flex items-center px-4 py-2 bg-red-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-red-700 focus:bg-red-700 active:bg-red-900 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition ease-in-out duration-150">
+                                                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                                                    </svg>
+                                                                    Disconnect YouTube
+                                                                </button>
+                                                            </form>
+                                                        </div>
+                                                    ');
+                                                }
+                                                
+                                                return new \Illuminate\Support\HtmlString('
+                                                    <div class="space-y-3">
+                                                        <p class="text-sm text-gray-600">
+                                                            Connect your YouTube account to start tracking video analytics, monitor performance metrics, and gain insights into your content.
+                                                        </p>
+                                                        <a href="' . url('/integrations/youtube/redirect?tenant=' . Filament::getTenant()->id) . '" 
+                                                           class="inline-flex items-center px-4 py-2 bg-red-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-red-700 focus:bg-red-700 active:bg-red-900 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition ease-in-out duration-150">
+                                                            <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
+                                                                <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                                                            </svg>
+                                                            Connect YouTube
+                                                        </a>
+                                                    </div>
+                                                ');
+                                            }),
                                     ]),
                             ]),
                     ])

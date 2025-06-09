@@ -11,6 +11,7 @@ use App\Services\UserDashboardService;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\YouTubeIntegrationController;
 
 /*
 |--------------------------------------------------------------------------
@@ -90,6 +91,16 @@ Route::get('/auth/{provider}/redirect', [OAuthController::class, 'redirect'])
 Route::get('/auth/{provider}/callback', [OAuthController::class, 'callback'])
     ->where('provider', 'google|github|facebook|twitter-oauth-2|linkedin-openid|bitbucket|gitlab')
     ->name('auth.oauth.callback');
+
+// YouTube Integration Routes
+Route::get('/integrations/youtube/redirect', [YouTubeIntegrationController::class, 'redirect'])
+    ->name('integrations.youtube.redirect');
+
+Route::get('/integrations/youtube/callback', [YouTubeIntegrationController::class, 'callback'])
+    ->name('integrations.youtube.callback');
+
+Route::post('/integrations/youtube/disconnect', [YouTubeIntegrationController::class, 'disconnect'])
+    ->name('integrations.youtube.disconnect');
 
 Route::get('/checkout/plan/{planSlug}', [
     App\Http\Controllers\SubscriptionCheckoutController::class,
