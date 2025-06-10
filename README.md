@@ -63,6 +63,13 @@ This platform solves a critical problem for online marketers: **tracking the tru
 - **Coaches & Consultants** tracking booking conversions from educational content
 - **Affiliate Marketers** optimizing video campaigns for maximum commissions
 
+## 🛠️ Development
+
+For developers working on this codebase:
+- See [Filament Development Guide](docs/FILAMENT_DEVELOPMENT_GUIDE.md) for important patterns and gotchas
+- Built with Laravel 11+ using the latest features and best practices
+- Multi-tenant architecture with Filament dashboard
+
 ---
 
 *Transform your YouTube marketing from guesswork into a data-driven growth engine.*
