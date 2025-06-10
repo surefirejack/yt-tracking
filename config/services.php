@@ -118,6 +118,9 @@ return [
         'update_link_url' => env('DUB_UPDATE_LINK_URL'),
         'create_tag_url' => env('DUB_CREATE_TAG_URL'),
         
+        // Test mode - when enabled, returns sample data instead of API calls
+        'test_mode' => env('DUB_TEST_MODE', false),
+        
         // Rate limiting settings
         'rate_limit_requests' => env('DUB_RATE_LIMIT_REQUESTS', 100), // Requests per window
         'rate_limit_window' => env('DUB_RATE_LIMIT_WINDOW', 60), // Window in minutes

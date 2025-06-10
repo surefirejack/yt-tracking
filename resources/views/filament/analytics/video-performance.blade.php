@@ -62,7 +62,7 @@
                             </div>
                             <div>
                                 <span class="font-medium">Time Period:</span><br>
-                                {{ \App\Enums\AnalyticsInterval::from($this->selectedInterval)->getLabel() }}
+                                {{ \App\Enums\AnalyticsInterval::from($this->selectedInterval)->label() }}
                             </div>
                         </div>
                         @if($selectedVideo->url)
@@ -187,7 +187,13 @@
                                     @foreach($this->analyticsData as $dataPoint)
                                         <tr>
                                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
-                                                {{ isset($dataPoint['start']) ? \Carbon\Carbon::parse($dataPoint['start'])->format('M j, Y') : 'N/A' }}
+                                                @if(isset($dataPoint['date']))
+                                                    {{ \Carbon\Carbon::parse($dataPoint['date'])->format('M j, Y') }}
+                                                @elseif(isset($dataPoint['start']))
+                                                    {{ \Carbon\Carbon::parse($dataPoint['start'])->format('M j, Y') }}
+                                                @else
+                                                    N/A
+                                                @endif
                                             </td>
                                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
                                                 {{ number_format($dataPoint['clicks'] ?? 0) }}

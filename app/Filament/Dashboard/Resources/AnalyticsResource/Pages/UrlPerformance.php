@@ -52,6 +52,11 @@ class UrlPerformance extends Page
         
         // Restore filter state from session
         $this->restoreFilterState();
+        
+        // If we have a selected destination URL from the restored state, load analytics data automatically
+        if ($this->selectedDestinationUrl) {
+            $this->loadAnalyticsData();
+        }
     }
     
     public function getMaxWidth(): MaxWidth

@@ -70,6 +70,50 @@ For developers working on this codebase:
 - Built with Laravel 11+ using the latest features and best practices
 - Multi-tenant architecture with Filament dashboard
 
+### 🧪 Analytics Test Mode
+
+For development and testing, the application includes a test mode for analytics data that generates realistic sample data instead of making API calls to Dub.co.
+
+**Quick Setup:**
+```bash
+# Enable test mode
+php artisan dub:test-mode enable
+
+# Check current status
+php artisan dub:test-mode status
+
+# Disable test mode (use real API)
+php artisan dub:test-mode disable
+```
+
+**Environment Configuration:**
+```env
+# Add to your .env file
+DUB_TEST_MODE=true    # Enable test mode
+DUB_TEST_MODE=false   # Use real Dub.co API
+```
+
+**Features:**
+- 📊 Generates realistic analytics data for 30-day periods
+- 🎯 Different performance metrics based on video IDs and UTM parameters
+- 📈 Includes weekend traffic patterns and realistic conversion rates
+- 🔄 Consistent data generation (same parameters = same data)
+- 🚀 No API rate limits or external dependencies during development
+
+**Test Data Includes:**
+- Click, lead, and sales metrics
+- Revenue tracking with realistic amounts
+- Device and browser distribution
+- Geographic data (countries)
+- Referrer information
+- UTM parameter variations
+
+This allows you to:
+- Test the analytics dashboard without real traffic
+- Develop UI components with realistic data
+- Demo the application with convincing metrics
+- Avoid API rate limits during development
+
 ---
 
 *Transform your YouTube marketing from guesswork into a data-driven growth engine.*

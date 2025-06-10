@@ -50,6 +50,11 @@ class VideoPerformance extends Page
         
         // Restore filter state from session
         $this->restoreFilterState();
+        
+        // If we have a selected video from the restored state, load analytics data automatically
+        if ($this->selectedVideoId) {
+            $this->loadAnalyticsData();
+        }
     }
     
     public function getMaxWidth(): MaxWidth

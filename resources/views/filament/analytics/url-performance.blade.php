@@ -51,7 +51,7 @@
                         <div class="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm text-gray-600 dark:text-gray-400">
                             <div>
                                 <span class="font-medium">Time Period:</span><br>
-                                {{ \App\Enums\AnalyticsInterval::from($this->selectedInterval)->getLabel() }}
+                                {{ \App\Enums\AnalyticsInterval::from($this->selectedInterval)->label() }}
                             </div>
                             <div>
                                 <span class="font-medium">Links Found:</span><br>

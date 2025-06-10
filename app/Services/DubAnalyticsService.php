@@ -18,6 +18,7 @@ class DubAnalyticsService
     protected int $maxRetries;
     protected int $retryDelay; // Base delay in seconds
     protected int $timeoutSeconds;
+    protected bool $testMode; // Test mode flag
     
     public function __construct()
     {
@@ -27,8 +28,9 @@ class DubAnalyticsService
         $this->maxRetries = config('services.dub.max_retries', 3);
         $this->retryDelay = config('services.dub.retry_delay', 2); // 2 seconds base delay
         $this->timeoutSeconds = config('services.dub.timeout', 15);
+        $this->testMode = config('services.dub.test_mode', false);
         
-        if (!$this->apiKey) {
+        if (!$this->testMode && !$this->apiKey) {
             throw new Exception('Dub API key is not configured. Please check DUB_API_KEY in your environment.');
         }
     }
@@ -89,6 +91,16 @@ class DubAnalyticsService
      */
     protected function fetchAnalyticsFromApiWithRetry(int $tenantId, array $params = []): array
     {
+        // Return test data if test mode is enabled
+        if ($this->testMode) {
+            Log::info('Test mode enabled - returning test analytics data', [
+                'tenant_id' => $tenantId,
+                'params' => $params,
+            ]);
+            
+            return $this->generateTestAnalyticsData($tenantId, $params);
+        }
+        
         $lastException = null;
         
         for ($attempt = 1; $attempt <= $this->maxRetries; $attempt++) {
@@ -554,5 +566,216 @@ class DubAnalyticsService
     public function getSupportedIntervals(): array
     {
         return AnalyticsInterval::options();
+    }
+    
+    /**
+     * Generate realistic test analytics data for development and testing
+     *
+     * @param int $tenantId
+     * @param array $params
+     * @return array
+     */
+    protected function generateTestAnalyticsData(int $tenantId, array $params = []): array
+    {
+        // Base seed for consistent but varied data
+        mt_srand($tenantId * 1000 + crc32(json_encode($params)));
+        
+        // Get the interval to determine how many data points to generate
+        $interval = $params['interval'] ?? AnalyticsInterval::default()->value;
+        $dataPoints = $this->getDataPointsForInterval($interval);
+        
+        // Determine base metrics based on parameters
+        $baseMetrics = $this->getBaseMetricsForParams($params);
+        
+        $analyticsData = [];
+        
+        // Generate daily data points
+        for ($i = 0; $i < $dataPoints; $i++) {
+            $date = now()->subDays($dataPoints - 1 - $i)->format('Y-m-d');
+            
+            // Add some variation to metrics (±30% from base)
+            $clickVariation = mt_rand(70, 130) / 100;
+            $leadVariation = mt_rand(80, 120) / 100;
+            $salesVariation = mt_rand(85, 115) / 100;
+            $revenueVariation = mt_rand(90, 110) / 100;
+            
+            // Weekend effect - lower traffic on weekends
+            $dayOfWeek = now()->subDays($dataPoints - 1 - $i)->dayOfWeek;
+            $weekendMultiplier = in_array($dayOfWeek, [0, 6]) ? 0.6 : 1.0; // Saturday=6, Sunday=0
+            
+            $clicks = max(0, round($baseMetrics['clicks'] * $clickVariation * $weekendMultiplier));
+            $leads = max(0, round($baseMetrics['leads'] * $leadVariation * $weekendMultiplier));
+            $sales = max(0, round($baseMetrics['sales'] * $salesVariation * $weekendMultiplier));
+            $saleAmount = max(0, round($baseMetrics['saleAmount'] * $revenueVariation * $weekendMultiplier, 2));
+            
+            $analyticsData[] = [
+                'date' => $date,
+                'clicks' => $clicks,
+                'leads' => $leads,
+                'sales' => $sales,
+                'saleAmount' => $saleAmount,
+                'country' => $this->getRandomCountry(),
+                'device' => $this->getRandomDevice(),
+                'browser' => $this->getRandomBrowser(),
+                'referer' => $this->getRandomReferer(),
+            ];
+        }
+        
+        return $analyticsData;
+    }
+    
+    /**
+     * Get number of data points based on interval
+     */
+    protected function getDataPointsForInterval(string $interval): int
+    {
+        return match ($interval) {
+            '24h' => 24, // Hourly data for 24 hours
+            '7d' => 7,   // Daily data for 7 days
+            '30d' => 30, // Daily data for 30 days
+            '90d' => 30, // Show 30 days of data (simplified)
+            '1y' => 30,  // Show monthly data (simplified to 30 points)
+            'mtd' => date('j'), // Days in current month
+            'qtd' => 30, // Simplified to 30 days
+            'ytd' => 30, // Simplified to 30 days
+            'all' => 30, // Simplified to 30 days
+            default => 30,
+        };
+    }
+    
+    /**
+     * Get base metrics based on parameters
+     */
+    protected function getBaseMetricsForParams(array $params): array
+    {
+        // Default base metrics
+        $baseMetrics = [
+            'clicks' => 45,
+            'leads' => 8,
+            'sales' => 2,
+            'saleAmount' => 150.00,
+        ];
+        
+        // Adjust based on video ID if present
+        if (isset($params['tagName'])) {
+            $videoId = str_replace('yt-video-', '', $params['tagName']);
+            if (is_numeric($videoId)) {
+                $multiplier = 1 + (($videoId % 5) * 0.3); // Different videos have different performance
+                $baseMetrics['clicks'] = round($baseMetrics['clicks'] * $multiplier);
+                $baseMetrics['leads'] = round($baseMetrics['leads'] * $multiplier);
+                $baseMetrics['sales'] = round($baseMetrics['sales'] * $multiplier);
+                $baseMetrics['saleAmount'] = round($baseMetrics['saleAmount'] * $multiplier, 2);
+            }
+        }
+        
+        // Adjust based on URL if present
+        if (isset($params['url'])) {
+            $urlHash = crc32($params['url']);
+            $multiplier = 1 + (($urlHash % 10) * 0.2); // Different URLs have different performance
+            $baseMetrics['clicks'] = round($baseMetrics['clicks'] * $multiplier);
+            $baseMetrics['leads'] = round($baseMetrics['leads'] * $multiplier);
+            $baseMetrics['sales'] = round($baseMetrics['sales'] * $multiplier);
+            $baseMetrics['saleAmount'] = round($baseMetrics['saleAmount'] * $multiplier, 2);
+        }
+        
+        // Adjust based on UTM parameters
+        $utmMultiplier = 1.0;
+        if (isset($params['utm_source'])) {
+            $utmMultiplier *= match($params['utm_source']) {
+                'youtube' => 1.5,
+                'facebook' => 1.2,
+                'google' => 1.3,
+                'twitter' => 0.8,
+                'email' => 0.9,
+                default => 1.0,
+            };
+        }
+        
+        if (isset($params['utm_medium'])) {
+            $utmMultiplier *= match($params['utm_medium']) {
+                'video' => 1.4,
+                'social' => 1.1,
+                'email' => 0.9,
+                'paid' => 1.6,
+                'organic' => 1.2,
+                default => 1.0,
+            };
+        }
+        
+        if (isset($params['utm_campaign'])) {
+            // Different campaigns have different performance
+            $campaignHash = crc32($params['utm_campaign']);
+            $utmMultiplier *= 1 + (($campaignHash % 6) * 0.15);
+        }
+        
+        // Apply UTM multiplier
+        if ($utmMultiplier !== 1.0) {
+            $baseMetrics['clicks'] = round($baseMetrics['clicks'] * $utmMultiplier);
+            $baseMetrics['leads'] = round($baseMetrics['leads'] * $utmMultiplier);
+            $baseMetrics['sales'] = round($baseMetrics['sales'] * $utmMultiplier);
+            $baseMetrics['saleAmount'] = round($baseMetrics['saleAmount'] * $utmMultiplier, 2);
+        }
+        
+        return $baseMetrics;
+    }
+    
+    /**
+     * Get random country for test data
+     */
+    protected function getRandomCountry(): string
+    {
+        $countries = ['US', 'CA', 'GB', 'AU', 'DE', 'FR', 'NL', 'JP', 'BR', 'IN'];
+        return $countries[array_rand($countries)];
+    }
+    
+    /**
+     * Get random device for test data
+     */
+    protected function getRandomDevice(): string
+    {
+        $devices = ['Desktop', 'Mobile', 'Tablet'];
+        $weights = [50, 40, 10]; // Desktop 50%, Mobile 40%, Tablet 10%
+        
+        $rand = mt_rand(1, 100);
+        if ($rand <= $weights[0]) return $devices[0];
+        if ($rand <= $weights[0] + $weights[1]) return $devices[1];
+        return $devices[2];
+    }
+    
+    /**
+     * Get random browser for test data
+     */
+    protected function getRandomBrowser(): string
+    {
+        $browsers = ['Chrome', 'Safari', 'Firefox', 'Edge', 'Opera'];
+        $weights = [65, 20, 8, 5, 2];
+        
+        $rand = mt_rand(1, 100);
+        $cumulative = 0;
+        foreach ($weights as $i => $weight) {
+            $cumulative += $weight;
+            if ($rand <= $cumulative) {
+                return $browsers[$i];
+            }
+        }
+        return $browsers[0];
+    }
+    
+    /**
+     * Get random referer for test data
+     */
+    protected function getRandomReferer(): string
+    {
+        $referers = [
+            'youtube.com',
+            'google.com',
+            'facebook.com',
+            'twitter.com',
+            'direct',
+            'linkedin.com',
+            'reddit.com',
+            'instagram.com'
+        ];
+        return $referers[array_rand($referers)];
     }
 } 
