@@ -46,13 +46,14 @@
                     <p class="text-sm text-gray-600 dark:text-gray-400">
                         Select any of your YouTube videos to view comprehensive analytics including clicks, leads, sales, and conversion rates for all associated links.
                     </p>
-                    <x-filament::button
-                        color="primary"
-                        size="sm"
-                        disabled
-                    >
-                        View Video Analytics
-                    </x-filament::button>
+                    <a href="{{ \App\Filament\Dashboard\Resources\AnalyticsResource::getUrl('video-performance') }}">
+                        <x-filament::button
+                            color="primary"
+                            size="sm"
+                        >
+                            View Video Analytics
+                        </x-filament::button>
+                    </a>
                 </div>
             </div>
 

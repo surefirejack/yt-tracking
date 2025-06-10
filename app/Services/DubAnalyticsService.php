@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Http\Client\RequestException;
 use Illuminate\Http\Client\ConnectionException;
+use App\Enums\AnalyticsInterval;
 use Exception;
 
 class DubAnalyticsService
@@ -155,7 +156,7 @@ class DubAnalyticsService
             // Prepare default parameters
             $defaultParams = [
                 'tenantId' => (string) $tenantId,
-                'interval' => '30d', // Default to 30 days
+                'interval' => AnalyticsInterval::default()->value, // Default to 30 days
                 'event' => 'composite', // Get all events (clicks, leads, sales)
             ];
             
@@ -552,16 +553,6 @@ class DubAnalyticsService
      */
     public function getSupportedIntervals(): array
     {
-        return [
-            '24h' => '24 hours',
-            '7d' => '7 days',
-            '30d' => '30 days',
-            '90d' => '90 days',
-            '1y' => '1 year',
-            'mtd' => 'Month to date',
-            'qtd' => 'Quarter to date',
-            'ytd' => 'Year to date',
-            'all' => 'All time',
-        ];
+        return AnalyticsInterval::options();
     }
 } 

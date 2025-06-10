@@ -28,13 +28,13 @@
   - [x] 1.5 Add error handling and rate limiting for Dub.co API calls
   - [x] 1.6 Create cache invalidation logic for manual refresh functionality
 
-- [ ] 2.0 Implement Video Performance Analytics View
-  - [ ] 2.1 Create VideoPerformance custom page within AnalyticsResource
-  - [ ] 2.2 Build video selection dropdown filtered by tenant using yt_videos table
-  - [ ] 2.3 Implement aggregated metrics calculation (clicks, leads, sales, conversion rates)
-  - [ ] 2.4 Create data processing logic to combine analytics for all links tagged with selected video
-  - [ ] 2.5 Add revenue per click and conversion rate calculations
-  - [ ] 2.6 Implement tenant-based data isolation using Filament::getTenant()
+- [x] 2.0 Implement Video Performance Analytics View
+  - [x] 2.1 Create VideoPerformance custom page within AnalyticsResource
+  - [x] 2.2 Build video selection dropdown filtered by tenant using yt_videos table
+  - [x] 2.3 Implement aggregated metrics calculation (clicks, leads, sales, conversion rates)
+  - [x] 2.4 Create data processing logic to combine analytics for all links tagged with selected video
+  - [x] 2.5 Add revenue per click and conversion rate calculations
+  - [x] 2.6 Implement tenant-based data isolation using Filament::getTenant()
 
 - [ ] 3.0 Implement Destination URL Performance Analytics View
   - [ ] 3.1 Create UrlPerformance custom page within AnalyticsResource
