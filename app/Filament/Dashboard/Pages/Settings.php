@@ -23,11 +23,16 @@ class Settings extends Page
     protected static bool $shouldRegisterNavigation = false;
     
     public ?array $data = [];
+    
+    public ?string $tenantUuid = null;
 
     public function mount(): void
     {
         $user = Auth::user();
         $tenant = Filament::getTenant();
+        
+        // Store tenant UUID to avoid repeated calls in action closures
+        $this->tenantUuid = $tenant?->uuid;
         
         // Load existing custom domains
         $customDomains = $tenant->customDomains()->active()->get()->map(function ($domain) {
@@ -356,7 +361,18 @@ EOT;
                                                 ->icon('heroicon-o-video-camera')
                                                 ->color('danger')
                                                 ->size('sm')
-                                                ->url(fn () => url('/integrations/youtube/redirect?tenant=' . Filament::getTenant()->uuid))
+                                                ->action(function () {
+                                                    if (!$this->tenantUuid) {
+                                                        \Filament\Notifications\Notification::make()
+                                                            ->danger()
+                                                            ->title('Error')
+                                                            ->body('Tenant not found')
+                                                            ->send();
+                                                        return;
+                                                    }
+                                                    $redirectUrl = url('/integrations/youtube/redirect?tenant=' . $this->tenantUuid);
+                                                    return redirect()->to($redirectUrl);
+                                                })
                                                 ->visible(fn (Forms\Get $get) => !$get('youtube_connected')),
                                                 
                                             Forms\Components\Actions\Action::make('disconnect_youtube')
@@ -395,7 +411,10 @@ EOT;
                                         // Keep the JavaScript function for disconnect
                                         Forms\Components\Placeholder::make('disconnect_script')
                                             ->label('')
-                                            ->content(new \Illuminate\Support\HtmlString('
+                                            ->content(function () {
+                                                $disconnectUrl = url('/integrations/youtube/disconnect/' . $this->tenantUuid);
+                                                
+                                                return new \Illuminate\Support\HtmlString('
                                                 <script>
                                                 function disconnectYouTube() {
                                                     console.log("Making disconnect request...");
@@ -410,7 +429,7 @@ EOT;
                                                         return;
                                                     }
                                                     
-                                                    fetch("' . url('/integrations/youtube/disconnect/' . Filament::getTenant()->uuid) . '", {
+                                                    fetch("' . $disconnectUrl . '", {
                                                         method: "POST",
                                                         headers: {
                                                             "Content-Type": "application/json",
@@ -437,7 +456,8 @@ EOT;
                                                     });
                                                 }
                                                 </script>
-                                            '))
+                                            ');
+                                            })
                                             ->visible(fn (Forms\Get $get) => $get('youtube_connected')),
                                     ]),
 
@@ -492,7 +512,6 @@ EOT;
                                             ->label('Channel ID or Username')
                                             ->placeholder('e.g. UCBJycsmduvYEL83R_U4JriQ or @channelname')
                                             ->helperText('Enter either a YouTube channel ID (starts with UC) or username (starts with @)')
-                                            ->live()
                                             ->visible(fn (Forms\Get $get) => $get('youtube_connected') && $get('youtube_token_valid')),
 
                                         Forms\Components\Actions::make([
