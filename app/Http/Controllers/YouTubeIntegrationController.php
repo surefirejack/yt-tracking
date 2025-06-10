@@ -154,6 +154,13 @@ class YouTubeIntegrationController extends Controller
                     ['name' => 'youtube_token'],
                     ['value' => $youtubeUser->token]
                 );
+                
+                // Store token expiry time (Google tokens typically expire in 1 hour)
+                $expiresAt = \Carbon\Carbon::now()->addHour();
+                $user->userParameters()->updateOrCreate(
+                    ['name' => 'youtube_token_expires_at'],
+                    ['value' => $expiresAt->toDateTimeString()]
+                );
             }
             
             if ($youtubeUser->refreshToken) {
