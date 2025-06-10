@@ -36,13 +36,13 @@
   - [x] 2.5 Add revenue per click and conversion rate calculations
   - [x] 2.6 Implement tenant-based data isolation using Filament::getTenant()
 
-- [ ] 3.0 Implement Destination URL Performance Analytics View
-  - [ ] 3.1 Create UrlPerformance custom page within AnalyticsResource
-  - [ ] 3.2 Build destination URL selection dropdown from links table original_url field
-  - [ ] 3.3 Implement analytics aggregation for all links pointing to selected destination URL
-  - [ ] 3.4 Create sortable table showing associated videos or "None" for unassociated links
-  - [ ] 3.5 Add traffic volume sorting and ranking functionality
-  - [ ] 3.6 Implement cross-referencing between links and yt_videos tables
+- [x] 3.0 Implement Destination URL Performance Analytics View
+  - [x] 3.1 Create UrlPerformance custom page within AnalyticsResource
+  - [x] 3.2 Build destination URL selection dropdown from links table original_url field
+  - [x] 3.3 Implement analytics aggregation for all links pointing to selected destination URL
+  - [x] 3.4 Create sortable table showing associated videos or "None" for unassociated links
+  - [x] 3.5 Add traffic volume sorting and ranking functionality
+  - [x] 3.6 Implement cross-referencing between links and yt_videos tables
 
 - [ ] 4.0 Build Filament UI Components and Dashboard Layout
   - [ ] 4.1 Update AnalyticsResource navigation to include new dashboard pages

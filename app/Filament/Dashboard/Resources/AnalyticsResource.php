@@ -29,8 +29,8 @@ class AnalyticsResource extends Resource
         return [
             'index' => Pages\ListAnalytics::route('/'),
             'video-performance' => Pages\VideoPerformance::route('/video-performance'),
+            'url-performance' => Pages\UrlPerformance::route('/url-performance'),
             // Future custom pages will be added here:
-            // 'url-performance' => Pages\UrlPerformance::route('/url-performance'),
         ];
     }
     
