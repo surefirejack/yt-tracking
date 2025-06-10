@@ -1,4 +1,36 @@
 <x-filament-panels::page>
+    {{-- Tab Navigation --}}
+    <div class="mb-6">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-1">
+            <nav class="flex space-x-1" aria-label="Analytics Views">
+                {{-- Overview Tab --}}
+                <a 
+                    href="{{ \App\Filament\Dashboard\Resources\AnalyticsResource::getUrl('index') }}"
+                    class="px-4 py-2 text-sm font-medium rounded-md text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                >
+                    <x-heroicon-o-chart-bar-square class="w-4 h-4 inline mr-2" />
+                    Overview
+                </a>
+                
+                {{-- Video Performance Tab (Active) --}}
+                <span class="px-4 py-2 text-sm font-medium rounded-md bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-200 border border-blue-200 dark:border-blue-700">
+                    <x-heroicon-o-play class="w-4 h-4 inline mr-2" />
+                    Video Performance
+                    <span class="ml-2 px-2 py-0.5 text-xs bg-blue-200 dark:bg-blue-800 text-blue-800 dark:text-blue-200 rounded-full">Current</span>
+                </span>
+                
+                {{-- URL Performance Tab --}}
+                <a 
+                    href="{{ \App\Filament\Dashboard\Resources\AnalyticsResource::getUrl('url-performance') }}"
+                    class="px-4 py-2 text-sm font-medium rounded-md text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                >
+                    <x-heroicon-o-link class="w-4 h-4 inline mr-2" />
+                    URL Performance
+                </a>
+            </nav>
+        </div>
+    </div>
+
     <div class="space-y-6">
         @if($this->selectedVideoId && $selectedVideo = $this->getSelectedVideo())
             {{-- Selected Video Info --}}

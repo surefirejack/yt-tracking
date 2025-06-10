@@ -32,6 +32,13 @@ class UrlPerformance extends Page
     public ?array $processedMetrics = null;
     public ?array $linkBreakdown = null;
     
+    // UTM filter properties
+    public ?string $utmSource = null;
+    public ?string $utmMedium = null;
+    public ?string $utmCampaign = null;
+    public ?string $utmTerm = null;
+    public ?string $utmContent = null;
+    
     protected DubAnalyticsService $analyticsService;
 
     public function boot(): void
@@ -42,6 +49,9 @@ class UrlPerformance extends Page
     public function mount(): void
     {
         $this->selectedInterval = AnalyticsInterval::default()->value;
+        
+        // Restore filter state from session
+        $this->restoreFilterState();
     }
     
     public function getMaxWidth(): MaxWidth
@@ -236,7 +246,8 @@ class UrlPerformance extends Page
                 ->icon('heroicon-o-adjustments-horizontal')
                 ->color('primary')
                 ->modal()
-                ->modalSubmitActionLabel('Apply Selection')
+                ->modalWidth('2xl')
+                ->modalSubmitActionLabel('Apply Filters')
                 ->form([
                     Select::make('destination_url')
                         ->label('Select Destination URL')
@@ -251,19 +262,75 @@ class UrlPerformance extends Page
                         ->options(AnalyticsInterval::options())
                         ->default(AnalyticsInterval::default()->value)
                         ->required(),
+                        
+                    \Filament\Forms\Components\Section::make('UTM Parameter Filters')
+                        ->description('Filter analytics by UTM parameters (optional)')
+                        ->schema([
+                            Select::make('utm_source')
+                                ->label('UTM Source')
+                                ->placeholder('All sources...')
+                                ->options(fn () => $this->getUtmOptions('utm_source'))
+                                ->searchable()
+                                ->clearable(),
+                                
+                            Select::make('utm_medium')
+                                ->label('UTM Medium')
+                                ->placeholder('All mediums...')
+                                ->options(fn () => $this->getUtmOptions('utm_medium'))
+                                ->searchable()
+                                ->clearable(),
+                                
+                            Select::make('utm_campaign')
+                                ->label('UTM Campaign')
+                                ->placeholder('All campaigns...')
+                                ->options(fn () => $this->getUtmOptions('utm_campaign'))
+                                ->searchable()
+                                ->clearable(),
+                                
+                            Select::make('utm_term')
+                                ->label('UTM Term')
+                                ->placeholder('All terms...')
+                                ->options(fn () => $this->getUtmOptions('utm_term'))
+                                ->searchable()
+                                ->clearable(),
+                                
+                            Select::make('utm_content')
+                                ->label('UTM Content')
+                                ->placeholder('All content...')
+                                ->options(fn () => $this->getUtmOptions('utm_content'))
+                                ->searchable()
+                                ->clearable(),
+                        ])
+                        ->columns(2)
+                        ->collapsible()
+                        ->collapsed(true),
                 ])
                 ->fillForm([
                     'destination_url' => $this->selectedDestinationUrl,
                     'interval' => $this->selectedInterval,
+                    'utm_source' => $this->utmSource,
+                    'utm_medium' => $this->utmMedium,
+                    'utm_campaign' => $this->utmCampaign,
+                    'utm_term' => $this->utmTerm,
+                    'utm_content' => $this->utmContent,
                 ])
                 ->action(function (array $data): void {
                     $this->selectedDestinationUrl = $data['destination_url'];
                     $this->selectedInterval = $data['interval'];
+                    $this->utmSource = $data['utm_source'];
+                    $this->utmMedium = $data['utm_medium'];
+                    $this->utmCampaign = $data['utm_campaign'];
+                    $this->utmTerm = $data['utm_term'];
+                    $this->utmContent = $data['utm_content'];
+                    
+                    // Save filter state to session
+                    $this->saveFilterState();
+                    
                     $this->loadAnalyticsData();
                     
                     Notification::make()
-                        ->title('Selection updated')
-                        ->body('Analytics data loaded for selected destination URL and time period.')
+                        ->title('Filters applied')
+                        ->body('Analytics data loaded with selected filters.')
                         ->success()
                         ->send();
                 }),
@@ -274,6 +341,38 @@ class UrlPerformance extends Page
                 ->color('gray')
                 ->action('refreshData')
                 ->visible(fn () => $this->selectedDestinationUrl !== null),
+                
+            Actions\Action::make('reset_filters')
+                ->label('Reset Filters')
+                ->icon('heroicon-o-x-mark')
+                ->color('gray')
+                ->action('resetFilters')
+                ->visible(fn () => $this->selectedDestinationUrl !== null || $this->hasUtmFilters()),
+        ];
+    }
+    
+    protected function getViewActions(): array
+    {
+        return [
+            // Tab navigation between analytics views
+            Actions\Action::make('dashboard_tab')
+                ->label('Overview')
+                ->icon('heroicon-o-chart-bar-square')
+                ->color('gray')
+                ->url(AnalyticsResource::getUrl('index')),
+                
+            Actions\Action::make('video_performance_tab')
+                ->label('Video Performance')
+                ->icon('heroicon-o-play')
+                ->color('gray')
+                ->url(AnalyticsResource::getUrl('video-performance')),
+                
+            Actions\Action::make('url_performance_tab')
+                ->label('URL Performance')
+                ->icon('heroicon-o-link')
+                ->color('primary')
+                ->badge('Current')
+                ->disabled(),
         ];
     }
     
@@ -307,5 +406,99 @@ class UrlPerformance extends Page
                     ->send();
             }
         }
+    }
+    
+    protected function getUtmOptions(string $field): array
+    {
+        try {
+            $tenant = Filament::getTenant();
+            
+            if (!$tenant) {
+                return [];
+            }
+            
+            $values = Link::where('tenant_id', $tenant->id)
+                ->whereNotNull($field)
+                ->where($field, '!=', '')
+                ->distinct()
+                ->orderBy($field)
+                ->pluck($field)
+                ->toArray();
+            
+            return array_combine($values, $values);
+            
+        } catch (\Exception $e) {
+            \Log::error('Error getting UTM options', [
+                'field' => $field,
+                'error' => $e->getMessage(),
+            ]);
+            
+            return [];
+        }
+    }
+    
+    protected function saveFilterState(): void
+    {
+        session()->put('url_analytics_filters', [
+            'destination_url' => $this->selectedDestinationUrl,
+            'interval' => $this->selectedInterval,
+            'utm_source' => $this->utmSource,
+            'utm_medium' => $this->utmMedium,
+            'utm_campaign' => $this->utmCampaign,
+            'utm_term' => $this->utmTerm,
+            'utm_content' => $this->utmContent,
+        ]);
+    }
+    
+    protected function restoreFilterState(): void
+    {
+        $filters = session()->get('url_analytics_filters', []);
+        
+        if (!empty($filters)) {
+            $this->selectedDestinationUrl = $filters['destination_url'] ?? null;
+            $this->selectedInterval = $filters['interval'] ?? AnalyticsInterval::default()->value;
+            $this->utmSource = $filters['utm_source'] ?? null;
+            $this->utmMedium = $filters['utm_medium'] ?? null;
+            $this->utmCampaign = $filters['utm_campaign'] ?? null;
+            $this->utmTerm = $filters['utm_term'] ?? null;
+            $this->utmContent = $filters['utm_content'] ?? null;
+        }
+    }
+    
+    protected function clearFilterState(): void
+    {
+        session()->forget('url_analytics_filters');
+    }
+    
+    public function resetFilters(): void
+    {
+        $this->selectedDestinationUrl = null;
+        $this->selectedInterval = AnalyticsInterval::default()->value;
+        $this->utmSource = null;
+        $this->utmMedium = null;
+        $this->utmCampaign = null;
+        $this->utmTerm = null;
+        $this->utmContent = null;
+        
+        $this->analyticsData = null;
+        $this->processedMetrics = null;
+        $this->linkBreakdown = null;
+        
+        $this->clearFilterState();
+        
+        Notification::make()
+            ->title('Filters reset')
+            ->body('All filters have been reset to default values.')
+            ->success()
+            ->send();
+    }
+    
+    protected function hasUtmFilters(): bool
+    {
+        return !empty($this->utmSource) || 
+               !empty($this->utmMedium) || 
+               !empty($this->utmCampaign) || 
+               !empty($this->utmTerm) || 
+               !empty($this->utmContent);
     }
 } 
