@@ -27,6 +27,7 @@ use Filament\Support\Colors\Color;
 use Filament\Facades\Filament;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Cache;
 
 class LinkResource extends Resource
 {
@@ -125,9 +126,13 @@ class LinkResource extends Resource
                                                     ->placeholder('Add tags to organize your links')
                                                     ->helperText('Press Enter to add tags')
                                                     ->suggestions(function () {
-                                                        return Tag::forTenant(Filament::getTenant()->id)
-                                                            ->pluck('name')
-                                                            ->toArray();
+                                                        return Cache::remember(
+                                                            'tenant_tag_suggestions_' . Filament::getTenant()->id,
+                                                            now()->addMinutes(15),
+                                                            fn() => Tag::forTenant(Filament::getTenant()->id)
+                                                                ->pluck('name')
+                                                                ->toArray()
+                                                        );
                                                     }),
                                                 
                                                 TextInput::make('folder_id')
@@ -565,9 +570,13 @@ class LinkResource extends Resource
                     ->label('Tags')
                     ->multiple()
                     ->options(function () {
-                        return Tag::forTenant(Filament::getTenant()->id)
-                            ->pluck('name', 'name')
-                            ->toArray();
+                        return Cache::remember(
+                            'tenant_tags_' . Filament::getTenant()->id,
+                            now()->addMinutes(15),
+                            fn() => Tag::forTenant(Filament::getTenant()->id)
+                                ->pluck('name', 'name')
+                                ->toArray()
+                        );
                     })
                     ->query(function (Builder $query, array $data): Builder {
                         if (empty($data['values'])) {
@@ -586,12 +595,16 @@ class LinkResource extends Resource
                     ->searchable()
                     ->preload()
                     ->options(function () {
-                        return \App\Models\YtVideo::whereHas('ytChannel', function (Builder $query) {
-                                $query->where('tenant_id', Filament::getTenant()->id);
-                            })
-                            ->whereHas('links') // Only show videos that have associated links
-                            ->pluck('title', 'id')
-                            ->toArray();
+                        return Cache::remember(
+                            'tenant_videos_with_links_' . Filament::getTenant()->id,
+                            now()->addMinutes(15),
+                            fn() => \App\Models\YtVideo::whereHas('ytChannel', function (Builder $query) {
+                                    $query->where('tenant_id', Filament::getTenant()->id);
+                                })
+                                ->whereHas('links') // Only show videos that have associated links
+                                ->pluck('title', 'id')
+                                ->toArray()
+                        );
                     })
                     ->query(function (Builder $query, array $data): Builder {
                         if (empty($data['value'])) {
