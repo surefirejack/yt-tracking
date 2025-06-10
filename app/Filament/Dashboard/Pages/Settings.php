@@ -310,124 +310,108 @@ EOT;
                                 Forms\Components\Section::make('YouTube Integration')
                                     ->description('Connect your YouTube account to track video analytics and performance.')
                                     ->schema([
-                                        Forms\Components\Placeholder::make('youtube_status')
+                                        Forms\Components\ViewField::make('youtube_status')
                                             ->label('Connection Status')
-                                            ->content(function (Forms\Get $get) {
+                                            ->view('components.youtube-connection-badge')
+                                            ->viewData(function (Forms\Get $get) {
                                                 $isConnected = $get('youtube_connected');
                                                 $email = $get('youtube_email');
                                                 
-                                                if ($isConnected) {
-                                                    $statusText = 'Connected';
-                                                    if ($email) {
-                                                        $statusText .= ' (' . $email . ')';
-                                                    }
-                                                    
-                                                    return new \Illuminate\Support\HtmlString('
-                                                        <div class="flex items-center space-x-2">
-                                                            <div class="flex items-center space-x-2 text-green-600">
-                                                                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                                                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
-                                                                </svg>
-                                                                <span class="font-medium">' . $statusText . '</span>
-                                                            </div>
-                                                        </div>
-                                                    ');
-                                                }
-                                                
-                                                return new \Illuminate\Support\HtmlString('
-                                                    <div class="flex items-center space-x-2 text-gray-500">
-                                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                                        </svg>
-                                                        <span>Not Connected</span>
-                                                    </div>
-                                                ');
+                                                return [
+                                                    'is_connected' => $isConnected,
+                                                    'email' => $email,
+                                                ];
                                             }),
                                             
-                                        Forms\Components\Placeholder::make('youtube_actions')
+                                        Forms\Components\Actions::make([
+                                            Forms\Components\Actions\Action::make('connect_youtube')
+                                                ->label('Connect YouTube')
+                                                ->icon('heroicon-o-video-camera')
+                                                ->color('danger')
+                                                ->size('sm')
+                                                ->url(fn () => url('/integrations/youtube/redirect?tenant=' . Filament::getTenant()->uuid))
+                                                ->visible(fn (Forms\Get $get) => !$get('youtube_connected')),
+                                                
+                                            Forms\Components\Actions\Action::make('disconnect_youtube')
+                                                ->label('Disconnect YouTube')
+                                                ->icon('heroicon-o-x-mark')
+                                                ->color('gray')
+                                                ->size('sm')
+                                                ->requiresConfirmation()
+                                                ->modalHeading('Disconnect YouTube Account')
+                                                ->modalDescription('Are you sure you want to disconnect your YouTube account? This will remove access to video analytics.')
+                                                ->modalSubmitActionLabel('Yes, disconnect')
+                                                ->action(function () {
+                                                    // Use JavaScript to make the disconnect request
+                                                    return redirect()->to('javascript:void(0)');
+                                                })
+                                                ->extraAttributes([
+                                                    'onclick' => 'disconnectYouTube(); return false;'
+                                                ])
+                                                ->visible(fn (Forms\Get $get) => $get('youtube_connected')),
+                                        ])
+                                        ->alignment('start'),
+                                        
+                                        Forms\Components\Placeholder::make('youtube_description')
                                             ->label('')
                                             ->content(function (Forms\Get $get) {
                                                 $isConnected = $get('youtube_connected');
                                                 
                                                 if ($isConnected) {
-                                                    return new \Illuminate\Support\HtmlString('
-                                                        <div class="space-y-3">
-                                                            <p class="text-sm text-gray-600">
-                                                                Your YouTube account is connected and ready to track video analytics.
-                                                            </p>
-                                                            <button type="button" 
-                                                                    onclick="disconnectYouTube()"
-                                                                    class="inline-flex items-center px-4 py-2 bg-red-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-red-700 focus:bg-red-700 active:bg-red-900 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition ease-in-out duration-150">
-                                                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                                                                </svg>
-                                                                Disconnect YouTube
-                                                            </button>
-                                                            
-                                                            <script>
-                                                            function disconnectYouTube() {
-                                                                if (!confirm("Are you sure you want to disconnect your YouTube account?")) {
-                                                                    return;
-                                                                }
-                                                                
-                                                                console.log("Making disconnect request...");
-                                                                
-                                                                // Get CSRF token
-                                                                const token = document.querySelector(\'meta[name="csrf-token"]\')?.getAttribute(\'content\') 
-                                                                           || document.querySelector(\'input[name="_token"]\')?.value;
-                                                                
-                                                                if (!token) {
-                                                                    console.error("CSRF token not found");
-                                                                    alert("Security token not found. Please refresh the page and try again.");
-                                                                    return;
-                                                                }
-                                                                
-                                                                fetch("' . url('/integrations/youtube/disconnect/' . Filament::getTenant()->uuid) . '", {
-                                                                    method: "POST",
-                                                                    headers: {
-                                                                        "Content-Type": "application/json",
-                                                                        "X-CSRF-TOKEN": token,
-                                                                        "Accept": "application/json"
-                                                                    },
-                                                                    credentials: "same-origin"
-                                                                })
-                                                                .then(response => {
-                                                                    console.log("Response status:", response.status);
-                                                                    if (response.redirected) {
-                                                                        console.log("Redirecting to:", response.url);
-                                                                        window.location.href = response.url;
-                                                                    } else if (response.ok) {
-                                                                        // Reload the current page to see the updated state
-                                                                        window.location.reload();
-                                                                    } else {
-                                                                        throw new Error("Request failed: " + response.status);
-                                                                    }
-                                                                })
-                                                                .catch(error => {
-                                                                    console.error("Disconnect error:", error);
-                                                                    alert("Failed to disconnect YouTube account. Please try again.");
-                                                                });
-                                                            }
-                                                            </script>
-                                                        </div>
-                                                    ');
+                                                    return 'Your YouTube account is connected and ready to track video analytics and performance metrics.';
+                                                } else {
+                                                    return 'Connect your YouTube account to start tracking video analytics, monitor performance metrics, and gain insights into your content.';
                                                 }
-                                                
-                                                return new \Illuminate\Support\HtmlString('
-                                                    <div class="space-y-3">
-                                                        <p class="text-sm text-gray-600">
-                                                            Connect your YouTube account to start tracking video analytics, monitor performance metrics, and gain insights into your content.
-                                                        </p>
-                                                        <a href="' . url('/integrations/youtube/redirect?tenant=' . Filament::getTenant()->uuid) . '" 
-                                                           class="inline-flex items-center px-4 py-2 bg-red-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-red-700 focus:bg-red-700 active:bg-red-900 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition ease-in-out duration-150">
-                                                            <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
-                                                                <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
-                                                            </svg> &nbsp;
-                                                            Connect YouTube
-                                                        </a>
-                                                    </div>
-                                                ');
-                                            }),
+                                            })
+                                            ->extraAttributes(['class' => 'text-sm text-gray-600 dark:text-gray-400']),
+                                            
+                                        // Keep the JavaScript function for disconnect
+                                        Forms\Components\Placeholder::make('disconnect_script')
+                                            ->label('')
+                                            ->content(new \Illuminate\Support\HtmlString('
+                                                <script>
+                                                function disconnectYouTube() {
+                                                    console.log("Making disconnect request...");
+                                                    
+                                                    // Get CSRF token
+                                                    const token = document.querySelector(\'meta[name="csrf-token"]\')?.getAttribute(\'content\') 
+                                                               || document.querySelector(\'input[name="_token"]\')?.value;
+                                                    
+                                                    if (!token) {
+                                                        console.error("CSRF token not found");
+                                                        alert("Security token not found. Please refresh the page and try again.");
+                                                        return;
+                                                    }
+                                                    
+                                                    fetch("' . url('/integrations/youtube/disconnect/' . Filament::getTenant()->uuid) . '", {
+                                                        method: "POST",
+                                                        headers: {
+                                                            "Content-Type": "application/json",
+                                                            "X-CSRF-TOKEN": token,
+                                                            "Accept": "application/json"
+                                                        },
+                                                        credentials: "same-origin"
+                                                    })
+                                                    .then(response => {
+                                                        console.log("Response status:", response.status);
+                                                        if (response.redirected) {
+                                                            console.log("Redirecting to:", response.url);
+                                                            window.location.href = response.url;
+                                                        } else if (response.ok) {
+                                                            // Reload the current page to see the updated state
+                                                            window.location.reload();
+                                                        } else {
+                                                            throw new Error("Request failed: " + response.status);
+                                                        }
+                                                    })
+                                                    .catch(error => {
+                                                        console.error("Disconnect error:", error);
+                                                        alert("Failed to disconnect YouTube account. Please try again.");
+                                                    });
+                                                }
+                                                </script>
+                                            '))
+                                            ->visible(fn (Forms\Get $get) => $get('youtube_connected')),
                                     ]),
                             ]),
                     ])
