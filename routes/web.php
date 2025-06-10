@@ -99,8 +99,9 @@ Route::get('/integrations/youtube/redirect', [YouTubeIntegrationController::clas
 Route::get('/integrations/youtube/callback', [YouTubeIntegrationController::class, 'callback'])
     ->name('integrations.youtube.callback');
 
-Route::post('/integrations/youtube/disconnect', [YouTubeIntegrationController::class, 'disconnect'])
-    ->name('integrations.youtube.disconnect');
+Route::post('/integrations/youtube/disconnect/{tenant?}', [YouTubeIntegrationController::class, 'disconnect'])
+    ->name('integrations.youtube.disconnect')
+    ->middleware('auth');
 
 Route::get('/checkout/plan/{planSlug}', [
     App\Http\Controllers\SubscriptionCheckoutController::class,

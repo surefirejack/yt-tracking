@@ -355,17 +355,60 @@ EOT;
                                                             <p class="text-sm text-gray-600">
                                                                 Your YouTube account is connected and ready to track video analytics.
                                                             </p>
-                                                            <form action="' . url('/integrations/youtube/disconnect') . '" method="POST" class="inline">
-                                                                ' . csrf_field() . '
-                                                                <button type="submit" 
-                                                                        onclick="return confirm(\'Are you sure you want to disconnect your YouTube account?\')"
-                                                                        class="inline-flex items-center px-4 py-2 bg-red-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-red-700 focus:bg-red-700 active:bg-red-900 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition ease-in-out duration-150">
-                                                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                                                                    </svg>
-                                                                    Disconnect YouTube
-                                                                </button>
-                                                            </form>
+                                                            <button type="button" 
+                                                                    onclick="disconnectYouTube()"
+                                                                    class="inline-flex items-center px-4 py-2 bg-red-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-red-700 focus:bg-red-700 active:bg-red-900 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition ease-in-out duration-150">
+                                                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                                                </svg>
+                                                                Disconnect YouTube
+                                                            </button>
+                                                            
+                                                            <script>
+                                                            function disconnectYouTube() {
+                                                                if (!confirm("Are you sure you want to disconnect your YouTube account?")) {
+                                                                    return;
+                                                                }
+                                                                
+                                                                console.log("Making disconnect request...");
+                                                                
+                                                                // Get CSRF token
+                                                                const token = document.querySelector(\'meta[name="csrf-token"]\')?.getAttribute(\'content\') 
+                                                                           || document.querySelector(\'input[name="_token"]\')?.value;
+                                                                
+                                                                if (!token) {
+                                                                    console.error("CSRF token not found");
+                                                                    alert("Security token not found. Please refresh the page and try again.");
+                                                                    return;
+                                                                }
+                                                                
+                                                                fetch("' . url('/integrations/youtube/disconnect/' . Filament::getTenant()->uuid) . '", {
+                                                                    method: "POST",
+                                                                    headers: {
+                                                                        "Content-Type": "application/json",
+                                                                        "X-CSRF-TOKEN": token,
+                                                                        "Accept": "application/json"
+                                                                    },
+                                                                    credentials: "same-origin"
+                                                                })
+                                                                .then(response => {
+                                                                    console.log("Response status:", response.status);
+                                                                    if (response.redirected) {
+                                                                        console.log("Redirecting to:", response.url);
+                                                                        window.location.href = response.url;
+                                                                    } else if (response.ok) {
+                                                                        // Reload the current page to see the updated state
+                                                                        window.location.reload();
+                                                                    } else {
+                                                                        throw new Error("Request failed: " + response.status);
+                                                                    }
+                                                                })
+                                                                .catch(error => {
+                                                                    console.error("Disconnect error:", error);
+                                                                    alert("Failed to disconnect YouTube account. Please try again.");
+                                                                });
+                                                            }
+                                                            </script>
                                                         </div>
                                                     ');
                                                 }

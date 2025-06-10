@@ -212,19 +212,33 @@ class YouTubeIntegrationController extends Controller
         }
     }
 
-    public function disconnect()
+    public function disconnect($tenant = null)
     {
-        \Log::info('YouTube Integration: disconnect method called');
+        \Log::info('YouTube Integration: disconnect method called', [
+            'user_id' => auth()->id(),
+            'tenant_param' => $tenant
+        ]);
         
-        $tenant = Filament::getTenant();
+        // Try to resolve tenant from parameter or Filament context
+        $tenantModel = null;
+        if ($tenant) {
+            $tenantModel = \App\Models\Tenant::where('uuid', $tenant)->first();
+        }
         
-        if (!$tenant) {
+        if (!$tenantModel) {
+            $tenantModel = Filament::getTenant();
+        }
+        
+        if (!$tenantModel) {
             \Log::error('YouTube Integration: Tenant not found in disconnect');
             abort(404, 'Tenant not found');
         }
         
         $user = auth()->user();
-        \Log::info('YouTube Integration: disconnecting for user', ['user_id' => $user->id]);
+        \Log::info('YouTube Integration: disconnecting for user', [
+            'user_id' => $user->id,
+            'tenant_uuid' => $tenantModel->uuid
+        ]);
         
         // Check existing parameters before deletion
         $existingParams = $user->userParameters()->where('name', 'like', 'youtube_%')->get();
@@ -245,7 +259,7 @@ class YouTubeIntegrationController extends Controller
         ]);
         
         \Log::info('YouTube Integration: redirecting to settings');
-        return redirect()->route('filament.dashboard.pages.settings', ['tenant' => $tenant->uuid])
+        return redirect()->route('filament.dashboard.pages.settings', ['tenant' => $tenantModel->uuid])
             ->with('youtube_disconnected', true);
     }
 } 
