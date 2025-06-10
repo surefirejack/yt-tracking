@@ -23,8 +23,16 @@
         }
       }
       
+      // Get all input elements to check type and placeholder attributes
+      const inputs = form.querySelectorAll('input, textarea, select');
+      
       for (let [key, value] of formData.entries()) {
         const lowerKey = key.toLowerCase();
+        
+        // Find the corresponding input element
+        const inputElement = Array.from(inputs).find(input => 
+          input.name === key || input.id === key
+        );
         
         // Look for name fields
         if (lowerKey.includes('name') || lowerKey === 'first_name' || lowerKey === 'last_name' || 
@@ -40,11 +48,22 @@
           }
         }
         
-        // Look for email fields
-        if (lowerKey.includes('email') || lowerKey === 'email_address' || 
-            lowerKey === 'emailaddress' || key.toLowerCase() === 'e-mail') {
+        // Look for email fields - check field name, input type, and placeholder
+        const isEmailByName = lowerKey.includes('email') || lowerKey === 'email_address' || 
+                             lowerKey === 'emailaddress' || key.toLowerCase() === 'e-mail';
+        const isEmailByType = inputElement && inputElement.type === 'email';
+        const isEmailByPlaceholder = inputElement && inputElement.placeholder && 
+                                   inputElement.placeholder.toLowerCase().includes('email');
+        
+        if (isEmailByName || isEmailByType || isEmailByPlaceholder) {
           if (config.debug) {
-            console.log(`Found email field: ${key} = ${value}`);
+            console.log(`Found email field: ${key} = ${value}`, {
+              byName: isEmailByName,
+              byType: isEmailByType,
+              byPlaceholder: isEmailByPlaceholder,
+              inputType: inputElement ? inputElement.type : 'unknown',
+              placeholder: inputElement ? inputElement.placeholder : 'none'
+            });
           }
           data.email = value;
         }
