@@ -135,7 +135,6 @@ EOT;
                                             ->label('Tracking Code')
                                             ->readonly()
                                             ->rows(10)
-                                            ->maxLength(255)
                                             ->extraAttributes([
                                                 'id' => 'tracking-code-textarea'
                                             ]),
@@ -317,16 +316,20 @@ EOT;
                                                 $isConnected = $get('youtube_connected');
                                                 $email = $get('youtube_email');
                                                 
-                                                if ($isConnected && $email) {
+                                                if ($isConnected) {
+                                                    $statusText = 'Connected';
+                                                    if ($email) {
+                                                        $statusText .= ' (' . $email . ')';
+                                                    }
+                                                    
                                                     return new \Illuminate\Support\HtmlString('
                                                         <div class="flex items-center space-x-2">
                                                             <div class="flex items-center space-x-2 text-green-600">
                                                                 <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                                                                     <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
                                                                 </svg>
-                                                                <span class="font-medium">Connected</span>
+                                                                <span class="font-medium">' . $statusText . '</span>
                                                             </div>
-                                                            <span class="text-gray-600">(' . $email . ')</span>
                                                         </div>
                                                     ');
                                                 }
@@ -372,7 +375,7 @@ EOT;
                                                         <p class="text-sm text-gray-600">
                                                             Connect your YouTube account to start tracking video analytics, monitor performance metrics, and gain insights into your content.
                                                         </p>
-                                                        <a href="' . url('/integrations/youtube/redirect?tenant=' . Filament::getTenant()->id) . '" 
+                                                        <a href="' . url('/integrations/youtube/redirect?tenant=' . Filament::getTenant()->uuid) . '" 
                                                            class="inline-flex items-center px-4 py-2 bg-red-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-red-700 focus:bg-red-700 active:bg-red-900 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition ease-in-out duration-150">
                                                             <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
                                                                 <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>

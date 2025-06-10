@@ -132,4 +132,8 @@ return [
         'webhook_token' => env('MAKEDOTCOM_WEBHOOK_TOKEN'),
     ],
 
+    'local' => [
+        'base_url' => env('TESTING_URL'),
+    ],
+
 ];
