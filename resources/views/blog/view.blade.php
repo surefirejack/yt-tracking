@@ -1,8 +1,11 @@
 <x-layouts.app>
 
-    @push('head')
-        @vite(['resources/js/blog.js'])
-    @endpush
+    {{-- Use optimized asset loading --}}
+    <x-vite.page-assets 
+        assets="resources/js/blog.js" 
+        preload="resources/js/blog.js"
+        defer="true" 
+    />
 
     <x-slot name="title">{{ $post->title }}</x-slot>
 

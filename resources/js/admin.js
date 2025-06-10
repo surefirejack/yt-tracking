@@ -1,5 +1,6 @@
-import * as bootstrap from 'bootstrap';
+// Admin panel functionality without Bootstrap dependency
 
+// Navigation link handling
 document.querySelectorAll('.nav-link').forEach((navLink) => {
     navLink.addEventListener('click', (event) => {
         const collapsableArrow = navLink.querySelector('.collapsable-arrow');
@@ -9,82 +10,131 @@ document.querySelectorAll('.nav-link').forEach((navLink) => {
     });
 });
 
-// when clicking on .toggle-menu, toggle the display of  .side-menu-container element even if it's not shown on mobile devices
+// Menu toggle functionality
 document.querySelectorAll('.toggle-menu-button').forEach((toggleMenu) => {
     toggleMenu.addEventListener('click', (event) => {
-        document.querySelector('.side-menu-container').classList.toggle('active');
-        document.querySelector('.page-content-container').classList.toggle('full-width');
+        const sideMenu = document.querySelector('.side-menu-container');
+        const pageContent = document.querySelector('.page-content-container');
+        
+        if (sideMenu) sideMenu.classList.toggle('active');
+        if (pageContent) pageContent.classList.toggle('full-width');
     });
 });
 
-// when clicking outside .side-menu-container, hide it if it's mobile device
+// Click outside to close menu on mobile
 document.addEventListener('click', (event) => {
     if (!event.target.closest('.side-menu-container') && !event.target.closest('.toggle-menu')) {
         if (window.innerWidth < 1200) {
-            document.querySelector('.side-menu-container').classList.remove('active');
-            document.querySelector('.page-content-container').classList.add('full-width');
+            const sideMenu = document.querySelector('.side-menu-container');
+            const pageContent = document.querySelector('.page-content-container');
+            
+            if (sideMenu) sideMenu.classList.remove('active');
+            if (pageContent) pageContent.classList.add('full-width');
         }
     }
 });
 
-// if the width of the window is less than 1200px, hide the side menu
+// Responsive menu handling
 window.addEventListener('resize', (event) => {
     if (window.innerWidth < 1200) {
-        document.querySelector('.side-menu-container').classList.remove('active');
-        document.querySelector('.page-content-container').classList.add('full-width');
+        const sideMenu = document.querySelector('.side-menu-container');
+        const pageContent = document.querySelector('.page-content-container');
+        
+        if (sideMenu) sideMenu.classList.remove('active');
+        if (pageContent) pageContent.classList.add('full-width');
     }
 });
 
-// when clicking on .generate-password-button button, generate a random password and put it in the #password input
+// Password generation
 document.querySelectorAll('.generate-password-button').forEach((generatePasswordButton) => {
     generatePasswordButton.addEventListener('click', (event) => {
         event.preventDefault();
-        document.querySelector('#password').value = generateRandomPassword();
+        const passwordInput = document.querySelector('#password');
+        if (passwordInput) {
+            passwordInput.value = generateRandomPassword();
+        }
     });
 });
 
-Livewire.on('laraveltable:action:confirm', (actionType, actionIdentifier, modelPrimary, confirmationQuestion) => {
-    if (window.confirm(confirmationQuestion)) {
-        Livewire.emit('laraveltable:action:confirmed', actionType, actionIdentifier, modelPrimary);
-    }
-});
+// Simple toast functionality without Bootstrap
+function showToast(message, type = 'success') {
+    const toastContainer = document.querySelector('.toast-container') || createToastContainer();
+    const toast = createToast(message, type);
+    
+    toastContainer.appendChild(toast);
+    
+    // Show toast with animation
+    setTimeout(() => toast.classList.add('show'), 100);
+    
+    // Auto-hide after 5 seconds
+    setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => toast.remove(), 300);
+    }, 5000);
+}
 
-Livewire.on('laraveltable:action:feedback', (feedbackMessage) => {
-    const toastContainer = document.querySelector('.toast-container');
+function createToastContainer() {
+    const container = document.createElement('div');
+    container.className = 'toast-container position-fixed top-0 end-0 p-3';
+    container.style.zIndex = '9999';
+    document.body.appendChild(container);
+    return container;
+}
+
+function createToast(message, type) {
     const toast = document.createElement('div');
-    toast.classList.add('toast', 'align-items-center', 'text-white', 'bg-success');
+    toast.className = `toast align-items-center text-white bg-${type}`;
     toast.setAttribute('role', 'alert');
     toast.setAttribute('aria-live', 'assertive');
     toast.setAttribute('aria-atomic', 'true');
+    
     toast.innerHTML = `
         <div class="d-flex">
             <div class="toast-body">
-                ${feedbackMessage}
+                ${message}
             </div>
-            <button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast"
-            aria-label="Close"></button>
+            <button type="button" class="btn-close me-2 m-auto" onclick="this.closest('.toast').remove()" aria-label="Close"></button>
         </div>
     `;
-    toastContainer.appendChild(toast);
-    const toastBootstrap = new bootstrap.Toast(toast);
-    toastBootstrap.show();
+    
+    return toast;
+}
+
+// Livewire event handlers (if Livewire is available)
+if (typeof Livewire !== 'undefined') {
+    Livewire.on('laraveltable:action:confirm', (actionType, actionIdentifier, modelPrimary, confirmationQuestion) => {
+        if (window.confirm(confirmationQuestion)) {
+            Livewire.emit('laraveltable:action:confirmed', actionType, actionIdentifier, modelPrimary);
+        }
+    });
+
+    Livewire.on('laraveltable:action:feedback', (feedbackMessage) => {
+        showToast(feedbackMessage, 'success');
+    });
+}
+
+// Show existing toasts on page load
+document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('.toast').forEach((toast) => {
+        setTimeout(() => toast.classList.add('show'), 100);
+    });
 });
 
-
-// on page load, show all toasts
-document.querySelectorAll('.toast').forEach((toast) => {
-    const toastBootstrap = bootstrap.Toast.getOrCreateInstance(toast);
-    toastBootstrap.show();
-});
-
-
+// Password generation utility
 function generateRandomPassword() {
-    let length = 18,
-        charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+~|}{[]:;?><,./-=",
-        password = "";
-    for (let i = 0, n = charset.length; i < length; ++i) {
-        password += charset.charAt(Math.floor(Math.random() * n));
+    const length = 18;
+    const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+~|}{[]:;?><,./-=";
+    let password = "";
+    
+    for (let i = 0; i < length; i++) {
+        password += charset.charAt(Math.floor(Math.random() * charset.length));
     }
-
+    
     return password;
 }
+
+// Export for dynamic imports
+export default {
+    showToast,
+    generateRandomPassword
+};
