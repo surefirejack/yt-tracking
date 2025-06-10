@@ -271,35 +271,35 @@ class UrlPerformance extends Page
                                 ->placeholder('All sources...')
                                 ->options(fn () => $this->getUtmOptions('utm_source'))
                                 ->searchable()
-                                ->clearable(),
+                                ->nullable(),
                                 
                             Select::make('utm_medium')
                                 ->label('UTM Medium')
                                 ->placeholder('All mediums...')
                                 ->options(fn () => $this->getUtmOptions('utm_medium'))
                                 ->searchable()
-                                ->clearable(),
+                                ->nullable(),
                                 
                             Select::make('utm_campaign')
                                 ->label('UTM Campaign')
                                 ->placeholder('All campaigns...')
                                 ->options(fn () => $this->getUtmOptions('utm_campaign'))
                                 ->searchable()
-                                ->clearable(),
+                                ->nullable(),
                                 
                             Select::make('utm_term')
                                 ->label('UTM Term')
                                 ->placeholder('All terms...')
                                 ->options(fn () => $this->getUtmOptions('utm_term'))
                                 ->searchable()
-                                ->clearable(),
+                                ->nullable(),
                                 
                             Select::make('utm_content')
                                 ->label('UTM Content')
                                 ->placeholder('All content...')
                                 ->options(fn () => $this->getUtmOptions('utm_content'))
                                 ->searchable()
-                                ->clearable(),
+                                ->nullable(),
                         ])
                         ->columns(2)
                         ->collapsible()
