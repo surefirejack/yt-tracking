@@ -52,7 +52,11 @@ class YouTubeIntegrationController extends Controller
         ]);
         
         $socialiteDriver = Socialite::driver('youtube')
-            ->scopes(['https://www.googleapis.com/auth/youtube.force-ssl']);
+            ->scopes(['https://www.googleapis.com/auth/youtube.force-ssl'])
+            ->with([
+                'access_type' => 'offline',
+                'prompt' => 'consent'
+            ]);
         
         // Override redirect URL for local testing
         if (env('APP_ENV') === 'local') {

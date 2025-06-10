@@ -12,6 +12,8 @@ use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\YouTubeIntegrationController;
+use App\Http\Controllers\SubscriptionCheckoutController;
+use App\Http\Controllers\ProductCheckoutController;
 
 /*
 |--------------------------------------------------------------------------

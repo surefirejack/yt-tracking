@@ -57,8 +57,23 @@ class Settings extends Page
             ->where('value', true)
             ->exists();
             
+        // Check if tokens are valid (not expired and has refresh token)
+        $youtubeTokenValid = false;
+        if ($youtubeConnected) {
+            $youtubeTokenService = app(\App\Services\YouTubeTokenService::class);
+            $youtubeTokenValid = $youtubeTokenService->hasValidConnection($user);
+        }
+            
         $youtubeEmail = $user->userParameters()
             ->where('name', 'youtube_email')
+            ->first()?->value ?? '';
+
+        $youtubeNickname = $user->userParameters()
+            ->where('name', 'youtube_nickname')
+            ->first()?->value ?? '';
+
+        $youtubeUserId = $user->userParameters()
+            ->where('name', 'youtube_user_id')
             ->first()?->value ?? '';
         
         // Generate tracking code
@@ -86,7 +101,10 @@ EOT;
             'custom_domains' => $customDomains,
             'tracking_code' => $trackingCode,
             'youtube_connected' => $youtubeConnected,
+            'youtube_token_valid' => $youtubeTokenValid,
             'youtube_email' => $youtubeEmail,
+            'youtube_nickname' => $youtubeNickname,
+            'youtube_user_id' => $youtubeUserId,
         ]);
         
         // Handle flash messages
@@ -121,7 +139,10 @@ EOT;
             ->schema([
                 // Hidden fields for YouTube integration
                 Forms\Components\Hidden::make('youtube_connected'),
+                Forms\Components\Hidden::make('youtube_token_valid'),
                 Forms\Components\Hidden::make('youtube_email'),
+                Forms\Components\Hidden::make('youtube_nickname'),
+                Forms\Components\Hidden::make('youtube_user_id'),
                 
                 Tabs::make('Settings')
                     ->tabs([
@@ -315,11 +336,17 @@ EOT;
                                             ->view('components.youtube-connection-badge')
                                             ->viewData(function (Forms\Get $get) {
                                                 $isConnected = $get('youtube_connected');
+                                                $tokenValid = $get('youtube_token_valid');
                                                 $email = $get('youtube_email');
+                                                $nickname = $get('youtube_nickname');
+                                                $userId = $get('youtube_user_id');
                                                 
                                                 return [
                                                     'is_connected' => $isConnected,
+                                                    'token_valid' => $tokenValid,
                                                     'email' => $email,
+                                                    'nickname' => $nickname,
+                                                    'user_id' => $userId,
                                                 ];
                                             }),
                                             
@@ -413,6 +440,325 @@ EOT;
                                             '))
                                             ->visible(fn (Forms\Get $get) => $get('youtube_connected')),
                                     ]),
+
+                                // YouTube Subscription Test Section (MVP)
+                                Forms\Components\Section::make('YouTube Subscription Test (MVP)')
+                                    ->description('Test if users are subscribed to specific YouTube channels - useful for building subscriber-only content areas.')
+                                    ->schema([
+                                        Forms\Components\Placeholder::make('subscription_test_status')
+                                            ->label('Test Status')
+                                            ->content(function (Forms\Get $get) {
+                                                $isConnected = $get('youtube_connected');
+                                                $tokenValid = $get('youtube_token_valid');
+                                                
+                                                if ($isConnected && $tokenValid) {
+                                                    return new \Illuminate\Support\HtmlString('
+                                                        <div class="flex items-center gap-2">
+                                                            <span class="inline-flex items-center px-2 py-1 text-xs font-medium text-green-800 bg-green-100 rounded-full">
+                                                                <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                                                </svg>
+                                                                Ready to test
+                                                            </span>
+                                                        </div>
+                                                    ');
+                                                } elseif ($isConnected && !$tokenValid) {
+                                                    return new \Illuminate\Support\HtmlString('
+                                                        <div class="flex items-center gap-2">
+                                                            <span class="inline-flex items-center px-2 py-1 text-xs font-medium text-orange-800 bg-orange-100 rounded-full">
+                                                                <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                                                    <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                                                                </svg>
+                                                                Connection expired
+                                                            </span>
+                                                            <span class="text-sm text-orange-600">Please reconnect your YouTube account</span>
+                                                        </div>
+                                                    ');
+                                                } else {
+                                                    return new \Illuminate\Support\HtmlString('
+                                                        <div class="flex items-center gap-2">
+                                                            <span class="inline-flex items-center px-2 py-1 text-xs font-medium text-gray-600 bg-gray-100 rounded-full">
+                                                                <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                                                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                                                                </svg>
+                                                                Connect YouTube first
+                                                            </span>
+                                                        </div>
+                                                    ');
+                                                }
+                                            }),
+
+                                        Forms\Components\TextInput::make('subscription_test_channel')
+                                            ->label('Channel ID or Username')
+                                            ->placeholder('e.g. UCBJycsmduvYEL83R_U4JriQ or @channelname')
+                                            ->helperText('Enter either a YouTube channel ID (starts with UC) or username (starts with @)')
+                                            ->live()
+                                            ->visible(fn (Forms\Get $get) => $get('youtube_connected') && $get('youtube_token_valid')),
+
+                                        Forms\Components\Actions::make([
+                                            Forms\Components\Actions\Action::make('test_subscription')
+                                                ->label('Check Subscription Status')
+                                                ->icon('heroicon-o-magnifying-glass')
+                                                ->color('primary')
+                                                ->size('sm')
+                                                ->requiresConfirmation(false)
+                                                ->action(function (Forms\Get $get, Forms\Set $set) {
+                                                    $channelIdentifier = $get('subscription_test_channel');
+                                                    
+                                                    if (empty($channelIdentifier)) {
+                                                        \Filament\Notifications\Notification::make()
+                                                            ->warning()
+                                                            ->title('Missing Channel')
+                                                            ->body('Please enter a channel ID or username to test.')
+                                                            ->send();
+                                                        return;
+                                                    }
+
+                                                    $user = auth()->user();
+                                                    $youtubeApiService = app(\App\Services\YouTubeApiService::class);
+                                                    
+                                                    try {
+                                                        // Get channel information
+                                                        $channelInfo = $youtubeApiService->getChannelByIdentifier($user, $channelIdentifier);
+                                                        
+                                                        if (!$channelInfo || empty($channelInfo['items'])) {
+                                                            \Filament\Notifications\Notification::make()
+                                                                ->danger()
+                                                                ->title('Channel Not Found')
+                                                                ->body('Could not find a channel with that identifier. Please check and try again.')
+                                                                ->send();
+                                                            return;
+                                                        }
+
+                                                        $channel = $channelInfo['items'][0];
+                                                        $channelId = $channel['id'];
+                                                        $channelTitle = $channel['snippet']['title'];
+                                                        
+                                                        // Check subscription
+                                                        $subscriptionData = $youtubeApiService->checkSubscription($user, $channelId);
+                                                        $isSubscribed = $subscriptionData !== null;
+                                                        
+                                                        if ($isSubscribed) {
+                                                            \Filament\Notifications\Notification::make()
+                                                                ->success()
+                                                                ->title('✅ Subscribed!')
+                                                                ->body("You are subscribed to {$channelTitle}")
+                                                                ->duration(8000)
+                                                                ->send();
+                                                        } else {
+                                                            \Filament\Notifications\Notification::make()
+                                                                ->warning()
+                                                                ->title('❌ Not Subscribed')
+                                                                ->body("You are not subscribed to {$channelTitle}")
+                                                                ->duration(8000)
+                                                                ->send();
+                                                        }
+
+                                                        // Store the last test result for display
+                                                        $set('last_test_result', [
+                                                            'channel_title' => $channelTitle,
+                                                            'channel_id' => $channelId,
+                                                            'is_subscribed' => $isSubscribed,
+                                                            'tested_at' => now()->format('M j, Y g:i A')
+                                                        ]);
+
+                                                    } catch (\Exception $e) {
+                                                        \Log::error('Subscription test error in settings', [
+                                                            'user_id' => $user->id,
+                                                            'channel_identifier' => $channelIdentifier,
+                                                            'error' => $e->getMessage()
+                                                        ]);
+                                                        
+                                                        \Filament\Notifications\Notification::make()
+                                                            ->danger()
+                                                            ->title('Test Failed')
+                                                            ->body('An error occurred while testing: ' . $e->getMessage())
+                                                            ->send();
+                                                    }
+                                                })
+                                                ->visible(fn (Forms\Get $get) => $get('youtube_connected') && $get('youtube_token_valid') && !empty($get('subscription_test_channel'))),
+
+                                            Forms\Components\Actions\Action::make('list_subscriptions')
+                                                ->label('Show My Subscriptions')
+                                                ->icon('heroicon-o-list-bullet')
+                                                ->color('secondary')
+                                                ->size('sm')
+                                                ->action(function (Forms\Get $get, Forms\Set $set) {
+                                                    $user = auth()->user();
+                                                    $youtubeApiService = app(\App\Services\YouTubeApiService::class);
+                                                    
+                                                    try {
+                                                        // Get user's subscriptions
+                                                        $subscriptionsList = $youtubeApiService->getUserSubscriptionsList($user, 25);
+                                                        
+                                                        if (empty($subscriptionsList)) {
+                                                            \Filament\Notifications\Notification::make()
+                                                                ->warning()
+                                                                ->title('No Subscriptions Found')
+                                                                ->body('You don\'t appear to have any public subscriptions, or they might be private.')
+                                                                ->duration(8000)
+                                                                ->send();
+                                                            return;
+                                                        }
+
+                                                        // Store the subscriptions list for display
+                                                        $set('user_subscriptions', $subscriptionsList);
+
+                                                        \Filament\Notifications\Notification::make()
+                                                            ->success()
+                                                            ->title('Subscriptions Loaded')
+                                                            ->body('Found ' . count($subscriptionsList) . ' subscriptions. You can now copy channel IDs to test.')
+                                                            ->duration(8000)
+                                                            ->send();
+
+                                                    } catch (\Exception $e) {
+                                                        \Log::error('Error loading subscriptions in settings', [
+                                                            'user_id' => $user->id,
+                                                            'error' => $e->getMessage()
+                                                        ]);
+                                                        
+                                                        \Filament\Notifications\Notification::make()
+                                                            ->danger()
+                                                            ->title('Failed to Load Subscriptions')
+                                                            ->body('An error occurred: ' . $e->getMessage())
+                                                            ->send();
+                                                    }
+                                                })
+                                                ->visible(fn (Forms\Get $get) => $get('youtube_connected') && $get('youtube_token_valid')),
+                                        ])
+                                        ->alignment('start'),
+
+                                        Forms\Components\Placeholder::make('last_test_result_display')
+                                            ->label('Last Test Result')
+                                            ->content(function (Forms\Get $get) {
+                                                $result = $get('last_test_result');
+                                                
+                                                if (!$result) {
+                                                    return 'No tests run yet.';
+                                                }
+                                                
+                                                $statusIcon = $result['is_subscribed'] ? '✅' : '❌';
+                                                $statusText = $result['is_subscribed'] ? 'Subscribed' : 'Not Subscribed';
+                                                $statusColor = $result['is_subscribed'] ? 'text-green-600' : 'text-orange-600';
+                                                
+                                                return new \Illuminate\Support\HtmlString("
+                                                    <div class='bg-gray-50 rounded-lg p-3 border'>
+                                                        <div class='flex items-center gap-2 mb-2'>
+                                                            <span class='text-lg'>{$statusIcon}</span>
+                                                            <span class='font-medium {$statusColor}'>{$statusText}</span>
+                                                        </div>
+                                                        <div class='text-sm text-gray-600'>
+                                                            <div><strong>Channel:</strong> {$result['channel_title']}</div>
+                                                            <div><strong>ID:</strong> <code class='text-xs bg-gray-200 px-1 rounded'>{$result['channel_id']}</code></div>
+                                                            <div><strong>Tested:</strong> {$result['tested_at']}</div>
+                                                        </div>
+                                                    </div>
+                                                ");
+                                            })
+                                            ->visible(fn (Forms\Get $get) => !empty($get('last_test_result'))),
+
+                                        Forms\Components\Hidden::make('last_test_result'),
+
+                                        Forms\Components\Placeholder::make('user_subscriptions_display')
+                                            ->label('Your Subscriptions')
+                                            ->content(function (Forms\Get $get) {
+                                                $subscriptions = $get('user_subscriptions');
+                                                
+                                                if (!$subscriptions || empty($subscriptions)) {
+                                                    return 'Click "Show My Subscriptions" above to load your subscription list.';
+                                                }
+                                                
+                                                $html = '<div class="space-y-3 max-h-96 overflow-y-auto">';
+                                                
+                                                foreach ($subscriptions as $index => $subscription) {
+                                                    $channelId = htmlspecialchars($subscription['channel_id']);
+                                                    $channelTitle = htmlspecialchars($subscription['channel_title']);
+                                                    $description = htmlspecialchars(substr($subscription['description'] ?? '', 0, 100));
+                                                    if (strlen($subscription['description'] ?? '') > 100) {
+                                                        $description .= '...';
+                                                    }
+                                                    
+                                                    $html .= "
+                                                        <div class='bg-white border rounded-lg p-3 hover:bg-gray-50'>
+                                                            <div class='flex items-start justify-between'>
+                                                                <div class='flex-1 min-w-0'>
+                                                                    <h4 class='font-medium text-gray-900 truncate'>{$channelTitle}</h4>
+                                                                    <p class='text-sm text-gray-600 mt-1'>{$description}</p>
+                                                                    <div class='mt-2'>
+                                                                        <code class='text-xs bg-gray-100 px-2 py-1 rounded font-mono'>{$channelId}</code>
+                                                                    </div>
+                                                                </div>
+                                                                <button 
+                                                                    type='button'
+                                                                    onclick='copyChannelId(\"{$channelId}\")'
+                                                                    class='ml-3 text-sm text-blue-600 hover:text-blue-800 font-medium'
+                                                                    title='Copy Channel ID'
+                                                                >
+                                                                    Copy ID
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    ";
+                                                }
+                                                
+                                                $html .= '</div>';
+                                                
+                                                // Add JavaScript for copying
+                                                $html .= '
+                                                    <script>
+                                                    function copyChannelId(channelId) {
+                                                        if (navigator.clipboard) {
+                                                            navigator.clipboard.writeText(channelId).then(function() {
+                                                                // Find the subscription test input and populate it
+                                                                const testInput = document.querySelector(\'input[name="data.subscription_test_channel"]\');
+                                                                if (testInput) {
+                                                                    testInput.value = channelId;
+                                                                    testInput.dispatchEvent(new Event(\'input\', { bubbles: true }));
+                                                                }
+                                                                alert("Channel ID copied and filled in test field!");
+                                                            }).catch(function() {
+                                                                alert("Failed to copy channel ID");
+                                                            });
+                                                        } else {
+                                                            alert("Copy not supported in this browser");
+                                                        }
+                                                    }
+                                                    </script>
+                                                ';
+                                                
+                                                return new \Illuminate\Support\HtmlString($html);
+                                            })
+                                            ->visible(fn (Forms\Get $get) => !empty($get('user_subscriptions'))),
+
+                                        Forms\Components\Hidden::make('user_subscriptions'),
+
+                                        Forms\Components\Placeholder::make('subscription_test_description')
+                                            ->label('')
+                                            ->content(function (Forms\Get $get) {
+                                                $isConnected = $get('youtube_connected');
+                                                
+                                                if ($isConnected) {
+                                                    return new \Illuminate\Support\HtmlString('
+                                                        <div class="text-sm text-gray-600 dark:text-gray-400 space-y-2">
+                                                            <p><strong>How to use:</strong></p>
+                                                            <ol class="list-decimal list-inside space-y-1 ml-2">
+                                                                <li>Find a YouTube channel you want to test</li>
+                                                                <li>Get the channel ID (starts with UC) or username (starts with @)</li>
+                                                                <li>Enter it above and click "Check Subscription Status"</li>
+                                                                <li>The result will show if you\'re subscribed to that channel</li>
+                                                            </ol>
+                                                            <p class="mt-3"><strong>Use cases:</strong> Perfect for building subscriber-only content areas, exclusive member benefits, or gated content based on YouTube subscriptions.</p>
+                                                        </div>
+                                                    ');
+                                                } else {
+                                                    return 'Connect your YouTube account above to test subscription status for any channel.';
+                                                }
+                                            })
+                                            ->extraAttributes(['class' => 'text-sm text-gray-600 dark:text-gray-400']),
+                                    ])
+                                    ->collapsible()
+                                    ->collapsed(fn (Forms\Get $get) => !$get('youtube_connected'))
+                                    ->visible(fn () => config('services.youtube.test_mode', false)),
                             ]),
                     ])
             ])
