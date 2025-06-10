@@ -3,62 +3,45 @@
 namespace App\Filament\Dashboard\Resources;
 
 use App\Filament\Dashboard\Resources\AnalyticsResource\Pages;
-use App\Filament\Dashboard\Resources\AnalyticsResource\RelationManagers;
-use App\Models\Analytics;
-use Filament\Forms;
-use Filament\Forms\Form;
 use Filament\Resources\Resource;
-use Filament\Tables;
-use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Filament\Navigation\NavigationItem;
 
 class AnalyticsResource extends Resource
 {
-    protected static ?string $model = Analytics::class;
+    // No model needed for this dashboard resource
+    protected static ?string $model = null;
 
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?string $navigationIcon = 'heroicon-o-chart-bar';
+    
+    protected static ?string $navigationLabel = 'Analytics';
+    
+    protected static ?string $slug = 'analytics';
+    
+    protected static ?int $navigationSort = 3;
 
-    public static function form(Form $form): Form
+    public static function canCreate(): bool
     {
-        return $form
-            ->schema([
-                //
-            ]);
-    }
-
-    public static function table(Table $table): Table
-    {
-        return $table
-            ->columns([
-                //
-            ])
-            ->filters([
-                //
-            ])
-            ->actions([
-                Tables\Actions\EditAction::make(),
-            ])
-            ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
-                ]),
-            ]);
-    }
-
-    public static function getRelations(): array
-    {
-        return [
-            //
-        ];
+        return false; // No create functionality needed
     }
 
     public static function getPages(): array
     {
         return [
             'index' => Pages\ListAnalytics::route('/'),
-            'create' => Pages\CreateAnalytics::route('/create'),
-            'edit' => Pages\EditAnalytics::route('/{record}/edit'),
+            // Future custom pages will be added here:
+            // 'video-performance' => Pages\VideoPerformance::route('/video-performance'),
+            // 'url-performance' => Pages\UrlPerformance::route('/url-performance'),
+        ];
+    }
+    
+    public static function getNavigationItems(): array
+    {
+        return [
+            NavigationItem::make(static::getNavigationLabel())
+                ->icon(static::getNavigationIcon())
+                ->sort(static::getNavigationSort())
+                ->url(static::getUrl('index'))
+                ->isActiveWhen(fn (): bool => request()->routeIs(static::getRouteBaseName() . '.*')),
         ];
     }
 }

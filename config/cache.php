@@ -19,6 +19,19 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Analytics Cache TTL
+    |--------------------------------------------------------------------------
+    |
+    | This controls how long analytics data is cached in minutes. This helps
+    | reduce API calls to Dub.co while providing reasonably fresh data.
+    | Recommended range: 15-30 minutes
+    |
+    */
+
+    'analytics_ttl' => env('ANALYTICS_CACHE_TTL', 20),
+
+    /*
+    |--------------------------------------------------------------------------
     | Cache Stores
     |--------------------------------------------------------------------------
     |

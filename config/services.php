@@ -117,6 +117,15 @@ return [
         'create_link_url' => env('DUB_CREATE_LINK_URL'),
         'update_link_url' => env('DUB_UPDATE_LINK_URL'),
         'create_tag_url' => env('DUB_CREATE_TAG_URL'),
+        
+        // Rate limiting settings
+        'rate_limit_requests' => env('DUB_RATE_LIMIT_REQUESTS', 100), // Requests per window
+        'rate_limit_window' => env('DUB_RATE_LIMIT_WINDOW', 60), // Window in minutes
+        
+        // Retry and timeout settings
+        'max_retries' => env('DUB_MAX_RETRIES', 3),
+        'retry_delay' => env('DUB_RETRY_DELAY', 2), // Base delay in seconds
+        'timeout' => env('DUB_TIMEOUT', 15), // Request timeout in seconds
     ],
 
     'supadata' => [
