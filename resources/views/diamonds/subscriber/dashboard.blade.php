@@ -95,13 +95,16 @@
 
                     <!-- Card Content -->
                     <div class="p-6">
-                        <h3 class="text-xl font-bold text-gray-900 mb-3 line-clamp-2 group-hover:text-blue-600 transition-colors duration-200">
-                            {{ $item->title }}
-                        </h3>
+                        <a href="{{ route('subscriber.content', ['channelname' => $channelname, 'slug' => $item->slug]) }}" 
+                           class="block">
+                            <h3 class="text-xl font-bold text-gray-900 mb-3 line-clamp-2 group-hover:text-blue-600 transition-colors duration-200">
+                                {{ $item->title }}
+                            </h3>
+                        </a>
 
-                        @if($item->content)
+                        @if($item->description)
                             <div class="text-gray-600 text-sm leading-relaxed mb-4 line-clamp-3">
-                                {{ Str::limit(strip_tags($item->content), 120) }}
+                                {{ Str::limit($item->description, 120) }}
                             </div>
                         @endif
 

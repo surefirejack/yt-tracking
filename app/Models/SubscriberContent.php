@@ -15,6 +15,7 @@ class SubscriberContent extends Model
         'tenant_id',
         'title',
         'slug',
+        'description',
         'content',
         'youtube_video_url',
         'file_paths',

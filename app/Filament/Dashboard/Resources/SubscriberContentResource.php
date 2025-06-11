@@ -78,6 +78,12 @@ class SubscriberContentResource extends Resource
                                 },
                             ])
                             ->helperText('URL-friendly version of the title. Will be used in /s/{channelname}/{slug}'),
+
+                        Forms\Components\TextInput::make('description')
+                            ->label('Description')
+                            ->maxLength(500)
+                            ->columnSpanFull()
+                            ->helperText('Optional blurb about the content subscribers will see on their dashboard'),
                     ])
                     ->columns(2),
 
