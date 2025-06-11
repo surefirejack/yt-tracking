@@ -9,6 +9,7 @@ use App\Filament\Dashboard\Pages\TwoFactorAuth\TwoFactorAuth;
 use App\Http\Middleware\UpdateUserLastSeenAt;
 use App\Models\Tenant;
 use App\Services\TenantPermissionService;
+use Awcodes\FilamentStickyHeader\StickyHeaderPlugin;
 use Filament\Facades\Filament;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -126,6 +127,9 @@ class DashboardPanelProvider extends PanelProvider
                     ->myProfileComponents([
                         \App\Livewire\AddressForm::class,
                     ]),
+                StickyHeaderPlugin::make()
+                    ->floating()
+                    ->colored(),
             ])
             ->tenantMenu()
             ->tenant(Tenant::class, 'uuid');

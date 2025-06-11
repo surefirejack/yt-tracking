@@ -365,7 +365,9 @@ class SubscriberContentResource extends Resource
             // Main Content Management
             \Filament\Navigation\NavigationItem::make(static::getNavigationLabel())
                 ->icon(static::getNavigationIcon())
-                ->isActiveWhen(fn (): bool => request()->routeIs(static::getRouteBaseName() . '.*'))
+                ->isActiveWhen(fn (): bool => 
+                    request()->routeIs(static::getRouteBaseName() . '.index', static::getRouteBaseName() . '.create', static::getRouteBaseName() . '.edit')
+                )
                 ->sort(static::getNavigationSort())
                 ->url(static::getUrl('index'))
                 ->group(static::getNavigationGroup()),
@@ -373,6 +375,7 @@ class SubscriberContentResource extends Resource
             // Settings Page
             \Filament\Navigation\NavigationItem::make('Settings')
                 ->icon('heroicon-o-cog-6-tooth')
+                ->isActiveWhen(fn (): bool => request()->routeIs(static::getRouteBaseName() . '.settings'))
                 ->sort(10)
                 ->url(static::getUrl('settings'))
                 ->group(static::getNavigationGroup()),
