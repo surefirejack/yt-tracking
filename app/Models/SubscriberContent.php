@@ -16,10 +16,14 @@ class SubscriberContent extends Model
         'content',
         'youtube_video_url',
         'file_paths',
+        'is_published',
+        'published_at',
     ];
 
     protected $casts = [
         'file_paths' => 'array',
+        'is_published' => 'boolean',
+        'published_at' => 'datetime',
     ];
 
     protected static function boot()

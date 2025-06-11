@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('content_downloads', function (Blueprint $table) {
             $table->id();
             $table->foreignId('subscriber_user_id')->constrained()->onDelete('cascade');
-            $table->foreignId('subscriber_content_id')->constrained()->onDelete('cascade');
+            $table->foreignId('subscriber_content_id')->constrained('subscriber_content')->onDelete('cascade');
             $table->string('file_name');
             $table->timestamp('downloaded_at');
             $table->timestamps();
