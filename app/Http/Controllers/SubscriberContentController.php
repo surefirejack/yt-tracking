@@ -74,11 +74,8 @@ class SubscriberContentController extends Controller
                     'is_tenant_member' => true
                 ];
             } else {
-                // Get subscriber user for tracking (if session exists)
-                $subscriberUserId = session("subscriber_user_{$tenant->id}");
-                if ($subscriberUserId) {
-                    $subscriberUser = SubscriberUser::find($subscriberUserId);
-                }
+                // Get subscriber from request attributes (set by middleware)
+                $subscriberUser = request()->attributes->get('subscriber');
             }
 
             // Get related content (other published content from this tenant, excluding current content)
