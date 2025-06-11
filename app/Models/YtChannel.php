@@ -18,6 +18,7 @@ class YtChannel extends Model
         'description',
         'additional_url',
         'logo_image_url',
+        'banner_image_url',
         'subscribers_count',
         'videos_count',
         'last_update_requested_date',
