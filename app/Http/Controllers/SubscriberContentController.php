@@ -151,10 +151,20 @@ class SubscriberContentController extends Controller
 
             // Find the file path that matches the filename
             $matchedFilePath = null;
+            $displayName = $filename;
+            
             if ($content->file_paths && is_array($content->file_paths)) {
-                foreach ($content->file_paths as $path) {
+                foreach ($content->file_paths as $index => $path) {
                     if (basename($path) === $filename) {
                         $matchedFilePath = $path;
+                        
+                        // Get human-readable name if available
+                        if ($content->file_names && isset($content->file_names[$index])) {
+                            $displayName = $content->file_names[$index];
+                        } else {
+                            // Remove timestamp prefix if present
+                            $displayName = preg_replace('/^\d{14}_/', '', $filename);
+                        }
                         break;
                     }
                 }
@@ -174,7 +184,7 @@ class SubscriberContentController extends Controller
                     'subscriber_user_id' => $subscriberUserId,
                     'subscriber_content_id' => $content->id,
                     'tenant_id' => $tenant->id,
-                    'filename' => $filename,
+                    'filename' => $displayName, // Use human-readable name for tracking
                     'downloaded_at' => now(),
                 ]);
             }
@@ -183,17 +193,18 @@ class SubscriberContentController extends Controller
                 'tenant_id' => $tenant->id,
                 'content_id' => $content->id,
                 'subscriber_user_id' => $subscriberUserId,
-                'filename' => $filename
+                'filename' => $displayName,
+                'actual_file' => $filename
             ]);
 
             // Get file path and MIME type
             $fullFilePath = Storage::disk('local')->path($matchedFilePath);
             $mimeType = Storage::disk('local')->mimeType($matchedFilePath);
 
-            // Return file download response
-            return response()->download($fullFilePath, $filename, [
+            // Return file download response with human-readable name
+            return response()->download($fullFilePath, $displayName, [
                 'Content-Type' => $mimeType,
-                'Content-Disposition' => 'attachment; filename="' . $filename . '"'
+                'Content-Disposition' => 'attachment; filename="' . $displayName . '"'
             ]);
 
         } catch (\Exception $e) {

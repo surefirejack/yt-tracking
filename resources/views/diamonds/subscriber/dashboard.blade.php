@@ -84,7 +84,7 @@
                             <div class="absolute top-3 right-3">
                                 <span class="inline-flex items-center px-2 py-1 bg-green-600 text-white text-xs font-medium rounded-full">
                                     <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 2l-2-2m2 2l2-2m-2-2V6m0 0L8 8m4-2l4 2"></path>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3"></path>
                                     </svg>
                                     {{ count($item->file_paths) }} {{ Str::plural('file', count($item->file_paths)) }}
                                 </span>

@@ -10,7 +10,8 @@ class ContentDownload extends Model
     protected $fillable = [
         'subscriber_user_id',
         'subscriber_content_id',
-        'file_name',
+        'tenant_id',
+        'filename',
         'downloaded_at',
     ];
 

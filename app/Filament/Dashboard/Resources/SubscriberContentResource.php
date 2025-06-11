@@ -14,6 +14,9 @@ use Filament\Notifications\Notification;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rules\File;
+use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 
 class SubscriberContentResource extends Resource
 {
@@ -153,7 +156,35 @@ class SubscriberContentResource extends Resource
                             ->helperText('Upload files (PDF, JPG, JPEG, PNG, ZIP) up to 50MB each. Subscribers will be able to download these files.')
                             ->rule([
                                 File::types(['pdf', 'jpg', 'jpeg', 'png', 'zip'])->max(50 * 1024), // 50MB
-                            ]),
+                            ])
+                            ->afterStateUpdated(function ($state, callable $set, callable $get) {
+                                // When files are uploaded, store their original names for display
+                                if (is_array($state)) {
+                                    $currentFileNames = $get('file_names') ?? [];
+                                    $newFileNames = [];
+                                    
+                                    foreach ($state as $index => $filePath) {
+                                        if (isset($currentFileNames[$index])) {
+                                            // Keep existing name if it exists
+                                            $newFileNames[] = $currentFileNames[$index];
+                                        } else {
+                                            // Extract original filename from the stored path
+                                            $filename = basename($filePath);
+                                            // Remove timestamp prefix (YmdHis_) if present
+                                            $cleanName = preg_replace('/^\d{14}_/', '', $filename);
+                                            $newFileNames[] = $cleanName;
+                                        }
+                                    }
+                                    
+                                    $set('file_names', $newFileNames);
+                                }
+                            })
+                            ->getUploadedFileNameForStorageUsing(
+                                fn (TemporaryUploadedFile $file): string => now()->format('YmdHis') . '_' . $file->getClientOriginalName()
+                            ),
+
+                        Forms\Components\Hidden::make('file_names')
+                            ->dehydrated(),
                     ])
                     ->collapsible(),
 

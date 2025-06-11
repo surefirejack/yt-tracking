@@ -29,7 +29,7 @@
             @if($content->file_paths && count($content->file_paths) > 0)
                 <div class="flex items-center">
                     <svg class="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 2l-2-2m2 2l2-2m-2-2V6m0 0L8 8m4-2l4 2"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3"></path>
                     </svg>
                     {{ count($content->file_paths) }} {{ Str::plural('download', count($content->file_paths)) }}
                 </div>
@@ -81,15 +81,25 @@
             <div class="bg-gradient-to-r from-green-50 to-blue-50 border border-green-200 rounded-xl p-6">
                 <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
                     <svg class="w-5 h-5 mr-2 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 2l-2-2m2 2l2-2m-2-2V6m0 0L8 8m4-2l4 2"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3"></path>
                     </svg>
                     Download Files
                 </h3>
                 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    @foreach($content->file_paths as $filePath)
+                    @foreach($content->file_paths as $index => $filePath)
                         @php
                             $filename = basename($filePath);
+                            
+                            // Use human-readable filename if available, otherwise use cleaned up filename
+                            $displayName = $filename;
+                            if ($content->file_names && isset($content->file_names[$index])) {
+                                $displayName = $content->file_names[$index];
+                            } else {
+                                // Remove timestamp prefix if present (e.g., 20250611063000_original.pdf -> original.pdf)
+                                $displayName = preg_replace('/^\d{14}_/', '', $filename);
+                            }
+                            
                             $extension = strtoupper(pathinfo($filename, PATHINFO_EXTENSION));
                             $filesize = null;
                             
@@ -118,7 +128,7 @@
                                     
                                     <div class="min-w-0 flex-1">
                                         <p class="text-sm font-medium text-gray-900 truncate">
-                                            {{ $filename }}
+                                            {{ $displayName }}
                                         </p>
                                         
                                         <div class="flex items-center text-xs text-gray-500 mt-1">
@@ -138,7 +148,7 @@
                                        class="inline-flex items-center px-3 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 focus:outline-none focus:ring-4 focus:ring-green-500 focus:ring-opacity-25 transition-all duration-200 group"
                                        download>
                                         <svg class="w-4 h-4 mr-1 group-hover:translate-y-0.5 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 2l-2-2m2 2l2-2m-2-2V6m0 0L8 8m4-2l4 2"></path>
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3"></path>
                                         </svg>
                                         Download
                                     </a>
