@@ -12,6 +12,7 @@ use Filament\Notifications\Notification;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
 use Illuminate\Support\Facades\Storage;
+use WallaceMaxters\FilamentImageColorPicker\ImageColorPicker;
 
 class SubscriberSettings extends Page implements HasForms
 {
@@ -81,11 +82,33 @@ class SubscriberSettings extends Page implements HasForms
                                 }
                             }),
 
-                        Forms\Components\ColorPicker::make('subscriber_accent_color')
-                            ->label('Accent Color')
-                            ->helperText('Choose a color that matches your brand/banner. This will be used for buttons and highlights.')
-                            ->default('#3b82f6')
-                            ->live(),
+                        // Color picker - use image picker if banner exists, otherwise regular picker
+                        Forms\Components\Group::make([
+                            ImageColorPicker::make('subscriber_accent_color')
+                                ->label('Accent Color')
+                                ->helperText('Click on your banner image above to pick a color that matches your brand.')
+                                ->image(function () {
+                                    $tenant = Filament::getTenant();
+                                    return $tenant->ytChannel?->banner_image_url;
+                                })
+                                ->columnSpanFull()
+                                ->default('#3b82f6')
+                                ->live()
+                                ->visible(function () {
+                                    $tenant = Filament::getTenant();
+                                    return !empty($tenant->ytChannel?->banner_image_url);
+                                }),
+
+                            Forms\Components\ColorPicker::make('subscriber_accent_color')
+                                ->label('Accent Color')
+                                ->helperText('Choose a color that matches your brand. Connect your YouTube channel to pick colors from your banner image.')
+                                ->default('#3b82f6')
+                                ->live()
+                                ->visible(function () {
+                                    $tenant = Filament::getTenant();
+                                    return empty($tenant->ytChannel?->banner_image_url);
+                                }),
+                        ]),
 
                         Forms\Components\Placeholder::make('color_preview')
                             ->label('Color Preview')

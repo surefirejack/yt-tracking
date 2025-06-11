@@ -44,7 +44,8 @@
         "symfony/http-client": "^7.0",
         "symfony/mailgun-mailer": "^7.0",
         "symfony/postmark-mailer": "^7.0",
-        "twilio/sdk": "^8.3"
+        "twilio/sdk": "^8.3",
+        "wallacemaxters/filament-image-color-picker": "^0.0.6"
     },
     "require-dev": {
         "barryvdh/laravel-debugbar": "^3.13",
