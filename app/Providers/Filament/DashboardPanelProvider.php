@@ -9,7 +9,6 @@ use App\Filament\Dashboard\Pages\TwoFactorAuth\TwoFactorAuth;
 use App\Http\Middleware\UpdateUserLastSeenAt;
 use App\Models\Tenant;
 use App\Services\TenantPermissionService;
-use Awcodes\FilamentStickyHeader\StickyHeaderPlugin;
 use Filament\Facades\Filament;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -127,10 +126,154 @@ class DashboardPanelProvider extends PanelProvider
                     ->myProfileComponents([
                         \App\Livewire\AddressForm::class,
                     ]),
-                StickyHeaderPlugin::make()
-                    ->floating()
-                    ->colored(),
             ])
+            ->renderHook(PanelsRenderHook::HEAD_END, function () {
+                return <<<'HTML'
+                <style>
+                    .fi-main.is-sticky .fi-header {
+                        position: fixed;
+                        top: 0;
+                        backdrop-filter: blur(12px);
+                        z-index: 1000;
+                        transition: all 0.2s ease-in-out;
+                    }
+                    
+                    .fi-main.is-sticky .fi-header .fi-header-heading {
+                        padding-bottom: 0.5rem;
+                        font-size: 1.25rem;
+                        text-overflow: ellipsis;
+                        white-space: nowrap;
+                        overflow: hidden;
+                        line-height: 1;
+                    }
+                    
+                    .is-sticky.sticky-theme-floating-colored .fi-header {
+                        margin: 1rem;
+                        padding: 0.75rem 1rem;
+                        background-color: rgba(20, 184, 166, 0.9);
+                        border: 1px solid rgba(255, 255, 255, 0.2);
+                        border-radius: 0.5rem;
+                        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+                        backdrop-filter: blur(12px);
+                    }
+                    
+                    .is-sticky.sticky-theme-floating-colored .fi-header .fi-header-heading {
+                        color: white;
+                    }
+                    
+                    .is-sticky.sticky-theme-floating-colored .fi-header .fi-breadcrumbs a {
+                        color: rgba(255, 255, 255, 0.8);
+                    }
+                    
+                    .is-sticky.sticky-theme-floating-colored .fi-header .fi-breadcrumbs a:hover,
+                    .is-sticky.sticky-theme-floating-colored .fi-header .fi-breadcrumbs a:focus {
+                        color: white;
+                    }
+                    
+                    .is-sticky.sticky-theme-floating-colored .fi-header .fi-breadcrumbs svg {
+                        color: rgba(255, 255, 255, 0.7);
+                    }
+                    
+                    /* Add padding to body to prevent content jump when header becomes fixed */
+                    .fi-main.is-sticky-active {
+                        padding-top: var(--sticky-header-height, 80px);
+                    }
+                </style>
+                
+                <script>
+                    document.addEventListener('DOMContentLoaded', function() {
+                        initializeStickyHeader();
+                    });
+                    
+                    document.addEventListener('livewire:navigated', () => {
+                        initializeStickyHeader();
+                    });
+
+                    function initializeStickyHeader() {
+                        console.log('Sticky Header Plugin - Current URL:', window.location.pathname);
+                        
+                        const shouldActivate = window.location.pathname.includes('/subscriber-contents/settings');
+                        console.log('Sticky Header Plugin - Should activate:', shouldActivate);
+                        
+                        if (!shouldActivate) {
+                            console.log('Sticky Header Plugin - Not activated for this page');
+                            return;
+                        }
+
+                        const filamentTopbar = document.querySelector(".fi-topbar");
+                        const filamentMainContent = document.querySelector(".fi-main");
+                        const filamentHeader = document.querySelector(".fi-header");
+
+                        if (filamentTopbar && filamentMainContent && filamentHeader) {
+                            console.log('Sticky Header Plugin - Setting up IntersectionObserver...');
+                            
+                            let trigger = document.querySelector('.filament-sticky-trigger');
+
+                            if (!trigger) {
+                                trigger = document.createElement("div");
+                                trigger.classList.add("filament-sticky-trigger");
+                                filamentMainContent.prepend(trigger);
+                            }
+
+                            const theme = 'floating-colored';
+                            filamentMainContent.classList.add(`sticky-theme-${theme}`);
+
+                            let offsetHeight = filamentTopbar ? filamentTopbar.offsetHeight : 0;
+                            let intersectingTime = null;
+
+                            // Function to calculate and set header positioning
+                            const updateHeaderPosition = () => {
+                                const mainRect = filamentMainContent.getBoundingClientRect();
+                                const marginOffset = 32; // 1rem margin on each side (16px each)
+                                
+                                filamentHeader.style.left = (mainRect.left + 16) + 'px';
+                                filamentHeader.style.width = (mainRect.width - marginOffset) + 'px';
+                                filamentHeader.style.top = (offsetHeight + 16) + 'px';
+                            };
+
+                            const observer = new IntersectionObserver(
+                                ([e]) => {
+                                    if (e.isIntersecting) {
+                                        if (intersectingTime && (e.time - intersectingTime) < 1000) {
+                                            return;
+                                        }
+                                        intersectingTime = e.time;
+                                        console.log('Sticky Header Plugin - Deactivating sticky mode');
+                                        filamentMainContent.classList.remove("is-sticky");
+                                        return;
+                                    }
+
+                                    updateHeaderPosition();
+                                    filamentHeader.setAttribute("wire:ignore.self", "true");
+                                    console.log('Sticky Header Plugin - Activating sticky mode');
+                                    filamentMainContent.classList.add("is-sticky");
+                                },
+                                {
+                                    rootMargin: `-${offsetHeight}px`,
+                                    threshold: [0],
+                                }
+                            );
+
+                            // Update position on window resize
+                            window.addEventListener('resize', () => {
+                                if (filamentMainContent.classList.contains('is-sticky')) {
+                                    updateHeaderPosition();
+                                }
+                            });
+
+                            observer.observe(trigger);
+                            console.log('Sticky Header Plugin - IntersectionObserver setup complete!');
+                        } else {
+                            console.log('Sticky Header Plugin - Could not find required elements:', { 
+                                topbar: !!filamentTopbar, 
+                                main: !!filamentMainContent, 
+                                header: !!filamentHeader 
+                            });
+                        }
+                    }
+                </script>
+                HTML;
+            })
             ->tenantMenu()
             ->tenant(Tenant::class, 'uuid');
     }
