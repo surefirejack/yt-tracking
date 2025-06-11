@@ -135,7 +135,7 @@ class DashboardPanelProvider extends PanelProvider
                         top: 0;
                         backdrop-filter: blur(12px);
                         z-index: 1000;
-                        transition: all 0.2s ease-in-out;
+                        /* transition: all 0.2s ease-in-out; */
                     }
                     
                     .fi-main.is-sticky .fi-header .fi-header-heading {
@@ -226,7 +226,7 @@ class DashboardPanelProvider extends PanelProvider
                                 const mainRect = filamentMainContent.getBoundingClientRect();
                                 const marginOffset = 32; // 1rem margin on each side (16px each)
                                 
-                                filamentHeader.style.left = (mainRect.left + 16) + 'px';
+                                filamentHeader.style.left = (mainRect.left + 1) + 'px';
                                 filamentHeader.style.width = (mainRect.width - marginOffset) + 'px';
                                 filamentHeader.style.top = (offsetHeight + 16) + 'px';
                             };
