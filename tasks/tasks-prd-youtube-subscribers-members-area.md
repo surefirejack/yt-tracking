@@ -82,11 +82,11 @@
   - [x] 4.3 Create access denied page in diamonds theme with link to tenant's YouTube channel and "try again" functionality
   - [x] 4.4 Create subscriber dashboard in diamonds theme showing all content as cards with title, description, and thumbnails
   - [x] 4.5 Create individual content page in diamonds theme displaying rich text, embedded YouTube video, and file download buttons
-  - [ ] 4.6 Implement logout functionality with custom redirect URL support
-  - [ ] 4.7 Add "Powered by [App Name]" footer link to all subscriber pages
-  - [ ] 4.8 Ensure all pages are mobile-responsive using Tailwind CSS
-  - [ ] 4.9 Implement navigation between dashboard and content pages
-  - [ ] 4.10 Add loading states and error messages for better UX
+  - [x] 4.6 Implement logout functionality with custom redirect URL support
+  - [x] 4.7 Add "Powered by [App Name]" footer link to all subscriber pages
+  - [x] 4.8 Ensure all pages are mobile-responsive using Tailwind CSS
+  - [x] 4.9 Implement navigation between dashboard and content pages
+  - [x] 4.10 Add loading states and error messages for better UX
 
 - [ ] 5.0 Tenant Content Management Interface
   - [ ] 5.1 Create `SubscriberContentResource`

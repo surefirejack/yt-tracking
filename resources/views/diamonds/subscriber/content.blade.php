@@ -9,41 +9,42 @@
         </h1>
         
         <!-- Content Meta -->
-        <div class="flex flex-wrap items-center gap-4 text-sm text-gray-600 mb-6">
+        <div class="flex flex-wrap items-center gap-2 sm:gap-4 text-xs sm:text-sm text-gray-600 mb-6">
             <div class="flex items-center">
-                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                 </svg>
-                Published {{ $content->created_at->format('F j, Y') }}
+                <span class="hidden sm:inline">Published </span>{{ $content->created_at->format('M j, Y') }}
             </div>
             
             @if($content->updated_at != $content->created_at)
                 <div class="flex items-center">
-                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg class="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
                     </svg>
-                    Updated {{ $content->updated_at->diffForHumans() }}
+                    <span class="hidden sm:inline">Updated </span>{{ $content->updated_at->diffForHumans() }}
                 </div>
             @endif
 
             @if($content->file_paths && count($content->file_paths) > 0)
                 <div class="flex items-center">
-                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg class="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 2l-2-2m2 2l2-2m-2-2V6m0 0L8 8m4-2l4 2"></path>
                     </svg>
-                    {{ count($content->file_paths) }} {{ Str::plural('download', count($content->file_paths)) }} available
+                    {{ count($content->file_paths) }} {{ Str::plural('download', count($content->file_paths)) }}
                 </div>
             @endif
         </div>
 
         <!-- Back to Dashboard -->
-        <div class="mb-8">
+        <div class="mb-6 sm:mb-8">
             <a href="{{ route('subscriber.dashboard', ['channelname' => $channelname]) }}" 
-               class="inline-flex items-center text-blue-600 hover:text-blue-800 font-medium transition-colors duration-200">
+               class="inline-flex items-center text-blue-600 hover:text-blue-800 font-medium transition-colors duration-200 text-sm sm:text-base">
                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
                 </svg>
-                Back to Dashboard
+                <span class="hidden xs:inline">Back to Dashboard</span>
+                <span class="xs:hidden">Back</span>
             </a>
         </div>
     </div>
@@ -165,18 +166,18 @@
 
     <!-- Content Actions -->
     <div class="mb-8">
-        <div class="bg-gray-50 border border-gray-200 rounded-xl p-6">
-            <div class="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
-                <div>
+        <div class="bg-gray-50 border border-gray-200 rounded-xl p-4 sm:p-6">
+            <div class="flex flex-col gap-4 justify-between items-start">
+                <div class="text-center sm:text-left w-full sm:w-auto">
                     <h4 class="font-semibold text-gray-900 mb-2">Enjoying this content?</h4>
                     <p class="text-sm text-gray-600">
                         Check out more exclusive content on the dashboard or visit the YouTube channel.
                     </p>
                 </div>
                 
-                <div class="flex flex-col sm:flex-row gap-3">
+                <div class="flex flex-col w-full sm:w-auto sm:flex-row gap-3">
                     <a href="{{ route('subscriber.dashboard', ['channelname' => $channelname]) }}" 
-                       class="inline-flex items-center justify-center px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-500 focus:ring-opacity-25 transition-all duration-200">
+                       class="inline-flex items-center justify-center px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-500 focus:ring-opacity-25 transition-all duration-200 text-sm sm:text-base">
                         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z"></path>
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5a2 2 0 012-2h4a2 2 0 012 2v1H8V5z"></path>
@@ -187,7 +188,7 @@
                     @if($tenant->ytChannel?->channel_url)
                         <a href="{{ $tenant->ytChannel->channel_url }}" 
                            target="_blank"
-                           class="inline-flex items-center justify-center px-4 py-2 bg-red-600 text-white font-medium rounded-lg hover:bg-red-700 focus:outline-none focus:ring-4 focus:ring-red-500 focus:ring-opacity-25 transition-all duration-200">
+                           class="inline-flex items-center justify-center px-4 py-2 bg-red-600 text-white font-medium rounded-lg hover:bg-red-700 focus:outline-none focus:ring-4 focus:ring-red-500 focus:ring-opacity-25 transition-all duration-200 text-sm sm:text-base">
                             <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
                                 <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
                             </svg>
