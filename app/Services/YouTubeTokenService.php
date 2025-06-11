@@ -124,32 +124,72 @@ class YouTubeTokenService
      */
     public function makeYouTubeApiRequest(User $user, string $endpoint, array $params = []): ?array
     {
+        Log::info('Making YouTube API request', [
+            'user_id' => $user->id,
+            'endpoint' => $endpoint,
+            'params' => $params
+        ]);
+
         $accessToken = $this->getValidAccessToken($user);
         
         if (!$accessToken) {
+            Log::error('No valid access token available for YouTube API request', [
+                'user_id' => $user->id,
+                'endpoint' => $endpoint
+            ]);
             return null;
         }
         
         try {
+            $url = 'https://www.googleapis.com/youtube/v3/' . $endpoint;
+            
+            Log::info('Sending HTTP request to YouTube API', [
+                'user_id' => $user->id,
+                'url' => $url,
+                'params' => $params,
+                'has_token' => !empty($accessToken)
+            ]);
+
             $response = Http::withHeaders([
                 'Authorization' => 'Bearer ' . $accessToken,
                 'Accept' => 'application/json',
-            ])->get('https://www.googleapis.com/youtube/v3/' . $endpoint, $params);
+            ])->get($url, $params);
+            
+            Log::info('YouTube API response received', [
+                'user_id' => $user->id,
+                'endpoint' => $endpoint,
+                'status' => $response->status(),
+                'successful' => $response->successful(),
+                'response_size' => strlen($response->body()),
+                'response_body' => $response->body()
+            ]);
             
             if ($response->successful()) {
-                return $response->json();
+                $jsonData = $response->json();
+                Log::info('YouTube API response parsed successfully', [
+                    'user_id' => $user->id,
+                    'endpoint' => $endpoint,
+                    'has_items' => isset($jsonData['items']),
+                    'item_count' => isset($jsonData['items']) ? count($jsonData['items']) : 0,
+                    'parsed_data' => $jsonData
+                ]);
+                return $jsonData;
             } else {
                 Log::error('YouTube API request failed', [
+                    'user_id' => $user->id,
                     'endpoint' => $endpoint,
                     'status' => $response->status(),
-                    'response' => $response->body()
+                    'response' => $response->body(),
+                    'headers' => $response->headers()
                 ]);
                 return null;
             }
         } catch (\Exception $e) {
             Log::error('YouTube API request exception', [
+                'user_id' => $user->id,
                 'endpoint' => $endpoint,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
             ]);
             return null;
         }

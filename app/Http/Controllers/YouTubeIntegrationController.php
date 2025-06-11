@@ -14,7 +14,12 @@ class YouTubeIntegrationController extends Controller
         \Log::info('YouTube Integration: redirect method called', [
             'url' => $request->fullUrl(),
             'query' => $request->query->all(),
-            'session' => session()->all()
+            'session' => session()->all(),
+            'referer' => $request->header('referer'),
+            'user_agent' => $request->header('user-agent'),
+            'ip' => $request->ip(),
+            'method' => $request->method(),
+            'headers' => $request->headers->all()
         ]);
         
         // Try to get tenant from query parameter first (if accessing directly)
@@ -52,7 +57,11 @@ class YouTubeIntegrationController extends Controller
         ]);
         
         $socialiteDriver = Socialite::driver('youtube')
-            ->scopes(['https://www.googleapis.com/auth/youtube.force-ssl']);
+            ->scopes(['https://www.googleapis.com/auth/youtube.force-ssl'])
+            ->with([
+                'access_type' => 'offline',
+                'prompt' => 'consent'
+            ]);
         
         // Override redirect URL for local testing
         if (env('APP_ENV') === 'local') {

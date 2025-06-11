@@ -81,6 +81,7 @@ return [
         'client_id' => env('YOUTUBE_CLIENT_ID'),
         'client_secret' => env('YOUTUBE_CLIENT_SECRET'),
         'redirect' => '/integrations/youtube/callback',
+        'test_mode' => env('YOUTUBE_SUBSCRIPTION_TEST', false),
     ],
 
     'stripe' => [
