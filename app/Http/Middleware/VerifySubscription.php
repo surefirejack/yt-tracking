@@ -150,7 +150,7 @@ class VerifySubscription
             $contentTitle = $this->getContentTitle($tenant, $slug);
         }
 
-        return response()->view('diamonds.subscriber.login', [
+        return response()->view('subscriber.login', [
             'tenant' => $tenant,
             'channelname' => $channelname,
             'slug' => $slugStr,
@@ -176,7 +176,7 @@ class VerifySubscription
             $slugStr = $slug;
         }
 
-        return response()->view('diamonds.subscriber.access-denied', [
+        return response()->view('subscriber.access-denied', [
             'tenant' => $tenant,
             'channelname' => $channelname,
             'slug' => $slugStr,

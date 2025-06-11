@@ -23,7 +23,7 @@ class SubscriberAuthController extends Controller
     /**
      * Show the login page for subscriber authentication
      */
-    public function showLogin(Request $request, $channelname, ?string $slug = null)
+    public function showLogin(Request $request, $channelname, $slug = null)
     {
         try {
             // Handle route model binding - channelname might be a Tenant object
@@ -48,28 +48,34 @@ class SubscriberAuthController extends Controller
                 return redirect()->route('home')->with('error', 'This feature is not available.');
             }
 
-            // Get content title if slug is provided
+            // Handle slug parameter - might be object or string
+            $slugStr = null;
             $contentTitle = null;
-            if ($slug) {
+            
+            if ($slug instanceof \App\Models\SubscriberContent) {
+                $slugStr = $slug->slug;
+                $contentTitle = $slug->title;
+            } elseif (is_string($slug)) {
+                $slugStr = $slug;
                 $content = $tenant->subscriberContent()->where('slug', $slug)->first();
                 $contentTitle = $content?->title;
             }
 
-            return view('diamonds.subscriber.login', [
+            return view('subscriber.login', [
                 'tenant' => $tenant,
                 'channelname' => $channelnameStr,
-                'slug' => $slug,
+                'slug' => $slugStr,
                 'contentTitle' => $contentTitle,
                 'loginText' => $tenant->member_login_text,
                 'profileImage' => $tenant->member_profile_image,
                 'channelBanner' => $tenant->ytChannel?->banner_image_url,
-                'oauthUrl' => route('subscriber.auth.google', ['channelname' => $channelnameStr, 'slug' => $slug])
+                'oauthUrl' => route('subscriber.auth.google', ['channelname' => $channelnameStr, 'slug' => $slugStr])
             ]);
 
         } catch (\Exception $e) {
             Log::error('Error in showLogin', [
                 'channelname' => is_object($channelname) ? get_class($channelname) : $channelname,
-                'slug' => $slug,
+                'slug' => is_object($slug) ? get_class($slug) : $slug,
                 'error' => $e->getMessage()
             ]);
             
@@ -80,7 +86,7 @@ class SubscriberAuthController extends Controller
     /**
      * Redirect to Google OAuth for subscriber authentication
      */
-    public function redirectToGoogle(Request $request, $channelname, ?string $slug = null)
+    public function redirectToGoogle(Request $request, $channelname, $slug = null)
     {
         try {
             // Handle route model binding - channelname might be a Tenant object
@@ -106,16 +112,24 @@ class SubscriberAuthController extends Controller
                 return redirect()->route('home')->with('error', 'This feature is not available.');
             }
 
+            // Handle slug parameter - might be object or string
+            $slugStr = null;
+            if ($slug instanceof \App\Models\SubscriberContent) {
+                $slugStr = $slug->slug;
+            } elseif (is_string($slug)) {
+                $slugStr = $slug;
+            }
+
             // Store tenant and intended destination in session
             Session::put('subscriber_auth.tenant_id', $tenant->id);
             Session::put('subscriber_auth.channelname', $channelnameStr);
-            Session::put('subscriber_auth.intended_slug', $slug);
+            Session::put('subscriber_auth.intended_slug', $slugStr);
             Session::put('subscriber_auth.remember_me', $request->boolean('remember_me', false));
 
             Log::info('Initiating Google OAuth for subscriber', [
                 'tenant_id' => $tenant->id,
                 'channelname' => $channelnameStr,
-                'intended_slug' => $slug,
+                'intended_slug' => $slugStr,
                 'remember_me' => $request->boolean('remember_me', false)
             ]);
 
@@ -128,7 +142,7 @@ class SubscriberAuthController extends Controller
         } catch (\Exception $e) {
             Log::error('Error initiating Google OAuth for subscriber', [
                 'channelname' => is_object($channelname) ? get_class($channelname) : $channelname,
-                'slug' => $slug,
+                'slug' => is_object($slug) ? get_class($slug) : $slug,
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);
@@ -384,7 +398,7 @@ class SubscriberAuthController extends Controller
     /**
      * Force re-verify subscription (for "try again" functionality)
      */
-    public function tryAgain(Request $request, $channelname, ?string $slug = null)
+    public function tryAgain(Request $request, $channelname, $slug = null)
     {
         try {
             // Handle route model binding - channelname might be a Tenant object
@@ -410,22 +424,30 @@ class SubscriberAuthController extends Controller
                 return redirect()->route('home')->with('error', 'This feature is not available.');
             }
 
+            // Handle slug parameter - might be object or string
+            $slugStr = null;
+            if ($slug instanceof \App\Models\SubscriberContent) {
+                $slugStr = $slug->slug;
+            } elseif (is_string($slug)) {
+                $slugStr = $slug;
+            }
+
             Log::info('Try again attempt', [
                 'tenant_id' => $tenant->id,
                 'channelname' => $channelnameStr,
-                'slug' => $slug
+                'slug' => $slugStr
             ]);
 
             // Redirect to login with slug
             return redirect()->route('subscriber.auth.google', [
                 'channelname' => $channelnameStr,
-                'slug' => $slug
+                'slug' => $slugStr
             ])->with(['try_again' => true]);
 
         } catch (\Exception $e) {
             Log::error('Error in try again', [
                 'channelname' => is_object($channelname) ? get_class($channelname) : $channelname,
-                'slug' => $slug,
+                'slug' => is_object($slug) ? get_class($slug) : $slug,
                 'error' => $e->getMessage()
             ]);
             

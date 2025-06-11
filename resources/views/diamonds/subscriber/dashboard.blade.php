@@ -1,4 +1,4 @@
-@extends('diamonds.layouts.subscriber')
+@extends('layouts.subscriber')
 
 @section('content')
 <div class="max-w-6xl mx-auto">
