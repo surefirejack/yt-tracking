@@ -66,9 +66,10 @@ class SubscriberContentController extends Controller
 
             if ($isTenantMember) {
                 // For tenant members, create a dummy subscriber representation for UI consistency
+                $user = auth()->user();
                 $subscriberUser = (object) [
-                    'name' => auth()->user()->name,
-                    'email' => auth()->user()->email,
+                    'name' => $user?->name ?? 'Tenant Member',
+                    'email' => $user?->email ?? 'tenant@example.com',
                     'profile_picture' => null,
                     'is_tenant_member' => true
                 ];
@@ -80,6 +81,14 @@ class SubscriberContentController extends Controller
                 }
             }
 
+            // Get related content (other published content from this tenant, excluding current content)
+            $relatedContent = SubscriberContent::where('tenant_id', $tenant->id)
+                ->where('is_published', true)
+                ->where('id', '!=', $content->id)
+                ->orderBy('created_at', 'desc')
+                ->limit(4)
+                ->get();
+
             return view('subscriber.content', [
                 'tenant' => $tenant,
                 'content' => $content,
@@ -87,6 +96,7 @@ class SubscriberContentController extends Controller
                 'channelname' => $channelnameStr,
                 'subscriber' => $subscriberUser,
                 'isTenantMember' => $isTenantMember,
+                'relatedContent' => $relatedContent,
             ]);
 
         } catch (\Exception $e) {
