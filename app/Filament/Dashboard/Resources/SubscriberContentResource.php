@@ -25,7 +25,7 @@ class SubscriberContentResource extends Resource
 
     protected static ?string $navigationLabel = 'Subscriber Content';
 
-    protected static ?string $navigationGroup = 'YouTube Members';
+    protected static ?string $navigationGroup = 'YouTube Subscribers';
 
     protected static ?int $navigationSort = 1;
 
@@ -340,6 +340,7 @@ class SubscriberContentResource extends Resource
             'index' => Pages\ListSubscriberContent::route('/'),
             'create' => Pages\CreateSubscriberContent::route('/create'),
             'edit' => Pages\EditSubscriberContent::route('/{record}/edit'),
+            'settings' => Pages\SubscriberSettings::route('/settings'),
         ];
     }
 
@@ -356,5 +357,25 @@ class SubscriberContentResource extends Resource
     public static function getNavigationBadgeColor(): ?string
     {
         return 'primary';
+    }
+
+    public static function getNavigationItems(): array
+    {
+        return [
+            // Main Content Management
+            \Filament\Navigation\NavigationItem::make(static::getNavigationLabel())
+                ->icon(static::getNavigationIcon())
+                ->isActiveWhen(fn (): bool => request()->routeIs(static::getRouteBaseName() . '.*'))
+                ->sort(static::getNavigationSort())
+                ->url(static::getUrl('index'))
+                ->group(static::getNavigationGroup()),
+                
+            // Settings Page
+            \Filament\Navigation\NavigationItem::make('Settings')
+                ->icon('heroicon-o-cog-6-tooth')
+                ->sort(10)
+                ->url(static::getUrl('settings'))
+                ->group(static::getNavigationGroup()),
+        ];
     }
 } 

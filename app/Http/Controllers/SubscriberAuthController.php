@@ -48,6 +48,27 @@ class SubscriberAuthController extends Controller
                 return redirect()->route('home')->with('error', 'This feature is not available.');
             }
 
+            // Check if this is a preview request from a tenant member
+            $isPreview = $request->has('preview') && $request->boolean('preview');
+            if ($isPreview) {
+                // Verify the user is a tenant member
+                $user = auth()->user();
+                if (!$user || !$tenant->users()->where('user_id', $user->id)->exists()) {
+                    Log::warning('Unauthorized preview attempt', [
+                        'user_id' => $user?->id,
+                        'tenant_id' => $tenant->id,
+                        'channelname' => $channelnameStr
+                    ]);
+                    return redirect()->route('home')->with('error', 'Unauthorized access.');
+                }
+                
+                Log::info('Tenant member previewing login page', [
+                    'user_id' => $user->id,
+                    'tenant_id' => $tenant->id,
+                    'channelname' => $channelnameStr
+                ]);
+            }
+
             // Handle slug parameter - might be object or string
             $slugStr = null;
             $contentTitle = null;
@@ -69,7 +90,8 @@ class SubscriberAuthController extends Controller
                 'loginText' => $tenant->member_login_text,
                 'profileImage' => $tenant->member_profile_image,
                 'channelBanner' => $tenant->ytChannel?->banner_image_url,
-                'oauthUrl' => route('subscriber.auth.google', ['channelname' => $channelnameStr, 'slug' => $slugStr])
+                'oauthUrl' => route('subscriber.auth.google', ['channelname' => $channelnameStr, 'slug' => $slugStr]),
+                'isPreview' => $isPreview ?? false,
             ]);
 
         } catch (\Exception $e) {

@@ -31,7 +31,7 @@
                         </svg>
                         <div>
                             <p class="text-sm font-medium">You're trying to access exclusive content from:</p>
-                            <p class="font-semibold">{{ $tenant->name ?? 'Creator' }}</p>
+                            <p class="font-semibold">{{ $tenant->ytChannel->name ?? $tenant->name ?? 'Creator' }}</p>
                         </div>
                     </div>
                 </div>
@@ -46,7 +46,7 @@
                 <div class="text-gray-600 mb-6 leading-relaxed space-y-3">
                     <p>
                         It looks like you're not currently subscribed to 
-                        <strong>{{ $tenant->name ?? 'this channel' }}</strong>, 
+                        <strong>{{ $tenant->ytChannel->name ?? $tenant->name ?? 'this channel' }}</strong>, 
                         or your subscription status couldn't be verified.
                     </p>
                     
@@ -77,7 +77,7 @@
                                     <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
                                     </svg>
-                                    Visit {{ $tenant->name ?? 'Channel' }} on YouTube
+                                    Visit {{ $tenant->ytChannel->name ?? $tenant->name ?? 'Channel' }} on YouTube
                                 </a>
                             @endif
                         </div>

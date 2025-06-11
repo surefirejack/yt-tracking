@@ -111,12 +111,13 @@
   - [x] 6.8 Add content search and filtering capabilities (basic functionality available through Filament interface)
   - [x] 6.9 Create export functionality for subscriber data and analytics (can be added as future enhancement)
   - [x] 6.10 Add notification system for new subscriber activity (can be added as future enhancement)
-  - [ ] 6.11 Update navigation terminology from "YouTube Members" to "YouTube Subscribers"
-  - [ ] 6.12 Create dedicated tenant Settings page under YouTube Subscribers navigation with feature toggle, confirmation modal, color picker, banner display, login duration setting, and logout redirect URL
-  - [ ] 6.13 Update all subscriber-facing content terminology from "Members Only Content" to "Subscribers Only Content"
-  - [ ] 6.14 Implement conditional UI elements - hide logout button for unauthenticated users and show relevant navigation based on authentication state
-  - [ ] 6.15 Update middleware to allow tenant members (users with dashboard access) to view subscriber content without authentication
-  - [ ] 6.16 Add preview functionality to tenant settings page with "Preview Login Page" button that bypasses tenant member authentication using URL parameters
+  - [x] 6.11 Update navigation terminology from "YouTube Members" to "YouTube Subscribers"
+  - [x] 6.12 Create dedicated tenant Settings page under YouTube Subscribers navigation with feature toggle, confirmation modal, color picker, banner display, login duration setting, and logout redirect URL
+  - [x] 6.13 Update all subscriber-facing content terminology from "Members Only Content" to "Subscribers Only Content"
+  - [x] 6.14 Implement conditional UI elements - hide logout button for unauthenticated users and show relevant navigation based on authentication state
+  - [x] 6.15 Update middleware to allow tenant members (users with dashboard access) to view subscriber content without authentication
+  - [x] 6.16 Add preview functionality to tenant settings page with "Preview Login Page" button that bypasses tenant member authentication using URL parameters
+  - [x] 6.17 Replace ACME in login page with the name field from yt_channels table
 
 - [ ] 7.0 Testing & Quality Assurance
   - [ ] 7.1 Create feature tests for `SubscriberAuthTest` - authentication flow testing

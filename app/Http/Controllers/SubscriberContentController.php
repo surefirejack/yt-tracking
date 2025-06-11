@@ -60,11 +60,24 @@ class SubscriberContentController extends Controller
             // Get the channel information for the header
             $channel = $tenant->ytChannel;
 
-            // Get subscriber user for tracking (if session exists)
+            // Check if this is a tenant member viewing content
+            $isTenantMember = request()->attributes->get('is_tenant_member', false);
             $subscriberUser = null;
-            $subscriberUserId = session("subscriber_user_{$tenant->id}");
-            if ($subscriberUserId) {
-                $subscriberUser = SubscriberUser::find($subscriberUserId);
+
+            if ($isTenantMember) {
+                // For tenant members, create a dummy subscriber representation for UI consistency
+                $subscriberUser = (object) [
+                    'name' => auth()->user()->name,
+                    'email' => auth()->user()->email,
+                    'profile_picture' => null,
+                    'is_tenant_member' => true
+                ];
+            } else {
+                // Get subscriber user for tracking (if session exists)
+                $subscriberUserId = session("subscriber_user_{$tenant->id}");
+                if ($subscriberUserId) {
+                    $subscriberUser = SubscriberUser::find($subscriberUserId);
+                }
             }
 
             return view('subscriber.content', [
@@ -72,7 +85,8 @@ class SubscriberContentController extends Controller
                 'content' => $content,
                 'channel' => $channel,
                 'channelname' => $channelnameStr,
-                'subscriberUser' => $subscriberUser,
+                'subscriber' => $subscriberUser,
+                'isTenantMember' => $isTenantMember,
             ]);
 
         } catch (\Exception $e) {

@@ -64,6 +64,22 @@ class VerifySubscription
                 return redirect()->route('home')->with('error', 'This feature is not available.');
             }
 
+            // Check if current user is a tenant member (has dashboard access)
+            $user = auth()->user();
+            if ($user && $tenant->users()->where('user_id', $user->id)->exists()) {
+                Log::info('User is tenant member, bypassing subscriber authentication', [
+                    'user_id' => $user->id,
+                    'tenant_id' => $tenant->id,
+                    'channelname' => $channelname
+                ]);
+
+                // Add tenant to request for use in controllers
+                $request->attributes->set('tenant', $tenant);
+                $request->attributes->set('is_tenant_member', true);
+
+                return $next($request);
+            }
+
             // Check if user is authenticated as a subscriber for this tenant
             if (!$this->authController->isAuthenticatedForTenant($tenant)) {
                 Log::info('User not authenticated, redirecting to login', [

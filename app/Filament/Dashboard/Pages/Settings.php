@@ -330,8 +330,8 @@ EOT;
                                             ),
                                     ]),
                             ]),
-                        Tabs\Tab::make('Integrations')
-                            ->icon('heroicon-o-puzzle-piece')
+                        Tabs\Tab::make('YouTube Subscribers')
+                            ->icon('heroicon-o-users')
                             ->schema([
                                 Forms\Components\Section::make('YouTube Integration')
                                     ->description('Connect your YouTube account to track video analytics and performance.')

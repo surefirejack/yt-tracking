@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>{{ $title ?? 'Members Area' }} - {{ $tenant->name ?? 'Creator' }}</title>
+    <title>{{ $title ?? 'Subscribers Area' }} - {{ $tenant->ytChannel->name ?? $tenant->name ?? 'Creator' }}</title>
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.bunny.net">
@@ -17,12 +17,12 @@
     @endif
 
     <!-- Meta Tags -->
-    <meta name="description" content="Exclusive members-only content from {{ $tenant->name ?? 'Creator' }}">
+    <meta name="description" content="Exclusive subscribers-only content from {{ $tenant->ytChannel->name ?? $tenant->name ?? 'Creator' }}">
     <meta name="robots" content="noindex, nofollow">
     
     <!-- Open Graph -->
-    <meta property="og:title" content="{{ $title ?? 'Members Area' }} - {{ $tenant->name ?? 'Creator' }}">
-    <meta property="og:description" content="Exclusive members-only content">
+    <meta property="og:title" content="{{ $title ?? 'Subscribers Area' }} - {{ $tenant->ytChannel->name ?? $tenant->name ?? 'Creator' }}">
+    <meta property="og:description" content="Exclusive subscribers-only content">
     @if($tenant->ytChannel?->banner_image_url)
         <meta property="og:image" content="{{ $tenant->ytChannel->banner_image_url }}">
     @endif
@@ -109,7 +109,7 @@
         <div class="w-full h-32 md:h-48 lg:h-64 bg-gradient-to-r from-blue-600 to-purple-600 relative overflow-hidden">
             <img 
                 src="{{ $tenant->ytChannel->banner_image_url }}" 
-                alt="{{ $tenant->name }} Channel Banner"
+                alt="{{ $tenant->ytChannel->name ?? $tenant->name ?? 'Creator' }} Channel Banner"
                 class="w-full h-full object-cover"
                 loading="lazy"
             >
@@ -121,16 +121,16 @@
                     @if($tenant->member_profile_image)
                         <img 
                             src="{{ Storage::url($tenant->member_profile_image) }}" 
-                            alt="{{ $tenant->name }}"
+                            alt="{{ $tenant->ytChannel->name ?? $tenant->name ?? 'Creator' }}"
                             class="w-12 h-12 md:w-16 md:h-16 rounded-full border-4 border-white shadow-lg object-cover"
                         >
                     @endif
                     <div>
                         <h1 class="text-xl md:text-2xl lg:text-3xl font-bold drop-shadow-lg">
-                            {{ $tenant->name ?? 'Creator' }}
+                            {{ $tenant->ytChannel->name ?? $tenant->name ?? 'Creator' }}
                         </h1>
                         <p class="text-sm md:text-base opacity-90 drop-shadow">
-                            Members Only Area
+                            Subscribers Only Area
                         </p>
                     </div>
                 </div>
@@ -144,16 +144,16 @@
                     @if($tenant->member_profile_image)
                         <img 
                             src="{{ Storage::url($tenant->member_profile_image) }}" 
-                            alt="{{ $tenant->name }}"
+                            alt="{{ $tenant->ytChannel->name ?? $tenant->name ?? 'Creator' }}"
                             class="w-12 h-12 md:w-16 md:h-16 rounded-full border-4 border-white shadow-lg object-cover"
                         >
                     @endif
                     <div>
                         <h1 class="text-xl md:text-2xl lg:text-3xl font-bold">
-                            {{ $tenant->name ?? 'Creator' }}
+                            {{ $tenant->ytChannel->name ?? $tenant->name ?? 'Creator' }}
                         </h1>
                         <p class="text-sm md:text-base opacity-90">
-                            Members Only Area
+                            Subscribers Only Area
                         </p>
                     </div>
                 </div>
@@ -195,19 +195,25 @@
                             @endif
                             <span class="text-gray-700 max-w-xs truncate">{{ $subscriber->name }}</span>
                         </div>
+                        
+                        <!-- Logout Form - Only show when authenticated -->
+                        <form method="POST" action="{{ route('subscriber.logout', ['channelname' => $channelname]) }}" class="inline">
+                            @csrf
+                            <button type="submit" 
+                                    class="text-gray-600 hover:text-gray-900 text-sm font-medium transition-colors duration-200 flex items-center">
+                                <svg class="w-4 h-4 mr-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+                                </svg>
+                                <span class="hidden sm:inline">Logout</span>
+                            </button>
+                        </form>
+                    @else
+                        <!-- Show login status when not authenticated -->
+                        <div class="text-sm text-gray-500">
+                            <span class="hidden sm:inline">Not authenticated</span>
+                            <span class="sm:hidden">⚠️</span>
+                        </div>
                     @endif
-                    
-                    <!-- Logout Form -->
-                    <form method="POST" action="{{ route('subscriber.logout', ['channelname' => $channelname]) }}" class="inline">
-                        @csrf
-                        <button type="submit" 
-                                class="text-gray-600 hover:text-gray-900 text-sm font-medium transition-colors duration-200 flex items-center">
-                            <svg class="w-4 h-4 mr-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
-                            </svg>
-                            <span class="hidden sm:inline">Logout</span>
-                        </button>
-                    </form>
                 </div>
             </div>
         </div>
@@ -280,7 +286,7 @@
         <div class="container mx-auto px-4 py-8">
             <div class="flex flex-col md:flex-row justify-between items-center">
                 <div class="text-gray-600 text-sm mb-4 md:mb-0">
-                    © {{ date('Y') }} {{ $tenant->name ?? 'Creator' }}. All rights reserved.
+                    © {{ date('Y') }} {{ $tenant->ytChannel->name ?? $tenant->name ?? 'Creator' }}. All rights reserved.
                 </div>
                 
                 <!-- Powered by Link -->

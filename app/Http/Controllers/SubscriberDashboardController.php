@@ -44,10 +44,29 @@ class SubscriberDashboardController extends Controller
                 ->orderBy('created_at', 'desc')
                 ->get();
 
+            // Check if this is a tenant member viewing the dashboard
+            $isTenantMember = request()->attributes->get('is_tenant_member', false);
+            $subscriber = null;
+
+            if ($isTenantMember) {
+                // For tenant members, create a dummy subscriber representation for UI consistency
+                $subscriber = (object) [
+                    'name' => auth()->user()->name,
+                    'email' => auth()->user()->email,
+                    'profile_picture' => null,
+                    'is_tenant_member' => true
+                ];
+            } else {
+                // Get subscriber from request attributes (set by middleware)
+                $subscriber = request()->attributes->get('subscriber');
+            }
+
             return view('subscriber.dashboard', [
                 'tenant' => $tenant,
                 'content' => $content,
-                'channelname' => $channelnameStr
+                'channelname' => $channelnameStr,
+                'subscriber' => $subscriber,
+                'isTenantMember' => $isTenantMember,
             ]);
 
         } catch (\Exception $e) {

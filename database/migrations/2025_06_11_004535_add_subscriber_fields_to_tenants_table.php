@@ -18,6 +18,7 @@ return new class extends Migration
             $table->string('logout_redirect_url')->nullable();
             $table->text('member_login_text')->nullable();
             $table->string('member_profile_image')->nullable();
+            $table->string('subscriber_accent_color')->default('#3b82f6');
         });
     }
 
@@ -33,7 +34,8 @@ return new class extends Migration
                 'subscription_cache_days',
                 'logout_redirect_url',
                 'member_login_text',
-                'member_profile_image'
+                'member_profile_image',
+                'subscriber_accent_color'
             ]);
         });
     }

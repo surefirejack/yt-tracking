@@ -159,8 +159,8 @@
                     No content available yet
                 </h3>
                 
-                <p class="text-gray-600 mb-6">
-                    {{ $tenant->name ?? 'The creator' }} hasn't published any exclusive content yet. 
+                <p class="text-gray-600 text-center">
+                    {{ $tenant->ytChannel->name ?? $tenant->name ?? 'The creator' }} hasn't published any exclusive content yet.
                     Check back soon for new updates!
                 </p>
 
