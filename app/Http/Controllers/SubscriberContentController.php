@@ -11,125 +11,172 @@ use Illuminate\Http\Response;
 use Illuminate\View\View;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\DB;
 
 class SubscriberContentController extends Controller
 {
     /**
      * Display a specific piece of subscriber content.
      */
-    public function show(Request $request, Tenant $tenant, SubscriberContent $content): View
+    public function show($channelname, $slug)
     {
-        // Verify content belongs to this tenant and is published
-        if ($content->tenant_id !== $tenant->id) {
-            abort(404);
+        try {
+            // Handle route model binding - both parameters might be objects
+            if ($channelname instanceof Tenant) {
+                $tenant = $channelname;
+                $channelnameStr = $tenant->getChannelName() ?? 'unknown';
+            } else {
+                $channelnameStr = $channelname;
+                $tenant = Tenant::whereHas('ytChannel', function ($query) use ($channelnameStr) {
+                    $query->where(\DB::raw('LOWER(REPLACE(handle, "@", ""))'), '=', strtolower($channelnameStr));
+                })->first();
+
+                if (!$tenant) {
+                    return redirect()->route('home')->with('error', 'Channel not found.');
+                }
+            }
+
+            if ($slug instanceof SubscriberContent) {
+                $content = $slug;
+            } else {
+                $content = SubscriberContent::where('tenant_id', $tenant->id)
+                    ->where('slug', $slug)
+                    ->where('is_published', true)
+                    ->first();
+
+                if (!$content) {
+                    return redirect()->route('subscriber.dashboard', ['channelname' => $channelnameStr])
+                        ->with('error', 'Content not found.');
+                }
+            }
+
+            // Verify content belongs to tenant
+            if ($content->tenant_id !== $tenant->id) {
+                return redirect()->route('home')->with('error', 'Invalid request.');
+            }
+
+            // Get the channel information for the header
+            $channel = $tenant->ytChannel;
+
+            // Get subscriber user for tracking (if session exists)
+            $subscriberUser = null;
+            $subscriberUserId = session("subscriber_user_{$tenant->id}");
+            if ($subscriberUserId) {
+                $subscriberUser = SubscriberUser::find($subscriberUserId);
+            }
+
+            return view('subscriber.content', [
+                'tenant' => $tenant,
+                'content' => $content,
+                'channel' => $channel,
+                'channelname' => $channelnameStr,
+                'subscriberUser' => $subscriberUser,
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Error loading subscriber content', [
+                'channelname' => is_object($channelname) ? get_class($channelname) : $channelname,
+                'slug' => is_object($slug) ? get_class($slug) : $slug,
+                'error' => $e->getMessage()
+            ]);
+            
+            return redirect()->route('home')->with('error', 'An error occurred.');
         }
-
-        if (!$content->is_published || ($content->published_at && $content->published_at->isFuture())) {
-            abort(404, 'This content is not available yet.');
-        }
-
-        // Get the channel information for the header
-        $channel = $tenant->ytChannel;
-
-        // Get subscriber user for tracking (if session exists)
-        $subscriberUser = null;
-        $subscriberUserId = session("subscriber_user_{$tenant->id}");
-        if ($subscriberUserId) {
-            $subscriberUser = SubscriberUser::find($subscriberUserId);
-        }
-
-        return view('subscriber.content', [
-            'tenant' => $tenant,
-            'content' => $content,
-            'channel' => $channel,
-            'channelname' => $tenant->getChannelName() ?? 'channel',
-            'subscriberUser' => $subscriberUser,
-        ]);
     }
 
     /**
      * Handle secure file downloads for subscribers.
      */
-    public function downloadFile(Request $request, Tenant $tenant, SubscriberContent $content, string $filename): BinaryFileResponse
+    public function download($channelname, $slug, string $filename)
     {
-        // Verify content belongs to this tenant and is published
-        if ($content->tenant_id !== $tenant->id) {
-            abort(404);
-        }
+        try {
+            // Handle route model binding - both parameters might be objects
+            if ($channelname instanceof Tenant) {
+                $tenant = $channelname;
+                $channelnameStr = $tenant->getChannelName() ?? 'unknown';
+            } else {
+                $channelnameStr = $channelname;
+                $tenant = Tenant::whereHas('ytChannel', function ($query) use ($channelnameStr) {
+                    $query->where(\DB::raw('LOWER(REPLACE(handle, "@", ""))'), '=', strtolower($channelnameStr));
+                })->first();
 
-        if (!$content->is_published || ($content->published_at && $content->published_at->isFuture())) {
-            abort(404, 'This content is not available yet.');
-        }
-
-        // Verify the file is associated with this content
-        $filePaths = $content->file_paths ?? [];
-        $requestedFile = null;
-
-        foreach ($filePaths as $filePath) {
-            if (basename($filePath) === $filename) {
-                $requestedFile = $filePath;
-                break;
+                if (!$tenant) {
+                    return response()->json(['error' => 'Channel not found'], 404);
+                }
             }
-        }
 
-        if (!$requestedFile) {
-            abort(404, 'File not found.');
-        }
+            if ($slug instanceof SubscriberContent) {
+                $content = $slug;
+            } else {
+                $content = SubscriberContent::where('tenant_id', $tenant->id)
+                    ->where('slug', $slug)
+                    ->where('is_published', true)
+                    ->first();
 
-        // Check if file exists in storage
-        if (!Storage::disk('local')->exists($requestedFile)) {
-            abort(404, 'File not found in storage.');
-        }
+                if (!$content) {
+                    return response()->json(['error' => 'Content not found'], 404);
+                }
+            }
 
-        // Get the full file path
-        $fullPath = Storage::disk('local')->path($requestedFile);
+            // Verify content belongs to tenant
+            if ($content->tenant_id !== $tenant->id) {
+                return response()->json(['error' => 'Invalid request'], 403);
+            }
 
-        // Track the download if we have a subscriber user
-        $subscriberUserId = session("subscriber_user_{$tenant->id}");
-        if ($subscriberUserId) {
-            $subscriberUser = SubscriberUser::find($subscriberUserId);
-            if ($subscriberUser) {
+            // Check if file exists and matches content
+            if (!$content->file_path || !Storage::disk('private')->exists($content->file_path)) {
+                return response()->json(['error' => 'File not found'], 404);
+            }
+
+            // Verify filename matches
+            $originalFilename = basename($content->file_path);
+            if ($filename !== $originalFilename) {
+                return response()->json(['error' => 'Invalid filename'], 403);
+            }
+
+            // Get authenticated subscriber for tracking
+            $subscriberUserId = Session::get('subscriber_user_id');
+            
+            // Track download
+            if ($subscriberUserId) {
                 ContentDownload::create([
-                    'subscriber_user_id' => $subscriberUser->id,
+                    'subscriber_user_id' => $subscriberUserId,
                     'subscriber_content_id' => $content->id,
-                    'file_name' => $filename,
+                    'tenant_id' => $tenant->id,
+                    'filename' => $filename,
                     'downloaded_at' => now(),
                 ]);
             }
+
+            Log::info('File download', [
+                'tenant_id' => $tenant->id,
+                'content_id' => $content->id,
+                'subscriber_user_id' => $subscriberUserId,
+                'filename' => $filename
+            ]);
+
+            // Get file path and MIME type
+            $filePath = Storage::disk('private')->path($content->file_path);
+            $mimeType = Storage::disk('private')->mimeType($content->file_path);
+
+            // Return file download response
+            return response()->download($filePath, $filename, [
+                'Content-Type' => $mimeType,
+                'Content-Disposition' => 'attachment; filename="' . $filename . '"'
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Error downloading file', [
+                'channelname' => is_object($channelname) ? get_class($channelname) : $channelname,
+                'slug' => is_object($slug) ? get_class($slug) : $slug,
+                'filename' => $filename,
+                'error' => $e->getMessage()
+            ]);
+            
+            return response()->json(['error' => 'Download failed'], 500);
         }
-
-        // Log the download
-        \Log::info('File downloaded', [
-            'tenant_id' => $tenant->id,
-            'content_id' => $content->id,
-            'filename' => $filename,
-            'subscriber_user_id' => $subscriberUserId,
-            'ip' => $request->ip(),
-        ]);
-
-        // Return the file download response
-        return response()->download($fullPath, $filename, [
-            'Content-Type' => $this->getMimeType($filename),
-            'Cache-Control' => 'no-cache, no-store, must-revalidate',
-            'Pragma' => 'no-cache',
-            'Expires' => '0',
-        ]);
-    }
-
-    /**
-     * Get the MIME type for a file based on its extension.
-     */
-    private function getMimeType(string $filename): string
-    {
-        $extension = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
-
-        return match ($extension) {
-            'pdf' => 'application/pdf',
-            'jpg', 'jpeg' => 'image/jpeg',
-            'png' => 'image/png',
-            'zip' => 'application/zip',
-            default => 'application/octet-stream',
-        };
     }
 
     /**

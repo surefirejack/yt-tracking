@@ -21,36 +21,100 @@ class SubscriberAuthController extends Controller
     }
 
     /**
-     * Redirect to Google OAuth for YouTube authentication
+     * Show the login page for subscriber authentication
      */
-    public function redirectToGoogle(Request $request, string $channelname, ?string $slug = null)
+    public function showLogin(Request $request, $channelname, ?string $slug = null)
     {
         try {
-            // Find tenant by channel name
-            $tenant = $this->findTenantByChannelName($channelname);
+            // Handle route model binding - channelname might be a Tenant object
+            if ($channelname instanceof Tenant) {
+                $tenant = $channelname;
+                $channelnameStr = $tenant->getChannelName() ?? 'unknown';
+            } else {
+                $channelnameStr = $channelname;
+                $tenant = $this->findTenantByChannelName($channelnameStr);
+                
+                if (!$tenant) {
+                    Log::error('Tenant not found for channel name in showLogin', ['channelname' => $channelnameStr]);
+                    return redirect()->route('home')->with('error', 'Channel not found.');
+                }
+            }
+
+            if (!$tenant->hasSubscriberLmsEnabled()) {
+                Log::error('Subscriber LMS not enabled for tenant in showLogin', [
+                    'tenant_id' => $tenant->id,
+                    'channelname' => $channelnameStr
+                ]);
+                return redirect()->route('home')->with('error', 'This feature is not available.');
+            }
+
+            // Get content title if slug is provided
+            $contentTitle = null;
+            if ($slug) {
+                $content = $tenant->subscriberContent()->where('slug', $slug)->first();
+                $contentTitle = $content?->title;
+            }
+
+            return view('diamonds.subscriber.login', [
+                'tenant' => $tenant,
+                'channelname' => $channelnameStr,
+                'slug' => $slug,
+                'contentTitle' => $contentTitle,
+                'loginText' => $tenant->member_login_text,
+                'profileImage' => $tenant->member_profile_image,
+                'channelBanner' => $tenant->ytChannel?->banner_image_url,
+                'oauthUrl' => route('subscriber.auth.google', ['channelname' => $channelnameStr, 'slug' => $slug])
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Error in showLogin', [
+                'channelname' => is_object($channelname) ? get_class($channelname) : $channelname,
+                'slug' => $slug,
+                'error' => $e->getMessage()
+            ]);
             
-            if (!$tenant) {
-                Log::error('Tenant not found for channel name', ['channelname' => $channelname]);
-                return redirect()->route('home')->with('error', 'Channel not found.');
+            return redirect()->route('home')->with('error', 'An error occurred.');
+        }
+    }
+
+    /**
+     * Redirect to Google OAuth for subscriber authentication
+     */
+    public function redirectToGoogle(Request $request, $channelname, ?string $slug = null)
+    {
+        try {
+            // Handle route model binding - channelname might be a Tenant object
+            if ($channelname instanceof Tenant) {
+                $tenant = $channelname;
+                $channelnameStr = $tenant->getChannelName() ?? 'unknown';
+            } else {
+                $channelnameStr = $channelname;
+                // Find tenant by channel name
+                $tenant = $this->findTenantByChannelName($channelnameStr);
+                
+                if (!$tenant) {
+                    Log::error('Tenant not found for channel name', ['channelname' => $channelnameStr]);
+                    return redirect()->route('home')->with('error', 'Channel not found.');
+                }
             }
 
             if (!$tenant->hasSubscriberLmsEnabled()) {
                 Log::error('Subscriber LMS not enabled for tenant', [
                     'tenant_id' => $tenant->id,
-                    'channelname' => $channelname
+                    'channelname' => $channelnameStr
                 ]);
                 return redirect()->route('home')->with('error', 'This feature is not available.');
             }
 
             // Store tenant and intended destination in session
             Session::put('subscriber_auth.tenant_id', $tenant->id);
-            Session::put('subscriber_auth.channelname', $channelname);
+            Session::put('subscriber_auth.channelname', $channelnameStr);
             Session::put('subscriber_auth.intended_slug', $slug);
             Session::put('subscriber_auth.remember_me', $request->boolean('remember_me', false));
 
             Log::info('Initiating Google OAuth for subscriber', [
                 'tenant_id' => $tenant->id,
-                'channelname' => $channelname,
+                'channelname' => $channelnameStr,
                 'intended_slug' => $slug,
                 'remember_me' => $request->boolean('remember_me', false)
             ]);
@@ -63,7 +127,7 @@ class SubscriberAuthController extends Controller
 
         } catch (\Exception $e) {
             Log::error('Error initiating Google OAuth for subscriber', [
-                'channelname' => $channelname,
+                'channelname' => is_object($channelname) ? get_class($channelname) : $channelname,
                 'slug' => $slug,
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
@@ -320,49 +384,52 @@ class SubscriberAuthController extends Controller
     /**
      * Force re-verify subscription (for "try again" functionality)
      */
-    public function tryAgain(Request $request, string $channelname, ?string $slug = null)
+    public function tryAgain(Request $request, $channelname, ?string $slug = null)
     {
         try {
-            $tenant = $this->findTenantByChannelName($channelname);
-            $subscriber = $this->getAuthenticatedSubscriber();
-
-            if (!$tenant || !$subscriber) {
-                return redirect()->route('subscriber.login', [
-                    'channelname' => $channelname,
-                    'slug' => $slug
-                ]);
+            // Handle route model binding - channelname might be a Tenant object
+            if ($channelname instanceof Tenant) {
+                $tenant = $channelname;
+                $channelnameStr = $tenant->getChannelName() ?? 'unknown';
+            } else {
+                $channelnameStr = $channelname;
+                // Find tenant by channel name
+                $tenant = $this->findTenantByChannelName($channelnameStr);
+                
+                if (!$tenant) {
+                    Log::error('Tenant not found for channel name in tryAgain', ['channelname' => $channelnameStr]);
+                    return redirect()->route('home')->with('error', 'Channel not found.');
+                }
             }
 
-            Log::info('Subscriber trying again to verify subscription', [
-                'subscriber_user_id' => $subscriber->id,
-                'tenant_id' => $tenant->id
+            if (!$tenant->hasSubscriberLmsEnabled()) {
+                Log::error('Subscriber LMS not enabled for tenant in tryAgain', [
+                    'tenant_id' => $tenant->id,
+                    'channelname' => $channelnameStr
+                ]);
+                return redirect()->route('home')->with('error', 'This feature is not available.');
+            }
+
+            Log::info('Try again attempt', [
+                'tenant_id' => $tenant->id,
+                'channelname' => $channelnameStr,
+                'slug' => $slug
             ]);
 
-            // Force re-verify subscription
-            $isSubscribed = $this->subscriptionService->forceVerifySubscription($subscriber, $tenant);
-
-            if ($isSubscribed) {
-                // Redirect to intended destination
-                if ($slug) {
-                    return redirect()->route('subscriber.content', [
-                        'channelname' => $channelname,
-                        'slug' => $slug
-                    ]);
-                } else {
-                    return redirect()->route('subscriber.dashboard', ['channelname' => $channelname]);
-                }
-            } else {
-                return $this->showAccessDenied($tenant, $channelname, $slug);
-            }
+            // Redirect to login with slug
+            return redirect()->route('subscriber.auth.google', [
+                'channelname' => $channelnameStr,
+                'slug' => $slug
+            ])->with(['try_again' => true]);
 
         } catch (\Exception $e) {
-            Log::error('Error in try again verification', [
-                'channelname' => $channelname,
+            Log::error('Error in try again', [
+                'channelname' => is_object($channelname) ? get_class($channelname) : $channelname,
                 'slug' => $slug,
                 'error' => $e->getMessage()
             ]);
-
-            return redirect()->route('home')->with('error', 'Verification failed.');
+            
+            return redirect()->route('home')->with('error', 'An error occurred.');
         }
     }
 }

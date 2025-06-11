@@ -231,6 +231,12 @@ Route::get('/referral/{tenant}', [App\Http\Controllers\ReferralController::class
 
 // OAuth routes for subscriber authentication
 Route::prefix('s/{channelname}')->group(function () {
+    // Login page (shows when not authenticated)
+    Route::get('/login/{slug?}', [App\Http\Controllers\SubscriberAuthController::class, 'showLogin'])
+        ->name('subscriber.login')
+        ->where('channelname', '[a-z0-9_-]+')
+        ->where('slug', '[a-z0-9_-]+');
+
     // Google OAuth redirect
     Route::get('/auth/google/{slug?}', [App\Http\Controllers\SubscriberAuthController::class, 'redirectToGoogle'])
         ->name('subscriber.auth.google')
@@ -268,7 +274,7 @@ Route::prefix('s/{channelname}')->middleware('verify.subscription')->group(funct
         ->where('slug', '[a-z0-9_-]+');
 
     // File downloads (secure)
-    Route::get('/{slug}/download/{filename}', [App\Http\Controllers\SubscriberContentController::class, 'downloadFile'])
+    Route::get('/{slug}/download/{filename}', [App\Http\Controllers\SubscriberContentController::class, 'download'])
         ->name('subscriber.download')
         ->where('channelname', '[a-z0-9_-]+')
         ->where('slug', '[a-z0-9_-]+')
@@ -291,11 +297,8 @@ Route::bind('channelname', function ($value) {
         $query->whereRaw('LOWER(REPLACE(handle, "@", "")) = ?', [strtolower($value)]);
     })->first();
 
-    if (!$tenant) {
-        abort(404, 'Channel not found');
-    }
-
-    return $tenant;
+    // Return the tenant if found, or return the string value to let middleware handle it
+    return $tenant ?: $value;
 });
 
 // Bind slug to SubscriberContent within tenant scope
@@ -306,21 +309,20 @@ Route::bind('slug', function ($value, $route) {
     if ($channelname instanceof \App\Models\Tenant) {
         $tenant = $channelname;
     } else {
+        // If channelname is still a string, try to find the tenant
         $tenant = \App\Models\Tenant::whereHas('ytChannel', function ($query) use ($channelname) {
             $query->whereRaw('LOWER(REPLACE(handle, "@", "")) = ?', [strtolower($channelname)]);
         })->first();
     }
 
     if (!$tenant) {
-        abort(404, 'Channel not found');
+        // Return the string value to let middleware handle tenant not found
+        return $value;
     }
 
     // Find content by slug within this tenant
     $content = $tenant->subscriberContent()->where('slug', $value)->first();
     
-    if (!$content) {
-        abort(404, 'Content not found');
-    }
-
-    return $content;
+    // Return the content if found, or return the string value to let middleware handle it
+    return $content ?: $value;
 });

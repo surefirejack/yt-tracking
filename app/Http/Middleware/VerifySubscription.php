@@ -32,20 +32,27 @@ class VerifySubscription
     {
         try {
             // Get channelname from route parameters
-            $channelname = $request->route('channelname');
+            $channelnameParam = $request->route('channelname');
             $slug = $request->route('slug');
 
-            if (!$channelname) {
-                Log::error('No channelname in route for subscription verification');
-                return redirect()->route('home')->with('error', 'Invalid request.');
-            }
+            // Handle route model binding - channelname might already be a Tenant object
+            if ($channelnameParam instanceof Tenant) {
+                $tenant = $channelnameParam;
+                $channelname = $tenant->getChannelName() ?? 'unknown';
+            } else {
+                $channelname = $channelnameParam;
+                if (!$channelname) {
+                    Log::error('No channelname in route for subscription verification');
+                    return redirect()->route('home')->with('error', 'Invalid request.');
+                }
 
-            // Find tenant by channel name
-            $tenant = $this->findTenantByChannelName($channelname);
+                // Find tenant by channel name
+                $tenant = $this->findTenantByChannelName($channelname);
 
-            if (!$tenant) {
-                Log::error('Tenant not found for channelname', ['channelname' => $channelname]);
-                return redirect()->route('home')->with('error', 'Channel not found.');
+                if (!$tenant) {
+                    Log::error('Tenant not found for channelname', ['channelname' => $channelname]);
+                    return redirect()->route('home')->with('error', 'Channel not found.');
+                }
             }
 
             // Check if subscriber LMS is enabled for this tenant
@@ -65,8 +72,18 @@ class VerifySubscription
                     'slug' => $slug
                 ]);
 
-                // Show login page for this specific content
-                return $this->showLoginPage($tenant, $channelname, $slug);
+                // Redirect to login page for this specific content
+                $slugStr = null;
+                if ($slug instanceof \App\Models\SubscriberContent) {
+                    $slugStr = $slug->slug;
+                } elseif (is_string($slug)) {
+                    $slugStr = $slug;
+                }
+
+                return redirect()->route('subscriber.login', [
+                    'channelname' => $channelname,
+                    'slug' => $slugStr
+                ]);
             }
 
             // Get authenticated subscriber
@@ -119,32 +136,53 @@ class VerifySubscription
     /**
      * Show login page for specific content
      */
-    private function showLoginPage(Tenant $tenant, string $channelname, ?string $slug): \Illuminate\View\View
+    private function showLoginPage(Tenant $tenant, string $channelname, $slug): \Illuminate\View\View
     {
-        return response()->view('subscriber.login', [
+        // Handle slug parameter - might be object or string
+        $slugStr = null;
+        $contentTitle = null;
+        
+        if ($slug instanceof \App\Models\SubscriberContent) {
+            $slugStr = $slug->slug;
+            $contentTitle = $slug->title;
+        } elseif (is_string($slug)) {
+            $slugStr = $slug;
+            $contentTitle = $this->getContentTitle($tenant, $slug);
+        }
+
+        return response()->view('diamonds.subscriber.login', [
             'tenant' => $tenant,
             'channelname' => $channelname,
-            'slug' => $slug,
-            'contentTitle' => $slug ? $this->getContentTitle($tenant, $slug) : null,
+            'slug' => $slugStr,
+            'contentTitle' => $contentTitle,
             'loginText' => $tenant->member_login_text,
             'profileImage' => $tenant->member_profile_image,
             'channelBanner' => $tenant->ytChannel?->banner_image_url,
-            'oauthUrl' => route('subscriber.auth.google', ['channelname' => $channelname, 'slug' => $slug])
+            'oauthUrl' => route('subscriber.auth.google', ['channelname' => $channelname, 'slug' => $slugStr])
         ]);
     }
 
     /**
      * Show access denied page
      */
-    private function showAccessDenied(Tenant $tenant, string $channelname, ?string $slug): \Illuminate\View\View
+    private function showAccessDenied(Tenant $tenant, string $channelname, $slug): \Illuminate\View\View
     {
-        return response()->view('subscriber.access-denied', [
+        // Handle slug parameter - might be object or string
+        $slugStr = null;
+        
+        if ($slug instanceof \App\Models\SubscriberContent) {
+            $slugStr = $slug->slug;
+        } elseif (is_string($slug)) {
+            $slugStr = $slug;
+        }
+
+        return response()->view('diamonds.subscriber.access-denied', [
             'tenant' => $tenant,
             'channelname' => $channelname,
-            'slug' => $slug,
+            'slug' => $slugStr,
             'youtubeChannelUrl' => $tenant->ytChannel?->channel_url,
             'channelBanner' => $tenant->ytChannel?->banner_image_url,
-            'tryAgainUrl' => route('subscriber.try-again', ['channelname' => $channelname, 'slug' => $slug])
+            'tryAgainUrl' => route('subscriber.try-again', ['channelname' => $channelname, 'slug' => $slugStr])
         ]);
     }
 
