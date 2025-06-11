@@ -37,10 +37,12 @@ class YouTubeTokenService
         $now = Carbon::now();
         $expiresAt = $tokenExpiry ? Carbon::parse($tokenExpiry) : $now->copy()->subMinute(); // Assume expired if no expiry time
         
-        if ($expiresAt->lessThan($now->addMinutes(5))) {
+        if ($expiresAt->lessThan($now->copy()->addMinutes(5))) {
             Log::info('YouTube token expired or expiring soon, refreshing', [
                 'user_id' => $user->id,
-                'expires_at' => $expiresAt->toDateTimeString()
+                'expires_at' => $expiresAt->toDateTimeString(),
+                'current_time' => $now->toDateTimeString(),
+                'expires_in_minutes' => $now->diffInMinutes($expiresAt, false)
             ]);
             
             $newTokens = $this->refreshAccessToken($refreshToken);
@@ -53,6 +55,12 @@ class YouTubeTokenService
                 return null;
             }
         }
+        
+        Log::debug('YouTube token is still valid', [
+            'user_id' => $user->id,
+            'expires_at' => $expiresAt->toDateTimeString(),
+            'expires_in_minutes' => $now->diffInMinutes($expiresAt, false)
+        ]);
         
         return $accessToken;
     }

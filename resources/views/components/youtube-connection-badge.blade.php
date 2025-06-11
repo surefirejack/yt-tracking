@@ -20,7 +20,7 @@
                 <div><strong>Channel:</strong> {{ $nickname }}</div>
             @endif
             @if(isset($user_id) && $user_id)
-                <div><strong>User ID:</strong> <code class="text-xs bg-gray-200 px-1 rounded">{{ $user_id }}</code></div>
+                <div><strong>User ID:</strong> <code>{{ $user_id }}</code></div>
             @endif
         </div>
     @elseif($is_connected && !$token_valid)
