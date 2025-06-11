@@ -4,7 +4,7 @@
 <div class="max-w-4xl mx-auto">
     <!-- Content Header -->
     <div class="mb-8">
-        <h1 class="text-4xl font-bold text-gray-900 mb-4">
+        <h1 class="text-4xl font-bold text-gray-900 mb-2">
             {{ $content->title }}
         </h1>
         
@@ -16,15 +16,6 @@
                 </svg>
                 <span class="hidden sm:inline">Published </span>{{ $content->created_at->format('M j, Y') }}
             </div>
-            
-            @if($content->updated_at != $content->created_at)
-                <div class="flex items-center">
-                    <svg class="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
-                    </svg>
-                    <span class="hidden sm:inline">Updated </span>{{ $content->updated_at->diffForHumans() }}
-                </div>
-            @endif
 
             @if($content->file_paths && count($content->file_paths) > 0)
                 <div class="flex items-center">
@@ -35,58 +26,13 @@
                 </div>
             @endif
         </div>
-
-        <!-- Back to Dashboard -->
-        <div class="mb-6 sm:mb-8">
-            <a href="{{ route('subscriber.dashboard', ['channelname' => $channelname]) }}" 
-               class="inline-flex items-center text-blue-600 hover:text-blue-800 font-medium transition-colors duration-200 text-sm sm:text-base">
-                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
-                </svg>
-                <span class="hidden xs:inline">Back to Dashboard</span>
-                <span class="xs:hidden">Back</span>
-            </a>
-        </div>
     </div>
 
-    <!-- YouTube Video Embed -->
-    @if($content->youtube_video_url)
-        @php
-            // Extract YouTube video ID and convert to embed URL
-            preg_match('/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/', $content->youtube_video_url, $matches);
-            $videoId = $matches[1] ?? null;
-        @endphp
-        
-        @if($videoId)
-            <div class="mb-8">
-                <div class="bg-white rounded-xl shadow-lg overflow-hidden">
-                    <div class="aspect-video">
-                        <iframe 
-                            src="https://www.youtube.com/embed/{{ $videoId }}?rel=0&modestbranding=1" 
-                            title="{{ $content->title }}"
-                            frameborder="0" 
-                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
-                            allowfullscreen
-                            class="w-full h-full">
-                        </iframe>
-                    </div>
-                </div>
-            </div>
-        @endif
-    @endif
-
-    <!-- File Downloads Section -->
+    <!-- File Downloads Section - Full Width -->
     @if($content->file_paths && count($content->file_paths) > 0)
         <div class="mb-8">
             <div class="bg-gradient-to-r from-green-50 to-blue-50 border border-green-200 rounded-xl p-6">
-                <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                    <svg class="w-5 h-5 mr-2 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3"></path>
-                    </svg>
-                    Download Files
-                </h3>
-                
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     @foreach($content->file_paths as $index => $filePath)
                         @php
                             $filename = basename($filePath);
@@ -118,7 +64,7 @@
                         @endphp
                         
                         <div class="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow duration-200">
-                            <div class="flex items-center justify-between">
+                            <div class="flex flex-col space-y-3">
                                 <div class="flex items-center min-w-0 flex-1">
                                     <div class="flex-shrink-0 mr-3">
                                         <svg class="w-8 h-8 {{ $iconClass }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -143,11 +89,11 @@
                                     </div>
                                 </div>
                                 
-                                <div class="ml-4 flex-shrink-0">
+                                <div class="w-full">
                                     <a href="{{ route('subscriber.download', ['channelname' => $channelname, 'slug' => $content->slug, 'filename' => $filename]) }}" 
-                                       class="inline-flex items-center px-3 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 focus:outline-none focus:ring-4 focus:ring-green-500 focus:ring-opacity-25 transition-all duration-200 group"
+                                       class="w-full flex items-center justify-center px-4 py-3 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 focus:outline-none focus:ring-4 focus:ring-green-500 focus:ring-opacity-25 transition-all duration-200 group"
                                        download>
-                                        <svg class="w-4 h-4 mr-1 group-hover:translate-y-0.5 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <svg class="w-4 h-4 mr-2 group-hover:translate-y-0.5 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3"></path>
                                         </svg>
                                         Download
@@ -161,18 +107,64 @@
         </div>
     @endif
 
-    <!-- Content Body -->
-    @if($content->content)
-        <div class="mb-8">
-            <div class="bg-white rounded-xl shadow-lg overflow-hidden">
-                <div class="p-8">
-                    <div class="prose prose-lg max-w-none prose-headings:text-gray-900 prose-p:text-gray-700 prose-strong:text-gray-900 prose-em:text-gray-700 prose-blockquote:text-gray-800 prose-blockquote:border-blue-500 prose-a:text-blue-600 hover:prose-a:text-blue-800 prose-ul:text-gray-700 prose-ol:text-gray-700 prose-li:text-gray-700">
-                        {!! $content->content !!}
+    <!-- Main Content Area - Two Column Layout -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- Left Column (2/3) - Content Text -->
+        <div class="lg:col-span-2">
+            <!-- Content Body -->
+            @if($content->content)
+                <div class="mb-8">
+                    <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+                        <div class="p-8">
+                            <div class="prose prose-lg max-w-none prose-headings:text-gray-900 prose-p:text-gray-700 prose-strong:text-gray-900 prose-em:text-gray-700 prose-blockquote:text-gray-800 prose-blockquote:border-blue-500 prose-a:text-blue-600 hover:prose-a:text-blue-800 prose-ul:text-gray-700 prose-ol:text-gray-700 prose-li:text-gray-700">
+                                <style>
+                                    .prose p {
+                                        margin-bottom: 1.25rem !important;
+                                    }
+                                </style>
+                                {!! $content->content !!}
+                            </div>
+                        </div>
                     </div>
                 </div>
-            </div>
+            @endif
         </div>
-    @endif
+
+        <!-- Right Column (1/3) - YouTube Video -->
+        <div class="lg:col-span-1">
+            @if($content->youtube_video_url)
+                @php
+                    // Extract YouTube video ID and convert to embed URL
+                    preg_match('/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/', $content->youtube_video_url, $matches);
+                    $videoId = $matches[1] ?? null;
+                @endphp
+                
+                @if($videoId)
+                    <div class="mb-8">
+                        <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+                            <div class="aspect-video">
+                                <iframe 
+                                    src="https://www.youtube.com/embed/{{ $videoId }}?rel=0&modestbranding=1" 
+                                    title="{{ $videoTitle ?? $content->title }}"
+                                    frameborder="0" 
+                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+                                    allowfullscreen
+                                    class="w-full h-full">
+                                </iframe>
+                            </div>
+                            @if($videoTitle)
+                                <div class="p-4">
+                                    <h3 class="text-sm font-medium text-gray-900">
+                                        {{ $videoTitle }}
+                                    </h3>
+                                </div>
+                            @endif
+                        </div>
+                    </div>
+                @endif
+            @endif
+        </div>
+    </div>
 
     <!-- Content Actions -->
     <div class="mb-8">

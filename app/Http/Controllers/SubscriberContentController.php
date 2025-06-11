@@ -89,6 +89,20 @@ class SubscriberContentController extends Controller
                 ->limit(4)
                 ->get();
 
+            // Get video title if YouTube video is set
+            $videoTitle = null;
+            if ($content->youtube_video_url) {
+                // Extract YouTube video ID from URL
+                preg_match('/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/', $content->youtube_video_url, $matches);
+                $videoId = $matches[1] ?? null;
+                
+                if ($videoId && $channel) {
+                    // Find the video in the yt_videos table
+                    $video = $channel->ytVideos()->where('video_id', $videoId)->first();
+                    $videoTitle = $video?->title;
+                }
+            }
+
             return view('subscriber.content', [
                 'tenant' => $tenant,
                 'content' => $content,
@@ -97,6 +111,7 @@ class SubscriberContentController extends Controller
                 'subscriber' => $subscriberUser,
                 'isTenantMember' => $isTenantMember,
                 'relatedContent' => $relatedContent,
+                'videoTitle' => $videoTitle,
             ]);
 
         } catch (\Exception $e) {
@@ -233,6 +248,20 @@ class SubscriberContentController extends Controller
         // Get the channel information for the header
         $channel = $tenant->ytChannel;
 
+        // Get video title if YouTube video is set
+        $videoTitle = null;
+        if ($content->youtube_video_url) {
+            // Extract YouTube video ID from URL
+            preg_match('/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/', $content->youtube_video_url, $matches);
+            $videoId = $matches[1] ?? null;
+            
+            if ($videoId && $channel) {
+                // Find the video in the yt_videos table
+                $video = $channel->ytVideos()->where('video_id', $videoId)->first();
+                $videoTitle = $video?->title;
+            }
+        }
+
         return view('subscriber.content', [
             'tenant' => $tenant,
             'content' => $content,
@@ -240,6 +269,7 @@ class SubscriberContentController extends Controller
             'channelname' => $tenant->getChannelName() ?? 'channel',
             'subscriberUser' => null,
             'isPreview' => true,
+            'videoTitle' => $videoTitle,
         ]);
     }
 }
