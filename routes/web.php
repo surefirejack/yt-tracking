@@ -225,7 +225,7 @@ Route::controller(InvoiceController::class)
 */
 
 // Referral tracking route (must come before other /s routes to avoid conflicts)
-Route::get('/ref/{tenant}', [App\Http\Controllers\ReferralController::class, 'trackClick'])
+Route::get('/referral/{tenant}', [App\Http\Controllers\ReferralController::class, 'trackReferral'])
     ->name('referral.track')
     ->where('tenant', '[0-9a-f-]+'); // UUID pattern
 
@@ -243,7 +243,7 @@ Route::prefix('s/{channelname}')->group(function () {
         ->where('channelname', '[a-z0-9_-]+');
 
     // Logout
-    Route::post('/logout', [App\Http\Controllers\SubscriberAuthController::class, 'logout'])
+    Route::post('/logout', [App\Http\Controllers\SubscriberDashboardController::class, 'logout'])
         ->name('subscriber.logout')
         ->where('channelname', '[a-z0-9_-]+');
 
@@ -257,7 +257,7 @@ Route::prefix('s/{channelname}')->group(function () {
 // Protected subscriber routes (require subscription verification)
 Route::prefix('s/{channelname}')->middleware('verify.subscription')->group(function () {
     // Dashboard (shows all content)
-    Route::get('/', [App\Http\Controllers\SubscriberDashboardController::class, 'dashboard'])
+    Route::get('/', [App\Http\Controllers\SubscriberDashboardController::class, 'index'])
         ->name('subscriber.dashboard')
         ->where('channelname', '[a-z0-9_-]+');
 
@@ -288,7 +288,7 @@ Route::prefix('s/{channelname}')->middleware('verify.subscription')->group(funct
 // Bind channelname to Tenant model
 Route::bind('channelname', function ($value) {
     $tenant = \App\Models\Tenant::whereHas('ytChannel', function ($query) use ($value) {
-        $query->whereRaw('LOWER(custom_url) = ?', [strtolower($value)]);
+        $query->whereRaw('LOWER(REPLACE(handle, "@", "")) = ?', [strtolower($value)]);
     })->first();
 
     if (!$tenant) {
@@ -307,7 +307,7 @@ Route::bind('slug', function ($value, $route) {
         $tenant = $channelname;
     } else {
         $tenant = \App\Models\Tenant::whereHas('ytChannel', function ($query) use ($channelname) {
-            $query->whereRaw('LOWER(custom_url) = ?', [strtolower($channelname)]);
+            $query->whereRaw('LOWER(REPLACE(handle, "@", "")) = ?', [strtolower($channelname)]);
         })->first();
     }
 

@@ -9,6 +9,8 @@ use Illuminate\Support\Str;
 
 class SubscriberContent extends Model
 {
+    protected $table = 'subscriber_content';
+
     protected $fillable = [
         'tenant_id',
         'title',

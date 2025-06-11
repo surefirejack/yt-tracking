@@ -20,7 +20,7 @@ class EditSubscriberContent extends EditRecord
                 ->color('info')
                 ->url(function () {
                     $tenant = Filament::getTenant();
-                    $channelname = strtolower($tenant->ytChannel?->channel_name ?? 'channel');
+                    $channelname = $tenant->getChannelName() ?? 'channel';
                     return route('subscriber.content', [
                         'channelname' => $channelname,
                         'slug' => $this->record->slug
@@ -47,7 +47,7 @@ class EditSubscriberContent extends EditRecord
     public function getSubheading(): ?string
     {
         $tenant = Filament::getTenant();
-        $channelname = strtolower($tenant->ytChannel?->channel_name ?? 'channel');
+        $channelname = $tenant->getChannelName() ?? 'channel';
         
         return "URL: /s/{$channelname}/{$this->record->slug}";
     }

@@ -19,6 +19,8 @@ class SubscriberContentResource extends Resource
 {
     protected static ?string $model = SubscriberContent::class;
 
+    protected static ?string $tenantRelationshipName = 'subscriberContent';
+
     protected static ?string $navigationIcon = 'heroicon-o-document-text';
 
     protected static ?string $navigationLabel = 'Subscriber Content';
@@ -258,7 +260,7 @@ class SubscriberContentResource extends Resource
                     ->color('info')
                     ->url(function (SubscriberContent $record) {
                         $tenant = Filament::getTenant();
-                        $channelname = strtolower($tenant->ytChannel?->channel_name ?? 'channel');
+                        $channelname = $tenant->getChannelName() ?? 'channel';
                         return route('subscriber.content', [
                             'channelname' => $channelname,
                             'slug' => $record->slug

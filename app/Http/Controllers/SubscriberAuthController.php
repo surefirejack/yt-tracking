@@ -274,7 +274,7 @@ class SubscriberAuthController extends Controller
     private function findTenantByChannelName(string $channelname): ?Tenant
     {
         return Tenant::whereHas('ytChannel', function ($query) use ($channelname) {
-            $query->whereRaw('LOWER(custom_url) = ?', [strtolower($channelname)]);
+            $query->whereRaw('LOWER(REPLACE(handle, "@", "")) = ?', [strtolower($channelname)]);
         })->first();
     }
 

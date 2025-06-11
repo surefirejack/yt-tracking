@@ -35,7 +35,7 @@ class ListSubscriberContent extends ListRecords
     public function getSubheading(): ?string
     {
         $tenant = Filament::getTenant();
-        $channelname = $tenant->ytChannel?->channel_name ?? 'your channel';
+        $channelname = $tenant->getChannelName() ?? 'your-channel';
         
         return "Manage exclusive content for your YouTube subscribers. Content will be available at /s/{$channelname}/{slug}";
     }

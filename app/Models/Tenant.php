@@ -160,6 +160,6 @@ class Tenant extends Model
      */
     public function getChannelName(): ?string
     {
-        return $this->ytChannel?->custom_url ? strtolower($this->ytChannel->custom_url) : null;
+        return $this->ytChannel?->handle ? strtolower(str_replace('@', '', $this->ytChannel->handle)) : null;
     }
 }
