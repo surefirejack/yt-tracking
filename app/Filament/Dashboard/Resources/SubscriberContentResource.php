@@ -136,6 +136,34 @@ class SubscriberContentResource extends Resource
                     ->description('Upload files that subscribers can download')
                     ->icon('heroicon-o-arrow-down-tray')
                     ->schema([
+                        // Show current human-readable file names when editing
+                        Forms\Components\Placeholder::make('current_files')
+                            ->label('Current Files')
+                            ->content(function ($record) {
+                                if (!$record || !$record->file_paths || count($record->file_paths) === 0) {
+                                    return 'No files uploaded yet';
+                                }
+                                
+                                $fileNames = [];
+                                foreach ($record->file_paths as $index => $path) {
+                                    $filename = basename($path);
+                                    
+                                    // Use human-readable name if available, otherwise clean up the filename
+                                    if ($record->file_names && isset($record->file_names[$index])) {
+                                        $displayName = $record->file_names[$index];
+                                    } else {
+                                        // Remove timestamp prefix if present
+                                        $displayName = preg_replace('/^\d{14}_/', '', $filename);
+                                    }
+                                    
+                                    $fileNames[] = '• ' . $displayName;
+                                }
+                                
+                                return new \Illuminate\Support\HtmlString(implode('<br>', $fileNames));
+                            })
+                            ->visible(fn ($record) => $record && $record->file_paths && count($record->file_paths) > 0)
+                            ->columnSpanFull(),
+
                         Forms\Components\FileUpload::make('file_paths')
                             ->label('Downloadable Files')
                             ->multiple()
