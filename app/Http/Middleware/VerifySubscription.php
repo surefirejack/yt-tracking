@@ -67,26 +67,8 @@ class VerifySubscription
             // Check if current user is a tenant member (has dashboard access)
             $user = auth()->user();
             
-            Log::info('Checking tenant member access', [
-                'user_authenticated' => !!$user,
-                'user_id' => $user?->id,
-                'tenant_id' => $tenant->id,
-                'channelname' => $channelname,
-                'session_id' => session()->getId(),
-                'session_has_login' => session()->has('login_web_59ba36addc2b2f9401580f014c7f58ea4e30989d'), // Laravel's default auth session key
-                'all_session_keys' => array_keys(session()->all()),
-                'guard' => config('auth.defaults.guard')
-            ]);
-            
             if ($user) {
                 $isTenantMember = $tenant->users()->where('user_id', $user->id)->exists();
-                
-                Log::info('Tenant member check result', [
-                    'user_id' => $user->id,
-                    'tenant_id' => $tenant->id,
-                    'is_tenant_member' => $isTenantMember,
-                    'tenant_users_count' => $tenant->users()->count()
-                ]);
                 
                 if ($isTenantMember) {
                     Log::info('User is tenant member, bypassing subscriber authentication', [
@@ -94,30 +76,9 @@ class VerifySubscription
                         'tenant_id' => $tenant->id,
                         'channelname' => $channelname
                     ]);
-
-                    // Add tenant to request for use in controllers
-                    $request->attributes->set('tenant', $tenant);
-                    $request->attributes->set('is_tenant_member', true);
-
-                    return $next($request);
-                }
-            }
-            
-            // TEMPORARY: Check for a special query parameter that allows tenant members to bypass
-            // This is a debug workaround - remove this in production
-            if ($request->has('tenant_access')) {
-                $accessToken = $request->get('tenant_access');
-                // Simple check - in production this should be a proper signed token
-                if ($accessToken === 'debug_' . $tenant->id) {
-                    Log::info('Tenant member accessing via debug token', [
-                        'tenant_id' => $tenant->id,
-                        'channelname' => $channelname,
-                        'debug_token' => $accessToken
-                    ]);
                     
-                    $request->attributes->set('tenant', $tenant);
+                    // Set flag for controller to know this is a tenant member
                     $request->attributes->set('is_tenant_member', true);
-                    
                     return $next($request);
                 }
             }

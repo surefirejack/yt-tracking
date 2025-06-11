@@ -4,7 +4,6 @@ use App\Http\Controllers\Auth\OAuthController;
 use App\Http\Controllers\BlogController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\PaymentProviders\PaddleController;
-use App\Http\Controllers\RoadmapController;
 use App\Services\SessionService;
 use App\Services\TenantCreationService;
 use App\Services\UserDashboardService;
@@ -194,7 +193,7 @@ Route::get('/checkout/product/success', [
 
 // roadmap
 
-Route::controller(RoadmapController::class)
+Route::controller(App\Http\Controllers\RoadmapController::class)
     ->prefix('/roadmap')
     ->group(function () {
         Route::get('/', 'index')->name('roadmap');
@@ -211,7 +210,7 @@ Route::get('/invitations', [
 
 // Invoice
 
-Route::controller(InvoiceController::class)
+Route::controller(App\Http\Controllers\InvoiceController::class)
     ->prefix('/invoice')
     ->group(function () {
         Route::get('/generate/{transactionUuid}', 'generate')->name('invoice.generate');
@@ -329,31 +328,4 @@ Route::bind('slug', function ($value, $route) {
     
     // Return the content if found, or return the string value to let middleware handle it
     return $content ?: $value;
-});
-
-// Subscriber Content Routes - must be after tenant routes to avoid conflicts
-Route::middleware(['web', 'verify.subscription'])->group(function () {
-    // Login page
-    Route::get('/s/{channelname}/login/{slug?}', [SubscriberAuthController::class, 'showLogin'])
-        ->name('subscriber.login');
-    
-    // OAuth callback
-    Route::get('/s/{channelname}/auth/callback', [SubscriberAuthController::class, 'handleCallback'])
-        ->name('subscriber.auth.callback');
-    
-    // Logout
-    Route::post('/s/{channelname}/logout', [SubscriberAuthController::class, 'logout'])
-        ->name('subscriber.logout');
-    
-    // Dashboard (shows all content)
-    Route::get('/s/{channelname}', [SubscriberDashboardController::class, 'index'])
-        ->name('subscriber.dashboard');
-    
-    // Content page
-    Route::get('/s/{channelname}/{slug}', [SubscriberContentController::class, 'show'])
-        ->name('subscriber.content');
-    
-    // File download
-    Route::get('/s/{channelname}/{slug}/download/{filename}', [SubscriberContentController::class, 'download'])
-        ->name('subscriber.download');
 });

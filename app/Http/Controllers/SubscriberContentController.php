@@ -149,15 +149,20 @@ class SubscriberContentController extends Controller
                 return response()->json(['error' => 'Invalid request'], 403);
             }
 
-            // Check if file exists and matches content
-            if (!$content->file_path || !Storage::disk('private')->exists($content->file_path)) {
-                return response()->json(['error' => 'File not found'], 404);
+            // Find the file path that matches the filename
+            $matchedFilePath = null;
+            if ($content->file_paths && is_array($content->file_paths)) {
+                foreach ($content->file_paths as $path) {
+                    if (basename($path) === $filename) {
+                        $matchedFilePath = $path;
+                        break;
+                    }
+                }
             }
 
-            // Verify filename matches
-            $originalFilename = basename($content->file_path);
-            if ($filename !== $originalFilename) {
-                return response()->json(['error' => 'Invalid filename'], 403);
+            // Check if file path was found and file exists
+            if (!$matchedFilePath || !Storage::disk('local')->exists($matchedFilePath)) {
+                return response()->json(['error' => 'File not found'], 404);
             }
 
             // Get authenticated subscriber for tracking
@@ -182,11 +187,11 @@ class SubscriberContentController extends Controller
             ]);
 
             // Get file path and MIME type
-            $filePath = Storage::disk('private')->path($content->file_path);
-            $mimeType = Storage::disk('private')->mimeType($content->file_path);
+            $fullFilePath = Storage::disk('local')->path($matchedFilePath);
+            $mimeType = Storage::disk('local')->mimeType($matchedFilePath);
 
             // Return file download response
-            return response()->download($filePath, $filename, [
+            return response()->download($fullFilePath, $filename, [
                 'Content-Type' => $mimeType,
                 'Content-Disposition' => 'attachment; filename="' . $filename . '"'
             ]);
