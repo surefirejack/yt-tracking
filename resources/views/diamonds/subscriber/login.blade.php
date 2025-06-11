@@ -1,6 +1,28 @@
 @extends('layouts.subscriber')
 
 @section('content')
+<!-- Google Fonts and Styles directly in the template -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Reenie+Beanie&display=swap" rel="stylesheet">
+
+<style>
+.signature-font {
+    font-family: 'Reenie Beanie', 'Brush Script MT', 'Lucida Handwriting', cursive !important;
+    font-size: 1.5rem !important;
+    line-height: 1.2 !important;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.3) !important;
+    font-weight: normal !important;
+    letter-spacing: 0.5px !important;
+}
+
+/* More specific selector to override any conflicting styles */
+div.signature-font,
+.signature-font * {
+    font-family: 'Reenie Beanie', 'Brush Script MT', 'Lucida Handwriting', cursive !important;
+}
+</style>
+
 @if(isset($isPreview) && $isPreview)
     <!-- Preview Mode Banner -->
     <div class="mb-6 bg-orange-100 border-l-4 border-orange-500 p-4 rounded-lg">
@@ -34,14 +56,6 @@
         @endphp
         <div class="px-8 py-6 text-center" style="background: linear-gradient(135deg, {{ $accentColor }}, {{ $darkerColor }});">
             <div class="flex flex-col items-center space-y-4">
-                @if($tenant->member_profile_image)
-                    <img 
-                        src="{{ Storage::url($tenant->member_profile_image) }}" 
-                        alt="{{ $tenant->ytChannel->name ?? $tenant->name ?? 'Creator' }}"
-                        class="w-20 h-20 rounded-full border-4 border-white shadow-xl object-cover"
-                    >
-                @endif
-                
                 <div class="text-white">
                     <h2 class="text-2xl font-bold">{{ $tenant->ytChannel->name ?? $tenant->name ?? 'Creator' }}</h2>
                     <p class="text-blue-100 text-sm">Subscribers Only Content</p>
@@ -68,19 +82,9 @@
 
             <!-- Login Instructions -->
             <div class="text-center mb-8">
-                <h3 class="text-xl font-semibold text-gray-900 mb-3">
+                <h3 class="text-xl font-semibold text-gray-900 mb-6">
                     Welcome, Subscriber!
                 </h3>
-                
-                @if($loginText)
-                    <div class="text-gray-600 mb-6 leading-relaxed">
-                        {!! nl2br(e($loginText)) !!}
-                    </div>
-                @else
-                    <p class="text-gray-600 mb-6">
-                        Sign in with Google to verify your subscription and access exclusive content.
-                    </p>
-                @endif
             </div>
 
             <!-- Login Button -->
@@ -128,6 +132,42 @@
                 </div>
             </div>
         </div>
+
+        <!-- Card Footer with Avatar and Login Text -->
+        @if($tenant->member_profile_image || $loginText)
+            <div class="px-8 py-6" style="background: linear-gradient(135deg, {{ $accentColor }}, {{ $darkerColor }});">
+                <div class="flex items-center space-x-3">
+                    <!-- Avatar taking up 1/3 width -->
+                    @if($tenant->member_profile_image)
+                        <div class="w-1/3 flex flex-col items-center">
+                            <img 
+                                src="{{ Storage::url($tenant->member_profile_image) }}" 
+                                alt="{{ $tenant->ytChannel->name ?? $tenant->name ?? 'Creator' }}"
+                                class="w-16 h-16 rounded-full border-2 border-white shadow-lg object-cover"
+                            >
+                            <!-- Cursive name below avatar with inline styles as backup -->
+                            @if($tenant->member_signature_name)
+                                <div class="mt-2 text-white signature-font" 
+                                     style="font-family: 'Reenie Beanie', 'Brush Script MT', 'Lucida Handwriting', cursive !important; 
+                                            font-size: 1.5rem !important; 
+                                            letter-spacing: 0.5px !important;">
+                                    {{ $tenant->member_signature_name }}
+                                </div>
+                            @endif
+                        </div>
+                    @endif
+                    
+                    <!-- Login text taking up 2/3 width -->
+                    @if($loginText)
+                        <div class="w-2/3 text-white">
+                            <div class="text-blue-100 leading-relaxed">
+                                {!! nl2br(e($loginText)) !!}
+                            </div>
+                        </div>
+                    @endif
+                </div>
+            </div>
+        @endif
     </div>
 
     <!-- Additional Information -->

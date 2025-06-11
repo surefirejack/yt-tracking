@@ -26,6 +26,7 @@ class Tenant extends Model
         'logout_redirect_url',
         'member_login_text',
         'member_profile_image',
+        'member_signature_name',
         'subscriber_accent_color',
     ];
 

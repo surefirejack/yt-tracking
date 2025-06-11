@@ -35,6 +35,7 @@ class SubscriberSettings extends Page implements HasForms
             'subscription_cache_days' => $tenant->subscription_cache_days ?? 7,
             'member_login_text' => $tenant->member_login_text ?? '',
             'member_profile_image' => $tenant->member_profile_image ?? '',
+            'member_signature_name' => $tenant->member_signature_name ?? '',
             'logout_redirect_url' => $tenant->logout_redirect_url ?? '',
             'subscriber_accent_color' => $tenant->subscriber_accent_color ?? '#3b82f6',
         ]);
@@ -156,6 +157,12 @@ class SubscriberSettings extends Page implements HasForms
                             ->maxSize(2048)
                             ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/webp']),
 
+                        Forms\Components\TextInput::make('member_signature_name')
+                            ->label('Signature Name')
+                            ->helperText('Optional name to display below your profile image in handwritten font (e.g., "John Smith")')
+                            ->maxLength(50)
+                            ->placeholder('Your name for signature'),
+
                         Forms\Components\TextInput::make('logout_redirect_url')
                             ->label('When a subscriber logs out, redirect them here:')
                             ->helperText('Optional custom URL to redirect subscribers after logout (leave empty for default)')
@@ -237,6 +244,7 @@ class SubscriberSettings extends Page implements HasForms
             'subscription_cache_days' => $data['subscription_cache_days'],
             'member_login_text' => $data['member_login_text'],
             'member_profile_image' => $data['member_profile_image'],
+            'member_signature_name' => $data['member_signature_name'],
             'logout_redirect_url' => $data['logout_redirect_url'],
             'subscriber_accent_color' => $data['subscriber_accent_color'] ?? '#3b82f6',
         ]);
