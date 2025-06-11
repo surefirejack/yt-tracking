@@ -18,7 +18,8 @@
             @foreach($content as $item)
                 <div class="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 group">
                     <!-- Card Image/Thumbnail -->
-                    <div class="relative h-48 bg-gradient-to-br from-blue-400 to-purple-500 overflow-hidden">
+                    <a href="{{ route('subscriber.content', ['channelname' => $channelname, 'slug' => $item->slug]) }}" 
+                       class="block relative h-48 bg-gradient-to-br from-blue-400 to-purple-500 overflow-hidden">
                         @if($item->youtube_video_url)
                             @php
                                 // Extract YouTube video ID for thumbnail
@@ -90,7 +91,7 @@
                                 </span>
                             </div>
                         @endif
-                    </div>
+                    </a>
 
                     <!-- Card Content -->
                     <div class="p-6">
