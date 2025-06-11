@@ -213,3 +213,114 @@ Route::controller(InvoiceController::class)
         Route::get('/generate/{transactionUuid}', 'generate')->name('invoice.generate');
         Route::get('/preview', 'preview')->name('invoice.preview');
     });
+
+/*
+|--------------------------------------------------------------------------
+| Subscriber Routes - YouTube Members Area
+|--------------------------------------------------------------------------
+|
+| Routes for the subscriber-only members area. All routes use the /s/{channelname}
+| pattern where channelname is the tenant's YouTube channel name (lowercase).
+|
+*/
+
+// Referral tracking route (must come before other /s routes to avoid conflicts)
+Route::get('/ref/{tenant}', [App\Http\Controllers\ReferralController::class, 'trackClick'])
+    ->name('referral.track')
+    ->where('tenant', '[0-9a-f-]+'); // UUID pattern
+
+// OAuth routes for subscriber authentication
+Route::prefix('s/{channelname}')->group(function () {
+    // Google OAuth redirect
+    Route::get('/auth/google/{slug?}', [App\Http\Controllers\SubscriberAuthController::class, 'redirectToGoogle'])
+        ->name('subscriber.auth.google')
+        ->where('channelname', '[a-z0-9_-]+')
+        ->where('slug', '[a-z0-9_-]+');
+
+    // Google OAuth callback
+    Route::get('/auth/callback', [App\Http\Controllers\SubscriberAuthController::class, 'handleGoogleCallback'])
+        ->name('subscriber.auth.callback')
+        ->where('channelname', '[a-z0-9_-]+');
+
+    // Logout
+    Route::post('/logout', [App\Http\Controllers\SubscriberAuthController::class, 'logout'])
+        ->name('subscriber.logout')
+        ->where('channelname', '[a-z0-9_-]+');
+
+    // Try again (force re-verify subscription)
+    Route::get('/try-again/{slug?}', [App\Http\Controllers\SubscriberAuthController::class, 'tryAgain'])
+        ->name('subscriber.try-again')
+        ->where('channelname', '[a-z0-9_-]+')
+        ->where('slug', '[a-z0-9_-]+');
+});
+
+// Protected subscriber routes (require subscription verification)
+Route::prefix('s/{channelname}')->middleware('verify.subscription')->group(function () {
+    // Dashboard (shows all content)
+    Route::get('/', [App\Http\Controllers\SubscriberDashboardController::class, 'dashboard'])
+        ->name('subscriber.dashboard')
+        ->where('channelname', '[a-z0-9_-]+');
+
+    // Individual content pages
+    Route::get('/{slug}', [App\Http\Controllers\SubscriberContentController::class, 'show'])
+        ->name('subscriber.content')
+        ->where('channelname', '[a-z0-9_-]+')
+        ->where('slug', '[a-z0-9_-]+');
+
+    // File downloads (secure)
+    Route::get('/{slug}/download/{filename}', [App\Http\Controllers\SubscriberContentController::class, 'downloadFile'])
+        ->name('subscriber.download')
+        ->where('channelname', '[a-z0-9_-]+')
+        ->where('slug', '[a-z0-9_-]+')
+        ->where('filename', '[^/]+'); // Allow various file name patterns
+});
+
+/*
+|--------------------------------------------------------------------------
+| Route Model Binding for Subscriber Routes
+|--------------------------------------------------------------------------
+|
+| Define custom route model binding to resolve tenants by channelname
+| and content by slug within tenant scope.
+|
+*/
+
+// Bind channelname to Tenant model
+Route::bind('channelname', function ($value) {
+    $tenant = \App\Models\Tenant::whereHas('ytChannel', function ($query) use ($value) {
+        $query->whereRaw('LOWER(custom_url) = ?', [strtolower($value)]);
+    })->first();
+
+    if (!$tenant) {
+        abort(404, 'Channel not found');
+    }
+
+    return $tenant;
+});
+
+// Bind slug to SubscriberContent within tenant scope
+Route::bind('slug', function ($value, $route) {
+    // Get the tenant from the channelname parameter
+    $channelname = $route->parameter('channelname');
+    
+    if ($channelname instanceof \App\Models\Tenant) {
+        $tenant = $channelname;
+    } else {
+        $tenant = \App\Models\Tenant::whereHas('ytChannel', function ($query) use ($channelname) {
+            $query->whereRaw('LOWER(custom_url) = ?', [strtolower($channelname)]);
+        })->first();
+    }
+
+    if (!$tenant) {
+        abort(404, 'Channel not found');
+    }
+
+    // Find content by slug within this tenant
+    $content = $tenant->subscriberContent()->where('slug', $value)->first();
+    
+    if (!$content) {
+        abort(404, 'Content not found');
+    }
+
+    return $content;
+});
