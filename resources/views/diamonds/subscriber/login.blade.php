@@ -127,7 +127,7 @@ div.signature-font,
                     </svg>
                     <div>
                         <p class="font-medium text-gray-700">Secure & Private</p>
-                        <p>We only verify your YouTube subscription status. Your data is never shared.</p>
+                        <p>This step is to ensure you are a subscriber to the channel and to give you access to the content.</p>
                     </div>
                 </div>
             </div>

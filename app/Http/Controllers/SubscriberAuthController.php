@@ -152,11 +152,34 @@ class SubscriberAuthController extends Controller
                 'tenant_id' => $tenant->id,
                 'channelname' => $channelnameStr,
                 'intended_slug' => $slugStr,
-                'remember_me' => $request->boolean('remember_me', false)
+                'remember_me' => $request->boolean('remember_me', false),
+                'session_id' => session()->getId()
             ]);
 
-            // Redirect to Google with YouTube readonly scope
-            return Socialite::driver('google')
+            // Redirect to Google with YouTube readonly scope using YouTube credentials
+            // Temporarily override Google OAuth config to use YouTube credentials
+            config([
+                'services.google.client_id' => config('services.youtube.client_id'),
+                'services.google.client_secret' => config('services.youtube.client_secret'),
+            ]);
+            
+            $driver = Socialite::driver('google');
+            $redirectUrl = url('/subscriber/auth/callback');
+            $driver->redirectUrl($redirectUrl);
+            
+            Log::info('=== OAUTH REDIRECT URL DEBUG ===', [
+                'callback_url_being_sent_to_google' => $redirectUrl,
+                'using_youtube_credentials' => true,
+                'client_id' => config('services.youtube.client_id'),
+                'session_data_stored' => [
+                    'tenant_id' => $tenant->id,
+                    'channelname' => $channelnameStr,
+                    'slug' => $slugStr,
+                    'session_id' => session()->getId()
+                ]
+            ]);
+            
+            return $driver
                 ->scopes(['https://www.googleapis.com/auth/youtube.readonly'])
                 ->with(['access_type' => 'offline', 'prompt' => 'consent'])
                 ->redirect();
@@ -179,14 +202,62 @@ class SubscriberAuthController extends Controller
     public function handleGoogleCallback(Request $request)
     {
         try {
+            Log::info('OAuth callback received', [
+                'url' => $request->fullUrl(),
+                'query_params' => $request->query->all(),
+                'all_request_data' => $request->all(),
+                'has_code' => $request->has('code'),
+                'has_error' => $request->has('error'),
+                'error' => $request->query('error'),
+                'error_description' => $request->query('error_description'),
+                'session_id' => session()->getId(),
+                'all_session_data' => session()->all()
+            ]);
+
+            // Check for OAuth errors first
+            if ($request->has('error')) {
+                Log::error('OAuth error received', [
+                    'error' => $request->query('error'),
+                    'error_description' => $request->query('error_description'),
+                    'error_uri' => $request->query('error_uri')
+                ]);
+                
+                return redirect()->route('subscriber.login', ['channelname' => 'unknown'])
+                    ->with('error', 'OAuth authentication failed: ' . $request->query('error_description', $request->query('error')));
+            }
+
+            // Check if we have authorization code
+            if (!$request->has('code')) {
+                Log::error('OAuth callback missing authorization code', [
+                    'query_params' => $request->query->all(),
+                    'full_url' => $request->fullUrl()
+                ]);
+                
+                return redirect()->route('subscriber.login', ['channelname' => 'unknown'])
+                    ->with('error', 'OAuth authentication failed: No authorization code received');
+            }
+
             // Get stored session data
             $tenantId = Session::get('subscriber_auth.tenant_id');
             $channelname = Session::get('subscriber_auth.channelname');
             $intendedSlug = Session::get('subscriber_auth.intended_slug');
             $rememberMe = Session::get('subscriber_auth.remember_me', false);
 
+            Log::info('Session data retrieval', [
+                'tenant_id' => $tenantId,
+                'channelname' => $channelname,
+                'intended_slug' => $intendedSlug,
+                'remember_me' => $rememberMe,
+                'session_keys' => array_keys(session()->all())
+            ]);
+
             if (!$tenantId || !$channelname) {
-                Log::error('Missing session data in OAuth callback');
+                Log::error('Missing session data in OAuth callback', [
+                    'tenant_id' => $tenantId,
+                    'channelname' => $channelname,
+                    'session_id' => session()->getId(),
+                    'all_session_keys' => array_keys(session()->all())
+                ]);
                 return redirect()->route('home')->with('error', 'Authentication session expired.');
             }
 
@@ -197,15 +268,72 @@ class SubscriberAuthController extends Controller
                 return redirect()->route('home')->with('error', 'Invalid session.');
             }
 
-            // Get user from Google
-            $googleUser = Socialite::driver('google')->user();
-            
-            Log::info('Google OAuth callback received', [
-                'tenant_id' => $tenant->id,
-                'google_id' => $googleUser->id,
-                'email' => $googleUser->email,
-                'name' => $googleUser->name
+            // Get user from Google using YouTube credentials
+            // Temporarily override Google OAuth config to use YouTube credentials
+            config([
+                'services.google.client_id' => config('services.youtube.client_id'),
+                'services.google.client_secret' => config('services.youtube.client_secret'),
             ]);
+            
+            Log::info('Attempting to get user from Google OAuth', [
+                'client_id' => config('services.youtube.client_id'),
+                'callback_url' => url('/subscriber/auth/callback'),
+                'request_code' => $request->query('code') ? substr($request->query('code'), 0, 20) . '...' : 'none',
+                'config_after_override' => [
+                    'google_client_id' => config('services.google.client_id'),
+                    'google_client_secret_first_10' => substr(config('services.google.client_secret'), 0, 10) . '...',
+                ]
+            ]);
+            
+            // Clear any cached instances and create a fresh Socialite driver instance
+            app()->forgetInstance(\Laravel\Socialite\Contracts\Factory::class);
+            $socialiteManager = app(\Laravel\Socialite\Contracts\Factory::class);
+            $driver = $socialiteManager->driver('google');
+            $driver->redirectUrl(url('/subscriber/auth/callback'));
+            
+            try {
+                $googleUser = $driver->user();
+                
+                Log::info('Successfully received Google user data', [
+                    'google_id' => $googleUser->id ?? 'unknown',
+                    'email' => $googleUser->email ?? 'unknown'
+                ]);
+            } catch (\Exception $e) {
+                Log::error('Failed to get Google user data', [
+                    'error' => $e->getMessage(),
+                    'error_class' => get_class($e),
+                    'file' => $e->getFile(),
+                    'line' => $e->getLine(),
+                    'previous_error' => $e->getPrevious() ? $e->getPrevious()->getMessage() : null,
+                    'config_check' => [
+                        'google_client_id' => config('services.google.client_id'),
+                        'google_client_secret_first_10' => substr(config('services.google.client_secret'), 0, 10) . '...',
+                        'youtube_client_id' => config('services.youtube.client_id'),
+                        'youtube_client_secret_first_10' => substr(config('services.youtube.client_secret'), 0, 10) . '...',
+                    ],
+                    'request_data' => [
+                        'code_length' => strlen($request->query('code')),
+                        'has_state' => $request->has('state'),
+                        'scope' => $request->query('scope'),
+                    ]
+                ]);
+                
+                // If it's a client credentials error, let's try to see if it's using the right config
+                if (strpos($e->getMessage(), 'client') !== false || strpos($e->getMessage(), 'invalid') !== false) {
+                    Log::error('Possible client configuration issue detected', [
+                        'current_google_config' => [
+                            'client_id' => config('services.google.client_id'),
+                            'client_secret' => substr(config('services.google.client_secret'), 0, 10) . '...',
+                        ],
+                        'youtube_config' => [
+                            'client_id' => config('services.youtube.client_id'),
+                            'client_secret' => substr(config('services.youtube.client_secret'), 0, 10) . '...',
+                        ]
+                    ]);
+                }
+                
+                throw $e; // Re-throw the original exception
+            }
 
             // Find or create subscriber user
             $subscriberUser = SubscriberUser::firstOrCreate(
@@ -337,8 +465,12 @@ class SubscriberAuthController extends Controller
         return view('subscriber.access-denied', [
             'tenant' => $tenant,
             'channelname' => $channelname,
-            'intendedSlug' => $intendedSlug,
-            'youtubeChannelUrl' => $tenant->ytChannel?->channel_url
+            'slug' => $intendedSlug,
+            'youtubeChannelUrl' => $tenant->ytChannel?->channel_url,
+            'tryAgainUrl' => route('subscriber.try-again', [
+                'channelname' => $channelname,
+                'slug' => $intendedSlug
+            ])
         ]);
     }
 
