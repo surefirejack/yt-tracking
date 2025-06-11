@@ -333,29 +333,3 @@ Route::bind('slug', function ($value, $route) {
     // Return the content if found, or return the string value to let middleware handle it
     return $content ?: $value;
     });
-
-// Debug routes (REMOVE THESE IN PRODUCTION)
-Route::get('/debug-auth-state', function() {
-    return [
-        'session_data' => session()->all(),
-        'config_google' => [
-            'client_id' => config('services.google.client_id'),
-            'client_secret' => substr(config('services.google.client_secret'), 0, 10) . '...',
-        ],
-        'config_youtube' => [
-            'client_id' => config('services.youtube.client_id'),
-            'client_secret' => substr(config('services.youtube.client_secret'), 0, 10) . '...',
-        ]
-    ];
-});
-
-Route::get('/debug-credentials', function() {
-    return [
-        'youtube_client_id' => config('services.youtube.client_id'),
-        'youtube_client_secret_first_10' => substr(config('services.youtube.client_secret'), 0, 10) . '...',
-        'google_client_id' => config('services.google.client_id'),
-        'google_client_secret_first_10' => substr(config('services.google.client_secret'), 0, 10) . '...',
-        'env_youtube_client_id' => env('YOUTUBE_CLIENT_ID'),
-        'env_youtube_client_secret_first_10' => substr(env('YOUTUBE_CLIENT_SECRET'), 0, 10) . '...',
-    ];
-});

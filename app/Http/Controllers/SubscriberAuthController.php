@@ -355,20 +355,27 @@ class SubscriberAuthController extends Controller
                 'profile_picture' => $googleUser->avatar,
             ]);
 
-            // Create temporary user for subscription verification
-            $tempUser = new \App\Models\User();
-            $tempUser->id = 'temp_' . $subscriberUser->id;
-            $tempUser->email = $subscriberUser->email;
-            $tempUser->name = $subscriberUser->name;
+            // Store OAuth tokens persistently for future subscription verification
+            $subscriberUser->storeOAuthTokens(
+                $googleUser->token,
+                $googleUser->refreshToken,
+                $googleUser->expiresIn ?? 3600
+            );
 
-            // Set OAuth tokens for verification
-            $this->subscriptionService->setTemporaryTokens($tempUser, [
-                'access_token' => $googleUser->token,
-                'refresh_token' => $googleUser->refreshToken,
-                'expires_in' => $googleUser->expiresIn ?? 3600
+            // Store subscriber info in session for future access
+            session([
+                'subscriber_user_id' => $subscriberUser->id,
+                'subscriber_google_id' => $subscriberUser->google_id
             ]);
 
-            // Verify subscription
+            Log::info('OAuth tokens stored for subscriber', [
+                'subscriber_user_id' => $subscriberUser->id,
+                'has_access_token' => !empty($googleUser->token),
+                'has_refresh_token' => !empty($googleUser->refreshToken),
+                'expires_at' => $subscriberUser->oauth_token_expires_at?->toDateTimeString()
+            ]);
+
+            // Verify subscription using stored tokens
             $isSubscribed = $this->subscriptionService->verifySubscription($subscriberUser, $tenant);
 
             if (!$isSubscribed) {
@@ -433,7 +440,7 @@ class SubscriberAuthController extends Controller
                 ]);
 
                 // Clear subscriber session
-                Session::forget(['subscriber_user_id', 'subscriber_tenant_id', 'subscriber_expires_at']);
+                Session::forget(['subscriber_user_id', 'subscriber_tenant_id', 'subscriber_expires_at', 'subscriber_google_id']);
 
                 // Redirect to custom logout URL or default
                 $redirectUrl = $tenant->logout_redirect_url ?: route('home');
@@ -442,7 +449,7 @@ class SubscriberAuthController extends Controller
             }
 
             // Fallback if tenant not found
-            Session::forget(['subscriber_user_id', 'subscriber_tenant_id', 'subscriber_expires_at']);
+            Session::forget(['subscriber_user_id', 'subscriber_tenant_id', 'subscriber_expires_at', 'subscriber_google_id']);
             return redirect()->route('home');
 
         } catch (\Exception $e) {
@@ -452,7 +459,7 @@ class SubscriberAuthController extends Controller
             ]);
 
             // Clean up session anyway
-            Session::forget(['subscriber_user_id', 'subscriber_tenant_id', 'subscriber_expires_at']);
+            Session::forget(['subscriber_user_id', 'subscriber_tenant_id', 'subscriber_expires_at', 'subscriber_google_id']);
             return redirect()->route('home');
         }
     }
@@ -570,21 +577,7 @@ class SubscriberAuthController extends Controller
                 }
             }
 
-            if (!$tenant->hasSubscriberLmsEnabled()) {
-                Log::error('Subscriber LMS not enabled for tenant in tryAgain', [
-                    'tenant_id' => $tenant->id,
-                    'channelname' => $channelnameStr
-                ]);
-                return redirect()->route('home')->with('error', 'This feature is not available.');
-            }
-
-            // Handle slug parameter - might be object or string
-            $slugStr = null;
-            if ($slug instanceof \App\Models\SubscriberContent) {
-                $slugStr = $slug->slug;
-            } elseif (is_string($slug)) {
-                $slugStr = $slug;
-            }
+            $slugStr = is_string($slug) ? $slug : null;
 
             Log::info('Try again attempt', [
                 'tenant_id' => $tenant->id,
@@ -592,20 +585,87 @@ class SubscriberAuthController extends Controller
                 'slug' => $slugStr
             ]);
 
-            // Redirect to login with slug
-            return redirect()->route('subscriber.auth.google', [
+            // Check if user already exists and has valid OAuth tokens
+            $subscriberUser = SubscriberUser::where('tenant_id', $tenant->id)
+                ->where('google_id', session('subscriber_google_id'))
+                ->first();
+
+            if ($subscriberUser && $subscriberUser->hasValidOAuthTokens()) {
+                Log::info('Reusing existing OAuth tokens for try again', [
+                    'subscriber_user_id' => $subscriberUser->id,
+                    'tenant_id' => $tenant->id,
+                    'token_expires_at' => $subscriberUser->oauth_token_expires_at?->toDateTimeString()
+                ]);
+
+                // Force re-verify subscription using existing tokens
+                $subscriptionService = new YouTubeSubscriptionService();
+                $isSubscribed = $subscriptionService->forceVerifySubscription($subscriberUser, $tenant);
+
+                if ($isSubscribed) {
+                    Log::info('Subscription verified on try again', [
+                        'subscriber_user_id' => $subscriberUser->id,
+                        'tenant_id' => $tenant->id
+                    ]);
+
+                    // Store subscriber info in session for future access
+                    session(['subscriber_user_id' => $subscriberUser->id]);
+
+                    return $this->redirectToIntendedContent($tenant, $channelnameStr, $slugStr);
+                } else {
+                    Log::info('Subscription still not found on try again', [
+                        'subscriber_user_id' => $subscriberUser->id,
+                        'tenant_id' => $tenant->id
+                    ]);
+
+                    return $this->showAccessDenied($tenant, $channelnameStr, $slugStr);
+                }
+            }
+
+            // If no valid tokens, fall back to OAuth flow
+            Log::info('No valid tokens found, falling back to OAuth', [
+                'has_subscriber_user' => $subscriberUser !== null,
+                'has_valid_tokens' => $subscriberUser ? $subscriberUser->hasValidOAuthTokens() : false,
+                'tenant_id' => $tenant->id
+            ]);
+
+            // Store session data for OAuth flow
+            session(['subscriber_auth' => [
+                'tenant_id' => $tenant->id,
                 'channelname' => $channelnameStr,
-                'slug' => $slugStr
-            ])->with(['try_again' => true]);
+                'intended_slug' => $slugStr,
+                'remember_me' => false
+            ]]);
+
+            // Redirect to Google OAuth
+            return $this->redirectToGoogle($tenant, $channelnameStr, $slugStr, false);
 
         } catch (\Exception $e) {
             Log::error('Error in try again', [
-                'channelname' => is_object($channelname) ? get_class($channelname) : $channelname,
-                'slug' => is_object($slug) ? get_class($slug) : $slug,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
+                'channelname' => $channelnameStr ?? 'unknown',
+                'slug' => $slugStr ?? 'none'
             ]);
             
-            return redirect()->route('home')->with('error', 'An error occurred.');
+            return redirect()->route('home')->with('error', 'An error occurred. Please try again.');
+        }
+    }
+
+    private function redirectToIntendedContent(Tenant $tenant, string $channelname, ?string $slug = null)
+    {
+        // Implement the logic to redirect to the intended content based on the tenant and slug
+        // This is a placeholder and should be replaced with the actual implementation
+        // For example, you can use the $slug to fetch the content and redirect accordingly
+        // or use the $channelname to redirect to a default content page
+        // or implement a more complex logic based on the $tenant and $slug
+
+        // Placeholder implementation
+        if ($slug) {
+            return redirect()->route('subscriber.content', [
+                'channelname' => $channelname,
+                'slug' => $slug
+            ]);
+        } else {
+            return redirect()->route('subscriber.dashboard', ['channelname' => $channelname]);
         }
     }
 }

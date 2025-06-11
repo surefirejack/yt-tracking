@@ -42,19 +42,23 @@ class YouTubeSubscriptionService extends YouTubeApiService
                 return false;
             }
 
-            // Create a temporary user object for API calls using subscriber's Google data
-            $tempUser = $this->createTemporaryUserFromSubscriber($subscriberUser);
+            // Get valid OAuth token from subscriber
+            $accessToken = $subscriberUser->getValidOAuthToken();
             
-            if (!$tempUser) {
-                Log::error('Failed to create temporary user for subscription check', [
+            if (!$accessToken) {
+                Log::error('No valid OAuth token available for subscription verification', [
                     'subscriber_user_id' => $subscriberUser->id,
-                    'tenant_id' => $tenant->id
+                    'tenant_id' => $tenant->id,
+                    'has_access_token' => !empty($subscriberUser->oauth_access_token),
+                    'has_refresh_token' => !empty($subscriberUser->oauth_refresh_token),
+                    'token_expired' => $subscriberUser->oauth_token_expires_at ? 
+                        $subscriberUser->oauth_token_expires_at->isPast() : 'no_token_date'
                 ]);
                 return false;
             }
 
-            // Check subscription using parent class method with error handling
-            $isSubscribed = $this->isSubscribedWithErrorHandling($tempUser, $tenantChannelId);
+            // Check subscription directly using the stored token
+            $isSubscribed = $this->checkSubscriptionDirectly($subscriberUser, $tenantChannelId, $accessToken);
 
             // Update subscription verification cache
             if ($isSubscribed) {
@@ -117,26 +121,44 @@ class YouTubeSubscriptionService extends YouTubeApiService
      */
     private function createTemporaryUserFromSubscriber(SubscriberUser $subscriberUser): ?\App\Models\User
     {
-        // We need to get the subscriber's OAuth tokens stored during login
-        // These should be stored in session or a temporary storage system
-        
-        // For now, we'll need to retrieve these from the session data
-        // This will be implemented in the SubscriberAuthController
-        
         Log::info('Creating temporary user for subscription verification', [
             'subscriber_user_id' => $subscriberUser->id,
             'google_id' => $subscriberUser->google_id,
-            'email' => $subscriberUser->email
+            'email' => $subscriberUser->email,
+            'has_stored_token' => !empty($subscriberUser->oauth_access_token),
+            'token_expires_at' => $subscriberUser->oauth_token_expires_at?->toDateTimeString()
         ]);
+
+        // Get a valid OAuth token from the subscriber user
+        $validToken = $subscriberUser->getValidOAuthToken();
+        
+        if (!$validToken) {
+            Log::error('No valid OAuth token available for subscriber', [
+                'subscriber_user_id' => $subscriberUser->id,
+                'has_access_token' => !empty($subscriberUser->oauth_access_token),
+                'has_refresh_token' => !empty($subscriberUser->oauth_refresh_token),
+                'token_expired' => $subscriberUser->oauth_token_expires_at ? 
+                    $subscriberUser->oauth_token_expires_at->isPast() : 'no_token_date'
+            ]);
+            return null;
+        }
 
         // Create a temporary user instance (not saved to database)
         $tempUser = new \App\Models\User();
-        $tempUser->id = 'temp_' . $subscriberUser->id; // Temporary ID
+        $tempUser->id = 'temp_' . $subscriberUser->id; // Fix: Proper temporary ID
         $tempUser->email = $subscriberUser->email;
         $tempUser->name = $subscriberUser->name;
         
-        // The OAuth tokens will need to be set by the auth controller
-        // using a method like setTemporaryTokens()
+        // Store the valid token in the temporary user
+        $tempUser->_temp_youtube_token = $validToken;
+        $tempUser->_temp_youtube_refresh_token = $subscriberUser->oauth_refresh_token;
+        $tempUser->_temp_youtube_token_expires_at = $subscriberUser->oauth_token_expires_at?->toDateTimeString();
+
+        Log::info('Temporary user created with stored OAuth tokens', [
+            'temp_user_id' => $tempUser->id,
+            'has_valid_token' => !empty($validToken),
+            'token_preview' => substr($validToken, 0, 20) . '...'
+        ]);
         
         return $tempUser;
     }
@@ -246,6 +268,199 @@ class YouTubeSubscriptionService extends YouTubeApiService
             ]);
             
             throw new \Exception('Subscription verification failed. Please try again.');
+        }
+    }
+
+    /**
+     * Override makeYouTubeApiRequest to handle temporary users with stored tokens
+     */
+    public function makeYouTubeApiRequest(\App\Models\User $user, string $endpoint, array $params = []): ?array
+    {
+        // Check if this is a temporary user with custom token storage
+        if (str_starts_with($user->id, 'temp_') && isset($user->_temp_youtube_token)) {
+            Log::info('Making YouTube API request with temporary user tokens', [
+                'user_id' => $user->id,
+                'endpoint' => $endpoint,
+                'params' => $params
+            ]);
+
+            $accessToken = $user->_temp_youtube_token;
+            
+            if (!$accessToken) {
+                Log::error('No valid access token available for YouTube API request', [
+                    'user_id' => $user->id,
+                    'endpoint' => $endpoint
+                ]);
+                return null;
+            }
+
+            try {
+                $response = \Illuminate\Support\Facades\Http::withHeaders([
+                    'Authorization' => 'Bearer ' . $accessToken,
+                    'Accept' => 'application/json',
+                ])->get("https://www.googleapis.com/youtube/v3/{$endpoint}", $params);
+
+                if ($response->successful()) {
+                    $data = $response->json();
+                    
+                    Log::info('YouTube API request successful', [
+                        'user_id' => $user->id,
+                        'endpoint' => $endpoint,
+                        'status' => $response->status(),
+                        'has_items' => isset($data['items']),
+                        'item_count' => isset($data['items']) ? count($data['items']) : 0
+                    ]);
+                    
+                    return $data;
+                } else {
+                    Log::error('YouTube API request failed', [
+                        'user_id' => $user->id,
+                        'endpoint' => $endpoint,
+                        'status' => $response->status(),
+                        'response' => $response->body()
+                    ]);
+                    
+                    return null;
+                }
+            } catch (\Exception $e) {
+                Log::error('YouTube API request exception', [
+                    'user_id' => $user->id,
+                    'endpoint' => $endpoint,
+                    'error' => $e->getMessage()
+                ]);
+                
+                return null;
+            }
+        }
+
+        // For regular users, delegate to parent class method
+        // Create a new YouTubeTokenService instance since we can't access the private property
+        $tokenService = new \App\Services\YouTubeTokenService();
+        return $tokenService->makeYouTubeApiRequest($user, $endpoint, $params);
+    }
+
+    /**
+     * Override checkSubscription to use our custom API request method
+     */
+    public function checkSubscription(\App\Models\User $user, string $channelId): ?array
+    {
+        try {
+            Log::info('Checking subscription for channel', [
+                'user_id' => $user->id,
+                'channel_id' => $channelId
+            ]);
+
+            $response = $this->makeYouTubeApiRequest($user, 'subscriptions', [
+                'part' => 'snippet,subscriberSnippet',
+                'forChannelId' => $channelId,
+                'mine' => 'true'
+            ]);
+
+            Log::info('Subscription check API response', [
+                'user_id' => $user->id,
+                'channel_id' => $channelId,
+                'response_received' => $response !== null,
+                'has_items' => $response && isset($response['items']),
+                'item_count' => $response && isset($response['items']) ? count($response['items']) : 0,
+                'full_response' => $response
+            ]);
+
+            if ($response && isset($response['items']) && count($response['items']) > 0) {
+                Log::info('User is subscribed to channel', [
+                    'user_id' => $user->id,
+                    'channel_id' => $channelId,
+                    'subscription_data' => $response['items'][0]
+                ]);
+                return $response['items'][0];
+            }
+
+            Log::info('User is not subscribed to channel', [
+                'user_id' => $user->id,
+                'channel_id' => $channelId
+            ]);
+            return null;
+
+        } catch (\Exception $e) {
+            Log::error('Error checking subscription', [
+                'user_id' => $user->id,
+                'channel_id' => $channelId,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return null;
+        }
+    }
+
+    /**
+     * Check subscription directly using the stored token
+     * 
+     * @param SubscriberUser $subscriberUser The subscriber to check
+     * @param string $channelId The channel ID to check
+     * @param string $accessToken The access token for the channel
+     * @return bool True if subscribed, false otherwise
+     */
+    private function checkSubscriptionDirectly(SubscriberUser $subscriberUser, string $channelId, string $accessToken): bool
+    {
+        try {
+            Log::info('Checking subscription directly using stored token', [
+                'subscriber_user_id' => $subscriberUser->id,
+                'channel_id' => $channelId,
+                'email' => $subscriberUser->email
+            ]);
+
+            $response = \Illuminate\Support\Facades\Http::withHeaders([
+                'Authorization' => 'Bearer ' . $accessToken,
+                'Accept' => 'application/json',
+            ])->get("https://www.googleapis.com/youtube/v3/subscriptions", [
+                'part' => 'snippet,subscriberSnippet',
+                'forChannelId' => $channelId,
+                'mine' => 'true'
+            ]);
+
+            if ($response->successful()) {
+                $data = $response->json();
+                
+                Log::info('Subscription check API response', [
+                    'subscriber_user_id' => $subscriberUser->id,
+                    'channel_id' => $channelId,
+                    'status' => $response->status(),
+                    'has_items' => isset($data['items']),
+                    'item_count' => isset($data['items']) ? count($data['items']) : 0,
+                    'response_data' => $data
+                ]);
+
+                if (isset($data['items']) && count($data['items']) > 0) {
+                    Log::info('User IS subscribed to channel', [
+                        'subscriber_user_id' => $subscriberUser->id,
+                        'channel_id' => $channelId,
+                        'subscription_data' => $data['items'][0]
+                    ]);
+                    return true;
+                }
+
+                Log::info('User is NOT subscribed to channel', [
+                    'subscriber_user_id' => $subscriberUser->id,
+                    'channel_id' => $channelId
+                ]);
+                return false;
+            } else {
+                Log::error('YouTube API subscription check failed', [
+                    'subscriber_user_id' => $subscriberUser->id,
+                    'channel_id' => $channelId,
+                    'status' => $response->status(),
+                    'response_body' => $response->body()
+                ]);
+                return false;
+            }
+
+        } catch (\Exception $e) {
+            Log::error('Error checking subscription directly', [
+                'subscriber_user_id' => $subscriberUser->id,
+                'channel_id' => $channelId,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return false;
         }
     }
 } 
