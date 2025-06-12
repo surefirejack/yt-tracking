@@ -119,6 +119,7 @@
   - [x] 6.16 Add preview functionality to tenant settings page with "Preview Login Page" button that bypasses tenant member authentication using URL parameters
   - [x] 6.17 Replace ACME in login page with the name field from yt_channels table
 
+
 - [ ] 7.0 Testing & Quality Assurance
   - [ ] 7.1 Create feature tests for `SubscriberAuthTest` - authentication flow testing
   - [ ] 7.2 Create feature tests for `SubscriberContentTest` - content access and download testing
