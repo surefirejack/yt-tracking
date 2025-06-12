@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "b2903bab4c8cda5fc1a74cd621708a94",
+    "content-hash": "7bf1d4b3082f66678a151f2c96c9abb2",
     "packages": [
         {
             "name": "anourvalar/eloquent-serialize",
@@ -12417,6 +12417,56 @@
                 }
             ],
             "time": "2024-11-21T01:49:47+00:00"
+        },
+        {
+            "name": "wallacemaxters/filament-image-color-picker",
+            "version": "0.0.6",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/wallacemaxters/filament-image-color-picker.git",
+                "reference": "0567f2720fad3d70f5efeec9085346b4519aa12b"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/wallacemaxters/filament-image-color-picker/zipball/0567f2720fad3d70f5efeec9085346b4519aa12b",
+                "reference": "0567f2720fad3d70f5efeec9085346b4519aa12b",
+                "shasum": ""
+            },
+            "require": {
+                "filament/forms": "*",
+                "php": "^8.1",
+                "spatie/laravel-package-tools": "^1.15.0"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "WallaceMaxters\\FilamentImageColorPicker\\ImageColorPickerServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "WallaceMaxters\\FilamentImageColorPicker\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "A custom Form Component to pick color from image",
+            "keywords": [
+                "color picker",
+                "filament",
+                "image color picker",
+                "laravel",
+                "wallacemaxters"
+            ],
+            "support": {
+                "issues": "https://github.com/wallacemaxters/filament-image-color-picker/issues",
+                "source": "https://github.com/wallacemaxters/filament-image-color-picker/tree/0.0.6"
+            },
+            "time": "2025-03-07T20:11:06+00:00"
         },
         {
             "name": "webmozart/assert",

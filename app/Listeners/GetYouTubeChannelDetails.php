@@ -99,6 +99,7 @@ class GetYouTubeChannelDetails implements ShouldQueue
                 'name' => $data['name'] ?? 'Unknown Channel',
                 'description' => $data['description'] ?? null,
                 'logo_image_url' => $data['thumbnail'] ?? null,
+                'banner_image_url' => $data['banner'] ?? null,
                 'subscribers_count' => $data['subscriberCount'] ?? 0,
                 'videos_count' => $data['videoCount'] ?? 0,
                 'handle' => $handle,

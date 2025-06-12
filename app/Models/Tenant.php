@@ -20,6 +20,19 @@ class Tenant extends Model
         'is_name_auto_generated',
         'created_by',
         'domain',
+        'can_use_subscriber_only_lms',
+        'subscriber_only_lms_status',
+        'subscription_cache_days',
+        'logout_redirect_url',
+        'member_login_text',
+        'member_profile_image',
+        'member_signature_name',
+        'subscriber_accent_color',
+    ];
+
+    protected $casts = [
+        'can_use_subscriber_only_lms' => 'boolean',
+        'subscriber_only_lms_status' => 'boolean',
     ];
 
     public function invitations(): HasMany
@@ -111,5 +124,44 @@ class Tenant extends Model
             'domain' => $domain,
             'is_primary' => $isPrimary,
         ]);
+    }
+
+    public function subscriberContent(): HasMany
+    {
+        return $this->hasMany(SubscriberContent::class);
+    }
+
+    public function subscriberUsers(): HasMany
+    {
+        return $this->hasMany(SubscriberUser::class);
+    }
+
+    public function tenantReferrals(): HasMany
+    {
+        return $this->hasMany(TenantReferral::class);
+    }
+
+    /**
+     * Check if tenant can use subscriber-only LMS feature
+     */
+    public function canUseSubscriberLms(): bool
+    {
+        return $this->can_use_subscriber_only_lms;
+    }
+
+    /**
+     * Check if tenant has enabled subscriber-only LMS feature
+     */
+    public function hasSubscriberLmsEnabled(): bool
+    {
+        return $this->subscriber_only_lms_status && $this->canUseSubscriberLms();
+    }
+
+    /**
+     * Get the channel name for routing (lowercase)
+     */
+    public function getChannelName(): ?string
+    {
+        return $this->ytChannel?->handle ? strtolower(str_replace('@', '', $this->ytChannel->handle)) : null;
     }
 }
