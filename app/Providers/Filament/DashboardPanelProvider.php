@@ -84,7 +84,9 @@ class DashboardPanelProvider extends PanelProvider
             ->viteTheme('resources/css/filament/dashboard/theme.css')
             ->discoverWidgets(in: app_path('Filament/Dashboard/Widgets'), for: 'App\\Filament\\Dashboard\\Widgets')
             ->widgets([
-                Widgets\AccountWidget::class,
+                \App\Filament\Dashboard\Widgets\DashboardStatsWidget::class,
+                \App\Filament\Dashboard\Widgets\SubscribersChartWidget::class,
+                \App\Filament\Dashboard\Widgets\ClicksChartWidget::class,
             ])
             ->middleware([
                 EncryptCookies::class,
