@@ -166,7 +166,22 @@ Route::get('/privacy-policy', function () {
 })->name('privacy-policy')->middleware('sitemapped');
 
 Route::get('/terms', function () {
-    return view('terms');
+    $markdownPath = resource_path('views/markdown/terms.md');
+    
+    if (!file_exists($markdownPath)) {
+        abort(404, 'Terms file not found');
+    }
+    
+    $markdown = file_get_contents($markdownPath);
+    
+    $converter = new \League\CommonMark\CommonMarkConverter([
+        'html_input' => 'strip',
+        'allow_unsafe_links' => false,
+    ]);
+    
+    $html = $converter->convert($markdown);
+    
+    return view('terms', ['terms' => $html]);
 })->name('terms.show');
 
 // Product checkout routes
