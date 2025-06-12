@@ -112,9 +112,6 @@ class DashboardPanelProvider extends PanelProvider
             ->renderHook(PanelsRenderHook::BODY_START,
                 fn (): string => Blade::render("@livewire('announcement.view', ['placement' => '".AnnouncementPlacement::USER_DASHBOARD->value."'])")
             )
-            ->renderHook(PanelsRenderHook::TOPBAR_START,
-                fn (): string => Blade::render("@livewire('quick-create-link')")
-            )
             ->authMiddleware([
                 Authenticate::class,
             ])->plugins([
