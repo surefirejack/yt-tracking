@@ -86,6 +86,33 @@ class EditLink extends EditRecord
             $data['tags'] = $this->record->tagModels()->pluck('name')->toArray();
         }
         
+        // Transform webhook_ids for repeater display
+        if (isset($data['webhook_ids']) && !empty($data['webhook_ids'])) {
+            $webhookIds = $data['webhook_ids'];
+            
+            // Handle different storage formats
+            if (is_string($webhookIds)) {
+                // If stored as JSON string, decode it
+                $webhookIds = json_decode($webhookIds, true) ?? [];
+            }
+            
+            if (is_array($webhookIds)) {
+                // Check if it's already in repeater format (array of objects with 'url' keys)
+                if (isset($webhookIds[0]) && is_array($webhookIds[0]) && isset($webhookIds[0]['url'])) {
+                    // Already in correct format
+                    $data['webhook_ids'] = $webhookIds;
+                } else {
+                    // Transform from array of strings to repeater format
+                    $data['webhook_ids'] = array_map(function($url) {
+                        return ['url' => $url];
+                    }, array_filter($webhookIds)); // Filter out empty values
+                }
+            } else {
+                // Invalid format, clear it
+                $data['webhook_ids'] = [];
+            }
+        }
+        
         return $data;
     }
 
@@ -307,10 +334,24 @@ class EditLink extends EditRecord
         }
 
         if (isset($data['webhook_ids']) && !empty($data['webhook_ids'])) {
-            // Try to decode JSON, fallback to string
+            // Handle repeater format (array of objects with 'url' keys) or legacy format
             $webhookIds = is_string($data['webhook_ids']) ? json_decode($data['webhook_ids'], true) : $data['webhook_ids'];
+            
             if (is_array($webhookIds)) {
-                $payload['webhookIds'] = $webhookIds;
+                // Check if this is repeater format (array of objects with 'url' keys)
+                if (isset($webhookIds[0]) && is_array($webhookIds[0]) && isset($webhookIds[0]['url'])) {
+                    // Transform repeater format to array of strings
+                    $webhookUrls = array_filter(array_map(function($item) {
+                        return isset($item['url']) && !empty($item['url']) ? $item['url'] : null;
+                    }, $webhookIds));
+                    
+                    if (!empty($webhookUrls)) {
+                        $payload['webhookIds'] = array_values($webhookUrls);
+                    }
+                } else {
+                    // Legacy format - assume it's already an array of strings
+                    $payload['webhookIds'] = $webhookIds;
+                }
             }
         }
 
@@ -395,7 +436,12 @@ class EditLink extends EditRecord
         }
 
         if (isset($responseData['webhookIds']) && is_array($responseData['webhookIds'])) {
-            $updateData['webhook_ids'] = $responseData['webhookIds'];
+            // Transform from Dub API format (array of strings) to repeater format (array of objects with 'url' keys)
+            $webhookData = array_map(function($url) {
+                return ['url' => $url];
+            }, $responseData['webhookIds']);
+            
+            $updateData['webhook_ids'] = $webhookData;
         }
 
         if (isset($responseData['geo']) && is_array($responseData['geo'])) {

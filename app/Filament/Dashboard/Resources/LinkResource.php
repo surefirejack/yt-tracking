@@ -28,6 +28,7 @@ use Filament\Facades\Filament;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Cache;
+use Filament\Forms\Components\Repeater;
 
 class LinkResource extends Resource
 {
@@ -430,12 +431,23 @@ class LinkResource extends Resource
                             ->schema([
                                 Grid::make(2)
                                     ->schema([
-                                        Textarea::make('webhook_ids')
-                                            ->label('Webhook IDs')
-                                            ->placeholder('JSON array of webhook IDs')
-                                            ->rows(4)
-                                            ->helperText('Webhook IDs to trigger on link events (JSON format)')
-                                            ->columnSpanFull(),
+                                        Repeater::make('webhook_ids')
+                                            ->label('Webhook URLs')
+                                            ->schema([
+                                                TextInput::make('url')
+                                                    ->label('Webhook URL')
+                                                    ->url()
+                                                    ->required()
+                                                    ->maxLength(2048)
+                                                    ->placeholder('https://your-webhook-endpoint.com/webhook'),
+                                            ])
+                                            ->addActionLabel('Add Webhook URL')
+                                            ->helperText('Add webhook URLs to trigger on link events')
+                                            ->columnSpanFull()
+                                            ->collapsible()
+                                            ->cloneable()
+                                            ->reorderableWithButtons()
+                                            ->defaultItems(0),
                                         
                                         Toggle::make('track_conversion')
                                             ->label('Track Conversions')
