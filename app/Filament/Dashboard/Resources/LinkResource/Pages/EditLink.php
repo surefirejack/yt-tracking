@@ -50,25 +50,14 @@ class EditLink extends EditRecord
                 ->label('Save Your Changes')
                 ->submit('save')
                 ->keyBindings(['mod+s'])
-                ->extraAttributes([
-                    'wire:dirty.class' => 'block',
-                    'wire:dirty.class.remove' => 'hidden',
-                    'class' => 'hidden',
-                ])
                 ->color('primary'),
             
             Actions\Action::make('cancel')
                 ->label('Cancel')
                 ->color('gray')
-                ->extraAttributes([
-                    'wire:dirty.class' => 'block',
-                    'wire:dirty.class.remove' => 'hidden',
-                    'class' => 'hidden',
-                ])
                 ->action(function () {
                     // Reset form to original record data
                     $this->fillForm();
-                    
                     // Optional: You can also redirect to refresh the page
                     // return redirect()->to($this->getResource()::getUrl('edit', ['record' => $this->record]));
                 })
