@@ -583,10 +583,8 @@ class LinkResource extends Resource
                             return $query;
                         }
                         
-                        return $query->where(function (Builder $query) use ($data) {
-                            foreach ($data['values'] as $tag) {
-                                $query->orWhereJsonContains('tags', $tag);
-                            }
+                        return $query->whereHas('tagModels', function (Builder $query) use ($data) {
+                            $query->whereIn('name', $data['values']);
                         });
                     }),
 
