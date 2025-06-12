@@ -9,7 +9,6 @@
     "license": "MIT",
     "require": {
         "php": "^8.2",
-        "awcodes/filament-sticky-header": "^2.0",
         "aws/aws-sdk-php": "^3.293",
         "blade-ui-kit/blade-icons": "^1.5",
         "codeisawesomehq/filament-tinyeditor": "^1.4",
