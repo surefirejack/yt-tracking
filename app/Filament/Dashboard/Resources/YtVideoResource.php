@@ -16,6 +16,9 @@ use Filament\Facades\Filament;
 use Filament\Notifications\Notification;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use App\Jobs\UpdateLinkJob;
+use App\Services\TagService;
+use App\Models\Tag;
 
 class YtVideoResource extends Resource
 {
@@ -159,42 +162,72 @@ class YtVideoResource extends Resource
                             }),
                     ])
                     ->action(function (array $data, $record) {
-                        // Here you can process the selected links
                         $selectedLinks = $data['allowed_links'] ?? [];
                         $existing = $record->getExistingLinkUrls();
-                        
+                        $tenantId = \Filament\Facades\Filament::getTenant()->id;
+                        $videoId = $record->id;
+                        $videoTagName = 'yt-video-' . $videoId;
+                        $tagService = new TagService();
                         $newLinksCount = 0;
-                        
-                        // Create new links for selected URLs that don't exist yet
+                        $updatedLinksCount = 0;
+
                         foreach ($selectedLinks as $url) {
                             if (!in_array($url, $existing)) {
+                                // Create new link as before
                                 $link = \App\Models\Link::create([
-                                    'tenant_id' => \Filament\Facades\Filament::getTenant()->id,
+                                    'tenant_id' => $tenantId,
                                     'original_url' => $url,
-                                    'yt_video_id' => $record->id,
+                                    'yt_video_id' => $videoId,
                                     'title' => 'From ' . $record->title,
                                     'status' => 'pending',
                                 ]);
-                                
-                                // Dispatch the job to create the short link
                                 \App\Jobs\CreateLinkJob::dispatch($link);
                                 $newLinksCount++;
+                            } else {
+                                // Existing link: update relationships and tags
+                                $link = \App\Models\Link::where('tenant_id', $tenantId)
+                                    ->where('original_url', $url)
+                                    ->first();
+                                if ($link) {
+                                    // 1. Attach link to video (many-to-many)
+                                    $link->ytVideos()->syncWithoutDetaching([$videoId]);
+
+                                    // 2. Ensure tag exists and attach to link
+                                    $tag = $tagService->createTag($videoTagName, $tenantId);
+                                    if ($tag && !$link->tagModels()->where('tags.id', $tag->id)->exists()) {
+                                        $link->tagModels()->attach($tag->id);
+                                    }
+
+                                    // 3. Update Dub.co with the new tag
+                                    // Merge all tag names for this link
+                                    $allTagNames = $link->tagModels()->pluck('name')->toArray();
+                                    if (!in_array($videoTagName, $allTagNames)) {
+                                        $allTagNames[] = $videoTagName;
+                                    }
+                                    $updateData = [
+                                        'tagNames' => $allTagNames,
+                                    ];
+                                    UpdateLinkJob::dispatch($link, $updateData);
+                                    $updatedLinksCount++;
+                                }
                             }
                         }
-                        
+
+                        $messages = [];
                         if ($newLinksCount > 0) {
-                            Notification::make()
-                                ->title('Links Queued for Processing')
-                                ->body("$newLinksCount new links have been queued for processing and will be created shortly.")
-                                ->success()
-                                ->send();
-                        } else {
-                            Notification::make()
-                                ->title('No New Links')
-                                ->body('All selected links have already been created.')
-                                ->info()
-                                ->send();
+                            $messages[] = "$newLinksCount new links have been queued for processing.";
                         }
+                        if ($updatedLinksCount > 0) {
+                            $messages[] = "$updatedLinksCount existing links have been updated with this video and tag.";
+                        }
+                        if (empty($messages)) {
+                            $messages[] = 'All selected links were already associated.';
+                        }
+                        Notification::make()
+                            ->title('Link Conversion Results')
+                            ->body(implode("\n", $messages))
+                            ->success()
+                            ->send();
                     }),
             ])
             ->bulkActions([
