@@ -118,7 +118,7 @@ class UrlPerformance extends Page
             // Get all links that point to this destination URL
             $links = Link::where('tenant_id', $tenant->id)
                 ->where('original_url', $this->selectedDestinationUrl)
-                ->get(['id', 'dub_id', 'title', 'yt_video_id']);
+                ->get(['id', 'dub_id', 'title']);
             
             if ($links->isEmpty()) {
                 throw new \Exception('No links found for this destination URL');
@@ -140,17 +140,16 @@ class UrlPerformance extends Page
             foreach ($links as $link) {
                 if (!$link->dub_id) {
                     // Skip links without dub_id, but include them with zero metrics
-                    $associatedVideo = null;
-                    if ($link->yt_video_id) {
-                        $associatedVideo = YtVideo::find($link->yt_video_id);
-                    }
+                    $associatedVideos = $link->ytVideos; // many-to-many
+                    $videoTitles = $associatedVideos->pluck('title')->toArray();
+                    $videoIds = $associatedVideos->pluck('id')->toArray();
                     
                     $linkBreakdown[] = [
                         'link_id' => $link->id,
                         'link_title' => $link->title,
                         'dub_id' => $link->dub_id,
-                        'video_title' => $associatedVideo ? $associatedVideo->title : 'None',
-                        'video_id' => $associatedVideo ? $associatedVideo->id : null,
+                        'video_title' => !empty($videoTitles) ? implode(', ', $videoTitles) : 'None',
+                        'video_id' => !empty($videoIds) ? implode(', ', $videoIds) : null,
                         'clicks' => 0,
                         'leads' => 0,
                         'sales' => 0,
@@ -190,18 +189,17 @@ class UrlPerformance extends Page
                     ];
                 }
                 
-                // Build breakdown per link with video association
-                $associatedVideo = null;
-                if ($link->yt_video_id) {
-                    $associatedVideo = YtVideo::find($link->yt_video_id);
-                }
+                // Build breakdown per link with video association (many-to-many)
+                $associatedVideos = $link->ytVideos; // many-to-many
+                $videoTitles = $associatedVideos->pluck('title')->toArray();
+                $videoIds = $associatedVideos->pluck('id')->toArray();
                 
                 $linkBreakdown[] = [
                     'link_id' => $link->id,
                     'link_title' => $link->title,
                     'dub_id' => $link->dub_id,
-                    'video_title' => $associatedVideo ? $associatedVideo->title : 'None',
-                    'video_id' => $associatedVideo ? $associatedVideo->id : null,
+                    'video_title' => !empty($videoTitles) ? implode(', ', $videoTitles) : 'None',
+                    'video_id' => !empty($videoIds) ? implode(', ', $videoIds) : null,
                     'clicks' => $linkMetrics['total_clicks'],
                     'leads' => $linkMetrics['total_leads'],
                     'sales' => $linkMetrics['total_sales'],
