@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOneThrough;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Builder;
 
 class YtVideo extends Model
@@ -54,11 +55,11 @@ class YtVideo extends Model
     }
 
     /**
-     * Links relationship - one video can have many links
+     * Links relationship - many-to-many
      */
-    public function links(): HasMany
+    public function links(): BelongsToMany
     {
-        return $this->hasMany(Link::class, 'yt_video_id');
+        return $this->belongsToMany(Link::class, 'link_yt_video');
     }
 
     /**

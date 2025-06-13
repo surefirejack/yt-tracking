@@ -117,11 +117,11 @@ class Link extends Model
     }
 
     /**
-     * YouTube Video relationship (belongs to)
+     * YouTube Videos relationship (many-to-many)
      */
-    public function ytVideo(): BelongsTo
+    public function ytVideos(): BelongsToMany
     {
-        return $this->belongsTo(YtVideo::class, 'yt_video_id');
+        return $this->belongsToMany(YtVideo::class, 'link_yt_video');
     }
 
     /**
@@ -170,5 +170,10 @@ class Link extends Model
     public function isPending(): bool
     {
         return $this->status === 'pending';
+    }
+
+    public function getYtVideosCountAttribute()
+    {
+        return $this->ytVideos->count();
     }
 }
