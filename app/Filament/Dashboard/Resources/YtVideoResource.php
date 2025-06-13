@@ -170,7 +170,10 @@ class YtVideoResource extends Resource
                         $tagService = new TagService();
                         $newLinksCount = 0;
                         $updatedLinksCount = 0;
+                        $linkReplacements = [];
+                        $allTrackingLinks = [];
 
+                        // Prepare a map of original_url => tracking_link for all selected links
                         foreach ($selectedLinks as $url) {
                             if (!in_array($url, $existing)) {
                                 // Create new link as before
@@ -183,23 +186,18 @@ class YtVideoResource extends Resource
                                 ]);
                                 \App\Jobs\CreateLinkJob::dispatch($link);
                                 $newLinksCount++;
+                                // We'll update the description with the tracking link after job completes
                             } else {
                                 // Existing link: update relationships and tags
                                 $link = \App\Models\Link::where('tenant_id', $tenantId)
                                     ->where('original_url', $url)
                                     ->first();
                                 if ($link) {
-                                    // 1. Attach link to video (many-to-many)
                                     $link->ytVideos()->syncWithoutDetaching([$videoId]);
-
-                                    // 2. Ensure tag exists and attach to link
                                     $tag = $tagService->createTag($videoTagName, $tenantId);
                                     if ($tag && !$link->tagModels()->where('tags.id', $tag->id)->exists()) {
                                         $link->tagModels()->attach($tag->id);
                                     }
-
-                                    // 3. Update Dub.co with the new tag
-                                    // Merge all tag names for this link
                                     $allTagNames = $link->tagModels()->pluck('name')->toArray();
                                     if (!in_array($videoTagName, $allTagNames)) {
                                         $allTagNames[] = $videoTagName;
@@ -209,8 +207,28 @@ class YtVideoResource extends Resource
                                     ];
                                     UpdateLinkJob::dispatch($link, $updateData);
                                     $updatedLinksCount++;
+                                    // If the link has a short_link, use it for replacement
+                                    if ($link->short_link) {
+                                        $linkReplacements[$url] = $link->short_link;
+                                    }
                                 }
                             }
+                        }
+
+                        // After processing, update the description_new or description with replacements
+                        $descField = $record->description_new !== null ? 'description_new' : 'description';
+                        $desc = $record->$descField;
+                        $replacedCount = 0;
+                        foreach ($linkReplacements as $original => $tracking) {
+                            // Replace all instances of the original link with the tracking link
+                            $count = 0;
+                            $desc = str_replace($original, $tracking, $desc, $count);
+                            $replacedCount += $count;
+                        }
+                        if ($replacedCount > 0) {
+                            $record->$descField = $desc;
+                            $record->converted_links = $replacedCount;
+                            $record->save();
                         }
 
                         $messages = [];
@@ -219,6 +237,9 @@ class YtVideoResource extends Resource
                         }
                         if ($updatedLinksCount > 0) {
                             $messages[] = "$updatedLinksCount existing links have been updated with this video and tag.";
+                        }
+                        if ($replacedCount > 0) {
+                            $messages[] = "$replacedCount links were replaced in the video description.";
                         }
                         if (empty($messages)) {
                             $messages[] = 'All selected links were already associated.';
