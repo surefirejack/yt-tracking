@@ -17,17 +17,26 @@
             <x-heading.h1 class="mt-4 text-primary-800 font-bold flex flex-col items-center justify-center">
                 <span class="flex flex-row items-center justify-center">
                     <span>
-                        {{ __('Build your SaaS') }}
+                        {{ __('The Ultimate YouTube Software') }}
                     </span>
-                    <span class="text-primary-500 hidden md:block">
-                        @svg('diamonds/lightning', 'w-16 h-16')
-                    </span>
+                    
                 </span>
-                <span>
-                    {{ __('with SaaSykit') }}
-                </span>
+                <span>To Give You <span id="typed1">Click Tracking</span></span>
 
             </x-heading.h1>
+
+            <script>
+            var typed2 = new Typed('#typed1', {
+                strings: ['Leads Tracking', 'Sales Tracking', 'More Leads', 'More Sales', 'More Views', 'More Engagement'],
+                typeSpeed: 20,
+                backSpeed: 0,
+                fadeOut: true,
+                fadeOutDelay: 600,
+                loop: true,
+                showCursor: true,
+            });
+           
+        </script>
 
             <p class="m-3">{{ __('A Laravel-based boilerplate with everything you need to build an awesome SaaS.') }}</p>
 
@@ -270,7 +279,7 @@
     <p class="text-center py-4">{{ __('Manage your SaaS application from a beautiful admin panel powered by Filament') }}</p>
 
     <div class="text-center pt-6 mx-auto max-w-5xl ">
-        <img src="{{URL::asset('/images/diamonds/features/admin-panel.png')}}" >
+        <img src="{{URL::asset('/images/screenshots/members-area-3-shots.png')}}" >
     </div>
 
     <x-section.block class="mt-24 relative overflow-hidden">
