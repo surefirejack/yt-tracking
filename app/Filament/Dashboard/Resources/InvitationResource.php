@@ -35,7 +35,7 @@ class InvitationResource extends Resource
                 Forms\Components\TextInput::make('email')
                     ->email()
                     ->required()
-                    ->helperText(__('Enter the email address of the person you want to invite.'))
+                    ->helperText(__('Enter the email address of the person you want to invite to the team.'))
                     ->rules([
                         fn (): \Closure => function (string $attribute, $value, \Closure $fail) {
                             // if there is a user with this email address in the tenant and status is pending and expires_at is greater than now, fail
