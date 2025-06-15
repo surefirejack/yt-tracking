@@ -143,10 +143,10 @@
                 @if($this->linkBreakdown && count($this->linkBreakdown) > 0)
                     <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
                         <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                            Link Performance Breakdown
+                            Video Performance Breakdown
                         </h3>
                         <p class="text-sm text-gray-600 dark:text-gray-400 mb-6">
-                            Shows all links pointing to this destination URL, ranked by traffic volume, with their associated YouTube videos.
+                            Shows all videos with a link pointing to this destination URL, ranked by performance.
                         </p>
                         
                         <div class="overflow-x-auto">
@@ -192,12 +192,17 @@
                                             <td class="px-6 py-4 text-sm text-gray-900 dark:text-white">
                                                 <div class="max-w-xs">
                                                     @if($linkData['video_title'] !== 'None')
-                                                        <p class="font-medium truncate text-green-600 dark:text-green-400">
-                                                            {{ $linkData['video_title'] }}
-                                                        </p>
-                                                        <p class="text-xs text-gray-500 dark:text-gray-400">
-                                                            Video ID: {{ $linkData['video_id'] }}
-                                                        </p>
+                                                        <div class="flex items-center space-x-3">
+                                                            @if($linkData['thumbnail_url'])
+                                                                <img src="{{ $linkData['thumbnail_url'] }}" 
+                                                                     alt="Video thumbnail" 
+                                                                     class="w-16 h-9 object-cover rounded"
+                                                                     loading="lazy">
+                                                            @endif
+                                                            <p class="font-medium truncate text-green-600 dark:text-green-400">
+                                                                {{ $linkData['video_title'] }}
+                                                            </p>
+                                                        </div>
                                                     @else
                                                         <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200">
                                                             No Video
