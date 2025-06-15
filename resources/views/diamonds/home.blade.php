@@ -21,19 +21,67 @@
                     </span>
                     
                 </span>
-                <span>To Give You <span id="typed1">Click Tracking</span></span>
+                <span>To Give You <span id="animated-text">Click Tracking</span></span>
 
             </x-heading.h1>
 
             <script>
-            var typed2 = new Typed('#typed1', {
-                strings: ['Leads Tracking', 'Sales Tracking', 'More Leads', 'More Sales', 'More Views', 'More Engagement'],
-                typeSpeed: 20,
-                backSpeed: 0,
-                fadeOut: true,
-                fadeOutDelay: 600,
-                loop: true,
-                showCursor: true,
+            document.addEventListener('DOMContentLoaded', function() {
+                const textElement = document.getElementById('animated-text');
+                const texts = ['Leads Tracking', 'Sales Tracking', 'More Leads', 'More Sales', 'More Views', 'More Subs', 'More Clicks'];
+                let currentIndex = 0;
+                
+                // Add CSS for animations
+                const style = document.createElement('style');
+                style.textContent = `
+                    @keyframes fadeIn {
+                        from { opacity: 0; }
+                        to { opacity: 1; }
+                    }
+                    @keyframes fadeOut {
+                        from { opacity: 1; }
+                        to { opacity: 0; }
+                    }
+                    .fade-in {
+                        animation: fadeIn 0.3s forwards;
+                    }
+                    .fade-out {
+                        animation: fadeOut 0.3s forwards;
+                    }
+                    #animated-text {
+                        border-bottom: 4px solid currentColor;
+                        padding-bottom: 2px;
+                    }
+                `;
+                document.head.appendChild(style);
+                
+                function cycleText() {
+                    // Fade out
+                    textElement.classList.add('fade-out');
+                    
+                    setTimeout(() => {
+                        // Change text
+                        textElement.textContent = texts[currentIndex];
+                        // Remove fade-out class
+                        textElement.classList.remove('fade-out');
+                        // Add fade-in class
+                        textElement.classList.add('fade-in');
+                        
+                        // Increment index
+                        currentIndex = (currentIndex + 1) % texts.length;
+                        
+                        // Schedule fade out after display time
+                        setTimeout(() => {
+                            // Remove fade-in class
+                            textElement.classList.remove('fade-in');
+                            // Call cycleText again
+                            cycleText();
+                        }, 1500); // Text stays visible for 800ms
+                    }, 300); // Duration of fade out animation
+                }
+                
+                // Start the animation cycle
+                cycleText();
             });
            
         </script>
