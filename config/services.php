@@ -149,4 +149,8 @@ return [
         'base_url' => env('TESTING_URL'),
     ],
 
+    'support' => [
+        'documentation_url' => env('DOCUMENTATION_URL')
+    ]
+
 ];

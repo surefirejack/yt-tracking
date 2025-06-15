@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOneThrough;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Builder;
 
 class YtVideo extends Model
@@ -15,6 +16,8 @@ class YtVideo extends Model
         'title',
         'url',
         'description',
+        'description_new',
+        'converted_links',
         'views',
         'likes',
         'length',
@@ -35,6 +38,7 @@ class YtVideo extends Model
         'likes' => 'integer',
         'length' => 'integer',
         'links_found' => 'integer',
+        'converted_links' => 'integer',
     ];
 
     /**
@@ -54,11 +58,11 @@ class YtVideo extends Model
     }
 
     /**
-     * Links relationship - one video can have many links
+     * Links relationship - many-to-many
      */
-    public function links(): HasMany
+    public function links(): BelongsToMany
     {
-        return $this->hasMany(Link::class, 'yt_video_id');
+        return $this->belongsToMany(Link::class, 'link_yt_video');
     }
 
     /**
@@ -72,19 +76,19 @@ class YtVideo extends Model
     }
 
     /**
-     * Extract URLs from the video description
+     * Extract URLs from the video description (uses description_new if not null)
      */
     public function getDescriptionUrls(): array
     {
-        if (empty($this->description)) {
+        $desc = $this->description_new ?? $this->description;
+        if (empty($desc)) {
             return [];
         }
-        
         // Regular expression to match URLs
-        $urlPattern = '/\b(?:https?:\/\/|www\.)[^\s<>"{}|\\^`\[\]]+/i';
+        $urlPattern = '/\\b(?:https?:\/\/|www\.)[^\s<>"{}|\\^`\[\]]+/i';
         
         // Find all matches
-        preg_match_all($urlPattern, $this->description, $matches);
+        preg_match_all($urlPattern, $desc, $matches);
         
         // Get unique URLs and sort alphabetically
         $uniqueUrls = array_unique($matches[0]);

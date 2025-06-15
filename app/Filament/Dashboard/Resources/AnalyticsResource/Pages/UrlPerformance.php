@@ -118,7 +118,7 @@ class UrlPerformance extends Page
             // Get all links that point to this destination URL
             $links = Link::where('tenant_id', $tenant->id)
                 ->where('original_url', $this->selectedDestinationUrl)
-                ->get(['id', 'dub_id', 'title', 'yt_video_id']);
+                ->get(['id', 'dub_id', 'title']);
             
             if ($links->isEmpty()) {
                 throw new \Exception('No links found for this destination URL');
@@ -140,17 +140,18 @@ class UrlPerformance extends Page
             foreach ($links as $link) {
                 if (!$link->dub_id) {
                     // Skip links without dub_id, but include them with zero metrics
-                    $associatedVideo = null;
-                    if ($link->yt_video_id) {
-                        $associatedVideo = YtVideo::find($link->yt_video_id);
-                    }
+                    $associatedVideos = $link->ytVideos; // many-to-many
+                    $videoTitles = $associatedVideos->pluck('title')->toArray();
+                    $videoIds = $associatedVideos->pluck('id')->toArray();
+                    $videoThumbnails = $associatedVideos->pluck('thumbnail_url')->toArray();
                     
                     $linkBreakdown[] = [
                         'link_id' => $link->id,
                         'link_title' => $link->title,
                         'dub_id' => $link->dub_id,
-                        'video_title' => $associatedVideo ? $associatedVideo->title : 'None',
-                        'video_id' => $associatedVideo ? $associatedVideo->id : null,
+                        'video_title' => !empty($videoTitles) ? implode(', ', $videoTitles) : 'None',
+                        'video_id' => !empty($videoIds) ? implode(', ', $videoIds) : null,
+                        'thumbnail_url' => !empty($videoThumbnails) ? $videoThumbnails[0] : null,
                         'clicks' => 0,
                         'leads' => 0,
                         'sales' => 0,
@@ -190,24 +191,72 @@ class UrlPerformance extends Page
                     ];
                 }
                 
-                // Build breakdown per link with video association
-                $associatedVideo = null;
-                if ($link->yt_video_id) {
-                    $associatedVideo = YtVideo::find($link->yt_video_id);
-                }
+                // Build breakdown per link with video association (many-to-many)
+                $associatedVideos = $link->ytVideos; // many-to-many
+                $videoTitles = $associatedVideos->pluck('title')->toArray();
+                $videoIds = $associatedVideos->pluck('id')->toArray();
+                $videoThumbnails = $associatedVideos->pluck('thumbnail_url')->toArray();
                 
-                $linkBreakdown[] = [
-                    'link_id' => $link->id,
-                    'link_title' => $link->title,
-                    'dub_id' => $link->dub_id,
-                    'video_title' => $associatedVideo ? $associatedVideo->title : 'None',
-                    'video_id' => $associatedVideo ? $associatedVideo->id : null,
-                    'clicks' => $linkMetrics['total_clicks'],
-                    'leads' => $linkMetrics['total_leads'],
-                    'sales' => $linkMetrics['total_sales'],
-                    'revenue' => $linkMetrics['total_sale_amount'],
-                    'conversion_rate' => $linkMetrics['sales_conversion_rate'],
-                ];
+                // Create a row for each video associated with this link
+                if (!empty($videoTitles)) {
+                    foreach ($videoTitles as $index => $videoTitle) {
+                        $videoId = $videoIds[$index] ?? null;
+                        $thumbnailUrl = $videoThumbnails[$index] ?? null;
+                        
+                        try {
+                            // Get analytics for this specific video
+                            $videoAnalytics = $this->analyticsService->getVideoAnalytics(
+                                $tenant->id,
+                                $videoId,
+                                [
+                                    'interval' => $this->selectedInterval,
+                                    'linkId' => $link->dub_id, // Also filter by link to get intersection
+                                ]
+                            );
+                            
+                            // Process the analytics for this video
+                            $videoMetrics = $this->analyticsService->processAnalyticsData($videoAnalytics);
+                        } catch (\Exception $e) {
+                            // If video analytics fail, use link metrics as fallback
+                            \Log::warning('Failed to get analytics for video', [
+                                'video_id' => $videoId,
+                                'link_id' => $link->id,
+                                'error' => $e->getMessage(),
+                            ]);
+                            
+                            $videoMetrics = $linkMetrics;
+                        }
+                        
+                        $linkBreakdown[] = [
+                            'link_id' => $link->id,
+                            'link_title' => $link->title,
+                            'dub_id' => $link->dub_id,
+                            'video_title' => $videoTitle,
+                            'video_id' => $videoId,
+                            'thumbnail_url' => $thumbnailUrl,
+                            'clicks' => $videoMetrics['total_clicks'],
+                            'leads' => $videoMetrics['total_leads'],
+                            'sales' => $videoMetrics['total_sales'],
+                            'revenue' => $videoMetrics['total_sale_amount'],
+                            'conversion_rate' => $videoMetrics['sales_conversion_rate'],
+                        ];
+                    }
+                } else {
+                    // If no videos are associated, add a single row with 'None'
+                    $linkBreakdown[] = [
+                        'link_id' => $link->id,
+                        'link_title' => $link->title,
+                        'dub_id' => $link->dub_id,
+                        'video_title' => 'None',
+                        'video_id' => null,
+                        'thumbnail_url' => null,
+                        'clicks' => $linkMetrics['total_clicks'],
+                        'leads' => $linkMetrics['total_leads'],
+                        'sales' => $linkMetrics['total_sales'],
+                        'revenue' => $linkMetrics['total_sale_amount'],
+                        'conversion_rate' => $linkMetrics['sales_conversion_rate'],
+                    ];
+                }
             }
             
             // Sort link breakdown by clicks (descending)
@@ -216,6 +265,36 @@ class UrlPerformance extends Page
             });
             
             $this->linkBreakdown = $linkBreakdown;
+            
+            // Calculate total metrics from the individual video metrics
+            $totalClicks = 0;
+            $totalLeads = 0;
+            $totalSales = 0;
+            $totalRevenue = 0;
+            
+            foreach ($linkBreakdown as $row) {
+                $totalClicks += $row['clicks'];
+                $totalLeads += $row['leads'];
+                $totalSales += $row['sales'];
+                $totalRevenue += $row['revenue'];
+            }
+            
+            // Calculate conversion rates and revenue per click
+            $leadConversionRate = $totalClicks > 0 ? round(($totalLeads / $totalClicks) * 100, 2) : 0;
+            $salesConversionRate = $totalClicks > 0 ? round(($totalSales / $totalClicks) * 100, 2) : 0;
+            $revenuePerClick = $totalClicks > 0 ? round($totalRevenue / $totalClicks, 2) : 0;
+            
+            // Update the processed metrics with the calculated totals
+            $this->processedMetrics = [
+                'total_clicks' => $totalClicks,
+                'total_leads' => $totalLeads,
+                'total_sales' => $totalSales,
+                'total_sale_amount' => $totalRevenue,
+                'lead_conversion_rate' => $leadConversionRate,
+                'sales_conversion_rate' => $salesConversionRate,
+                'revenue_per_click' => $revenuePerClick,
+                'raw_data' => $this->analyticsData,
+            ];
             
         } catch (\Exception $e) {
             \Log::error('Error loading URL analytics data', [

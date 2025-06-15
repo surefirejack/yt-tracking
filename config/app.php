@@ -179,8 +179,8 @@ return [
 
     // this is the name of the logo file in the public directory
     'logo' => [
-        'light' => 'images/logo-light.png',
-        'dark' => 'images/logo-dark.png',
+        'light' => 'images/video-bolt-light-text.png',
+        'dark' => 'images/video-bolt-dark-text.png',
     ],
 
     'roadmap_enabled' => env('ROADMAP_ENABLED', true),

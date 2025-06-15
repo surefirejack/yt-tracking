@@ -2,6 +2,7 @@
 <x-nav.item route="#tech-stack">{{ __('Tech Stack') }}</x-nav.item>
 <x-nav.item route="#pricing">{{ __('Pricing') }}</x-nav.item>
 <x-nav.item route="#faq">{{ __('FAQ') }}</x-nav.item>
+<x-nav.item route="about">{{ __('About') }}</x-nav.item>
 @if(config('app.roadmap_enabled'))
     <x-nav.item route="roadmap">{{ __('Roadmap') }}</x-nav.item>
 @endif

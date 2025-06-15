@@ -1,6 +1,6 @@
 <x-layouts.app class="relative overflow-hidden">
     <x-slot name="title">
-        {{ __('SaaSykit - Laravel SaaS Starter Kit') }}
+        {{ __('Video Bolt: The software YouTube experts use for maximum growth.') }}
     </x-slot>
 
     <div class="bg-primary-300  w-40 h-40 md:w-96 md:h-96 rounded-3xl absolute opacity-10 -z-10 -right-28 md:-right-48 top-52 md:top-40 rotate-45">
@@ -13,44 +13,53 @@
     <x-section.hero class="w-full">
 
         <div class="mx-auto text-center px-4">
-            <span class="text-primary-500 uppercase font-semibold">{{ __('Launch your Business') }}</span>
+            <span class="text-primary-500 uppercase font-semibold">{{ __('If you have a YouTube channel... then this is for you:') }}</span>
             <x-heading.h1 class="mt-4 text-primary-800 font-bold flex flex-col items-center justify-center">
                 <span class="flex flex-row items-center justify-center">
                     <span>
-                        {{ __('Build your SaaS') }}
+                        {{ __('The Ultimate YouTube Software') }}
                     </span>
-                    <span class="text-primary-500 hidden md:block">
-                        @svg('diamonds/lightning', 'w-16 h-16')
+                    
+                </span>
+                
+                <span class="cd-headline slide is-full-width"><span>To Get You </span>
+                    <span class="cd-words-wrapper">
+                        <b class="is-visible">Click Stats</b>
+                        <b>Lead Stats</b>
+                        <b>Sales Stats</b>
+                        <b>More Attention</b>
+                        <b>More Leads</b>
+                        <b>More Sales</b>
+                        <b>More Views</b>
+                        <b>More Clicks</b>
+                        <b>More Subs</b>
                     </span>
-                </span>
-                <span>
-                    {{ __('with SaaSykit') }}
-                </span>
-
             </x-heading.h1>
+            <link rel="stylesheet" href="/css/jqueryAnimateText.css">
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js" integrity="sha512-v2CJ7UaYy4JwqLDIrZUI/4hqeoQieOmAZNXBeQyjo21dadnwR+8ZaIJVT8EE2iyI61OV8e6M8PP2/4hpQINQ/g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+            <script src="/js/jqueryAnimateText.js"></script>
 
-            <p class="m-3">{{ __('A Laravel-based boilerplate with everything you need to build an awesome SaaS.') }}</p>
+            <x-heading.h3 class="m-3">{{ __('You\'re about to unlock a new level of YouTube growth') }}</x-heading.h3>
 
-            <div class="flex flex-wrap gap-4 justify-center md:flex-row mt-6">
+            <div class="flex flex-wrap gap-4 justify-center md:flex-row mt-12">
                 <x-button-link.primary href="#pricing" class="self-center !py-3" elementType="a">
-                    {{ __('Get SaaSykit') }}
+                    {{ __('Start Your VideoBolt Test Drive') }}
                 </x-button-link.primary>
                 <x-button-link.secondary-outline href="//demo.saasykit.com" class=" self-center !py-3" rel=”nofollow” >
-                    {{ __('Check The Demo') }}
+                    {{ __('Watch the Video') }}
                 </x-button-link.secondary-outline>
 
             </div>
 
             <x-user-ratings link="#testimonials" class="items-center justify-center mt-6 relative z-40 p-4">
                 <x-slot name="avatars">
-                    <x-user-ratings.avatar src="https://unsplash.com/photos/rDEOVtE7vOs/download?ixid=M3wxMjA3fDB8MXxzZWFyY2h8Mnx8cGVyc29ufGVufDB8fHx8MTcxMzY4NDI1MHww&force=true&w=640" alt="testimonial 1"/>
-                    <x-user-ratings.avatar src="https://unsplash.com/photos/c_GmwfHBDzk/download?ixid=M3wxMjA3fDB8MXxzZWFyY2h8M3x8cGVyc29ufGVufDB8fHx8MTcxMzY4NDI1MHww&force=true&w=640" alt="testimonial 2"/>
-                    <x-user-ratings.avatar src="https://unsplash.com/photos/QXevDflbl8A/download?ixid=M3wxMjA3fDB8MXxzZWFyY2h8NHx8cGVyc29ufGVufDB8fHx8MTcxMzY4NDI1MHww&force=true&w=640" alt="testimonial 3"/>
-                    <x-user-ratings.avatar src="https://unsplash.com/photos/mjRwhvqEC0U/download?ixid=M3wxMjA3fDB8MXxzZWFyY2h8Nnx8cGVyc29ufGVufDB8fHx8MTcxMzY4NDI1MHww&force=true&w=640" alt="testimonial 4"/>
-                    <x-user-ratings.avatar src="https://unsplash.com/photos/C8Ta0gwPbQg/download?ixid=M3wxMjA3fDB8MXxzZWFyY2h8MTl8fHBlcnNvbnxlbnwwfHx8fDE3MTM2ODQyNTB8MA&force=true&w=640" alt="testimonial 5"/>
+                    <x-user-ratings.avatar src="/images/founders/primalvideo-logo-circle.png" alt="testimonial 1"/>
+                    <x-user-ratings.avatar src="/images/founders/justin-cicle.png" alt="testimonial 2"/>
+                    <x-user-ratings.avatar src="/images/founders/mike-circle.png" alt="testimonial 3"/>
+                    <x-user-ratings.avatar src="/images/founders/jack-circle.png" alt="testimonial 4"/>
                 </x-slot>
 
-                {{ __('Join the best SaaS developers who are using SaaSykit to build their SaaS.') }}
+                {{ __('Co-founded by YouTube experts with over 12 years in business, 1.8 Million subscribers, and over 190 Million views.') }}
             </x-user-ratings>
 
             <div class="mx-auto md:max-w-3xl lg:max-w-5xl text-center p-4">
@@ -64,49 +73,204 @@
         <x-section.column>
             <div x-intersect="$el.classList.add('slide-in-top')">
                 <x-heading.h6 class="text-primary-500 !uppercase">
-                    {{ __('At your fingertips') }}
+                    {{ __('No more guessing') }}
                 </x-heading.h6>
                 <x-heading.h2 class="text-primary-900">
-                    {{ __('Products, Plans & Pricing.') }}
+                    {{ __('Shows You Which Videos Get the Most Leads & Sales') }}
                 </x-heading.h2>
             </div>
 
             <p class="mt-4">
-                {{ __('Create and manage your products, plans, and pricing, set features for each plan, mark a plan as featured, and more.') }}
+                {{ __('Simple to start. Easy to understand.') }}
             </p>
 
             <p class="mt-4">
-                {{ __('Rewards your customers with discounts and manage all that from a beautiful admin panel.') }}
+                {{ __('And crazy powerful for your business.') }}
+            </p>
+
+            <p class="mt-4">
+                {{ __('Go beyond YouTube\'s views, likes, and subscribes metrics and get to the REAL metrics that matter: Clicks, Leads, Sales, Revenue.') }}
             </p>
         </x-section.column>
 
         <x-section.column>
-            <img src="{{URL::asset('/images/diamonds/features/plans.png')}}" class="rounded-2xl"/>
+            <img src="{{URL::asset('/images/screenshots/url-performance-close-2.png')}}"  class="relative z-10 hover:scale-105 transition-all duration-300" />
         </x-section.column>
 
     </x-section.columns>
 
+    <div class="text-center pt-6 mx-auto max-w-5xl ">
+        <img src="{{URL::asset('/images/screenshots/performance-detail.png')}}" >
+    </div>
+
     <x-section.columns class="max-w-none md:max-w-6xl mt-6 flex-wrap-reverse">
         <x-section.column >
-            <img src="{{URL::asset('/images/diamonds/features/checkout.png')}}" class="rounded-2xl" />
+            <img src="{{URL::asset('/images/screenshots/video-performance-close.png')}}" class="relative z-10 hover:scale-105 transition-all duration-300" />
         </x-section.column>
 
         <x-section.column>
             <div x-intersect="$el.classList.add('slide-in-top')">
                 <x-heading.h6 class="text-primary-500 !uppercase">
-                    {{ __('Buttery smooth') }}
+                    {{ __('Trends Become Obvious') }}
                 </x-heading.h6>
                 <x-heading.h2 class="text-primary-900">
-                    {{ __('Beautiful checkout process.') }}
+                    {{ __('Shows you video performance over time') }}
                 </x-heading.h2>
             </div>
 
             <p class="mt-4">
-                {{ __('In a few clicks, your customers can subscribe to your service using a beautiful checkout page that shows all the details of the plan they are subscribing to, allowing them to add a coupon code if they have one, and choose their payment method.') }}
+                {{ __('No more digging through Google Analytics in search of the numbers you need.') }}
+            </p>
+
+            <p class="mt-4">
+                {{ __('Now the critical business metrics you need are right at your fingertips.') }}
             </p>
         </x-section.column>
 
     </x-section.columns>
+
+    <div class="text-center mt-24" x-intersect="$el.classList.add('slide-in-top')">
+        
+        <x-heading.h2 class="text-primary-900">
+            {{ __('Newbie Friendly...') }}
+            <br />
+            {{ __('Yet Powerful Enough for the Pros') }}
+        </x-heading.h2>
+    </div>
+
+    <x-section.columns class="max-w-none md:max-w-6xl mt-6">
+        <x-section.column class="flex flex-col items-center justify-center text-center">
+            <x-icon.fancy name="beaker" class="w-1/4 mx-auto" />
+            <x-heading.h3 class="mx-auto pt-2">
+                {{ __('Split Testing') }}
+            </x-heading.h3>
+            <p class="mt-2">{{ __('Send visitors to 2 different pages to see which one performs best.') }}</p>
+        </x-section.column>
+
+        <x-section.column class="flex flex-col items-center justify-center text-center">
+            <x-icon.fancy name="utms" class="w-1/4 mx-auto" />
+            <x-heading.h3 class="mx-auto pt-2">
+                {{ __('UTM Tracking') }}
+            </x-heading.h3>
+            <p class="mt-2">{{ __('Extra tracking power for your smart links.') }}</p>
+        </x-section.column>
+
+        <x-section.column class="flex flex-col items-center justify-center text-center">
+            <x-icon.fancy name="iphone" class="w-1/4 mx-auto" />
+            <x-heading.h3 class="mx-auto pt-2">
+                {{ __('Device Detection') }}
+            </x-heading.h3>
+            <p class="mt-2">{{ __('You can send iOS and Android users to different pages.') }}</p>
+        </x-section.column>
+
+    </x-section.columns>
+
+    <x-section.columns class="max-w-none md:max-w-6xl mt-6">
+        <x-section.column class="flex flex-col items-center justify-center text-center">
+            <x-icon.fancy name="clock" class="w-1/4 mx-auto" />
+            <x-heading.h3 class="mx-auto pt-2">
+                {{ __('Time Expiring Links') }}
+            </x-heading.h3>
+            <p class="mt-2">{{ __('You can set a time limit for your links to expire. Great for promotions.') }}</p>
+        </x-section.column>
+
+        <x-section.column class="flex flex-col items-center justify-center text-center">
+            <x-icon.fancy name="qr" class="w-1/4 mx-auto" />
+            <x-heading.h3 class="mx-auto pt-2">
+                {{ __('QR Codes') }}
+            </x-heading.h3>
+            <p class="mt-2">{{ __('Create QR codes for your links.') }}</p>
+        </x-section.column>
+
+        <x-section.column class="flex flex-col items-center justify-center text-center">
+            <x-icon.fancy name="lock" class="w-1/4 mx-auto" />
+            <x-heading.h3 class="mx-auto pt-2">
+                {{ __('Password Protection') }}
+            </x-heading.h3>
+            <p class="mt-2">{{ __('Protect your links with a password.') }}</p>
+        </x-section.column>
+
+    </x-section.columns>
+
+
+
+    
+
+
+    <div class="text-center mt-24 px-4" x-intersect="$el.classList.add('slide-in-top')">
+        <x-heading.h6 class="text-primary-500 !uppercase">
+            {{ __('Plus...') }}
+        </x-heading.h6>
+        <x-heading.h2 class="text-primary-900">
+            {{ __('Grows Your Email List') }}
+            <br />
+            {{ __(' with Beautiful Download Pages') }}
+        </x-heading.h2>
+    </div>
+
+    <p class="text-center py-4">{{ __('In just a few minutes you\'ll be up and running with a download area that turns your viewers into email subscribers') }}</p>
+
+    <div class="text-center pt-6 mx-auto max-w-5xl ">
+        <img src="{{URL::asset('/images/screenshots/yt-to-optin-4.png')}}" >
+    </div>
+
+    <x-section.block class="mt-12 bg-secondary-100/25 relative overflow-hidden">
+        <div class="bg-secondary-900  w-40 h-40 md:w-96 md:h-96 rounded-3xl absolute opacity-5 z-0 -right-16 -bottom-16 md:-right-56 md:-bottom-10 rotate-45">
+
+        </div>
+        <div class="bg-secondary-900  w-40 h-40 md:w-96 md:h-96 rounded-3xl absolute opacity-10 z-0 -right-16 -bottom-0 md:-right-56 md:-bottom-32 rotate-45">
+
+        </div>
+
+        <x-section.columns class="mt-8">
+            <x-section.column>
+                <div x-intersect="$el.classList.add('slide-in-top')">
+                    <x-heading.h6 class="text-secondary-700 !uppercase">
+                        {{ __('Newbie Friendly') }}
+                    </x-heading.h6>
+                    <x-heading.h2 class="text-primary-950">
+                        {{ __('Copy & Paste Easy to Use') }}
+                    </x-heading.h2>
+                </div>
+
+                <div class="text-primary-950/75">
+                    <p class="mt-4">
+                        {{ __('If you can describe your download, you have all the skill you need to create a beautiful page for your subscribers.') }}
+                    </p>
+                </div>
+            </x-section.column>
+
+            <x-section.column>
+                <img src="{{URL::asset('/images/screenshots/edit-page-3.png')}}" dir="right" class="relative z-10 hover:scale-105 transition-all duration-300">
+            </x-section.column>
+
+        </x-section.columns>
+        <x-section.columns class="max-w-none md:max-w-6xl mt-12  flex-wrap-reverse">
+            <x-section.column >
+                <img src="{{URL::asset('/images/screenshots/customize-content-settings.png')}}" class="relative z-10 hover:scale-105 transition-all duration-300" />
+            </x-section.column>
+
+            <x-section.column>
+                <div x-intersect="$el.classList.add('slide-in-top')">
+                    <x-heading.h6 class="text-secondary-700 !uppercase">
+                        {{ __('Your brand') }}
+                    </x-heading.h6>
+                    <x-heading.h2 class="text-primary-950">
+                        {{ __('Customized to Your Brand') }}
+                    </x-heading.h2>
+                </div>
+
+                <div class="text-primary-950/75">
+                    <p class="mt-4">
+                        {{ __('VideoBolt automatically pulls in your YouTube banner, logo, and colors to make your members area personalized to you in the blink of an eye.') }}
+                    </p>
+
+                   
+                </div>
+            </x-section.column>
+
+        </x-section.columns>
+    </x-section.block>
 
     <x-section.block class="mt-32 bg-primary-950 relative overflow-hidden">
 
@@ -121,19 +285,19 @@
             <x-section.column>
                 <div x-intersect="$el.classList.add('slide-in-top')">
                     <x-heading.h6 class="text-primary-200 !uppercase">
-                        {{ __('a solid SaaS') }}
+                        {{ __('Boosts your revenue') }}
                     </x-heading.h6>
                     <x-heading.h2 class="text-white">
-                        {{ __('Subscriptions & One-time purchases.') }}
+                        {{ __('Resource page with affiliate links') }}
                     </x-heading.h2>
                 </div>
 
                 <div class="text-primary-50/75">
                     <p class="mt-4">
-                        {{ __('Easily offer your customers subscription-based & one-time purchase products with SaaSykit. All the webhook handling, subscription management, and billing are already set up for you in a beautiful and easy-to-use admin panel.') }}
+                        {{ __('VideoBolt creates a beautiful resource page you can link to from all of your videos, so you can earn affiliate commissions from the products you recommend.') }}
                     </p>
                     <p class="mt-4">
-                        {{ __('Collect payments with Stripe and Paddle, and manage your customers with ease.') }}
+                        {{ __('And you get boilerplate disclaimer text automatically added to your resource page - which you can customize.') }}
                     </p>
                 </div>
             </x-section.column>
@@ -143,137 +307,27 @@
             </x-section.column>
 
         </x-section.columns>
-        <x-section.columns class="max-w-none md:max-w-6xl mt-12  flex-wrap-reverse">
-            <x-section.column class="flex items-center justify-center">
-                @svg('diamonds/brush', 'h-48 w-48 md:h-60 md:w-60 text-primary-200 relative hover:scale-105 transition-all duration-300')
-            </x-section.column>
-
-            <x-section.column>
-                <div x-intersect="$el.classList.add('slide-in-top')">
-                    <x-heading.h6 class="text-primary-200 !uppercase">
-                        {{ __('Your Brand, Your Colors') }}
-                    </x-heading.h6>
-                    <x-heading.h2 class="text-white">
-                        {{ __('Customize Everything.') }}
-                    </x-heading.h2>
-                </div>
-
-                <div class="text-primary-50/75">
-                    <p class="mt-4">
-                        {{ __('Customize the primary & secondary colors of your website, error pages, email templates, fonts, social sharing cards, favicons, and more.') }}
-                    </p>
-
-                    <p class="mt-4">
-                        {{ __('Based on the popular TailwindCSS, you can easily customize the look and feel of your SaaS application.') }}
-                    </p>
-                </div>
-            </x-section.column>
-
-        </x-section.columns>
+        
 
 
     </x-section.block>
-
-    <div class="text-center mt-24 mx-4" id="tech-stack">
-        <x-heading.h6 class="text-primary-500 !uppercase">
-            {{ __('The best of the best') }}
-        </x-heading.h6>
-        <x-heading.h2 class="text-primary-900">
-            {{ __('A solid tech stack') }}
-        </x-heading.h2>
-    </div>
-
-
-    <div class="text-center p-4 mx-auto">
-        <p >{{ __('Laravel, TailwindCSS, Livewire, AlpineJS & FilamentPhp') }}</p>
-
-        <div class="flex flex-wrap items-center justify-center gap-12 mt-8">
-            <img src="{{URL::asset('/images/diamonds/tech-stack/laravel.svg')}}" class="h-6 md:h-8 hover:cursor-pointer hover:scale-103 hover:opacity-100 transition grayscale hover:grayscale-0 opacity-50" />
-            <img src="{{URL::asset('/images/diamonds/tech-stack/filament.avif')}}" class="h-6 md:h-8 hover:cursor-pointer hover:scale-103 hover:opacity-100 transition grayscale hover:grayscale-0 opacity-50" />
-            <img src="{{URL::asset('/images/diamonds/tech-stack/tailwindcss.svg')}}" class="h-6 md:h-8 hover:cursor-pointer hover:scale-103 hover:opacity-100 transition grayscale hover:grayscale-0 opacity-50" />
-            <img src="{{URL::asset('/images/diamonds/tech-stack/livewire.png')}}" class="h-12 md:h-16 hover:cursor-pointer hover:scale-103 hover:opacity-100 transition grayscale hover:grayscale-0 opacity-50" />
-            <img src="{{URL::asset('/images/diamonds/tech-stack/alpinejs.svg')}}" class="h-8 md:h-10 hover:cursor-pointer hover:scale-103 hover:opacity-100 transition grayscale hover:grayscale-0 opacity-50" />
-        </div>
-
-    </div>
-
-    <x-section.block class="mt-32 bg-secondary-100/25 relative overflow-hidden">
-        <div class="bg-secondary-900  w-40 h-40 md:w-96 md:h-96 rounded-3xl absolute opacity-5 z-0 -right-16 -bottom-16 md:-right-56 md:-bottom-10 rotate-45">
-
-        </div>
-        <div class="bg-secondary-900  w-40 h-40 md:w-96 md:h-96 rounded-3xl absolute opacity-10 z-0 -right-16 -bottom-0 md:-right-56 md:-bottom-32 rotate-45">
-
-        </div>
-
-        <x-section.columns class="mt-8">
-            <x-section.column>
-                <div x-intersect="$el.classList.add('slide-in-top')">
-                    <x-heading.h6 class="text-secondary-700 !uppercase">
-                        {{ __('SaaS Stats') }}
-                    </x-heading.h6>
-                    <x-heading.h2 class="text-primary-950">
-                        {{ __('Know your numbers') }}
-                    </x-heading.h2>
-                </div>
-
-                <div class="text-primary-950/75">
-                    <p class="mt-4">
-                        {{ __('View your MRR (monthly recurring revenue), Churn rates, ARPU (average revenue per user), and other SaaS metrics right inside your admin panel.') }}
-                    </p>
-                </div>
-            </x-section.column>
-
-            <x-section.column>
-                <img src="{{URL::asset('/images/diamonds/features/stats.png')}}" dir="right" class="relative z-10 hover:scale-105 transition-all duration-300">
-            </x-section.column>
-
-        </x-section.columns>
-        <x-section.columns class="max-w-none md:max-w-6xl mt-12  flex-wrap-reverse">
-            <x-section.column >
-                <img src="{{URL::asset('/images/diamonds/features/blog.png')}}" class="relative z-10 hover:scale-105 transition-all duration-300" />
-            </x-section.column>
-
-            <x-section.column>
-                <div x-intersect="$el.classList.add('slide-in-top')">
-                    <x-heading.h6 class="text-secondary-700 !uppercase">
-                        {{ __('Content is king') }}
-                    </x-heading.h6>
-                    <x-heading.h2 class="text-primary-950">
-                        {{ __('A ready Blog.') }}
-                    </x-heading.h2>
-                </div>
-
-                <div class="text-primary-950/75">
-                    <p class="mt-4">
-                        {{ __('Customize the primary & secondary colors of your website, error pages, email templates, fonts, social sharing cards, favicons, and more.') }}
-                    </p>
-
-                    <p class="mt-4">
-                        {{ __('Based on the popular TailwindCSS, you can easily customize the look and feel of your SaaS application.') }}
-                    </p>
-                </div>
-            </x-section.column>
-
-        </x-section.columns>
-    </x-section.block>
-
 
     <div class="text-center mt-24 px-4" x-intersect="$el.classList.add('slide-in-top')">
         <x-heading.h6 class="text-primary-500 !uppercase">
-            {{ __('Can\'t get more beautiful') }}
+            {{ __('Got Clients? We got you covered!') }}
         </x-heading.h6>
         <x-heading.h2 class="text-primary-900">
-            {{ __('A stunning Admin Panel.') }}
+            {{ __('If You\'re an Agency You Can') }}
+            <br />
+            {{ __('Manage All Your Clients') }}
+            <br />
+            {{ __('With VideoBolt') }}
         </x-heading.h2>
     </div>
 
-    <p class="text-center py-4">{{ __('Manage your SaaS application from a beautiful admin panel powered by Filament') }}</p>
+    <p class="text-center py-4">{{ __('We have plans that give you as many client workspaces as you want, and you can invite your team too.') }}</p>
 
-    <div class="text-center pt-6 mx-auto max-w-5xl ">
-        <img src="{{URL::asset('/images/diamonds/features/admin-panel.png')}}" >
-    </div>
-
-    <x-section.block class="mt-24 relative overflow-hidden">
+    <x-section.block class="mt-12 relative overflow-hidden">
 
         <div class="bg-primary-300  w-40 h-40 md:w-96 md:h-96 rounded-3xl absolute opacity-10 z-0 -right-24 md:-right-56 top-22 md:top-32 rotate-45">
 
@@ -286,23 +340,21 @@
             <x-section.column>
                 <div x-intersect="$el.classList.add('slide-in-top')">
                     <x-heading.h6 class="text-primary-500 !uppercase">
-                        {{ __('Connect with customers') }}
+                        {{ __('Agency Feature') }}
                     </x-heading.h6>
                     <x-heading.h2 class="text-primary-900">
-                        {{ __('Send & Customize Emails.') }}
+                        {{ __('Multiple Client Workspaces') }}
                     </x-heading.h2>
                 </div>
 
                 <p class="mt-4">
-                    {{ __('Choose your preferred email service from options like Mailgun, Postmark, and Amazon SES to communicate with your customers.') }}
+                    {{ __('No matter how many clients you have, our plans and platform can give you a separate workspace for each client.') }}
                 </p>
-                <p class="mt-4">
-                    {{ __('SaaSykit comes with a beautiful email template out of the box that takes your brand colors into consideration, along with the typical emails for customer registration, verification, resetting password, etc set up for you.') }}
-                </p>
+                
             </x-section.column>
 
             <x-section.column>
-                <img src="{{URL::asset('/images/diamonds/features/email.png')}}" class="relative z-10 hover:scale-105 transition-all duration-300"  />
+                <img src="{{URL::asset('/images/screenshots/tenant-closeup.png')}}" class="relative z-10 hover:scale-105 transition-all duration-300"  />
             </x-section.column>
 
         </x-section.columns>
@@ -310,21 +362,25 @@
         <x-section.columns class="max-w-none md:max-w-6xl pt-8 flex-wrap-reverse">
 
             <x-section.column>
-                <img src="{{URL::asset('/images/diamonds/features/login.png')}}" class="relative z-10 hover:scale-105 transition-all duration-300"  />
+                <img src="{{URL::asset('/images/screenshots/invite-team-member.png')}}" class="relative z-10 hover:scale-105 transition-all duration-300"  />
             </x-section.column>
 
             <x-section.column>
                 <div x-intersect="$el.classList.add('slide-in-top')">
                     <x-heading.h6 class="text-primary-500 !uppercase">
-                        {{ __('Modern Authentication') }}
+                        {{ __('Agency Feature') }}
                     </x-heading.h6>
                     <x-heading.h2 class="text-primary-900">
-                        {{ __('Login, Registration & Social login.') }}
+                        {{ __('Manage multiple team members') }}
                     </x-heading.h2>
                 </div>
 
                 <p class="mt-4">
-                    {{ __('SaaSykit includes built-in user authentication, supporting both traditional email/password authentication and social login options such as Google, Facebook, Twitter, Github, LinkedIn, and more.') }}
+                    {{ __('As your business grows, VideoBolt will grow with you.') }}
+                </p>
+
+                <p class="mt-4">
+                    {{ __('You can invite team members and control their permissions. When a team members leaves you can easily shut off their access.') }}
                 </p>
 
                 <p class="pt-4">
@@ -345,77 +401,51 @@
     </x-section.block>
 
 
-    <div class="text-center mt-24" x-intersect="$el.classList.add('slide-in-top')">
-        <x-heading.h6 class="text-primary-500 !uppercase">
-            {{ __('Oh, we\'re not done yet') }}
+    <div class="mx-4 mt=16">
+        <x-heading.h6 class="text-center mt-24 text-primary-500 !uppercase" id="pricing">
+            {{ __('Decades of Experience') }}
         </x-heading.h6>
-        <x-heading.h2 class="text-primary-900">
-            {{ __('And a whole lot more') }}
+        <x-heading.h2 class="text-primary-900 text-center">
+            {{ __('As a VideoBolt Client... ') }}
+            <br />
+            {{ __('You have us in your corner') }}
         </x-heading.h2>
+        <p class="text-center py-4">We know what we're doing and we have your back</p>
     </div>
 
-    <x-section.columns class="max-w-none md:max-w-6xl mt-6">
-        <x-section.column class="flex flex-col items-center justify-center text-center">
-            <x-icon.fancy name="users" class="w-1/4 mx-auto" />
-            <x-heading.h3 class="mx-auto pt-2">
-                {{ __('Users & Roles') }}
-            </x-heading.h3>
-            <p class="mt-2">{{ __('Manage your users, create roles and assign permissions to your users.') }}</p>
-        </x-section.column>
+    <div class="text-center pt-6 mx-auto max-w-5xl ">
+        <img src="{{URL::asset('/images/screenshots/brothers-cafe-credentials-2.png')}}" >
+    </div>
 
-        <x-section.column class="flex flex-col items-center justify-center text-center">
-            <x-icon.fancy name="translatable" class="w-1/4 mx-auto" />
-            <x-heading.h3 class="mx-auto pt-2">
-                {{ __('Fully translatable') }}
-            </x-heading.h3>
-            <p class="mt-2">{{ __('Translate your application to any language you want.') }}</p>
-        </x-section.column>
+    <div class="text-center pt-6 mx-auto max-w-5xl mt-12">
+        <img src="{{URL::asset('/images/screenshots/jack-credentials-2.png')}}" >
+    </div>
 
-        <x-section.column class="flex flex-col items-center justify-center text-center">
-            <x-icon.fancy name="seo" class="w-1/4 mx-auto" />
-            <x-heading.h3 class="mx-auto pt-2">
-                {{ __('Sitemap & SEO') }}
-            </x-heading.h3>
-            <p class="mt-2">{{ __('Auto-generated sitemap and SEO optimization out of the box.') }}</p>
-        </x-section.column>
-
-    </x-section.columns>
-
-    <x-section.columns class="max-w-none md:max-w-6xl mt-6">
-        <x-section.column class="flex flex-col items-center justify-center text-center">
-            <x-icon.fancy name="user-dashboard" class="w-1/4 mx-auto" />
-            <x-heading.h3 class="mx-auto pt-2">
-                {{ __('User Dashboard') }}
-            </x-heading.h3>
-            <p class="mt-2">{{ __('Users can manage their subscriptions, change payment method, upgrade plan, cancel subscription alone.') }}</p>
-        </x-section.column>
-
-        <x-section.column class="flex flex-col items-center justify-center text-center">
-            <x-icon.fancy name="tool" class="w-1/4 mx-auto" />
-            <x-heading.h3 class="mx-auto pt-2">
-                {{ __('Highly customizable') }}
-            </x-heading.h3>
-            <p class="mt-2">{{ __('Manage your SaaS settings from within the admin panel. No need to redeploy app for simple changes anymore.') }}</p>
-        </x-section.column>
-
-        <x-section.column class="flex flex-col items-center justify-center text-center">
-            <x-icon.fancy name="development" class="w-1/4 mx-auto" />
-            <x-heading.h3 class="mx-auto pt-2">
-                {{ __('Developer-friendly') }}
-            </x-heading.h3>
-            <p class="mt-2">{{ __('Built with developers in mind, uses best coding practices. Offers handlers & events and automated tests covering critical components of the application.') }}</p>
-        </x-section.column>
-
-    </x-section.columns>
-
+    <!-- Guarantee -->
 
     <div class="mx-4 mt=16">
         <x-heading.h6 class="text-center mt-24 text-primary-500 !uppercase" id="pricing">
-            {{ __('Launch your SaaS Today') }}
+            {{ __('Give it a go') }}
         </x-heading.h6>
         <x-heading.h2 class="text-primary-900 text-center">
-            {{ __('Ship Your SaaS in Days') }}
+            {{ __('Test Drive VideoBolt') }}
+            <br />
+            {{ __('For a whopping 44 days') }}
         </x-heading.h2>
+        
+    </div>
+    <div class="text-center pt-6 mx-auto max-w-5xl ">
+        <img src="{{URL::asset('/images/screenshots/guarantee-period.png')}}" >
+    </div>
+
+    <div class="mx-4 mt=16">
+        <x-heading.h6 class="text-center mt-24 text-primary-500 !uppercase" id="pricing">
+            {{ __('Choose Your Plan') }}
+        </x-heading.h6>
+        <x-heading.h2 class="text-primary-900 text-center">
+            {{ __('Start Your 14 Day Free Trial') }}
+        </x-heading.h2>
+        <p class="text-center py-4">Pricing plan goes here</p>
     </div>
 
     <div class="pricing">
@@ -436,50 +466,41 @@
     <div class="max-w-none md:max-w-6xl mx-auto">
         <x-accordion class="mt-4 p-8">
             <x-accordion.item active="true" name="faqs">
-                <x-slot name="title">{{ __('What is SaaSykit?') }}</x-slot>
+                <x-slot name="title">{{ __('What is VideoBolt?') }}</x-slot>
 
                 <p>
-                    {{ __('SaaSykit is a complete SaaS starter kit that includes everything you need to start your SaaS business. It comes ready with a huge list of reusable components, a complete admin panel, user dashboard, user authentication, user & role management, plans & pricing, subscriptions, payments, emails, and more.') }}
+                    {{ __('VideoBolt is software built to help you grow your YouTube channel. It\'s cofounded by YouTube experts Justin and Mike Brown of Primal Video who have 1.8 million subscribers and over 190 million views. VideoBolt gives you the information you need to know which videos are bringing you the most leads and sales. It also helps makes it easier than ever to deliver special downloads and bonus content so you can build a true asset in your business that builds trust and increases your sales.') }}
                 </p>
 
             </x-accordion.item>
 
             <x-accordion.item active="false" name="faqs">
-                <x-slot name="title">{{ __('What features does SaaSykit offer?') }}</x-slot>
+                <x-slot name="title">{{ __('What features does VideoBolt offer?') }}</x-slot>
 
                 <p class="mt-4">
-                    {{ __('Here are some of the features included in SaaSykit in a nutshell:') }}
+                    {{ __('Here are some of the features included in VideoBolt in a nutshell:') }}
                 </p>
 
                 <ul class="mt-4 list-disc ms-4 ps-4">
-                    <li>{{ __('Customize Styles: Customize the styles &amp; colors, error page of your application to fit your brand.') }}</li>
-                    <li>{{ __('Product, Plans &amp; Pricing: Create and manage your products, plans, and pricing from a beautiful and easy-to-use admin panel.') }}</li>
-                    <li>{{ __('Beautiful checkout process: Your customers can subscribe to your plans from a beautiful checkout process.') }}</li>
-                    <li>{{ __('Huge list of ready-to-use components: Plans &amp; Pricing, hero section, features section, testimonials, FAQ, Call to action, tab slider, and much more.') }}</li>
-                    <li>{{ __('User authentication: Comes with user authentication out of the box, whether classic email/password or social login (Google, Facebook, Twitter, Github, LinkedIn, and more).') }}</li>
-                    <li>{{ __('Discounts: Create and manage your discounts and reward your customers.') }}</li>
-                    <li>{{ __('SaaS metric stats: View your MRR, Churn rates, ARPU, and other SaaS metrics.') }}</li>
-                    <li>{{ __('Multiple payment providers: Stripe, Paddle, and more coming soon.') }}</li>
-                    <li>{{ __('Multiple email providers: Mailgun, Postmark, Amazon SES, and more coming soon.') }}</li>
-                    <li>{{ __('Blog: Create and manage your blog posts.') }}</li>
-                    <li>{{ __('User &amp; Role Management: Create and manage your users and roles, and assign permissions to your users.') }}</li>
-                    <li>{{ __('Fully translatable: Translate your application to any language you want.') }}</li>
-                    <li>{{ __('Sitemap &amp; SEO: Sitemap and SEO optimization out of the box.') }}</li>
-                    <li>{{ __('Admin Panel: Manage your SaaS application from a beautiful admin panel powered by ') }} <a href="https://filamentphp.com/" target="_blank" rel="noopener noreferrer">Filament</a>.</li>
-                    <li>{{ __('User Dashboard: Your customers can manage their subscriptions, change payment method, upgrade plan, cancel subscription, and more from a beautiful user dashboard powered by') }} <a href="https://filamentphp.com/" target="_blank" rel="noopener noreferrer">Filament</a>.</li>
-                    <li>{{ __('Automated Tests: Comes with automated tests for critical components of the application.') }}</li>
-                    <li>{{ __('One-line deployment: Provision your server and deploy your application easily with integrated') }} <a href="https://deployer.org/" target="_blank" rel="noopener noreferrer">Deployer</a> {{ __('  support.') }}</li>
-                    <li>{{ __('Developer-friendly: Built with developers in mind, uses best coding practices.') }}</li>
+                    <li><b>{{ __('Detailed Video Stats: ') }}</b>{{ __('Shows you key metrics for any video on your channel including leads, sales, revenue.') }}</li>
+                    <li><b>{{ __('URL Traffic: ') }}</b>{{ __('For key pages like your email signup forms or checkout pages see side by side comparisons of your videos. Finaly see which videos are sending the most clicks, leads, and sales.') }}</li>
+                    <li><b>{{ __('Time Saving Automation: ') }}</b>{{ __('Converts any links in your existing video descriptions over to VideoBolt smart links.') }}</li>
+                    <li><b>{{ __('Subscriber\'s Only Content: ') }}</b>{{ __('Delivers downloads, free guides, checklists, blueprints and resources to your YouTube subscribers. Grows your email list at the same time.') }}</li>
+                    <li><b>{{ __('Simple Conversion Setup: ') }}</b>{{ __('If you can copy and paste, you can start tracking your leads and sales.') }}</li>
+                    <li><b>{{ __('Time Expiring Links: ') }}</b>{{ __('Great for season or one time promotions like Black Friday, Cyber Monday, or product launch announcements.') }}</li>
+                    <li><b>{{ __('Resource Page: ') }}</b>{{ __('Quickly create a resource page and use affiliate links to generate passive revenue. No page building required!') }}</li>
+                    <li><b>{{ __('Profile Page: ') }}</b>{{ __('Guides your YouTube subscribers to your other social media accounts, websites, products, and podcasts.') }}</li>
+
                     <li>{{ __('And much more...') }}</li>
                 </ul>
 
             </x-accordion.item>
 
             <x-accordion.item active="false" name="faqs">
-                <x-slot name="title">{{ __('Which payment providers are supported?') }}</x-slot>
+                <x-slot name="title">{{ __('What if I have more than one channel?') }}</x-slot>
 
                 <p>
-                    {{ __('SaaSykit supports Stripe and Paddle out of the box. You can easily add more payment providers by extending the code. More payment method will be added in the future as well (e.g. Lemon Squeezy)') }}
+                    {{ __('Depending on which plan you choose, we can give you extra workspaces where you can use VideoBolt on multiple YouTube channels.') }}
                 </p>
 
             </x-accordion.item>
@@ -488,80 +509,50 @@
                 <x-slot name="title">{{ __('Do you offer support?') }}</x-slot>
 
                 <p>
-                    {{ __('Of course! we offer email and discord support to help you with any issues you might face or questions you have. Write us an email at') }} <a href="mailto:{{config('app.support_email')}}" class="text-primary-500 hover:underline">{{config('app.support_email')}}</a> {{ __('or join our') }} <a href="{{config('app.social_links.discord')}}">{{ __('discord server')}}</a> {{ __('to get help.')}}
+                    {{ __('Of course! We offer email support and we have extensive documentation. You can contact our support team from within the software.')}}
                 </p>
 
             </x-accordion.item>
 
             <x-accordion.item active="false" name="faqs">
-                <x-slot name="title">{{'What Tech stack is used?'}}</x-slot>
+                <x-slot name="title">{{'Do you offer a trial?'}}</x-slot>
 
                 <p>
-                    {{ __('SaaSykit is built on top of') }} <a href="https://laravel.com" target="_blank">Laravel</a> {{ __('Laravel, the most popular PHP framework, and') }} <a target="_blank" href="https://filamentphp.com/">Filament</a> {{ __(', a beautiful and powerful admin panel for Laravel. It also uses TailwindCSS, AlpineJS, and Livewire.')}}
-                </p>
-                <p class="mt-4">
-                    {{ __('You can use your favourite database (MySQL, PostgreSQL, SQLite) and your favourite queue driver (Redis, Amazon SQS, etc).')}}
+                    {{ __('Yes! We have a 14 day free trial with all of our plans.')}}
                 </p>
 
             </x-accordion.item>
 
-            <x-accordion.item active="false" name="faqs">
-                <x-slot name="title">{{'How often is SaaSykit updated?'}}</x-slot>
-
-                <p>
-                    {{ __('SaaSykit is updated regularly to keep up with the latest Laravel and Filament versions, and to add new features and improvements.')}}
-                </p>
-
-            </x-accordion.item>
+            
 
             <x-accordion.item active="false" name="faqs">
                 <x-slot name="title">{{'Do you offer refunds?'}}</x-slot>
 
                 <p>
-                    {{ __('Yes, we offer a 14-day money-back guarantee. If you are not satisfied with SaaSykit, you can request a refund within 14 days of your purchase. Please write us an email at') }} <a href="mailto:{{config('app.support_email')}}" class="text-primary-500 hover:underline">{{config('app.support_email')}}</a> {{ __('to request a refund.')}}
+                    {{ __('Yes, we offer a 30-day money-back guarantee... on top of the 14 day free trial. Which means from the moment you start your trial you have 44 days to try VideoBolt, see how you like it, and make your decision.')}}
                 </p>
 
             </x-accordion.item>
 
             <x-accordion.item active="false" name="faqs">
-                <x-slot name="title">{{'Where can I host my SaaS application?'}}</x-slot>
+                <x-slot name="title">{{'What if I\'m not "tech savvy"?'}}</x-slot>
 
                 <p>
-                    {{ __('You can host your SaaS application on any server that supports PHP, such as DigitalOcean, AWS, Hetzner, Linode, and more. You can also use a platform like Laravel Forge to manage your server and deploy your application.')}}
+                    {{ __('No worries at all! You\'re in good company because many of our clients and community members feel the same way. That\'s why we built VideoBolt to be super simple to use.')}}
+                </p>
+                <p>
+                    {{ __('And to make sure you know it\'s going to fit your needs and be simple to use... we offer a 14 day free trial.')}}
                 </p>
 
             </x-accordion.item>
 
-            <x-accordion.item active="false" name="faqs">
-                <x-slot name="title">{{'Is there a demo available?'}}</x-slot>
-
-                <p>
-                    {{ __('Yes, a demo is available to help you get a feel of SaaSykit. You can find the demo') }} <a href="https://saasykit.com/demo" target="_blank" rel=”nofollow” >here</a>.
-                </p>
-
-            </x-accordion.item>
+           
 
             <x-accordion.item active="false" name="faqs">
                 <x-slot name="title">{{'Is there documentation available?'}}</x-slot>
 
                 <p>
-                    {{ __('Yes, an extensive documentation is available to help you get started with SaaSykit. You can find the documentation ')}} <a href="https://saasykit.com/docs" target="_blank">here</a>.
-                </p>
-
-            </x-accordion.item>
-
-            <x-accordion.item active="false" name="faqs">
-                <x-slot name="title">{{'How is SaaSykit different from just using Laravel directly?'}}</x-slot>
-
-                <p>
-                    {{__('SaaSykit is built on top of Laravel with the intention to save you time and effort by not having to build everything needed for a modern SaaS from scratch, like payment provider integration, subscription management, user authentication, user & role management, having a beautiful admin panel, a user dashboard to manage their subscriptions/payments, and more.')}}
-                </p>
-                <p class="mt-4">
-                    {{__('You can choose to base your SaaS on vanilla Laravel and build everything from scratch if you prefer and that is totally fine, but you will need a few months to build what SaaSykit offers out of the box, then on top of that, you will need to start to build your actual SaaS application.')}}
-                </p>
-
-                <p class="mt-4">
-                    {{__('SaaSykit is a great starting point for your SaaS application, it is built with best coding practices, and it is developer-friendly. It is also built with the intention to be easily customizable and extendable. Any developer who is familiar with Laravel will feel right at home.')}}
+                    {{ __('Yes, an extensive documentation is available to help you get started with VideoBolt. You can find the documentation ')}} <a href="{{ config('app.documentation.support') }}" target="_blank">here</a>.
                 </p>
 
             </x-accordion.item>
@@ -571,19 +562,21 @@
         <div class="text-center">
             <x-section.outro>
                 <x-heading.h6 class="text-primary-50">
-                    {{ __('Ship fast & don\'t reinvent the wheel') }}
+                    {{ __('Grow your YouTube channel faster than ever') }}
                 </x-heading.h6>
                 <x-heading.h2 class="text-primary-50 drop-shadow-4xl">
-                    {{ __('Build your SaaS Today') }}
+                    {{ __('Level Up Your Channel Today') }}
                 </x-heading.h2>
 
                 <p class="text-primary-100 mt-2">
-                    {{ __('SaaSykit is a SaaS boilerplate that comes packed with all components required to run a modern SaaS software.') }}
+                    {{ __('VideoBolt is powerful enough for a YouTube channel with millions of subscribers') }}
+                    <br />
+                    {{ __(' and simple enough for even the most tech-phobic newbie to use.') }}
                 </p>
 
                 <div class="mt-12">
                     <x-button-link.secondary href="/" >
-                        {{ __('Buy SaaSykit Now') }}
+                        {{ __('Start Your Test Drive of VideoBolt Now') }}
                     </x-button-link.secondary>
                 </div>
             </x-section.outro>

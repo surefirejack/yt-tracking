@@ -38,6 +38,9 @@ class DashboardPanelProvider extends PanelProvider
         return $panel
             ->id('dashboard')
             ->path('dashboard')
+            ->brandLogo(asset('images/video-bolt-dark-text.png'))
+            ->darkModeBrandLogo(asset('images/video-bolt-light-text.png'))
+            ->sidebarCollapsibleOnDesktop()
             ->colors([
                 'primary' => Color::Teal,
             ])

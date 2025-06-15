@@ -29,4 +29,9 @@ class CreateInvitation extends CreateRecord
         $tenantService = app(TenantService::class);
         $tenantService->handleAfterInvitationCreated($this->getRecord());
     }
+
+    public function getTitle(): string
+    {
+        return __('Invite a New Team Member');
+    }
 }
