@@ -129,6 +129,149 @@
 
     </x-section.columns>
 
+    <div class="text-center mt-24" x-intersect="$el.classList.add('slide-in-top')">
+        
+        <x-heading.h2 class="text-primary-900">
+            {{ __('VideoBolt is newbie friendly') }}
+            <br />
+            {{ __('but it\'s also powerful enough for the pros') }}
+        </x-heading.h2>
+    </div>
+
+    <x-section.columns class="max-w-none md:max-w-6xl mt-6">
+        <x-section.column class="flex flex-col items-center justify-center text-center">
+            <x-icon.fancy name="beaker" class="w-1/4 mx-auto" />
+            <x-heading.h3 class="mx-auto pt-2">
+                {{ __('Split Testing') }}
+            </x-heading.h3>
+            <p class="mt-2">{{ __('Send visitors to 2 different pages to see which one performs best.') }}</p>
+        </x-section.column>
+
+        <x-section.column class="flex flex-col items-center justify-center text-center">
+            <x-icon.fancy name="utms" class="w-1/4 mx-auto" />
+            <x-heading.h3 class="mx-auto pt-2">
+                {{ __('UTM Tracking') }}
+            </x-heading.h3>
+            <p class="mt-2">{{ __('Extra tracking power for your smart links.') }}</p>
+        </x-section.column>
+
+        <x-section.column class="flex flex-col items-center justify-center text-center">
+            <x-icon.fancy name="iphone" class="w-1/4 mx-auto" />
+            <x-heading.h3 class="mx-auto pt-2">
+                {{ __('Device Detection') }}
+            </x-heading.h3>
+            <p class="mt-2">{{ __('You can send iOS and Android users to different pages.') }}</p>
+        </x-section.column>
+
+    </x-section.columns>
+
+    <x-section.columns class="max-w-none md:max-w-6xl mt-6">
+        <x-section.column class="flex flex-col items-center justify-center text-center">
+            <x-icon.fancy name="clock" class="w-1/4 mx-auto" />
+            <x-heading.h3 class="mx-auto pt-2">
+                {{ __('Time Expiring Links') }}
+            </x-heading.h3>
+            <p class="mt-2">{{ __('You can set a time limit for your links to expire. Great for promotions.') }}</p>
+        </x-section.column>
+
+        <x-section.column class="flex flex-col items-center justify-center text-center">
+            <x-icon.fancy name="qr" class="w-1/4 mx-auto" />
+            <x-heading.h3 class="mx-auto pt-2">
+                {{ __('QR Codes') }}
+            </x-heading.h3>
+            <p class="mt-2">{{ __('Create QR codes for your links.') }}</p>
+        </x-section.column>
+
+        <x-section.column class="flex flex-col items-center justify-center text-center">
+            <x-icon.fancy name="lock" class="w-1/4 mx-auto" />
+            <x-heading.h3 class="mx-auto pt-2">
+                {{ __('Password Protection') }}
+            </x-heading.h3>
+            <p class="mt-2">{{ __('Protect your links with a password.') }}</p>
+        </x-section.column>
+
+    </x-section.columns>
+
+
+
+    
+
+
+    <div class="text-center mt-24 px-4" x-intersect="$el.classList.add('slide-in-top')">
+        <x-heading.h6 class="text-primary-500 !uppercase">
+            {{ __('Plus...') }}
+        </x-heading.h6>
+        <x-heading.h2 class="text-primary-900">
+            {{ __('Grows Your Email List') }}
+            <br />
+            {{ __(' with Beautiful Download Pages') }}
+        </x-heading.h2>
+    </div>
+
+    <p class="text-center py-4">{{ __('In just a few minutes you\'ll be up and running with a download area that turns your viewers into email subscribers') }}</p>
+
+    <div class="text-center pt-6 mx-auto max-w-5xl ">
+        <img src="{{URL::asset('/images/screenshots/yt-to-optin-4.png')}}" >
+    </div>
+
+    <x-section.block class="mt-12 bg-secondary-100/25 relative overflow-hidden">
+        <div class="bg-secondary-900  w-40 h-40 md:w-96 md:h-96 rounded-3xl absolute opacity-5 z-0 -right-16 -bottom-16 md:-right-56 md:-bottom-10 rotate-45">
+
+        </div>
+        <div class="bg-secondary-900  w-40 h-40 md:w-96 md:h-96 rounded-3xl absolute opacity-10 z-0 -right-16 -bottom-0 md:-right-56 md:-bottom-32 rotate-45">
+
+        </div>
+
+        <x-section.columns class="mt-8">
+            <x-section.column>
+                <div x-intersect="$el.classList.add('slide-in-top')">
+                    <x-heading.h6 class="text-secondary-700 !uppercase">
+                        {{ __('Newbie Friendly') }}
+                    </x-heading.h6>
+                    <x-heading.h2 class="text-primary-950">
+                        {{ __('Copy & Paste Easy to Use') }}
+                    </x-heading.h2>
+                </div>
+
+                <div class="text-primary-950/75">
+                    <p class="mt-4">
+                        {{ __('If you can describe your download, you have all the skill you need to create a beautiful page for your subscribers.') }}
+                    </p>
+                </div>
+            </x-section.column>
+
+            <x-section.column>
+                <img src="{{URL::asset('/images/screenshots/edit-page-3.png')}}" dir="right" class="relative z-10 hover:scale-105 transition-all duration-300">
+            </x-section.column>
+
+        </x-section.columns>
+        <x-section.columns class="max-w-none md:max-w-6xl mt-12  flex-wrap-reverse">
+            <x-section.column >
+                <img src="{{URL::asset('/images/screenshots/customize-content-settings.png')}}" class="relative z-10 hover:scale-105 transition-all duration-300" />
+            </x-section.column>
+
+            <x-section.column>
+                <div x-intersect="$el.classList.add('slide-in-top')">
+                    <x-heading.h6 class="text-secondary-700 !uppercase">
+                        {{ __('Your brand') }}
+                    </x-heading.h6>
+                    <x-heading.h2 class="text-primary-950">
+                        {{ __('Customized to Your Brand') }}
+                    </x-heading.h2>
+                </div>
+
+                <div class="text-primary-950/75">
+                    <p class="mt-4">
+                        {{ __('VideoBolt automatically pulls in your YouTube banner, logo, and colors to make your members area personalized to you in the blink of an eye.') }}
+                    </p>
+
+                   
+                </div>
+            </x-section.column>
+
+        </x-section.columns>
+    </x-section.block>
+
     <x-section.block class="mt-32 bg-primary-950 relative overflow-hidden">
 
         <div class="bg-primary-50  w-40 h-40 md:w-96 md:h-96 rounded-3xl absolute opacity-10 -right-24 md:-right-56 top-22 md:top-32 rotate-45">
@@ -142,10 +285,10 @@
             <x-section.column>
                 <div x-intersect="$el.classList.add('slide-in-top')">
                     <x-heading.h6 class="text-primary-200 !uppercase">
-                        {{ __('a solid SaaS') }}
+                        {{ __('Boosts your revenue') }}
                     </x-heading.h6>
                     <x-heading.h2 class="text-white">
-                        {{ __('Subscriptions & One-time purchases.') }}
+                        {{ __('Resource page with affiliate links') }}
                     </x-heading.h2>
                 </div>
 
@@ -164,138 +307,9 @@
             </x-section.column>
 
         </x-section.columns>
-        <x-section.columns class="max-w-none md:max-w-6xl mt-12  flex-wrap-reverse">
-            <x-section.column class="flex items-center justify-center">
-                @svg('diamonds/brush', 'h-48 w-48 md:h-60 md:w-60 text-primary-200 relative hover:scale-105 transition-all duration-300')
-            </x-section.column>
-
-            <x-section.column>
-                <div x-intersect="$el.classList.add('slide-in-top')">
-                    <x-heading.h6 class="text-primary-200 !uppercase">
-                        {{ __('Your Brand, Your Colors') }}
-                    </x-heading.h6>
-                    <x-heading.h2 class="text-white">
-                        {{ __('Customize Everything.') }}
-                    </x-heading.h2>
-                </div>
-
-                <div class="text-primary-50/75">
-                    <p class="mt-4">
-                        {{ __('Customize the primary & secondary colors of your website, error pages, email templates, fonts, social sharing cards, favicons, and more.') }}
-                    </p>
-
-                    <p class="mt-4">
-                        {{ __('Based on the popular TailwindCSS, you can easily customize the look and feel of your SaaS application.') }}
-                    </p>
-                </div>
-            </x-section.column>
-
-        </x-section.columns>
+        
 
 
-    </x-section.block>
-
-    <div class="text-center mt-24 mx-4" id="tech-stack">
-        <x-heading.h6 class="text-primary-500 !uppercase">
-            {{ __('The best of the best') }}
-        </x-heading.h6>
-        <x-heading.h2 class="text-primary-900">
-            {{ __('A solid tech stack') }}
-        </x-heading.h2>
-    </div>
-
-
-    <div class="text-center p-4 mx-auto">
-        <p >{{ __('Laravel, TailwindCSS, Livewire, AlpineJS & FilamentPhp') }}</p>
-
-        <div class="flex flex-wrap items-center justify-center gap-12 mt-8">
-            <img src="{{URL::asset('/images/diamonds/tech-stack/laravel.svg')}}" class="h-6 md:h-8 hover:cursor-pointer hover:scale-103 hover:opacity-100 transition grayscale hover:grayscale-0 opacity-50" />
-            <img src="{{URL::asset('/images/diamonds/tech-stack/filament.avif')}}" class="h-6 md:h-8 hover:cursor-pointer hover:scale-103 hover:opacity-100 transition grayscale hover:grayscale-0 opacity-50" />
-            <img src="{{URL::asset('/images/diamonds/tech-stack/tailwindcss.svg')}}" class="h-6 md:h-8 hover:cursor-pointer hover:scale-103 hover:opacity-100 transition grayscale hover:grayscale-0 opacity-50" />
-            <img src="{{URL::asset('/images/diamonds/tech-stack/livewire.png')}}" class="h-12 md:h-16 hover:cursor-pointer hover:scale-103 hover:opacity-100 transition grayscale hover:grayscale-0 opacity-50" />
-            <img src="{{URL::asset('/images/diamonds/tech-stack/alpinejs.svg')}}" class="h-8 md:h-10 hover:cursor-pointer hover:scale-103 hover:opacity-100 transition grayscale hover:grayscale-0 opacity-50" />
-        </div>
-
-    </div>
-
-    
-
-
-    <div class="text-center mt-24 px-4" x-intersect="$el.classList.add('slide-in-top')">
-        <x-heading.h6 class="text-primary-500 !uppercase">
-            {{ __('Can\'t Get Any Easier') }}
-        </x-heading.h6>
-        <x-heading.h2 class="text-primary-900">
-            {{ __('A stunning subscriber\'s Only Area') }}
-            <br />
-            {{ __(' for Content and Downloads') }}
-        </x-heading.h2>
-    </div>
-
-    <p class="text-center py-4">{{ __('In just a few minutes you\'ll be up and running with a download area that turns your viewers into email subscribers') }}</p>
-
-    <div class="text-center pt-6 mx-auto max-w-5xl ">
-        <img src="{{URL::asset('/images/screenshots/members-area-3-shots.png')}}" >
-    </div>
-
-    <x-section.block class="mt-12 bg-secondary-100/25 relative overflow-hidden">
-        <div class="bg-secondary-900  w-40 h-40 md:w-96 md:h-96 rounded-3xl absolute opacity-5 z-0 -right-16 -bottom-16 md:-right-56 md:-bottom-10 rotate-45">
-
-        </div>
-        <div class="bg-secondary-900  w-40 h-40 md:w-96 md:h-96 rounded-3xl absolute opacity-10 z-0 -right-16 -bottom-0 md:-right-56 md:-bottom-32 rotate-45">
-
-        </div>
-
-        <x-section.columns class="mt-8">
-            <x-section.column>
-                <div x-intersect="$el.classList.add('slide-in-top')">
-                    <x-heading.h6 class="text-secondary-700 !uppercase">
-                        {{ __('Newbie Friendly') }}
-                    </x-heading.h6>
-                    <x-heading.h2 class="text-primary-950">
-                        {{ __('Simple Download Pages') }}
-                    </x-heading.h2>
-                </div>
-
-                <div class="text-primary-950/75">
-                    <p class="mt-4">
-                        {{ __('If you can describe your download, you have all the skill you need to create a beautiful page for your subscribers.') }}
-                    </p>
-                </div>
-            </x-section.column>
-
-            <x-section.column>
-                <img src="{{URL::asset('/images/diamonds/features/stats.png')}}" dir="right" class="relative z-10 hover:scale-105 transition-all duration-300">
-            </x-section.column>
-
-        </x-section.columns>
-        <x-section.columns class="max-w-none md:max-w-6xl mt-12  flex-wrap-reverse">
-            <x-section.column >
-                <img src="{{URL::asset('/images/diamonds/features/blog.png')}}" class="relative z-10 hover:scale-105 transition-all duration-300" />
-            </x-section.column>
-
-            <x-section.column>
-                <div x-intersect="$el.classList.add('slide-in-top')">
-                    <x-heading.h6 class="text-secondary-700 !uppercase">
-                        {{ __('Content is king') }}
-                    </x-heading.h6>
-                    <x-heading.h2 class="text-primary-950">
-                        {{ __('A ready Blog.') }}
-                    </x-heading.h2>
-                </div>
-
-                <div class="text-primary-950/75">
-                    <p class="mt-4">
-                        {{ __('Customize the primary & secondary colors of your website, error pages, email templates, fonts, social sharing cards, favicons, and more.') }}
-                    </p>
-
-                    <p class="mt-4">
-                        {{ __('Based on the popular TailwindCSS, you can easily customize the look and feel of your SaaS application.') }}
-                    </p>
-                </div>
-            </x-section.column>
-
-        </x-section.columns>
     </x-section.block>
 
     <div class="text-center mt-24 px-4" x-intersect="$el.classList.add('slide-in-top')">
@@ -387,77 +401,17 @@
     </x-section.block>
 
 
-    <div class="text-center mt-24" x-intersect="$el.classList.add('slide-in-top')">
-        <x-heading.h6 class="text-primary-500 !uppercase">
-            {{ __('Oh, we\'re not done yet') }}
-        </x-heading.h6>
-        <x-heading.h2 class="text-primary-900">
-            {{ __('And a whole lot more') }}
-        </x-heading.h2>
-    </div>
-
-    <x-section.columns class="max-w-none md:max-w-6xl mt-6">
-        <x-section.column class="flex flex-col items-center justify-center text-center">
-            <x-icon.fancy name="users" class="w-1/4 mx-auto" />
-            <x-heading.h3 class="mx-auto pt-2">
-                {{ __('Users & Roles') }}
-            </x-heading.h3>
-            <p class="mt-2">{{ __('Manage your users, create roles and assign permissions to your users.') }}</p>
-        </x-section.column>
-
-        <x-section.column class="flex flex-col items-center justify-center text-center">
-            <x-icon.fancy name="translatable" class="w-1/4 mx-auto" />
-            <x-heading.h3 class="mx-auto pt-2">
-                {{ __('Fully translatable') }}
-            </x-heading.h3>
-            <p class="mt-2">{{ __('Translate your application to any language you want.') }}</p>
-        </x-section.column>
-
-        <x-section.column class="flex flex-col items-center justify-center text-center">
-            <x-icon.fancy name="seo" class="w-1/4 mx-auto" />
-            <x-heading.h3 class="mx-auto pt-2">
-                {{ __('Sitemap & SEO') }}
-            </x-heading.h3>
-            <p class="mt-2">{{ __('Auto-generated sitemap and SEO optimization out of the box.') }}</p>
-        </x-section.column>
-
-    </x-section.columns>
-
-    <x-section.columns class="max-w-none md:max-w-6xl mt-6">
-        <x-section.column class="flex flex-col items-center justify-center text-center">
-            <x-icon.fancy name="user-dashboard" class="w-1/4 mx-auto" />
-            <x-heading.h3 class="mx-auto pt-2">
-                {{ __('User Dashboard') }}
-            </x-heading.h3>
-            <p class="mt-2">{{ __('Users can manage their subscriptions, change payment method, upgrade plan, cancel subscription alone.') }}</p>
-        </x-section.column>
-
-        <x-section.column class="flex flex-col items-center justify-center text-center">
-            <x-icon.fancy name="tool" class="w-1/4 mx-auto" />
-            <x-heading.h3 class="mx-auto pt-2">
-                {{ __('Highly customizable') }}
-            </x-heading.h3>
-            <p class="mt-2">{{ __('Manage your SaaS settings from within the admin panel. No need to redeploy app for simple changes anymore.') }}</p>
-        </x-section.column>
-
-        <x-section.column class="flex flex-col items-center justify-center text-center">
-            <x-icon.fancy name="development" class="w-1/4 mx-auto" />
-            <x-heading.h3 class="mx-auto pt-2">
-                {{ __('Developer-friendly') }}
-            </x-heading.h3>
-            <p class="mt-2">{{ __('Built with developers in mind, uses best coding practices. Offers handlers & events and automated tests covering critical components of the application.') }}</p>
-        </x-section.column>
-
-    </x-section.columns>
+    
 
 
     <div class="mx-4 mt=16">
         <x-heading.h6 class="text-center mt-24 text-primary-500 !uppercase" id="pricing">
-            {{ __('Launch your SaaS Today') }}
+            {{ __('Choose Your Plan') }}
         </x-heading.h6>
         <x-heading.h2 class="text-primary-900 text-center">
-            {{ __('Ship Your SaaS in Days') }}
+            {{ __('Start Your 14 Day Free Trial') }}
         </x-heading.h2>
+        <p class="text-center py-4">Pricing plan goes here</p>
     </div>
 
     <div class="pricing">
