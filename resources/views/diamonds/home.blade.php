@@ -22,11 +22,11 @@
                     
                 </span>
                 
-                <span class="cd-headline slide is-full-width"><span>To Give You </span>
+                <span class="cd-headline slide is-full-width"><span>To Get You </span>
                     <span class="cd-words-wrapper">
-                        <b class="is-visible">Click Tracking</b>
-                        <b>Leads Tracking</b>
-                        <b>Sales Tracking</b>
+                        <b class="is-visible">Click Stats</b>
+                        <b>Lead Stats</b>
+                        <b>Sales Stats</b>
                         <b>More Attention</b>
                         <b>More Leads</b>
                         <b>More Sales</b>
@@ -39,7 +39,7 @@
             <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js" integrity="sha512-v2CJ7UaYy4JwqLDIrZUI/4hqeoQieOmAZNXBeQyjo21dadnwR+8ZaIJVT8EE2iyI61OV8e6M8PP2/4hpQINQ/g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
             <script src="/js/jqueryAnimateText.js"></script>
 
-            <x-heading.h3 class="m-3">{{ __('Your future YouTube success begins right now.') }}</x-heading.h3>
+            <x-heading.h3 class="m-3">{{ __('You\'re about to unlock a new level of YouTube growth') }}</x-heading.h3>
 
             <div class="flex flex-wrap gap-4 justify-center md:flex-row mt-12">
                 <x-button-link.primary href="#pricing" class="self-center !py-3" elementType="a">
@@ -76,16 +76,20 @@
                     {{ __('No more guessing') }}
                 </x-heading.h6>
                 <x-heading.h2 class="text-primary-900">
-                    {{ __('See Which Videos Get You the Most Leads & Sales') }}
+                    {{ __('Shows You Which Videos Get the Most Leads & Sales') }}
                 </x-heading.h2>
             </div>
 
             <p class="mt-4">
-                {{ __('Create and manage your products, plans, and pricing, set features for each plan, mark a plan as featured, and more.') }}
+                {{ __('Simple to start. Easy to understand.') }}
             </p>
 
             <p class="mt-4">
-                {{ __('Rewards your customers with discounts and manage all that from a beautiful admin panel.') }}
+                {{ __('And crazy powerful for your business.') }}
+            </p>
+
+            <p class="mt-4">
+                {{ __('Go beyond YouTube\'s views, likes, and subscribes metrics and get to the REAL metrics that matter: Clicks, Leads, Sales, Revenue.') }}
             </p>
         </x-section.column>
 
@@ -95,23 +99,31 @@
 
     </x-section.columns>
 
+    <div class="text-center pt-6 mx-auto max-w-5xl ">
+        <img src="{{URL::asset('/images/screenshots/performance-detail.png')}}" >
+    </div>
+
     <x-section.columns class="max-w-none md:max-w-6xl mt-6 flex-wrap-reverse">
         <x-section.column >
-            <img src="{{URL::asset('/images/diamonds/features/checkout.png')}}" class="rounded-2xl" />
+            <img src="{{URL::asset('/images/screenshots/video-performance-close.png')}}" class="relative z-10 hover:scale-105 transition-all duration-300" />
         </x-section.column>
 
         <x-section.column>
             <div x-intersect="$el.classList.add('slide-in-top')">
                 <x-heading.h6 class="text-primary-500 !uppercase">
-                    {{ __('Buttery smooth') }}
+                    {{ __('Trends Become Obvious') }}
                 </x-heading.h6>
                 <x-heading.h2 class="text-primary-900">
-                    {{ __('Beautiful checkout process.') }}
+                    {{ __('Shows you video performance over time') }}
                 </x-heading.h2>
             </div>
 
             <p class="mt-4">
-                {{ __('In a few clicks, your customers can subscribe to your service using a beautiful checkout page that shows all the details of the plan they are subscribing to, allowing them to add a coupon code if they have one, and choose their payment method.') }}
+                {{ __('No more digging through Google Analytics in search of the numbers you need.') }}
+            </p>
+
+            <p class="mt-4">
+                {{ __('Now the critical business metrics you need are right at your fingertips.') }}
             </p>
         </x-section.column>
 
@@ -206,7 +218,27 @@
 
     </div>
 
-    <x-section.block class="mt-32 bg-secondary-100/25 relative overflow-hidden">
+    
+
+
+    <div class="text-center mt-24 px-4" x-intersect="$el.classList.add('slide-in-top')">
+        <x-heading.h6 class="text-primary-500 !uppercase">
+            {{ __('Can\'t Get Any Easier') }}
+        </x-heading.h6>
+        <x-heading.h2 class="text-primary-900">
+            {{ __('A stunning subscriber\'s Only Area') }}
+            <br />
+            {{ __(' for Content and Downloads') }}
+        </x-heading.h2>
+    </div>
+
+    <p class="text-center py-4">{{ __('In just a few minutes you\'ll be up and running with a download area that turns your viewers into email subscribers') }}</p>
+
+    <div class="text-center pt-6 mx-auto max-w-5xl ">
+        <img src="{{URL::asset('/images/screenshots/members-area-3-shots.png')}}" >
+    </div>
+
+    <x-section.block class="mt-12 bg-secondary-100/25 relative overflow-hidden">
         <div class="bg-secondary-900  w-40 h-40 md:w-96 md:h-96 rounded-3xl absolute opacity-5 z-0 -right-16 -bottom-16 md:-right-56 md:-bottom-10 rotate-45">
 
         </div>
@@ -218,16 +250,16 @@
             <x-section.column>
                 <div x-intersect="$el.classList.add('slide-in-top')">
                     <x-heading.h6 class="text-secondary-700 !uppercase">
-                        {{ __('SaaS Stats') }}
+                        {{ __('Newbie Friendly') }}
                     </x-heading.h6>
                     <x-heading.h2 class="text-primary-950">
-                        {{ __('Know your numbers') }}
+                        {{ __('Simple Download Pages') }}
                     </x-heading.h2>
                 </div>
 
                 <div class="text-primary-950/75">
                     <p class="mt-4">
-                        {{ __('View your MRR (monthly recurring revenue), Churn rates, ARPU (average revenue per user), and other SaaS metrics right inside your admin panel.') }}
+                        {{ __('If you can describe your download, you have all the skill you need to create a beautiful page for your subscribers.') }}
                     </p>
                 </div>
             </x-section.column>
@@ -265,24 +297,6 @@
 
         </x-section.columns>
     </x-section.block>
-
-
-    <div class="text-center mt-24 px-4" x-intersect="$el.classList.add('slide-in-top')">
-        <x-heading.h6 class="text-primary-500 !uppercase">
-            {{ __('Can\'t Get Any Easier') }}
-        </x-heading.h6>
-        <x-heading.h2 class="text-primary-900">
-            {{ __('A stunning subscriber\'s Only Area') }}
-            <br />
-            {{ __(' for Content and Downloads') }}
-        </x-heading.h2>
-    </div>
-
-    <p class="text-center py-4">{{ __('In just a few minutes you\'ll be up and running with a download area that turns your viewers into email subscribers') }}</p>
-
-    <div class="text-center pt-6 mx-auto max-w-5xl ">
-        <img src="{{URL::asset('/images/screenshots/members-area-3-shots.png')}}" >
-    </div>
 
     <div class="text-center mt-24 px-4" x-intersect="$el.classList.add('slide-in-top')">
         <x-heading.h6 class="text-primary-500 !uppercase">
@@ -326,7 +340,7 @@
             </x-section.column>
 
             <x-section.column>
-                <img src="{{URL::asset('/images/diamonds/features/email.png')}}" class="relative z-10 hover:scale-105 transition-all duration-300"  />
+                <img src="{{URL::asset('/images/screenshots/tenant-closeup.png')}}" class="relative z-10 hover:scale-105 transition-all duration-300"  />
             </x-section.column>
 
         </x-section.columns>
@@ -334,7 +348,7 @@
         <x-section.columns class="max-w-none md:max-w-6xl pt-8 flex-wrap-reverse">
 
             <x-section.column>
-                <img src="{{URL::asset('/images/diamonds/features/login.png')}}" class="relative z-10 hover:scale-105 transition-all duration-300"  />
+                <img src="{{URL::asset('/images/screenshots/invite-team-member.png')}}" class="relative z-10 hover:scale-105 transition-all duration-300"  />
             </x-section.column>
 
             <x-section.column>
@@ -348,7 +362,11 @@
                 </div>
 
                 <p class="mt-4">
-                    {{ __('SaaSykit includes built-in user authentication, supporting both traditional email/password authentication and social login options such as Google, Facebook, Twitter, Github, LinkedIn, and more.') }}
+                    {{ __('As your business grows, VideoBolt will grow with you.') }}
+                </p>
+
+                <p class="mt-4">
+                    {{ __('You can invite team members and control their permissions. When a team members leaves you can easily shut off their access.') }}
                 </p>
 
                 <p class="pt-4">
