@@ -90,7 +90,7 @@
         </x-section.column>
 
         <x-section.column>
-            <img src="{{URL::asset('/images/screenshots/url-performance.png')}}"  class="relative z-10 hover:scale-105 transition-all duration-300" />
+            <img src="{{URL::asset('/images/screenshots/url-performance-close-2.png')}}"  class="relative z-10 hover:scale-105 transition-all duration-300" />
         </x-section.column>
 
     </x-section.columns>
