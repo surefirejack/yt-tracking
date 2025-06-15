@@ -132,9 +132,9 @@
     <div class="text-center mt-24" x-intersect="$el.classList.add('slide-in-top')">
         
         <x-heading.h2 class="text-primary-900">
-            {{ __('VideoBolt is newbie friendly') }}
+            {{ __('Newbie Friendly...') }}
             <br />
-            {{ __('but it\'s also powerful enough for the pros') }}
+            {{ __('Yet Powerful Enough for the Pros') }}
         </x-heading.h2>
     </div>
 
@@ -294,10 +294,10 @@
 
                 <div class="text-primary-50/75">
                     <p class="mt-4">
-                        {{ __('Easily offer your customers subscription-based & one-time purchase products with SaaSykit. All the webhook handling, subscription management, and billing are already set up for you in a beautiful and easy-to-use admin panel.') }}
+                        {{ __('VideoBolt creates a beautiful resource page you can link to from all of your videos, so you can earn affiliate commissions from the products you recommend.') }}
                     </p>
                     <p class="mt-4">
-                        {{ __('Collect payments with Stripe and Paddle, and manage your customers with ease.') }}
+                        {{ __('And you get boilerplate disclaimer text automatically added to your resource page - which you can customize.') }}
                     </p>
                 </div>
             </x-section.column>
@@ -401,8 +401,42 @@
     </x-section.block>
 
 
-    
+    <div class="mx-4 mt=16">
+        <x-heading.h6 class="text-center mt-24 text-primary-500 !uppercase" id="pricing">
+            {{ __('Decades of Experience') }}
+        </x-heading.h6>
+        <x-heading.h2 class="text-primary-900 text-center">
+            {{ __('As a VideoBolt Client... ') }}
+            <br />
+            {{ __('You have us in your corner') }}
+        </x-heading.h2>
+        <p class="text-center py-4">We know what we're doing and we have your back</p>
+    </div>
 
+    <div class="text-center pt-6 mx-auto max-w-5xl ">
+        <img src="{{URL::asset('/images/screenshots/brothers-cafe-credentials-2.png')}}" >
+    </div>
+
+    <div class="text-center pt-6 mx-auto max-w-5xl mt-12">
+        <img src="{{URL::asset('/images/screenshots/jack-credentials-2.png')}}" >
+    </div>
+
+    <!-- Guarantee -->
+
+    <div class="mx-4 mt=16">
+        <x-heading.h6 class="text-center mt-24 text-primary-500 !uppercase" id="pricing">
+            {{ __('Give it a go') }}
+        </x-heading.h6>
+        <x-heading.h2 class="text-primary-900 text-center">
+            {{ __('Test Drive VideoBolt') }}
+            <br />
+            {{ __('For a whopping 44 days') }}
+        </x-heading.h2>
+        
+    </div>
+    <div class="text-center pt-6 mx-auto max-w-5xl ">
+        <img src="{{URL::asset('/images/screenshots/guarantee-period.png')}}" >
+    </div>
 
     <div class="mx-4 mt=16">
         <x-heading.h6 class="text-center mt-24 text-primary-500 !uppercase" id="pricing">
