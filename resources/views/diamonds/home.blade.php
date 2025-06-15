@@ -73,10 +73,10 @@
         <x-section.column>
             <div x-intersect="$el.classList.add('slide-in-top')">
                 <x-heading.h6 class="text-primary-500 !uppercase">
-                    {{ __('At your fingertips') }}
+                    {{ __('No more guessing') }}
                 </x-heading.h6>
                 <x-heading.h2 class="text-primary-900">
-                    {{ __('Products, Plans & Pricing.') }}
+                    {{ __('See Which Videos Get You the Most Leads & Sales') }}
                 </x-heading.h2>
             </div>
 
@@ -269,14 +269,16 @@
 
     <div class="text-center mt-24 px-4" x-intersect="$el.classList.add('slide-in-top')">
         <x-heading.h6 class="text-primary-500 !uppercase">
-            {{ __('Can\'t get more beautiful') }}
+            {{ __('Can\'t Get Any Easier') }}
         </x-heading.h6>
         <x-heading.h2 class="text-primary-900">
-            {{ __('A stunning Admin Panel.') }}
+            {{ __('A stunning subscriber\'s Only Area') }}
+            <br />
+            {{ __(' for Content and Downloads') }}
         </x-heading.h2>
     </div>
 
-    <p class="text-center py-4">{{ __('Manage your SaaS application from a beautiful admin panel powered by Filament') }}</p>
+    <p class="text-center py-4">{{ __('In just a few minutes you\'ll be up and running with a download area that turns your viewers into email subscribers') }}</p>
 
     <div class="text-center pt-6 mx-auto max-w-5xl ">
         <img src="{{URL::asset('/images/screenshots/members-area-3-shots.png')}}" >
@@ -445,50 +447,41 @@
     <div class="max-w-none md:max-w-6xl mx-auto">
         <x-accordion class="mt-4 p-8">
             <x-accordion.item active="true" name="faqs">
-                <x-slot name="title">{{ __('What is SaaSykit?') }}</x-slot>
+                <x-slot name="title">{{ __('What is VideoBolt?') }}</x-slot>
 
                 <p>
-                    {{ __('SaaSykit is a complete SaaS starter kit that includes everything you need to start your SaaS business. It comes ready with a huge list of reusable components, a complete admin panel, user dashboard, user authentication, user & role management, plans & pricing, subscriptions, payments, emails, and more.') }}
+                    {{ __('VideoBolt is software built to help you grow your YouTube channel. It\'s cofounded by YouTube experts Justin and Mike Brown of Primal Video who have 1.8 million subscribers and over 190 million views. VideoBolt gives you the information you need to know which videos are bringing you the most leads and sales. It also helps makes it easier than ever to deliver special downloads and bonus content so you can build a true asset in your business that builds trust and increases your sales.') }}
                 </p>
 
             </x-accordion.item>
 
             <x-accordion.item active="false" name="faqs">
-                <x-slot name="title">{{ __('What features does SaaSykit offer?') }}</x-slot>
+                <x-slot name="title">{{ __('What features does VideoBolt offer?') }}</x-slot>
 
                 <p class="mt-4">
-                    {{ __('Here are some of the features included in SaaSykit in a nutshell:') }}
+                    {{ __('Here are some of the features included in VideoBolt in a nutshell:') }}
                 </p>
 
                 <ul class="mt-4 list-disc ms-4 ps-4">
-                    <li>{{ __('Customize Styles: Customize the styles &amp; colors, error page of your application to fit your brand.') }}</li>
-                    <li>{{ __('Product, Plans &amp; Pricing: Create and manage your products, plans, and pricing from a beautiful and easy-to-use admin panel.') }}</li>
-                    <li>{{ __('Beautiful checkout process: Your customers can subscribe to your plans from a beautiful checkout process.') }}</li>
-                    <li>{{ __('Huge list of ready-to-use components: Plans &amp; Pricing, hero section, features section, testimonials, FAQ, Call to action, tab slider, and much more.') }}</li>
-                    <li>{{ __('User authentication: Comes with user authentication out of the box, whether classic email/password or social login (Google, Facebook, Twitter, Github, LinkedIn, and more).') }}</li>
-                    <li>{{ __('Discounts: Create and manage your discounts and reward your customers.') }}</li>
-                    <li>{{ __('SaaS metric stats: View your MRR, Churn rates, ARPU, and other SaaS metrics.') }}</li>
-                    <li>{{ __('Multiple payment providers: Stripe, Paddle, and more coming soon.') }}</li>
-                    <li>{{ __('Multiple email providers: Mailgun, Postmark, Amazon SES, and more coming soon.') }}</li>
-                    <li>{{ __('Blog: Create and manage your blog posts.') }}</li>
-                    <li>{{ __('User &amp; Role Management: Create and manage your users and roles, and assign permissions to your users.') }}</li>
-                    <li>{{ __('Fully translatable: Translate your application to any language you want.') }}</li>
-                    <li>{{ __('Sitemap &amp; SEO: Sitemap and SEO optimization out of the box.') }}</li>
-                    <li>{{ __('Admin Panel: Manage your SaaS application from a beautiful admin panel powered by ') }} <a href="https://filamentphp.com/" target="_blank" rel="noopener noreferrer">Filament</a>.</li>
-                    <li>{{ __('User Dashboard: Your customers can manage their subscriptions, change payment method, upgrade plan, cancel subscription, and more from a beautiful user dashboard powered by') }} <a href="https://filamentphp.com/" target="_blank" rel="noopener noreferrer">Filament</a>.</li>
-                    <li>{{ __('Automated Tests: Comes with automated tests for critical components of the application.') }}</li>
-                    <li>{{ __('One-line deployment: Provision your server and deploy your application easily with integrated') }} <a href="https://deployer.org/" target="_blank" rel="noopener noreferrer">Deployer</a> {{ __('  support.') }}</li>
-                    <li>{{ __('Developer-friendly: Built with developers in mind, uses best coding practices.') }}</li>
+                    <li><b>{{ __('Detailed Video Stats: ') }}</b>{{ __('Shows you key metrics for any video on your channel including leads, sales, revenue.') }}</li>
+                    <li><b>{{ __('URL Traffic: ') }}</b>{{ __('For key pages like your email signup forms or checkout pages see side by side comparisons of your videos. Finaly see which videos are sending the most clicks, leads, and sales.') }}</li>
+                    <li><b>{{ __('Time Saving Automation: ') }}</b>{{ __('Converts any links in your existing video descriptions over to VideoBolt smart links.') }}</li>
+                    <li><b>{{ __('Subscriber\'s Only Content: ') }}</b>{{ __('Delivers downloads, free guides, checklists, blueprints and resources to your YouTube subscribers. Grows your email list at the same time.') }}</li>
+                    <li><b>{{ __('Simple Conversion Setup: ') }}</b>{{ __('If you can copy and paste, you can start tracking your leads and sales.') }}</li>
+                    <li><b>{{ __('Time Expiring Links: ') }}</b>{{ __('Great for season or one time promotions like Black Friday, Cyber Monday, or product launch announcements.') }}</li>
+                    <li><b>{{ __('Resource Page: ') }}</b>{{ __('Quickly create a resource page and use affiliate links to generate passive revenue. No page building required!') }}</li>
+                    <li><b>{{ __('Profile Page: ') }}</b>{{ __('Guides your YouTube subscribers to your other social media accounts, websites, products, and podcasts.') }}</li>
+
                     <li>{{ __('And much more...') }}</li>
                 </ul>
 
             </x-accordion.item>
 
             <x-accordion.item active="false" name="faqs">
-                <x-slot name="title">{{ __('Which payment providers are supported?') }}</x-slot>
+                <x-slot name="title">{{ __('What if I have more than one channel?') }}</x-slot>
 
                 <p>
-                    {{ __('SaaSykit supports Stripe and Paddle out of the box. You can easily add more payment providers by extending the code. More payment method will be added in the future as well (e.g. Lemon Squeezy)') }}
+                    {{ __('Depending on which plan you choose, we can give you extra workspaces where you can use VideoBolt on multiple YouTube channels.') }}
                 </p>
 
             </x-accordion.item>
@@ -497,19 +490,16 @@
                 <x-slot name="title">{{ __('Do you offer support?') }}</x-slot>
 
                 <p>
-                    {{ __('Of course! we offer email and discord support to help you with any issues you might face or questions you have. Write us an email at') }} <a href="mailto:{{config('app.support_email')}}" class="text-primary-500 hover:underline">{{config('app.support_email')}}</a> {{ __('or join our') }} <a href="{{config('app.social_links.discord')}}">{{ __('discord server')}}</a> {{ __('to get help.')}}
+                    {{ __('Of course! We offer email support and we have extensive documentation. You can contact our support team from within the software.')}}
                 </p>
 
             </x-accordion.item>
 
             <x-accordion.item active="false" name="faqs">
-                <x-slot name="title">{{'What Tech stack is used?'}}</x-slot>
+                <x-slot name="title">{{'Do you offer a trial?'}}</x-slot>
 
                 <p>
-                    {{ __('SaaSykit is built on top of') }} <a href="https://laravel.com" target="_blank">Laravel</a> {{ __('Laravel, the most popular PHP framework, and') }} <a target="_blank" href="https://filamentphp.com/">Filament</a> {{ __(', a beautiful and powerful admin panel for Laravel. It also uses TailwindCSS, AlpineJS, and Livewire.')}}
-                </p>
-                <p class="mt-4">
-                    {{ __('You can use your favourite database (MySQL, PostgreSQL, SQLite) and your favourite queue driver (Redis, Amazon SQS, etc).')}}
+                    {{ __('Yes! We have a 14 day free trial with all of our plans.')}}
                 </p>
 
             </x-accordion.item>
@@ -580,19 +570,21 @@
         <div class="text-center">
             <x-section.outro>
                 <x-heading.h6 class="text-primary-50">
-                    {{ __('Ship fast & don\'t reinvent the wheel') }}
+                    {{ __('Grow your YouTube channel faster than ever') }}
                 </x-heading.h6>
                 <x-heading.h2 class="text-primary-50 drop-shadow-4xl">
-                    {{ __('Build your SaaS Today') }}
+                    {{ __('Level Up Your Channel Today') }}
                 </x-heading.h2>
 
                 <p class="text-primary-100 mt-2">
-                    {{ __('SaaSykit is a SaaS boilerplate that comes packed with all components required to run a modern SaaS software.') }}
+                    {{ __('VideoBolt is powerful enough for a YouTube channel with millions of subscribers') }}
+                    <br />
+                    {{ __(' and simple enough for even the most tech-phobic newbie to use.') }}
                 </p>
 
                 <div class="mt-12">
                     <x-button-link.secondary href="/" >
-                        {{ __('Buy SaaSykit Now') }}
+                        {{ __('Start Your Test Drive of VideoBolt Now') }}
                     </x-button-link.secondary>
                 </div>
             </x-section.outro>

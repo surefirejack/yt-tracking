@@ -186,7 +186,7 @@ Route::get('/terms', function () {
     $html = $converter->convert($markdown);
     
     return view('terms', ['terms' => $html]);
-})->name('terms.show');
+})->name('terms');
 
 // Product checkout routes
 
