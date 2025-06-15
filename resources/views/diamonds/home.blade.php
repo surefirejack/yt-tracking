@@ -1,6 +1,6 @@
 <x-layouts.app class="relative overflow-hidden">
     <x-slot name="title">
-        {{ __('SaaSykit - Laravel SaaS Starter Kit') }}
+        {{ __('Video Bolt: The software YouTube experts use for maximum growth.') }}
     </x-slot>
 
     <div class="bg-primary-300  w-40 h-40 md:w-96 md:h-96 rounded-3xl absolute opacity-10 -z-10 -right-28 md:-right-48 top-52 md:top-40 rotate-45">
@@ -13,7 +13,7 @@
     <x-section.hero class="w-full">
 
         <div class="mx-auto text-center px-4">
-            <span class="text-primary-500 uppercase font-semibold">{{ __('Launch your Business') }}</span>
+            <span class="text-primary-500 uppercase font-semibold">{{ __('If you have a YouTube channel... then this is for you:') }}</span>
             <x-heading.h1 class="mt-4 text-primary-800 font-bold flex flex-col items-center justify-center">
                 <span class="flex flex-row items-center justify-center">
                     <span>
@@ -21,93 +21,45 @@
                     </span>
                     
                 </span>
-                <span>To Give You <span id="animated-text">Click Tracking</span></span>
-
+                
+                <span class="cd-headline slide is-full-width"><span>To Give You </span>
+                    <span class="cd-words-wrapper">
+                        <b class="is-visible">Click Tracking</b>
+                        <b>Leads Tracking</b>
+                        <b>Sales Tracking</b>
+                        <b>More Attention</b>
+                        <b>More Leads</b>
+                        <b>More Sales</b>
+                        <b>More Views</b>
+                        <b>More Clicks</b>
+                        <b>More Subs</b>
+                    </span>
             </x-heading.h1>
+            <link rel="stylesheet" href="/css/jqueryAnimateText.css">
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js" integrity="sha512-v2CJ7UaYy4JwqLDIrZUI/4hqeoQieOmAZNXBeQyjo21dadnwR+8ZaIJVT8EE2iyI61OV8e6M8PP2/4hpQINQ/g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+            <script src="/js/jqueryAnimateText.js"></script>
 
-            <script>
-            document.addEventListener('DOMContentLoaded', function() {
-                const textElement = document.getElementById('animated-text');
-                const texts = ['Leads Tracking', 'Sales Tracking', 'More Leads', 'More Sales', 'More Views', 'More Subs', 'More Clicks'];
-                let currentIndex = 0;
-                
-                // Add CSS for animations
-                const style = document.createElement('style');
-                style.textContent = `
-                    @keyframes fadeIn {
-                        from { opacity: 0; }
-                        to { opacity: 1; }
-                    }
-                    @keyframes fadeOut {
-                        from { opacity: 1; }
-                        to { opacity: 0; }
-                    }
-                    .fade-in {
-                        animation: fadeIn 0.3s forwards;
-                    }
-                    .fade-out {
-                        animation: fadeOut 0.3s forwards;
-                    }
-                    #animated-text {
-                        border-bottom: 4px solid currentColor;
-                        padding-bottom: 2px;
-                    }
-                `;
-                document.head.appendChild(style);
-                
-                function cycleText() {
-                    // Fade out
-                    textElement.classList.add('fade-out');
-                    
-                    setTimeout(() => {
-                        // Change text
-                        textElement.textContent = texts[currentIndex];
-                        // Remove fade-out class
-                        textElement.classList.remove('fade-out');
-                        // Add fade-in class
-                        textElement.classList.add('fade-in');
-                        
-                        // Increment index
-                        currentIndex = (currentIndex + 1) % texts.length;
-                        
-                        // Schedule fade out after display time
-                        setTimeout(() => {
-                            // Remove fade-in class
-                            textElement.classList.remove('fade-in');
-                            // Call cycleText again
-                            cycleText();
-                        }, 1500); // Text stays visible for 800ms
-                    }, 300); // Duration of fade out animation
-                }
-                
-                // Start the animation cycle
-                cycleText();
-            });
-           
-        </script>
+            <x-heading.h3 class="m-3">{{ __('Your future YouTube success begins right now.') }}</x-heading.h3>
 
-            <p class="m-3">{{ __('A Laravel-based boilerplate with everything you need to build an awesome SaaS.') }}</p>
-
-            <div class="flex flex-wrap gap-4 justify-center md:flex-row mt-6">
+            <div class="flex flex-wrap gap-4 justify-center md:flex-row mt-12">
                 <x-button-link.primary href="#pricing" class="self-center !py-3" elementType="a">
-                    {{ __('Get SaaSykit') }}
+                    {{ __('Start Your VideoBolt Test Drive') }}
                 </x-button-link.primary>
                 <x-button-link.secondary-outline href="//demo.saasykit.com" class=" self-center !py-3" rel=”nofollow” >
-                    {{ __('Check The Demo') }}
+                    {{ __('Watch the Video') }}
                 </x-button-link.secondary-outline>
 
             </div>
 
             <x-user-ratings link="#testimonials" class="items-center justify-center mt-6 relative z-40 p-4">
                 <x-slot name="avatars">
-                    <x-user-ratings.avatar src="https://unsplash.com/photos/rDEOVtE7vOs/download?ixid=M3wxMjA3fDB8MXxzZWFyY2h8Mnx8cGVyc29ufGVufDB8fHx8MTcxMzY4NDI1MHww&force=true&w=640" alt="testimonial 1"/>
-                    <x-user-ratings.avatar src="https://unsplash.com/photos/c_GmwfHBDzk/download?ixid=M3wxMjA3fDB8MXxzZWFyY2h8M3x8cGVyc29ufGVufDB8fHx8MTcxMzY4NDI1MHww&force=true&w=640" alt="testimonial 2"/>
-                    <x-user-ratings.avatar src="https://unsplash.com/photos/QXevDflbl8A/download?ixid=M3wxMjA3fDB8MXxzZWFyY2h8NHx8cGVyc29ufGVufDB8fHx8MTcxMzY4NDI1MHww&force=true&w=640" alt="testimonial 3"/>
-                    <x-user-ratings.avatar src="https://unsplash.com/photos/mjRwhvqEC0U/download?ixid=M3wxMjA3fDB8MXxzZWFyY2h8Nnx8cGVyc29ufGVufDB8fHx8MTcxMzY4NDI1MHww&force=true&w=640" alt="testimonial 4"/>
-                    <x-user-ratings.avatar src="https://unsplash.com/photos/C8Ta0gwPbQg/download?ixid=M3wxMjA3fDB8MXxzZWFyY2h8MTl8fHBlcnNvbnxlbnwwfHx8fDE3MTM2ODQyNTB8MA&force=true&w=640" alt="testimonial 5"/>
+                    <x-user-ratings.avatar src="/images/founders/primalvideo-logo-circle.png" alt="testimonial 1"/>
+                    <x-user-ratings.avatar src="/images/founders/justin-cicle.png" alt="testimonial 2"/>
+                    <x-user-ratings.avatar src="/images/founders/mike-circle.png" alt="testimonial 3"/>
+                    <x-user-ratings.avatar src="/images/founders/jack-circle.png" alt="testimonial 4"/>
                 </x-slot>
 
-                {{ __('Join the best SaaS developers who are using SaaSykit to build their SaaS.') }}
+                {{ __('Co-founded by YouTube experts with over 12 years in business, 1.8 Million subscribers, and over 190 Million views.') }}
             </x-user-ratings>
 
             <div class="mx-auto md:max-w-3xl lg:max-w-5xl text-center p-4">
