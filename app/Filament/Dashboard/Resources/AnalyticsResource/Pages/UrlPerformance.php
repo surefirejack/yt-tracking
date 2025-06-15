@@ -194,18 +194,63 @@ class UrlPerformance extends Page
                 $videoTitles = $associatedVideos->pluck('title')->toArray();
                 $videoIds = $associatedVideos->pluck('id')->toArray();
                 
-                $linkBreakdown[] = [
-                    'link_id' => $link->id,
-                    'link_title' => $link->title,
-                    'dub_id' => $link->dub_id,
-                    'video_title' => !empty($videoTitles) ? implode(', ', $videoTitles) : 'None',
-                    'video_id' => !empty($videoIds) ? implode(', ', $videoIds) : null,
-                    'clicks' => $linkMetrics['total_clicks'],
-                    'leads' => $linkMetrics['total_leads'],
-                    'sales' => $linkMetrics['total_sales'],
-                    'revenue' => $linkMetrics['total_sale_amount'],
-                    'conversion_rate' => $linkMetrics['sales_conversion_rate'],
-                ];
+                // Create a row for each video associated with this link
+                if (!empty($videoTitles)) {
+                    foreach ($videoTitles as $index => $videoTitle) {
+                        $videoId = $videoIds[$index] ?? null;
+                        
+                        try {
+                            // Get analytics for this specific video
+                            $videoAnalytics = $this->analyticsService->getVideoAnalytics(
+                                $tenant->id,
+                                $videoId,
+                                [
+                                    'interval' => $this->selectedInterval,
+                                    'linkId' => $link->dub_id, // Also filter by link to get intersection
+                                ]
+                            );
+                            
+                            // Process the analytics for this video
+                            $videoMetrics = $this->analyticsService->processAnalyticsData($videoAnalytics);
+                        } catch (\Exception $e) {
+                            // If video analytics fail, use link metrics as fallback
+                            \Log::warning('Failed to get analytics for video', [
+                                'video_id' => $videoId,
+                                'link_id' => $link->id,
+                                'error' => $e->getMessage(),
+                            ]);
+                            
+                            $videoMetrics = $linkMetrics;
+                        }
+                        
+                        $linkBreakdown[] = [
+                            'link_id' => $link->id,
+                            'link_title' => $link->title,
+                            'dub_id' => $link->dub_id,
+                            'video_title' => $videoTitle,
+                            'video_id' => $videoId,
+                            'clicks' => $videoMetrics['total_clicks'],
+                            'leads' => $videoMetrics['total_leads'],
+                            'sales' => $videoMetrics['total_sales'],
+                            'revenue' => $videoMetrics['total_sale_amount'],
+                            'conversion_rate' => $videoMetrics['sales_conversion_rate'],
+                        ];
+                    }
+                } else {
+                    // If no videos are associated, add a single row with 'None'
+                    $linkBreakdown[] = [
+                        'link_id' => $link->id,
+                        'link_title' => $link->title,
+                        'dub_id' => $link->dub_id,
+                        'video_title' => 'None',
+                        'video_id' => null,
+                        'clicks' => $linkMetrics['total_clicks'],
+                        'leads' => $linkMetrics['total_leads'],
+                        'sales' => $linkMetrics['total_sales'],
+                        'revenue' => $linkMetrics['total_sale_amount'],
+                        'conversion_rate' => $linkMetrics['sales_conversion_rate'],
+                    ];
+                }
             }
             
             // Sort link breakdown by clicks (descending)

@@ -58,8 +58,8 @@
                                 {{ count($this->linkBreakdown ?? []) }}
                             </div>
                             <div>
-                                <span class="font-medium">Video Associations:</span><br>
-                                {{ collect($this->linkBreakdown ?? [])->where('video_title', '!=', 'None')->count() }} of {{ count($this->linkBreakdown ?? []) }}
+                                <span class="font-medium">Videos Pointing Here:</span><br>
+                                {{ collect($this->linkBreakdown ?? [])->where('video_title', '!=', 'None')->count() }}
                             </div>
                         </div>
                     </div>
@@ -156,11 +156,9 @@
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                                             Rank
                                         </th>
+                                     
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                            Link Title
-                                        </th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                            Associated Video
+                                            Video
                                         </th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                                             Clicks
@@ -190,16 +188,6 @@
                                                 @else
                                                     <span class="text-gray-500 dark:text-gray-400">#{{ $index + 1 }}</span>
                                                 @endif
-                                            </td>
-                                            <td class="px-6 py-4 text-sm text-gray-900 dark:text-white">
-                                                <div class="max-w-xs">
-                                                    <p class="font-medium truncate">{{ $linkData['link_title'] }}</p>
-                                                    @if($linkData['dub_id'])
-                                                        <p class="text-xs text-gray-500 dark:text-gray-400">ID: {{ $linkData['dub_id'] }}</p>
-                                                    @else
-                                                        <p class="text-xs text-red-500">No Dub ID</p>
-                                                    @endif
-                                                </div>
                                             </td>
                                             <td class="px-6 py-4 text-sm text-gray-900 dark:text-white">
                                                 <div class="max-w-xs">
