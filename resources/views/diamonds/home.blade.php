@@ -90,7 +90,7 @@
         </x-section.column>
 
         <x-section.column>
-            <img src="{{URL::asset('/images/diamonds/features/plans.png')}}" class="rounded-2xl"/>
+            <img src="{{URL::asset('/images/screenshots/url-performance.png')}}"  class="relative z-10 hover:scale-105 transition-all duration-300" />
         </x-section.column>
 
     </x-section.columns>
@@ -284,7 +284,22 @@
         <img src="{{URL::asset('/images/screenshots/members-area-3-shots.png')}}" >
     </div>
 
-    <x-section.block class="mt-24 relative overflow-hidden">
+    <div class="text-center mt-24 px-4" x-intersect="$el.classList.add('slide-in-top')">
+        <x-heading.h6 class="text-primary-500 !uppercase">
+            {{ __('Got Clients? We got you covered!') }}
+        </x-heading.h6>
+        <x-heading.h2 class="text-primary-900">
+            {{ __('If You\'re an Agency You Can') }}
+            <br />
+            {{ __('Manage All Your Clients') }}
+            <br />
+            {{ __('With VideoBolt') }}
+        </x-heading.h2>
+    </div>
+
+    <p class="text-center py-4">{{ __('We have plans that give you as many client workspaces as you want, and you can invite your team too.') }}</p>
+
+    <x-section.block class="mt-12 relative overflow-hidden">
 
         <div class="bg-primary-300  w-40 h-40 md:w-96 md:h-96 rounded-3xl absolute opacity-10 z-0 -right-24 md:-right-56 top-22 md:top-32 rotate-45">
 
@@ -297,19 +312,17 @@
             <x-section.column>
                 <div x-intersect="$el.classList.add('slide-in-top')">
                     <x-heading.h6 class="text-primary-500 !uppercase">
-                        {{ __('Connect with customers') }}
+                        {{ __('Agency Feature') }}
                     </x-heading.h6>
                     <x-heading.h2 class="text-primary-900">
-                        {{ __('Send & Customize Emails.') }}
+                        {{ __('Multiple Client Workspaces') }}
                     </x-heading.h2>
                 </div>
 
                 <p class="mt-4">
-                    {{ __('Choose your preferred email service from options like Mailgun, Postmark, and Amazon SES to communicate with your customers.') }}
+                    {{ __('No matter how many clients you have, our plans and platform can give you a separate workspace for each client.') }}
                 </p>
-                <p class="mt-4">
-                    {{ __('SaaSykit comes with a beautiful email template out of the box that takes your brand colors into consideration, along with the typical emails for customer registration, verification, resetting password, etc set up for you.') }}
-                </p>
+                
             </x-section.column>
 
             <x-section.column>
@@ -327,10 +340,10 @@
             <x-section.column>
                 <div x-intersect="$el.classList.add('slide-in-top')">
                     <x-heading.h6 class="text-primary-500 !uppercase">
-                        {{ __('Modern Authentication') }}
+                        {{ __('Agency Feature') }}
                     </x-heading.h6>
                     <x-heading.h2 class="text-primary-900">
-                        {{ __('Login, Registration & Social login.') }}
+                        {{ __('Manage multiple team members') }}
                     </x-heading.h2>
                 </div>
 
@@ -504,63 +517,36 @@
 
             </x-accordion.item>
 
-            <x-accordion.item active="false" name="faqs">
-                <x-slot name="title">{{'How often is SaaSykit updated?'}}</x-slot>
-
-                <p>
-                    {{ __('SaaSykit is updated regularly to keep up with the latest Laravel and Filament versions, and to add new features and improvements.')}}
-                </p>
-
-            </x-accordion.item>
+            
 
             <x-accordion.item active="false" name="faqs">
                 <x-slot name="title">{{'Do you offer refunds?'}}</x-slot>
 
                 <p>
-                    {{ __('Yes, we offer a 14-day money-back guarantee. If you are not satisfied with SaaSykit, you can request a refund within 14 days of your purchase. Please write us an email at') }} <a href="mailto:{{config('app.support_email')}}" class="text-primary-500 hover:underline">{{config('app.support_email')}}</a> {{ __('to request a refund.')}}
+                    {{ __('Yes, we offer a 30-day money-back guarantee... on top of the 14 day free trial. Which means from the moment you start your trial you have 44 days to try VideoBolt, see how you like it, and make your decision.')}}
                 </p>
 
             </x-accordion.item>
 
             <x-accordion.item active="false" name="faqs">
-                <x-slot name="title">{{'Where can I host my SaaS application?'}}</x-slot>
+                <x-slot name="title">{{'What if I\'m not "tech savvy"?'}}</x-slot>
 
                 <p>
-                    {{ __('You can host your SaaS application on any server that supports PHP, such as DigitalOcean, AWS, Hetzner, Linode, and more. You can also use a platform like Laravel Forge to manage your server and deploy your application.')}}
+                    {{ __('No worries at all! You\'re in good company because many of our clients and community members feel the same way. That\'s why we built VideoBolt to be super simple to use.')}}
+                </p>
+                <p>
+                    {{ __('And to make sure you know it\'s going to fit your needs and be simple to use... we offer a 14 day free trial.')}}
                 </p>
 
             </x-accordion.item>
 
-            <x-accordion.item active="false" name="faqs">
-                <x-slot name="title">{{'Is there a demo available?'}}</x-slot>
-
-                <p>
-                    {{ __('Yes, a demo is available to help you get a feel of SaaSykit. You can find the demo') }} <a href="https://saasykit.com/demo" target="_blank" rel=”nofollow” >here</a>.
-                </p>
-
-            </x-accordion.item>
+           
 
             <x-accordion.item active="false" name="faqs">
                 <x-slot name="title">{{'Is there documentation available?'}}</x-slot>
 
                 <p>
-                    {{ __('Yes, an extensive documentation is available to help you get started with SaaSykit. You can find the documentation ')}} <a href="https://saasykit.com/docs" target="_blank">here</a>.
-                </p>
-
-            </x-accordion.item>
-
-            <x-accordion.item active="false" name="faqs">
-                <x-slot name="title">{{'How is SaaSykit different from just using Laravel directly?'}}</x-slot>
-
-                <p>
-                    {{__('SaaSykit is built on top of Laravel with the intention to save you time and effort by not having to build everything needed for a modern SaaS from scratch, like payment provider integration, subscription management, user authentication, user & role management, having a beautiful admin panel, a user dashboard to manage their subscriptions/payments, and more.')}}
-                </p>
-                <p class="mt-4">
-                    {{__('You can choose to base your SaaS on vanilla Laravel and build everything from scratch if you prefer and that is totally fine, but you will need a few months to build what SaaSykit offers out of the box, then on top of that, you will need to start to build your actual SaaS application.')}}
-                </p>
-
-                <p class="mt-4">
-                    {{__('SaaSykit is a great starting point for your SaaS application, it is built with best coding practices, and it is developer-friendly. It is also built with the intention to be easily customizable and extendable. Any developer who is familiar with Laravel will feel right at home.')}}
+                    {{ __('Yes, an extensive documentation is available to help you get started with VideoBolt. You can find the documentation ')}} <a href="{{ config('app.documentation.support') }}" target="_blank">here</a>.
                 </p>
 
             </x-accordion.item>
