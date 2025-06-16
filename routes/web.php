@@ -26,7 +26,7 @@ use App\Http\Controllers\ProductCheckoutController;
 | If you want the URL to be added to the sitemap, add a "sitemapped" middleware to the route (it has to GET route)
 |
 */
-if ( env('APP_ENV') == 'staging' || true) {
+if ( env('APP_ENV') == 'staging') {
     Route::get('/', function () {
         return view('coming-soon.vertical');
     })->name('home')->middleware('sitemapped');
@@ -50,7 +50,7 @@ Route::get('/about', function () {
 
 Route::get('/dashboard', function (UserDashboardService $dashboardService) {
     return redirect($dashboardService->getUserDashboardUrl(Auth::user()));
-})->name('dashboard')->middleware('auth');
+})->name('dashboard')->middleware(['auth', 'verified']);
 
 Auth::routes();
 
