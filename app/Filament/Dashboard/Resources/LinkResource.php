@@ -341,12 +341,12 @@ class LinkResource extends Resource
                                             ->maxLength(2048)
                                             ->placeholder('URL for Android users'),
                                         
-                                        Textarea::make('geo')
-                                            ->label('Geographic Targeting')
-                                            ->placeholder('JSON object for geo targeting')
-                                            ->rows(4)
-                                            ->columnSpanFull()
-                                            ->helperText('Advanced geographic targeting settings (JSON format)'),
+                                        // Textarea::make('geo')
+                                        //     ->label('Geographic Targeting')
+                                        //     ->placeholder('JSON object for geo targeting')
+                                        //     ->rows(4)
+                                        //     ->columnSpanFull()
+                                        //     ->helperText('Advanced geographic targeting settings (JSON format)'),
                                     ]),
                             ]),
 
@@ -383,6 +383,7 @@ class LinkResource extends Resource
                                     ]),
                             ]),
 
+                        /* Link Preview tab - commented out for future use
                         Tabs\Tab::make('Link Preview')
                             ->icon('heroicon-o-eye')
                             ->schema([
@@ -401,6 +402,7 @@ class LinkResource extends Resource
                                             ->placeholder('Video for social media previews'),
                                     ]),
                             ]),
+                        */
 
                         Tabs\Tab::make('QR Code')
                             ->icon('heroicon-o-qr-code')
