@@ -108,6 +108,12 @@ class DashboardPanelProvider extends PanelProvider
             })
             ->navigationGroups([
                 NavigationGroup::make()
+                    ->label('Analytics')
+                    ->icon('heroicon-o-chart-bar'),
+                NavigationGroup::make()
+                    ->label('YouTube Subscribers')
+                    ->icon('heroicon-o-folder'),
+                NavigationGroup::make()
                     ->label(__('Team'))
                     ->icon('heroicon-s-users')
                     ->collapsed(),
