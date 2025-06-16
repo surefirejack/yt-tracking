@@ -270,4 +270,10 @@ class SubscriptionResource extends Resource
     {
         return app()->make(ConfigService::class)->get('app.customer_dashboard.show_subscriptions', true);
     }
+
+    public static function shouldRegisterNavigation(): bool
+    {
+        // Only register navigation in the billing panel
+        return Filament::getCurrentPanel()?->getId() === 'billing';
+    }
 }

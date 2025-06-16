@@ -15,6 +15,8 @@ use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Filament\Facades\Filament;
+
 
 class OrderResource extends Resource
 {
@@ -198,5 +200,11 @@ class OrderResource extends Resource
     public static function getNavigationLabel(): string
     {
         return __('Orders');
+    }
+
+    public static function shouldRegisterNavigation(): bool
+    {
+        // Only register navigation in the billing panel
+        return Filament::getCurrentPanel()?->getId() === 'billing';
     }
 }
