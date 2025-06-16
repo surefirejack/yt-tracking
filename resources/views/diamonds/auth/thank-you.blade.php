@@ -15,9 +15,9 @@
                 </div>
 
                 <p>
-                    {{ __('Your account is successfully registered. Head to the home page to get started.') }}
+                    {{ __('Your account is successfully registered. Head to the dashboard page to get started.') }}
 
-                    <x-button-link.primary class="inline-block !w-full mt-6" href="{{ route('home') }}">
+                    <x-button-link.primary class="inline-block !w-full mt-6" href="{{ route('dashboard') }}">
                         {{ __('Continue') }}
                     </x-button-link.primary>
                 </p>
