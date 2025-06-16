@@ -3,9 +3,9 @@
 namespace App\Providers\Filament;
 
 use App\Filament\Billing\Pages\Billing;
-use App\Filament\Dashboard\Resources\OrderResource;
-use App\Filament\Dashboard\Resources\SubscriptionResource;
-use App\Filament\Dashboard\Resources\TransactionResource;
+use App\Filament\Billing\Resources\OrderResource;
+use App\Filament\Billing\Resources\SubscriptionResource;
+use App\Filament\Billing\Resources\TransactionResource;
 use App\Filament\Resources\TokenResource;
 use App\Http\Middleware\UpdateUserLastSeenAt;
 use App\Models\Tenant;
@@ -26,6 +26,7 @@ use Illuminate\Session\Middleware\AuthenticateSession;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 use Filament\Navigation\NavigationGroup;
+use Filament\Navigation\NavigationItem;
 
 
 class BillingPanelProvider extends PanelProvider
@@ -49,7 +50,23 @@ class BillingPanelProvider extends PanelProvider
                 TransactionResource::class,
                 OrderResource::class,
             ])
+            ->navigationItems([
+                // Only show our specific resources in navigation
+                NavigationItem::make('Subscriptions')
+                    ->icon('heroicon-o-fire')
+                    ->group(__('Details'))
+                    ->url(SubscriptionResource::getUrl()),
+                NavigationItem::make('Transactions')
+                    ->icon('heroicon-o-currency-dollar')
+                    ->group(__('Details'))
+                    ->url(TransactionResource::getUrl()),
+                NavigationItem::make('Orders')
+                    ->icon('heroicon-o-shopping-cart')
+                    ->group(__('Details'))
+                    ->url(OrderResource::getUrl()),
+            ])
             ->pages([
+                Pages\Dashboard::class,
                 Billing::class,
             ])
             ->middleware([
@@ -68,6 +85,8 @@ class BillingPanelProvider extends PanelProvider
                 Authenticate::class,
             ])
             ->tenant(Tenant::class)
-            ->tenantMenu();
+            ->tenantMenu()
+            ->discoverResources(in: app_path('Filament/Billing/Resources'), for: 'App\\Filament\\Billing\\Resources')
+            ->discoverPages(in: app_path('Filament/Billing/Pages'), for: 'App\\Filament\\Billing\\Pages');
     }
 }

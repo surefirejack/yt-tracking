@@ -36,7 +36,7 @@
                         <div class="mt-1">
                             <x-filament::button
                                 tag="a"
-                                href="{{ \App\Filament\Dashboard\Resources\SubscriptionResource::getUrl('index', panel: 'billing') }}"
+                                href="{{ route('filament.billing.resources.subscriptions.index', ['tenant' => \Filament\Facades\Filament::getTenant()]) }}"
                                 color="primary"
                                 size="sm"
                             >
@@ -60,7 +60,7 @@
                         <div class="mt-1">
                             <x-filament::button
                                 tag="a"
-                                href="{{ \App\Filament\Dashboard\Resources\TransactionResource::getUrl('index', panel: 'billing') }}"
+                                href="{{ route('filament.billing.resources.transactions.index', ['tenant' => \Filament\Facades\Filament::getTenant()]) }}"
                                 color="primary"
                                 size="sm"
                             >
@@ -84,7 +84,7 @@
                         <div class="mt-1">
                             <x-filament::button
                                 tag="a"
-                                href="{{ \App\Filament\Dashboard\Resources\OrderResource::getUrl('index', panel: 'billing') }}"
+                                href="{{ route('filament.billing.resources.orders.index', ['tenant' => \Filament\Facades\Filament::getTenant()]) }}"
                                 color="primary"
                                 size="sm"
                             >

@@ -30,7 +30,7 @@ use Illuminate\Session\Middleware\StartSession;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 use Jeffgreco13\FilamentBreezy\BreezyCore;
-use App\Filament\Dashboard\Pages\Billing;
+use App\Filament\Billing\Pages\Billing;
 
 class DashboardPanelProvider extends PanelProvider
 {
@@ -76,7 +76,7 @@ class DashboardPanelProvider extends PanelProvider
                         ->label(__('Billing'))
                         ->icon('heroicon-s-credit-card')
                         ->visible(true)
-                        ->url(fn () => Billing::getUrl(['tenant' => Filament::getTenant()])),
+                        ->url(fn () => route('filament.billing.pages.billing', ['tenant' => Filament::getTenant()])),
                     MenuItem::make()
                     ->label(__('2-Factor Authentication'))
                     ->visible(
