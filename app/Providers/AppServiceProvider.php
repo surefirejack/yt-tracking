@@ -25,6 +25,7 @@ class AppServiceProvider extends ServiceProvider
             $this->app->register(TelescopeServiceProvider::class);
         }
 
+
         // payment providers
         $this->app->tag([
             StripeProvider::class,

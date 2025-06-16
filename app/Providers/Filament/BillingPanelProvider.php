@@ -48,7 +48,6 @@ class BillingPanelProvider extends PanelProvider
                 SubscriptionResource::class,
                 TransactionResource::class,
                 OrderResource::class,
-                TokenResource::class,
             ])
             ->pages([
                 Billing::class,
