@@ -12,6 +12,8 @@ use Filament\Notifications\Notification;
 use Illuminate\Support\Facades\Log;
 use Filament\Facades\Filament;
 use Filament\Support\Enums\ActionSize;
+use App\Models\YtVideo;
+use Filament\Forms\Components\Select;
 
 class EditLink extends EditRecord
 {
@@ -58,14 +60,42 @@ class EditLink extends EditRecord
                 ->action(function () {
                     // Reset form to original record data
                     $this->fillForm();
-                    // Optional: You can also redirect to refresh the page
-                    // return redirect()->to($this->getResource()::getUrl('edit', ['record' => $this->record]));
                 })
                 ->requiresConfirmation()
                 ->modalHeading('Discard Changes?')
                 ->modalDescription('Are you sure you want to discard your unsaved changes?')
                 ->modalSubmitActionLabel('Yes, discard changes'),
         ];
+    }
+
+    protected function getYoutubeVideos(): array
+    {
+        return YtVideo::whereHas('ytChannel', function ($query) {
+                $query->where('tenant_id', Filament::getTenant()->id);
+            })
+            ->get()
+            ->mapWithKeys(function ($video) {
+                return [$video->video_id => $video->title . ' (' . $video->video_id . ')'];
+            })
+            ->toArray();
+    }
+
+    protected function copyShortLinkWithVideo(string $shortLink, ?int $videoId = null): void
+    {
+        $url = $shortLink;
+        if ($videoId) {
+            $url .= (parse_url($url, PHP_URL_QUERY) ? '&' : '?') . 'utm_content=' . $videoId;
+        }
+
+        $this->js("
+            navigator.clipboard.writeText('{$url}');
+        ");
+
+        Notification::make()
+            ->title('Copied!')
+            ->body($videoId ? 'Short link with video tracking copied to clipboard' : 'Short link copied to clipboard')
+            ->success()
+            ->send();
     }
 
     protected function mutateFormDataBeforeFill(array $data): array

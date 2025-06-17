@@ -29,6 +29,9 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Cache;
 use Filament\Forms\Components\Repeater;
+use App\Models\YtVideo;
+use Filament\Forms\Components\Select;
+use Filament\Notifications\Notification;
 
 class LinkResource extends Resource
 {
@@ -66,18 +69,42 @@ class LinkResource extends Resource
                                                         Forms\Components\Actions\Action::make('copyShortLink')
                                                             ->icon('heroicon-o-document-duplicate')
                                                             ->tooltip('Click to copy')
-                                                            ->action(function ($component) {
-                                                                $value = $component->getState();
-                                                                if ($value) {
-                                                                    // Use JavaScript to copy to clipboard
+                                                            ->modal()
+                                                            ->modalHeading('Copy Short Link')
+                                                            ->modalDescription('If you\'re using this link in a YouTube video, choose from the dropdown.')
+                                                            ->form([
+                                                                Select::make('video_id')
+                                                                    ->label('YouTube Video')
+                                                                    ->placeholder('Select a video (optional)')
+                                                                    ->options(function () {
+                                                                        return YtVideo::whereHas('ytChannel', function ($query) {
+                                                                            $query->where('tenant_id', Filament::getTenant()->id);
+                                                                        })
+                                                                        ->get()
+                                                                        ->mapWithKeys(function ($video) {
+                                                                            return [$video->video_id => $video->title . ' (' . $video->video_id . ')'];
+                                                                        })
+                                                                        ->toArray();
+                                                                    })
+                                                                    ->searchable()
+                                                                    ->preload()
+                                                            ])
+                                                            ->action(function (array $data, $component) {
+                                                                $shortLink = $component->getState();
+                                                                if ($shortLink) {
+                                                                    $videoId = $data['video_id'] ?? null;
+                                                                    $url = $shortLink;
+                                                                    if ($videoId) {
+                                                                        $url .= (parse_url($url, PHP_URL_QUERY) ? '&' : '?') . 'utm_content=' . $videoId;
+                                                                    }
+                                                                    
                                                                     $component->getLivewire()->js('
-                                                                        navigator.clipboard.writeText("' . $value . '");
+                                                                        navigator.clipboard.writeText("' . $url . '");
                                                                     ');
                                                                     
-                                                                    // Show Filament notification
-                                                                    \Filament\Notifications\Notification::make()
+                                                                    Notification::make()
                                                                         ->title('Copied!')
-                                                                        ->body('Short link copied to clipboard')
+                                                                        ->body($videoId ? 'Short link with video tracking copied to clipboard' : 'Short link copied to clipboard')
                                                                         ->success()
                                                                         ->send();
                                                                 }
@@ -502,8 +529,51 @@ class LinkResource extends Resource
                     ->limit(30)
                     ->icon('heroicon-o-document-duplicate')
                     ->tooltip('Click to Copy')
-                    ->copyable()
-                    ->copyMessage('Short link copied!')
+                    ->copyable(false)
+                    ->action(
+                        Tables\Actions\Action::make('copyShortLink')
+                            ->icon('heroicon-o-document-duplicate')
+                            ->modal()
+                            ->modalHeading('Copy Short Link')
+                            ->modalDescription('If you\'re using this link in a YouTube video, choose from the dropdown.')
+                            ->form([
+                                Select::make('video_id')
+                                    ->label('YouTube Video')
+                                    ->placeholder('Select a video (optional)')
+                                    ->options(function () {
+                                        return YtVideo::whereHas('ytChannel', function ($query) {
+                                            $query->where('tenant_id', Filament::getTenant()->id);
+                                        })
+                                        ->get()
+                                        ->mapWithKeys(function ($video) {
+                                            return [$video->video_id => $video->title . ' (' . $video->video_id . ')'];
+                                        })
+                                        ->toArray();
+                                    })
+                                    ->searchable()
+                                    ->preload()
+                            ])
+                            ->action(function (array $data, $record) {
+                                $shortLink = $record->short_link;
+                                if ($shortLink) {
+                                    $videoId = $data['video_id'] ?? null;
+                                    $url = $shortLink;
+                                    if ($videoId) {
+                                        $url .= (parse_url($url, PHP_URL_QUERY) ? '&' : '?') . 'utm_content=' . $videoId;
+                                    }
+                                    
+                                    $this->js('
+                                        navigator.clipboard.writeText("' . $url . '");
+                                    ');
+                                    
+                                    Notification::make()
+                                        ->title('Copied!')
+                                        ->body($videoId ? 'Short link with video tracking copied to clipboard' : 'Short link copied to clipboard')
+                                        ->success()
+                                        ->send();
+                                }
+                            })
+                    )
                     ->url(fn ($record) => $record->short_link)
                     ->openUrlInNewTab()
                     ->placeholder('Processing...')
