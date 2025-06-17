@@ -43,7 +43,7 @@
 
             <div class="flex flex-wrap gap-4 justify-center md:flex-row mt-12">
                 <x-button-link.primary href="#pricing" class="self-center !py-3" elementType="a">
-                    {{ __('Start Your VideoBolt Test Drive') }}
+                    {{ __('Start Your VideoStats Test Drive') }}
                 </x-button-link.primary>
                 <x-button-link.secondary-outline href="//demo.saasykit.com" class=" self-center !py-3" rel=”nofollow” >
                     {{ __('Watch the Video') }}
@@ -262,7 +262,7 @@
 
                 <div class="text-primary-950/75">
                     <p class="mt-4">
-                        {{ __('VideoBolt automatically pulls in your YouTube banner, logo, and colors to make your members area personalized to you in the blink of an eye.') }}
+                        {{ __('VideoStats automatically pulls in your YouTube banner, logo, and colors to make your members area personalized to you in the blink of an eye.') }}
                     </p>
 
                    
@@ -294,7 +294,7 @@
 
                 <div class="text-primary-50/75">
                     <p class="mt-4">
-                        {{ __('VideoBolt creates a beautiful resource page you can link to from all of your videos, so you can earn affiliate commissions from the products you recommend.') }}
+                        {{ __('VideoStats creates a beautiful resource page you can link to from all of your videos, so you can earn affiliate commissions from the products you recommend.') }}
                     </p>
                     <p class="mt-4">
                         {{ __('And you get boilerplate disclaimer text automatically added to your resource page - which you can customize.') }}
@@ -321,7 +321,7 @@
             <br />
             {{ __('Manage All Your Clients') }}
             <br />
-            {{ __('With VideoBolt') }}
+            {{ __('With VideoStats') }}
         </x-heading.h2>
     </div>
 
@@ -376,7 +376,7 @@
                 </div>
 
                 <p class="mt-4">
-                    {{ __('As your business grows, VideoBolt will grow with you.') }}
+                    {{ __('As your business grows, VideoStats will grow with you.') }}
                 </p>
 
                 <p class="mt-4">
@@ -406,7 +406,7 @@
             {{ __('Decades of Experience') }}
         </x-heading.h6>
         <x-heading.h2 class="text-primary-900 text-center">
-            {{ __('As a VideoBolt Client... ') }}
+            {{ __('As a VideoStats Client... ') }}
             <br />
             {{ __('You have us in your corner') }}
         </x-heading.h2>
@@ -428,7 +428,7 @@
             {{ __('Give it a go') }}
         </x-heading.h6>
         <x-heading.h2 class="text-primary-900 text-center">
-            {{ __('Test Drive VideoBolt') }}
+            {{ __('Test Drive VideoStats') }}
             <br />
             {{ __('For a whopping 44 days') }}
         </x-heading.h2>
@@ -466,25 +466,25 @@
     <div class="max-w-none md:max-w-6xl mx-auto">
         <x-accordion class="mt-4 p-8">
             <x-accordion.item active="true" name="faqs">
-                <x-slot name="title">{{ __('What is VideoBolt?') }}</x-slot>
+                <x-slot name="title">{{ __('What is VideoStats?') }}</x-slot>
 
                 <p>
-                    {{ __('VideoBolt is software built to help you grow your YouTube channel. It\'s cofounded by YouTube experts Justin and Mike Brown of Primal Video who have 1.8 million subscribers and over 190 million views. VideoBolt gives you the information you need to know which videos are bringing you the most leads and sales. It also helps makes it easier than ever to deliver special downloads and bonus content so you can build a true asset in your business that builds trust and increases your sales.') }}
+                    {{ __('VideoStats is software built to help you grow your YouTube channel. It\'s cofounded by YouTube experts Justin and Mike Brown of Primal Video who have 1.8 million subscribers and over 190 million views. VideoStats gives you the information you need to know which videos are bringing you the most leads and sales. It also helps makes it easier than ever to deliver special downloads and bonus content so you can build a true asset in your business that builds trust and increases your sales.') }}
                 </p>
 
             </x-accordion.item>
 
             <x-accordion.item active="false" name="faqs">
-                <x-slot name="title">{{ __('What features does VideoBolt offer?') }}</x-slot>
+                <x-slot name="title">{{ __('What features does VideoStats offer?') }}</x-slot>
 
                 <p class="mt-4">
-                    {{ __('Here are some of the features included in VideoBolt in a nutshell:') }}
+                    {{ __('Here are some of the features included in VideoStats in a nutshell:') }}
                 </p>
 
                 <ul class="mt-4 list-disc ms-4 ps-4">
                     <li><b>{{ __('Detailed Video Stats: ') }}</b>{{ __('Shows you key metrics for any video on your channel including leads, sales, revenue.') }}</li>
                     <li><b>{{ __('URL Traffic: ') }}</b>{{ __('For key pages like your email signup forms or checkout pages see side by side comparisons of your videos. Finaly see which videos are sending the most clicks, leads, and sales.') }}</li>
-                    <li><b>{{ __('Time Saving Automation: ') }}</b>{{ __('Converts any links in your existing video descriptions over to VideoBolt smart links.') }}</li>
+                    <li><b>{{ __('Time Saving Automation: ') }}</b>{{ __('Converts any links in your existing video descriptions over to VideoStats smart links.') }}</li>
                     <li><b>{{ __('Subscriber\'s Only Content: ') }}</b>{{ __('Delivers downloads, free guides, checklists, blueprints and resources to your YouTube subscribers. Grows your email list at the same time.') }}</li>
                     <li><b>{{ __('Simple Conversion Setup: ') }}</b>{{ __('If you can copy and paste, you can start tracking your leads and sales.') }}</li>
                     <li><b>{{ __('Time Expiring Links: ') }}</b>{{ __('Great for season or one time promotions like Black Friday, Cyber Monday, or product launch announcements.') }}</li>
@@ -500,7 +500,7 @@
                 <x-slot name="title">{{ __('What if I have more than one channel?') }}</x-slot>
 
                 <p>
-                    {{ __('Depending on which plan you choose, we can give you extra workspaces where you can use VideoBolt on multiple YouTube channels.') }}
+                    {{ __('Depending on which plan you choose, we can give you extra workspaces where you can use VideoStats on multiple YouTube channels.') }}
                 </p>
 
             </x-accordion.item>
@@ -529,7 +529,7 @@
                 <x-slot name="title">{{'Do you offer refunds?'}}</x-slot>
 
                 <p>
-                    {{ __('Yes, we offer a 30-day money-back guarantee... on top of the 14 day free trial. Which means from the moment you start your trial you have 44 days to try VideoBolt, see how you like it, and make your decision.')}}
+                    {{ __('Yes, we offer a 30-day money-back guarantee... on top of the 14 day free trial. Which means from the moment you start your trial you have 44 days to try VideoStats, see how you like it, and make your decision.')}}
                 </p>
 
             </x-accordion.item>
@@ -538,7 +538,7 @@
                 <x-slot name="title">{{'What if I\'m not "tech savvy"?'}}</x-slot>
 
                 <p>
-                    {{ __('No worries at all! You\'re in good company because many of our clients and community members feel the same way. That\'s why we built VideoBolt to be super simple to use.')}}
+                    {{ __('No worries at all! You\'re in good company because many of our clients and community members feel the same way. That\'s why we built VideoStats to be super simple to use.')}}
                 </p>
                 <p>
                     {{ __('And to make sure you know it\'s going to fit your needs and be simple to use... we offer a 14 day free trial.')}}
@@ -552,7 +552,7 @@
                 <x-slot name="title">{{'Is there documentation available?'}}</x-slot>
 
                 <p>
-                    {{ __('Yes, an extensive documentation is available to help you get started with VideoBolt. You can find the documentation ')}} <a href="{{ config('app.documentation.support') }}" target="_blank">here</a>.
+                    {{ __('Yes, an extensive documentation is available to help you get started with VideoStats. You can find the documentation ')}} <a href="{{ config('app.documentation.support') }}" target="_blank">here</a>.
                 </p>
 
             </x-accordion.item>
@@ -569,14 +569,14 @@
                 </x-heading.h2>
 
                 <p class="text-primary-100 mt-2">
-                    {{ __('VideoBolt is powerful enough for a YouTube channel with millions of subscribers') }}
+                    {{ __('VideoStats is powerful enough for a YouTube channel with millions of subscribers') }}
                     <br />
                     {{ __(' and simple enough for even the most tech-phobic newbie to use.') }}
                 </p>
 
                 <div class="mt-12">
                     <x-button-link.secondary href="/" >
-                        {{ __('Start Your Test Drive of VideoBolt Now') }}
+                        {{ __('Start Your Test Drive of VideoStats Now') }}
                     </x-button-link.secondary>
                 </div>
             </x-section.outro>

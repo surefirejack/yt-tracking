@@ -15,7 +15,7 @@ return [
     |
     */
 
-    'name' => env('APP_NAME', 'SaaSykit'),
+    'name' => env('APP_NAME', 'VideoStats'),
 
     'description' => env('APP_DESCRIPTION', ''),
 
@@ -179,8 +179,8 @@ return [
 
     // this is the name of the logo file in the public directory
     'logo' => [
-        'light' => 'images/video-bolt-light-text.png',
-        'dark' => 'images/video-bolt-dark-text.png',
+        'light' => 'images/videostats-light-text-logo-small.png',
+        'dark' => 'images/videostats-dark-text-logo-small.png',
     ],
 
     'roadmap_enabled' => env('ROADMAP_ENABLED', true),

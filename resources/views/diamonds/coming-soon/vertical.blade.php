@@ -9,7 +9,7 @@
             <x-heading.h1 class="mt-4 text-primary-500 font-bold">
                 {{ __('Grow Your YouTube Channel') }}
                 <br class="hidden sm:block">
-                {{ __('with VideoBolt') }}
+                {{ __('with VideoStats') }}
             </x-heading.h1>
 
             <div class="text-center mx-auto md:max-w-4xl mt-8">
