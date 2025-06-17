@@ -26,7 +26,7 @@ use App\Http\Controllers\ProductCheckoutController;
 | If you want the URL to be added to the sitemap, add a "sitemapped" middleware to the route (it has to GET route)
 |
 */
-if ( env('APP_ENV') == 'staging') {
+if ( env('APP_ENV') == 'staging' || env('APP_ENV') == 'production') {
     Route::get('/', function () {
         return view('coming-soon.vertical');
     })->name('home')->middleware('sitemapped');
