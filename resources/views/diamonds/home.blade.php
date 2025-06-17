@@ -1,6 +1,6 @@
 <x-layouts.app class="relative overflow-hidden">
     <x-slot name="title">
-        {{ __('Video Bolt: The software YouTube experts use for maximum growth.') }}
+        {{ __('Video Stats: The software YouTube experts use for maximum growth.') }}
     </x-slot>
 
     <div class="bg-primary-300  w-40 h-40 md:w-96 md:h-96 rounded-3xl absolute opacity-10 -z-10 -right-28 md:-right-48 top-52 md:top-40 rotate-45">
