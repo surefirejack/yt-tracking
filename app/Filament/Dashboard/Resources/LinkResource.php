@@ -72,6 +72,7 @@ class LinkResource extends Resource
                                                             ->modal()
                                                             ->modalHeading('Copy Short Link')
                                                             ->modalDescription('If you\'re using this link in a YouTube video, choose from the dropdown.')
+                                                            ->modalSubmitActionLabel('Copy the Link')
                                                             ->form([
                                                                 Select::make('video_id')
                                                                     ->label('YouTube Video')
@@ -536,6 +537,7 @@ class LinkResource extends Resource
                             ->modal()
                             ->modalHeading('Copy Short Link')
                             ->modalDescription('If you\'re using this link in a YouTube video, choose from the dropdown.')
+                            ->modalSubmitActionLabel('Copy the Link')
                             ->form([
                                 Select::make('video_id')
                                     ->label('YouTube Video')
