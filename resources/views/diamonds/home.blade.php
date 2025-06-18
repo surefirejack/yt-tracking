@@ -17,16 +17,16 @@
             <x-heading.h1 class="mt-4 text-primary-800 font-bold flex flex-col items-center justify-center">
                 <span class="flex flex-row items-center justify-center">
                     <span>
-                        {{ __('The Ultimate YouTube Software') }}
+                        {{ __('This Ultimate YouTube Software') }}
                     </span>
                     
                 </span>
                 
-                <span class="cd-headline slide is-full-width"><span>To Get You </span>
+                <span class="cd-headline slide is-full-width"><span>Gets You </span>
                     <span class="cd-words-wrapper">
-                        <b class="is-visible">Click Stats</b>
-                        <b>Lead Stats</b>
-                        <b>Sales Stats</b>
+                        <b class="is-visible">Click Tracking</b>
+                        <b>Lead Tracking</b>
+                        <b>Sales Tracking</b>
                         <b>More Attention</b>
                         <b>More Leads</b>
                         <b>More Sales</b>
