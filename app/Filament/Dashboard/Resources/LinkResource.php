@@ -87,24 +87,87 @@ class LinkResource extends Resource
                                                                         ->toArray();
                                                                     })
                                                                     ->searchable()
-                                                                    ->preload()
+                                                                    ->preload(),
+                                                                    
+                                                                \Filament\Forms\Components\Section::make('UTM Parameters')
+                                                                    ->description('Add UTM parameters to track your link (optional)')
+                                                                    ->schema([
+                                                                        TextInput::make('utm_source')
+                                                                            ->label('UTM Source')
+                                                                            ->placeholder('e.g., google, newsletter')
+                                                                            ->maxLength(255),
+                                                                            
+                                                                        TextInput::make('utm_medium')
+                                                                            ->label('UTM Medium')
+                                                                            ->placeholder('e.g., email, social, cpc')
+                                                                            ->maxLength(255),
+                                                                            
+                                                                        TextInput::make('utm_campaign')
+                                                                            ->label('UTM Campaign')
+                                                                            ->placeholder('e.g., spring_sale')
+                                                                            ->maxLength(255),
+                                                                            
+                                                                        TextInput::make('utm_term')
+                                                                            ->label('UTM Term')
+                                                                            ->placeholder('e.g., running shoes')
+                                                                            ->maxLength(255),
+                                                                            
+                                                                        TextInput::make('utm_content')
+                                                                            ->label('UTM Content')
+                                                                            ->placeholder('e.g., logolink, textlink')
+                                                                            ->maxLength(255),
+                                                                    ])
+                                                                    ->columns(2)
+                                                                    ->collapsible()
+                                                                    ->collapsed(true),
                                                             ])
                                                             ->action(function (array $data, $component) {
                                                                 $shortLink = $component->getState();
                                                                 if ($shortLink) {
                                                                     $videoId = $data['video_id'] ?? null;
+                                                                    
+                                                                    // Extract UTM parameters
+                                                                    $utmParams = [];
+                                                                    $utmFields = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content'];
+                                                                    foreach ($utmFields as $field) {
+                                                                        if (!empty($data[$field])) {
+                                                                            $utmParams[$field] = $data[$field];
+                                                                        }
+                                                                    }
+                                                                    
                                                                     $url = $shortLink;
+                                                                    $params = [];
+                                                                    
                                                                     if ($videoId) {
-                                                                        $url .= (parse_url($url, PHP_URL_QUERY) ? '&' : '?') . 'utm_content=' . $videoId;
+                                                                        $params['utm_content'] = $videoId;
+                                                                    }
+                                                                    
+                                                                    // Add any provided UTM parameters
+                                                                    if (!empty($utmParams)) {
+                                                                        $params = array_merge($params, $utmParams);
+                                                                    }
+                                                                    
+                                                                    // Append all parameters to URL
+                                                                    if (!empty($params)) {
+                                                                        $url .= (parse_url($url, PHP_URL_QUERY) ? '&' : '?') . http_build_query($params);
                                                                     }
                                                                     
                                                                     $component->getLivewire()->js('
                                                                         navigator.clipboard.writeText("' . $url . '");
                                                                     ');
                                                                     
+                                                                    $message = 'Short link';
+                                                                    if ($videoId) {
+                                                                        $message .= ' with video tracking';
+                                                                    }
+                                                                    if (!empty($utmParams)) {
+                                                                        $message .= ' and UTM parameters';
+                                                                    }
+                                                                    $message .= ' copied to clipboard';
+                                                                    
                                                                     Notification::make()
                                                                         ->title('Copied!')
-                                                                        ->body($videoId ? 'Short link with video tracking copied to clipboard' : 'Short link copied to clipboard')
+                                                                        ->body($message)
                                                                         ->success()
                                                                         ->send();
                                                                 }
@@ -551,24 +614,87 @@ class LinkResource extends Resource
                                         ->toArray();
                                     })
                                     ->searchable()
-                                    ->preload()
+                                    ->preload(),
+                                    
+                                \Filament\Forms\Components\Section::make('UTM Parameters')
+                                    ->description('Add UTM parameters to track your link (optional)')
+                                    ->schema([
+                                        TextInput::make('utm_source')
+                                            ->label('UTM Source')
+                                            ->placeholder('e.g., google, newsletter')
+                                            ->maxLength(255),
+                                            
+                                        TextInput::make('utm_medium')
+                                            ->label('UTM Medium')
+                                            ->placeholder('e.g., email, social, cpc')
+                                            ->maxLength(255),
+                                            
+                                        TextInput::make('utm_campaign')
+                                            ->label('UTM Campaign')
+                                            ->placeholder('e.g., spring_sale')
+                                            ->maxLength(255),
+                                            
+                                        TextInput::make('utm_term')
+                                            ->label('UTM Term')
+                                            ->placeholder('e.g., running shoes')
+                                            ->maxLength(255),
+                                            
+                                        TextInput::make('utm_content')
+                                            ->label('UTM Content')
+                                            ->placeholder('e.g., logolink, textlink')
+                                            ->maxLength(255),
+                                    ])
+                                    ->columns(2)
+                                    ->collapsible()
+                                    ->collapsed(true),
                             ])
                             ->action(function (array $data, $record) {
                                 $shortLink = $record->short_link;
                                 if ($shortLink) {
                                     $videoId = $data['video_id'] ?? null;
+                                    
+                                    // Extract UTM parameters
+                                    $utmParams = [];
+                                    $utmFields = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content'];
+                                    foreach ($utmFields as $field) {
+                                        if (!empty($data[$field])) {
+                                            $utmParams[$field] = $data[$field];
+                                        }
+                                    }
+                                    
                                     $url = $shortLink;
+                                    $params = [];
+                                    
                                     if ($videoId) {
-                                        $url .= (parse_url($url, PHP_URL_QUERY) ? '&' : '?') . 'utm_content=' . $videoId;
+                                        $params['utm_content'] = $videoId;
+                                    }
+                                    
+                                    // Add any provided UTM parameters
+                                    if (!empty($utmParams)) {
+                                        $params = array_merge($params, $utmParams);
+                                    }
+                                    
+                                    // Append all parameters to URL
+                                    if (!empty($params)) {
+                                        $url .= (parse_url($url, PHP_URL_QUERY) ? '&' : '?') . http_build_query($params);
                                     }
                                     
                                     $this->js('
                                         navigator.clipboard.writeText("' . $url . '");
                                     ');
                                     
+                                    $message = 'Short link';
+                                    if ($videoId) {
+                                        $message .= ' with video tracking';
+                                    }
+                                    if (!empty($utmParams)) {
+                                        $message .= ' and UTM parameters';
+                                    }
+                                    $message .= ' copied to clipboard';
+                                    
                                     Notification::make()
                                         ->title('Copied!')
-                                        ->body($videoId ? 'Short link with video tracking copied to clipboard' : 'Short link copied to clipboard')
+                                        ->body($message)
                                         ->success()
                                         ->send();
                                 }

@@ -41,7 +41,79 @@ class EditLink extends EditRecord
     protected function getHeaderActions(): array
     {
         return [
-            //
+            Actions\Action::make('copyShortLink')
+                ->label('Copy Short Link')
+                ->icon('heroicon-o-document-duplicate')
+                ->modal()
+                ->modalHeading('Copy Short Link')
+                ->modalDescription('If you\'re using this link in a YouTube video, choose from the dropdown.')
+                ->form([
+                    Select::make('video_id')
+                        ->label('YouTube Video')
+                        ->placeholder('Select a video (optional)')
+                        ->options($this->getYoutubeVideos())
+                        ->searchable()
+                        ->preload(),
+                        
+                    \Filament\Forms\Components\Section::make('UTM Parameters')
+                        ->description('Add UTM parameters to track your link (optional)')
+                        ->schema([
+                            Select::make('utm_source')
+                                ->label('UTM Source')
+                                ->placeholder('All sources...')
+                                ->options(fn () => $this->getUtmOptions('utm_source'))
+                                ->searchable()
+                                ->nullable(),
+                                
+                            Select::make('utm_medium')
+                                ->label('UTM Medium')
+                                ->placeholder('All mediums...')
+                                ->options(fn () => $this->getUtmOptions('utm_medium'))
+                                ->searchable()
+                                ->nullable(),
+                                
+                            Select::make('utm_campaign')
+                                ->label('UTM Campaign')
+                                ->placeholder('All campaigns...')
+                                ->options(fn () => $this->getUtmOptions('utm_campaign'))
+                                ->searchable()
+                                ->nullable(),
+                                
+                            Select::make('utm_term')
+                                ->label('UTM Term')
+                                ->placeholder('All terms...')
+                                ->options(fn () => $this->getUtmOptions('utm_term'))
+                                ->searchable()
+                                ->nullable(),
+                                
+                            Select::make('utm_content')
+                                ->label('UTM Content')
+                                ->placeholder('All content...')
+                                ->options(fn () => $this->getUtmOptions('utm_content'))
+                                ->searchable()
+                                ->nullable(),
+                        ])
+                        ->columns(2)
+                        ->collapsible()
+                        ->collapsed(true),
+                ])
+                ->action(function (array $data) {
+                    $shortLink = $this->record->short_link;
+                    if ($shortLink) {
+                        $videoId = $data['video_id'] ?? null;
+                        
+                        // Extract UTM parameters
+                        $utmParams = [];
+                        $utmFields = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content'];
+                        foreach ($utmFields as $field) {
+                            if (!empty($data[$field])) {
+                                $utmParams[$field] = $data[$field];
+                            }
+                        }
+                        
+                        $this->copyShortLinkWithVideo($shortLink, $videoId, $utmParams);
+                    }
+                }),
         ];
     }
 
@@ -80,20 +152,74 @@ class EditLink extends EditRecord
             ->toArray();
     }
 
-    protected function copyShortLinkWithVideo(string $shortLink, ?int $videoId = null): void
+    protected function getUtmOptions(string $field): array
+    {
+        try {
+            $tenant = Filament::getTenant();
+            
+            if (!$tenant) {
+                return [];
+            }
+            
+            $values = \App\Models\Link::where('tenant_id', $tenant->id)
+                ->whereNotNull($field)
+                ->where($field, '!=', '')
+                ->distinct()
+                ->orderBy($field)
+                ->pluck($field)
+                ->toArray();
+            
+            return array_combine($values, $values);
+            
+        } catch (\Exception $e) {
+            \Log::error('Error getting UTM options', [
+                'field' => $field,
+                'error' => $e->getMessage(),
+            ]);
+            
+            return [];
+        }
+    }
+
+    protected function copyShortLinkWithVideo(string $shortLink, ?int $videoId = null, ?array $utmParams = null): void
     {
         $url = $shortLink;
+        $params = [];
+
         if ($videoId) {
-            $url .= (parse_url($url, PHP_URL_QUERY) ? '&' : '?') . 'utm_content=' . $videoId;
+            $params['utm_content'] = $videoId;
+        }
+
+        // Add any provided UTM parameters
+        if ($utmParams) {
+            foreach ($utmParams as $key => $value) {
+                if (!empty($value)) {
+                    $params[$key] = $value;
+                }
+            }
+        }
+
+        // Append all parameters to URL
+        if (!empty($params)) {
+            $url .= (parse_url($url, PHP_URL_QUERY) ? '&' : '?') . http_build_query($params);
         }
 
         $this->js("
             navigator.clipboard.writeText('{$url}');
         ");
 
+        $message = 'Short link';
+        if ($videoId) {
+            $message .= ' with video tracking';
+        }
+        if (!empty($utmParams)) {
+            $message .= ' and UTM parameters';
+        }
+        $message .= ' copied to clipboard';
+
         Notification::make()
             ->title('Copied!')
-            ->body($videoId ? 'Short link with video tracking copied to clipboard' : 'Short link copied to clipboard')
+            ->body($message)
             ->success()
             ->send();
     }
