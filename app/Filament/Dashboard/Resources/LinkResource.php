@@ -574,8 +574,7 @@ class LinkResource extends Resource
                                 }
                             })
                     )
-                    ->url(fn ($record) => $record->short_link)
-                    ->openUrlInNewTab()
+                    ->url(null)
                     ->placeholder('Processing...')
                     ->searchable(),
 
