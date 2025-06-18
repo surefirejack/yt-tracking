@@ -74,6 +74,16 @@ class LinkResource extends Resource
                                                             ->modalDescription('If you\'re using this link in a YouTube video, choose from the dropdown.')
                                                             ->modalSubmitActionLabel('Copy the Link')
                                                             ->form([
+                                                                Toggle::make('is_youtube_video')
+                                                                    ->label('Are you using this in a YouTube video description?')
+                                                                    ->default(true)
+                                                                    ->live()
+                                                                    ->afterStateUpdated(function ($state, $set) {
+                                                                        if (!$state) {
+                                                                            $set('video_id', null);
+                                                                        }
+                                                                    }),
+
                                                                 Select::make('video_id')
                                                                     ->label('YouTube Video')
                                                                     ->placeholder('Select a video (optional)')
@@ -89,23 +99,79 @@ class LinkResource extends Resource
                                                                     })
                                                                     ->searchable()
                                                                     ->preload()
+                                                                    ->visible(fn ($get) => $get('is_youtube_video')),
+
+                                                                Grid::make(2)
+                                                                    ->schema([
+                                                                        TextInput::make('utm_source')
+                                                                            ->label('Source')
+                                                                            // ->helperText('email')
+                                                                            ->placeholder('Example: email')
+                                                                            ->maxLength(255),
+
+                                                                        TextInput::make('utm_medium')
+                                                                            ->label('Medium')
+                                                                            // ->helperText('broadcast')
+                                                                            ->placeholder('Example: broadcast')
+                                                                            ->maxLength(255),
+
+                                                                        TextInput::make('utm_campaign')
+                                                                            ->label('Campaign')
+                                                                            // ->helperText('cyber monday')
+                                                                            ->placeholder('Example: cyber monday')
+                                                                            ->maxLength(255),
+
+                                                                        TextInput::make('utm_term')
+                                                                            ->label('Term')
+                                                                            // ->helperText('Ex: "cart closes today"')
+                                                                            ->placeholder('Example: cart closes today')
+                                                                            ->maxLength(255),
+                                                                    ])
+                                                                    ->visible(fn ($get) => !$get('is_youtube_video')),
                                                             ])
-                                                            ->action(function (array $data, $component) {
-                                                                $shortLink = $component->getState();
+                                                            ->action(function (array $data, $record) {
+                                                                $shortLink = $record->short_link;
                                                                 if ($shortLink) {
-                                                                    $videoId = $data['video_id'] ?? null;
                                                                     $url = $shortLink;
-                                                                    if ($videoId) {
-                                                                        $url .= (parse_url($url, PHP_URL_QUERY) ? '&' : '?') . 'utm_content=' . $videoId;
+                                                                    $isYoutubeVideo = $data['is_youtube_video'] ?? true;
+                                                                    
+                                                                    if ($isYoutubeVideo) {
+                                                                        $videoId = $data['video_id'] ?? null;
+                                                                        if ($videoId) {
+                                                                            $url .= (parse_url($url, PHP_URL_QUERY) ? '&' : '?') . 'utm_content=' . $videoId;
+                                                                        }
+                                                                    } else {
+                                                                        // Build UTM parameters from manual inputs
+                                                                        $utmParams = [];
+                                                                        if (!empty($data['utm_source'])) {
+                                                                            $utmParams['utm_source'] = $data['utm_source'];
+                                                                        }
+                                                                        if (!empty($data['utm_medium'])) {
+                                                                            $utmParams['utm_medium'] = $data['utm_medium'];
+                                                                        }
+                                                                        if (!empty($data['utm_campaign'])) {
+                                                                            $utmParams['utm_campaign'] = $data['utm_campaign'];
+                                                                        }
+                                                                        if (!empty($data['utm_term'])) {
+                                                                            $utmParams['utm_term'] = $data['utm_term'];
+                                                                        }
+                                                                        
+                                                                        if (!empty($utmParams)) {
+                                                                            $url .= (parse_url($url, PHP_URL_QUERY) ? '&' : '?') . http_build_query($utmParams);
+                                                                        }
                                                                     }
                                                                     
-                                                                    $component->getLivewire()->js('
+                                                                    $this->js('
                                                                         navigator.clipboard.writeText("' . $url . '");
                                                                     ');
                                                                     
+                                                                    $message = $isYoutubeVideo 
+                                                                        ? ($data['video_id'] ? 'Short link with video tracking copied to clipboard' : 'Short link copied to clipboard')
+                                                                        : 'Short link with UTM parameters copied to clipboard';
+                                                                    
                                                                     Notification::make()
                                                                         ->title('Copied!')
-                                                                        ->body($videoId ? 'Short link with video tracking copied to clipboard' : 'Short link copied to clipboard')
+                                                                        ->body($message)
                                                                         ->success()
                                                                         ->send();
                                                                 }
@@ -539,6 +605,16 @@ class LinkResource extends Resource
                             ->modalDescription('If you\'re using this link in a YouTube video, choose from the dropdown.')
                             ->modalSubmitActionLabel('Copy the Link')
                             ->form([
+                                Toggle::make('is_youtube_video')
+                                    ->label('Are you using this in a YouTube video description?')
+                                    ->default(true)
+                                    ->live()
+                                    ->afterStateUpdated(function ($state, $set) {
+                                        if (!$state) {
+                                            $set('video_id', null);
+                                        }
+                                    }),
+
                                 Select::make('video_id')
                                     ->label('YouTube Video')
                                     ->placeholder('Select a video (optional)')
@@ -554,23 +630,79 @@ class LinkResource extends Resource
                                     })
                                     ->searchable()
                                     ->preload()
+                                    ->visible(fn ($get) => $get('is_youtube_video')),
+
+                                Grid::make(2)
+                                    ->schema([
+                                        TextInput::make('utm_source')
+                                            ->label('Source')
+                                            // ->helperText('email')
+                                            ->placeholder('Example: email')
+                                            ->maxLength(255),
+
+                                        TextInput::make('utm_medium')
+                                            ->label('Medium')
+                                            // ->helperText('broadcast')
+                                            ->placeholder('Example: broadcast')
+                                            ->maxLength(255),
+
+                                        TextInput::make('utm_campaign')
+                                            ->label('Campaign')
+                                            // ->helperText('cyber monday')
+                                            ->placeholder('Example: cyber monday')
+                                            ->maxLength(255),
+
+                                        TextInput::make('utm_term')
+                                            ->label('Term')
+                                            // ->helperText('Ex: "cart closes today"')
+                                            ->placeholder('Example: cart closes today')
+                                            ->maxLength(255),
+                                    ])
+                                    ->visible(fn ($get) => !$get('is_youtube_video')),
                             ])
                             ->action(function (array $data, $record) {
                                 $shortLink = $record->short_link;
                                 if ($shortLink) {
-                                    $videoId = $data['video_id'] ?? null;
                                     $url = $shortLink;
-                                    if ($videoId) {
-                                        $url .= (parse_url($url, PHP_URL_QUERY) ? '&' : '?') . 'utm_content=' . $videoId;
+                                    $isYoutubeVideo = $data['is_youtube_video'] ?? true;
+                                    
+                                    if ($isYoutubeVideo) {
+                                        $videoId = $data['video_id'] ?? null;
+                                        if ($videoId) {
+                                            $url .= (parse_url($url, PHP_URL_QUERY) ? '&' : '?') . 'utm_content=' . $videoId;
+                                        }
+                                    } else {
+                                        // Build UTM parameters from manual inputs
+                                        $utmParams = [];
+                                        if (!empty($data['utm_source'])) {
+                                            $utmParams['utm_source'] = $data['utm_source'];
+                                        }
+                                        if (!empty($data['utm_medium'])) {
+                                            $utmParams['utm_medium'] = $data['utm_medium'];
+                                        }
+                                        if (!empty($data['utm_campaign'])) {
+                                            $utmParams['utm_campaign'] = $data['utm_campaign'];
+                                        }
+                                        if (!empty($data['utm_term'])) {
+                                            $utmParams['utm_term'] = $data['utm_term'];
+                                        }
+                                        
+                                        if (!empty($utmParams)) {
+                                            $url .= (parse_url($url, PHP_URL_QUERY) ? '&' : '?') . http_build_query($utmParams);
+                                        }
                                     }
                                     
                                     $this->js('
                                         navigator.clipboard.writeText("' . $url . '");
                                     ');
                                     
+                                    $message = $isYoutubeVideo 
+                                        ? ($data['video_id'] ? 'Short link with video tracking copied to clipboard' : 'Short link copied to clipboard')
+                                        : 'Short link with UTM parameters copied to clipboard';
+                                    
                                     Notification::make()
                                         ->title('Copied!')
-                                        ->body($videoId ? 'Short link with video tracking copied to clipboard' : 'Short link copied to clipboard')
+                                        ->body($message)
                                         ->success()
                                         ->send();
                                 }
