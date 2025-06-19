@@ -9,7 +9,7 @@
 - `database/migrations/2025_06_19_032305_create_email_verification_requests_table.php` - Migration for verification tracking ✅
 - `database/migrations/2025_06_19_032328_create_subscriber_access_records_table.php` - Migration for access records ✅
 - `database/migrations/2025_06_19_032517_add_email_integration_settings_to_tenants_table.php` - Migration for ESP settings in tenants table ✅
-- `database/migrations/[timestamp]_add_file_and_video_fields_to_email_subscriber_contents_table.php` - Migration for file upload and YouTube video fields
+- `database/migrations/2025_06_19_183644_add_file_and_video_fields_to_email_subscriber_contents_table.php` - Migration for file upload and YouTube video fields ✅
 - `app/Services/EmailServiceProvider/EmailServiceProviderInterface.php` - Abstract interface for ESP integration ✅
 - `app/Services/EmailServiceProvider/KitServiceProvider.php` - Kit/ConvertKit API implementation ✅
 - `app/Services/EmailServiceProvider/EmailServiceProviderManager.php` - ESP factory/manager class ✅
@@ -55,8 +55,8 @@
   - [x] 1.5 Create `EmailVerificationRequest` model with encrypted email casting, automatic token generation, and expiration handling
   - [x] 1.6 Create `SubscriberAccessRecord` model with encrypted email casting, JSON tag storage, and cookie token generation
   - [x] 1.7 Add email integration settings to existing tenant settings system (ESP type, API credentials, cookie duration)
-  - [ ] 1.8 Add migration to include file storage fields (file_paths, file_names) and youtube_video_url to email_subscriber_contents table
-  - [ ] 1.9 Update EmailSubscriberContent model to handle file uploads and YouTube video URL with proper casting and validation
+  - [x] 1.8 Add migration to include file storage fields (file_paths, file_names) and youtube_video_url to email_subscriber_contents table
+  - [x] 1.9 Update EmailSubscriberContent model to handle file uploads and YouTube video URL with proper casting and validation
 - [x] 2.0 Email Service Provider Integration Architecture  
   - [x] 2.1 Create `EmailServiceProviderInterface` with methods: checkSubscriber(), getTags(), addSubscriber(), addTagToSubscriber()
   - [x] 2.2 Implement `KitServiceProvider` class using Kit API v3 for subscriber management

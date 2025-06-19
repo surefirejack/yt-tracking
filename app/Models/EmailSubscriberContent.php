@@ -17,6 +17,14 @@ class EmailSubscriberContent extends Model
         'slug',
         'content',
         'required_tag_id',
+        'file_paths',
+        'file_names',
+        'youtube_video_url',
+    ];
+
+    protected $casts = [
+        'file_paths' => 'array',
+        'file_names' => 'array',
     ];
 
     protected static function boot()
