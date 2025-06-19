@@ -24,7 +24,7 @@
         .header {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            padding: 40px 30px;
+            padding: 20px 20px;
             text-align: center;
         }
         .header h1 {
@@ -154,35 +154,34 @@
                 @if($channelAvatar)
                 <img src="{{ $channelAvatar }}" alt="{{ $channelName }}" class="channel-avatar">
                 @endif
-                <h3 class="channel-name">{{ $channelName }}</h3>
             </div>
         </div>
 
         <!-- Main Content -->
         <div class="content">
-            <h2 class="content-title">{{ $content->title }}</h2>
             
             <p>Hi there! 👋</p>
             
-            <p>You've requested access to exclusive content from <strong>{{ $channelName }}</strong>. To verify your email address and get instant access, simply click the button below:</p>
+            <p>You've requested access to exclusive content from <strong>{{ $channelName }}</strong>.</p>
+            
+            <p>To verify your email address and get instant access, simply click the button below:</p>
 
             <div class="verification-box">
-                <p style="margin: 0 0 15px; font-size: 18px; font-weight: 600;">Ready to access your content?</p>
+                <p style="margin: 0 0 15px; font-size: 18px; font-weight: 600;">Click the button below to get the content:</p>
                 <a href="{{ $verificationUrl }}" class="verify-button">✨ Verify Email & Get Access</a>
                 <p class="expires-note">⏰ This link expires at {{ $expiresAt->format('M j, Y g:i A') }}</p>
             </div>
 
             <div class="security-note">
-                <strong>🔒 Security Note:</strong> This verification link was sent because someone (hopefully you!) requested access to content from {{ $channelName }}. If this wasn't you, you can safely ignore this email.
+                <strong>🔒 Note:</strong> This verification link was sent because someone (hopefully you!) requested access to content from {{ $channelName }}. If this wasn't you, you can safely ignore this email.
             </div>
 
-            <p><strong>What happens next?</strong></p>
+            <p><strong>When you click the link...?</strong></p>
             <ul style="padding-left: 20px;">
+                <li>🚀 You'll get immediate access to "{{ $content->title }}"</li>
                 <li>✅ Your email will be verified</li>
                 <li>📧 You'll be added to {{ $channelName }}'s email list</li>
-                <li>🎯 You'll get the required tag for this content</li>
-                <li>🚀 Immediate access to "{{ $content->title }}"</li>
-                <li>🍪 A secure cookie so you won't need to verify again</li>
+                
             </ul>
 
             @if($utmContent)
@@ -194,14 +193,12 @@
 
         <!-- Footer -->
         <div class="footer">
-            <p>This email was sent by {{ config('app.name') }}</p>
-            <p>Having trouble? Copy and paste this link into your browser:</p>
-            <p style="word-break: break-all; color: #667eea; font-size: 12px;">{{ $verificationUrl }}</p>
             
-            <p style="margin-top: 25px;">
-                <strong>{{ $channelName }}</strong><br>
-                Building amazing content for awesome people like you! 🎉
-            </p>
+            <p>Having trouble with the button? Copy and paste this link into your browser:</p>
+            <p style="word-break: break-all; color: #667eea; font-size: 12px;">{{ $verificationUrl }}</p>
+            <p>This email was sent by {{ config('app.name') }} for {{ $channelName }}</p>
+            <p>Powered by <a href="https://videostats.ai" target="_blank">VideoStats.ai</a>• The ultimate software for growing your YouTube channel</p>
+            
         </div>
     </div>
 </body>
