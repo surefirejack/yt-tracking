@@ -320,7 +320,7 @@ class EmailSubscriberContentResource extends Resource
                             }
                         }
                         
-                        return view('diamonds.components.email-content-preview', [
+                        return view('components.email-content-preview', [
                             'content' => $record,
                             'tenant' => $tenant,
                             'channelname' => $channelname,

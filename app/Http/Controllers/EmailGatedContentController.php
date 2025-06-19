@@ -227,7 +227,7 @@ class EmailGatedContentController extends Controller
             if (!$verificationRequest) {
                 Log::warning('Invalid or expired verification token', ['token' => $token]);
                 
-                return view('diamonds.email-verification.expired', [
+                return view('email-verification.expired', [
                     'message' => 'This verification link is invalid or has expired.'
                 ]);
             }
@@ -268,7 +268,7 @@ class EmailGatedContentController extends Controller
                 'slug' => $content->slug
             ]);
 
-            $response = response()->view('diamonds.email-verification.success', [
+            $response = response()->view('email-verification.success', [
                 'tenant' => $tenant,
                 'content' => $content,
                 'channelname' => $channelname,
@@ -284,7 +284,7 @@ class EmailGatedContentController extends Controller
                 'error' => $e->getMessage()
             ]);
 
-            return view('diamonds.email-verification.expired', [
+            return view('email-verification.expired', [
                 'message' => 'An error occurred during verification. Please try again.'
             ]);
         }
@@ -329,7 +329,7 @@ class EmailGatedContentController extends Controller
             }
         }
 
-        return view('diamonds.email-gated-content.access-form', [
+        return view('email-gated-content.access-form', [
             'tenant' => $tenant,
             'content' => $content,
             'channelname' => $channelname,
@@ -345,7 +345,7 @@ class EmailGatedContentController extends Controller
      */
     private function showContent(Tenant $tenant, EmailSubscriberContent $content, string $channelname, SubscriberAccessRecord $accessRecord): View
     {
-        return view('diamonds.email-gated-content.content', [
+        return view('email-gated-content.content', [
             'tenant' => $tenant,
             'content' => $content,
             'channelname' => $channelname,

@@ -1,4 +1,4 @@
-@extends('diamonds.layouts.public')
+@extends('layouts.public')
 
 @section('title', $content->title)
 
