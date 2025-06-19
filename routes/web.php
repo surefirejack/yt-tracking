@@ -370,7 +370,7 @@ Route::bind('channelname', function ($value) {
     return $tenant ?: $value;
 });
 
-// Bind slug to SubscriberContent within tenant scope
+// Bind slug to content within tenant scope (handles both subscriber and email-gated content)
 Route::bind('slug', function ($value, $route) {
     // Get the tenant from the channelname parameter
     $channelname = $route->parameter('channelname');
@@ -389,34 +389,8 @@ Route::bind('slug', function ($value, $route) {
         return $value;
     }
 
-    // Find content by slug within this tenant
-    $content = $tenant->subscriberContent()->where('slug', $value)->first();
-    
-    // Return the content if found, or return the string value to let middleware handle it
-    return $content ?: $value;
-});
-
-// Extend route model binding for email-gated content (p/ routes)
-Route::bind('slug', function ($value, $route) {
-    // Check if this is an email-gated content route
+    // Check if this is an email-gated content route (p/ prefix)
     if (str_starts_with($route->uri(), 'p/')) {
-        // Get the tenant from the channelname parameter
-        $channelname = $route->parameter('channelname');
-        
-        if ($channelname instanceof \App\Models\Tenant) {
-            $tenant = $channelname;
-        } else {
-            // If channelname is still a string, try to find the tenant
-            $tenant = \App\Models\Tenant::whereHas('ytChannel', function ($query) use ($channelname) {
-                $query->whereRaw('LOWER(REPLACE(handle, "@", "")) = ?', [strtolower($channelname)]);
-            })->first();
-        }
-
-        if (!$tenant) {
-            // Return the string value to let middleware handle tenant not found
-            return $value;
-        }
-
         // Find email-gated content by slug within this tenant
         $content = $tenant->emailSubscriberContents()->where('slug', $value)->first();
         
@@ -424,6 +398,9 @@ Route::bind('slug', function ($value, $route) {
         return $content ?: $value;
     }
     
-    // For other routes, use the original logic (already handled above)
-    return $value;
+    // For subscriber routes (s/ prefix), find subscriber content
+    $content = $tenant->subscriberContent()->where('slug', $value)->first();
+    
+    // Return the content if found, or return the string value to let middleware handle it
+    return $content ?: $value;
 });
