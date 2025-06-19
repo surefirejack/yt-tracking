@@ -52,14 +52,14 @@
   - [x] 2.5 Create ESP factory/manager class to resolve correct provider based on tenant settings
   - [x] 2.6 Implement proper error handling and API response validation for Kit API calls
   - [x] 2.7 Add rate limiting protection and retry logic for ESP API calls
-- [ ] 3.0 Content Management & Admin Interface
-  - [ ] 3.1 Create `EmailSubscriberContentResource` in Filament copying structure from existing `SubscriberContentResource`
-  - [ ] 3.2 Add tag selection dropdown that dynamically fetches available tags from configured ESP
-  - [ ] 3.3 Implement "Create New Tag" functionality within the content creation form
-  - [ ] 3.4 Add ESP configuration section to tenant settings with API key input and connection testing
-  - [ ] 3.5 Create content preview functionality showing how the access form will appear to visitors
-  - [ ] 3.6 Add bulk operations for email-gated content (duplicate, delete, export)
-  - [ ] 3.7 Implement content analytics view showing email conversion metrics per piece of content
+- [x] 3.0 Content Management & Admin Interface
+  - [x] 3.1 Create `EmailSubscriberContentResource` in Filament copying structure from existing `SubscriberContentResource`
+  - [x] 3.2 Add tag selection dropdown that dynamically fetches available tags from configured ESP
+  - [x] 3.3 Implement "Create New Tag" functionality within the content creation form
+  - [x] 3.4 Add ESP configuration section to tenant settings with API key input and connection testing
+  - [x] 3.5 Create content preview functionality showing how the access form will appear to visitors
+  - [x] 3.6 Add bulk operations for email-gated content (duplicate, delete, export)
+  - [x] 3.7 Implement content analytics view showing email conversion metrics per piece of content
 - [ ] 4.0 Email Verification & Access Control System
   - [ ] 4.1 Create `EmailGatedContentController` with methods for showing access form and handling email submission
   - [ ] 4.2 Implement email validation and duplicate request prevention logic
