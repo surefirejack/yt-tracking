@@ -359,9 +359,9 @@ class EmailGatedContentController extends Controller
     private function checkESPConnectivity(Tenant $tenant): bool
     {
         try {
-            $espSettings = $tenant->esp_settings ?? [];
+            $espCredentials = $tenant->esp_api_credentials ?? [];
             
-            if (empty($espSettings['provider']) || empty($espSettings['api_key'])) {
+            if (empty($tenant->email_service_provider) || empty($espCredentials['api_key'])) {
                 return false;
             }
 
