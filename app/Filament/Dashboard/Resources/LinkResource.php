@@ -138,7 +138,7 @@ class LinkResource extends Resource
                                                                     ])
                                                                     ->visible(fn ($get) => !$get('is_youtube_video')),
                                                             ])
-                                                            ->action(function (array $data, $record) {
+                                                            ->action(function (array $data, $record, $livewire) {
                                                                 $shortLink = $record->short_link;
                                                                 if ($shortLink) {
                                                                     $url = $shortLink;
@@ -170,7 +170,7 @@ class LinkResource extends Resource
                                                                         }
                                                                     }
                                                                     
-                                                                    $this->js('
+                                                                    $livewire->js('
                                                                         navigator.clipboard.writeText("' . $url . '");
                                                                     ');
                                                                     
@@ -676,7 +676,7 @@ class LinkResource extends Resource
                                     ])
                                     ->visible(fn ($get) => !$get('is_youtube_video')),
                             ])
-                            ->action(function (array $data, $record) {
+                            ->action(function (array $data, $record, $livewire) {
                                 $shortLink = $record->short_link;
                                 if ($shortLink) {
                                     $url = $shortLink;
@@ -708,7 +708,7 @@ class LinkResource extends Resource
                                         }
                                     }
                                     
-                                    $this->js('
+                                    $livewire->js('
                                         navigator.clipboard.writeText("' . $url . '");
                                     ');
                                     
