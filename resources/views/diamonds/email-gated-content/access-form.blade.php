@@ -2,6 +2,19 @@
 
 @section('title', 'Get Access to: ' . $content->title)
 
+@push('head')
+<!-- Dub Conversion Tracking for Email Gated Content -->
+<script>
+(function(d,s,id,domain){
+    if(d.getElementById(id)) return;
+    var js=d.createElement(s),fjs=d.getElementsByTagName(s)[0];
+    js.id=id;js.async=true;
+    js.src='https://'+domain+'/js/dub-conversion.js';
+    fjs.parentNode.insertBefore(js,fjs);
+})(document,'script','dub-conversion-js','{{ request()->getHost() }}');
+</script>
+@endpush
+
 @section('content')
 <div class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-12">
     <div class="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -267,10 +280,45 @@ document.addEventListener('DOMContentLoaded', function() {
             messageContainer.classList.remove('hidden');
             
             if (data.success) {
+                // Fire analytics event for email entry
+                if (typeof window.dubTrackConversion === 'function') {
+                    window.dubTrackConversion({
+                        eventName: 'Email Subscriber - Email Entry',
+                        eventQuantity: 1,
+                        customerEmail: formData.get('email'),
+                        metadata: {
+                            content_title: '{{ $content->title }}',
+                            content_slug: '{{ $content->slug }}',
+                            channel_name: '{{ $channelname }}',
+                            utm_content: '{{ $utmContent }}',
+                            esp_status: data.esp_status || 'unknown',
+                            funnel_step: 'email_entry',
+                            action_type: data.action || 'verification_sent'
+                        }
+                    });
+                }
+                
                 successMessage.classList.remove('hidden');
                 document.getElementById('success-text').textContent = data.message;
                 
                 if (data.action === 'immediate_access') {
+                    // Fire additional event for immediate access
+                    if (typeof window.dubTrackConversion === 'function') {
+                        window.dubTrackConversion({
+                            eventName: 'Email Subscriber - Immediate Access',
+                            eventQuantity: 1,
+                            customerEmail: formData.get('email'),
+                            metadata: {
+                                content_title: '{{ $content->title }}',
+                                content_slug: '{{ $content->slug }}',
+                                channel_name: '{{ $channelname }}',
+                                utm_content: '{{ $utmContent }}',
+                                funnel_step: 'immediate_access',
+                                skip_verification: true
+                            }
+                        });
+                    }
+                    
                     setTimeout(() => {
                         window.location.reload();
                     }, 2000);

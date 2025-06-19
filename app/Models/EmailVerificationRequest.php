@@ -16,12 +16,15 @@ class EmailVerificationRequest extends Model
         'tenant_id',
         'expires_at',
         'verified_at',
+        'esp_error',
+        'esp_error_at',
     ];
 
     protected $casts = [
         'email' => 'encrypted', // Automatically encrypt/decrypt email
         'expires_at' => 'datetime',
         'verified_at' => 'datetime',
+        'esp_error_at' => 'datetime',
     ];
 
     protected static function boot()

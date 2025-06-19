@@ -171,6 +171,9 @@ class EmailGatedContentController extends Controller
                 'expires_at' => now()->addHours(2),
             ]);
 
+            // Check ESP connectivity before dispatching job
+            $espConnected = $this->checkESPConnectivity($tenant);
+            
             // Dispatch job to handle ESP interactions and send email
             ProcessEmailVerification::dispatch(
                 $verificationRequest,
@@ -181,13 +184,19 @@ class EmailGatedContentController extends Controller
                 'tenant_id' => $tenant->id,
                 'content_id' => $content->id,
                 'verification_request_id' => $verificationRequest->id,
-                'email' => $email
+                'email' => $email,
+                'esp_connected' => $espConnected
             ]);
+
+            $message = $espConnected 
+                ? 'Check your email for a verification link!'
+                : 'Check your email for a verification link! Note: Email list signup may be delayed due to temporary issues.';
 
             return response()->json([
                 'success' => true,
-                'message' => 'Check your email for a verification link!',
-                'action' => 'email_sent'
+                'message' => $message,
+                'action' => 'email_sent',
+                'esp_status' => $espConnected ? 'connected' : 'degraded'
             ]);
 
         } catch (\Exception $e) {
@@ -342,6 +351,36 @@ class EmailGatedContentController extends Controller
             'channelname' => $channelname,
             'accessRecord' => $accessRecord,
         ]);
+    }
+
+    /**
+     * Check ESP connectivity to provide user feedback
+     */
+    private function checkESPConnectivity(Tenant $tenant): bool
+    {
+        try {
+            $espSettings = $tenant->esp_settings ?? [];
+            
+            if (empty($espSettings['provider']) || empty($espSettings['api_key'])) {
+                return false;
+            }
+
+            $provider = $this->espManager->getProviderForTenant($tenant);
+            
+            if (!$provider) {
+                return false;
+            }
+            
+            // Try a simple API call to check connectivity
+            $provider->getTags();
+            return true;
+        } catch (\Exception $e) {
+            Log::warning('ESP connectivity check failed', [
+                'tenant_id' => $tenant->id,
+                'error' => $e->getMessage()
+            ]);
+            return false;
+        }
     }
 
     /**

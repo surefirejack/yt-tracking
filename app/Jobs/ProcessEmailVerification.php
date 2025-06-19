@@ -137,6 +137,12 @@ class ProcessEmailVerification implements ShouldQueue
                 'trace' => $e->getTraceAsString()
             ]);
 
+            // Record ESP error in verification request
+            $this->verificationRequest->update([
+                'esp_error' => $e->getMessage(),
+                'esp_error_at' => now()
+            ]);
+
             // Still try to send verification email as fallback
             try {
                 $this->sendVerificationEmail();

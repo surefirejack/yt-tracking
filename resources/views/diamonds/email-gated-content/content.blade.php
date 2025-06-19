@@ -2,6 +2,32 @@
 
 @section('title', $content->title)
 
+@push('head')
+<!-- Dub Conversion Tracking for Content Access -->
+<script>
+window.DubConversionConfig = {
+    eventName: 'Email Subscriber - Content Access',
+    eventQuantity: 1,
+    metadata: {
+        content_title: '{{ $content->title }}',
+        content_slug: '{{ $content->slug }}',
+        channel_name: '{{ $channelname }}',
+        funnel_step: 'content_access',
+        access_type: 'verified_subscriber'
+    }
+};
+</script>
+<script>
+(function(d,s,id,domain){
+    if(d.getElementById(id)) return;
+    var js=d.createElement(s),fjs=d.getElementsByTagName(s)[0];
+    js.id=id;js.async=true;
+    js.src='https://'+domain+'/js/dub-conversion.js';
+    fjs.parentNode.insertBefore(js,fjs);
+})(document,'script','dub-conversion-js','{{ request()->getHost() }}');
+</script>
+@endpush
+
 @section('content')
 <div class="min-h-screen bg-gray-50 py-8">
     <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
