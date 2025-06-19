@@ -13,17 +13,19 @@
 - `app/Services/EmailServiceProvider/KitServiceProvider.php` - Kit/ConvertKit API implementation ✅
 - `app/Services/EmailServiceProvider/EmailServiceProviderManager.php` - ESP factory/manager class ✅
 - `app/Providers/AppServiceProvider.php` - Updated to register EmailServiceProviderManager ✅
-- `app/Filament/Resources/EmailSubscriberContentResource.php` - Filament admin resource for content management
-- `app/Http/Controllers/EmailGatedContentController.php` - Controller for handling content access and verification
-- `app/Mail/EmailVerificationMail.php` - Mailable for sending verification emails
-- `app/Jobs/ProcessEmailVerification.php` - Queue job for ESP API interactions
-- `app/Jobs/CleanupExpiredVerifications.php` - Job to clean up expired verification requests
-- `resources/views/email-gated-content/access-form.blade.php` - Content access form view
-- `resources/views/email-gated-content/verification-success.blade.php` - Post-verification success page
-- `resources/views/emails/email-verification.blade.php` - Email verification template
-- `routes/tenant.php` - Routes for email-gated content (pattern: /p/{channelname}/{slug})
-- `tests/Feature/EmailGatedContentTest.php` - Feature tests for the complete workflow
-- `tests/Unit/KitServiceProviderTest.php` - Unit tests for Kit API integration
+- `app/Filament/Resources/EmailSubscriberContentResource.php` - Filament admin resource for content management ✅
+- `app/Http/Controllers/EmailGatedContentController.php` - Controller for handling content access and verification ✅
+- `app/Mail/EmailVerificationMail.php` - Mailable for sending verification emails ✅
+- `app/Jobs/ProcessEmailVerification.php` - Queue job for ESP API interactions ✅
+- `app/Jobs/CleanupExpiredVerifications.php` - Job to clean up expired verification requests ✅
+- `resources/views/diamonds/email-gated-content/access-form.blade.php` - Content access form view ✅ (needs UI enhancement)
+- `resources/views/diamonds/email-gated-content/content.blade.php` - Content display page ✅ (needs UI enhancement)
+- `resources/views/diamonds/email-verification/success.blade.php` - Post-verification success page ✅ (needs UI enhancement)
+- `resources/views/diamonds/email-verification/expired.blade.php` - Verification error/expired page ✅ (needs UI enhancement)
+- `resources/views/emails/email-verification.blade.php` - Email verification template ✅
+- `routes/web.php` - Routes for email-gated content (pattern: /p/{channelname}/{slug}) ✅
+- `tests/Feature/EmailGatedContentTest.php` - Feature tests for the complete workflow ✅
+- `tests/Unit/KitServiceProviderTest.php` - Unit tests for Kit API integration ✅
 
 ### Notes
 
@@ -33,6 +35,11 @@
 - Use existing tenant settings system for ESP configuration
 - Follow Laravel 11+ patterns and register services in bootstrap/app.php
 - Tests should cover the complete user flow from content access to verification
+- **UI Enhancement Phase**: Update all email-gated content views to match the subscriber layout design patterns
+- **Accent Color Integration**: Use tenant's `subscriber_accent_color` field for consistent branding across all email-gated pages
+- **File Download Support**: Add file upload/download functionality to EmailSubscriberContent similar to SubscriberContent
+- **Content Rendering**: Ensure HTML content is properly rendered instead of displaying raw HTML tags
+- **Layout Consistency**: Maintain consistent header, navigation, and footer design across all email-gated content pages
 
 ## Tasks
 
@@ -81,4 +88,15 @@
   - [x] 5.7 Create responsive design ensuring mobile-friendly email entry experience
   - [x] 5.8 Add loading animations and progress indicators for verification process
   - [x] 5.9 Implement routes using pattern `/p/{channelname}/{slug}` for email-gated content
-  - [x] 5.10 Add analytics event firing for email conversion tracking (email entry → verification → content access) 
+  - [x] 5.10 Add analytics event firing for email conversion tracking (email entry → verification → content access)
+- [ ] 6.0 Enhanced UI & Layout Improvements
+  - [ ] 6.1 Update email access form layout to match subscriber layout design with channel banner header
+  - [ ] 6.2 Implement tenant accent color integration for buttons and content area highlights on access form
+  - [ ] 6.3 Add channel profile image and banner display to access form header section
+  - [ ] 6.4 Update email verification success page with subscriber-style banner and accent color theming
+  - [ ] 6.5 Enhance verification expired/error page with consistent banner design and accent color usage
+  - [ ] 6.6 Update email-gated content display page to match subscriber content layout structure
+  - [ ] 6.7 Add file download functionality to email-gated content similar to subscriber content downloads
+  - [ ] 6.8 Implement proper HTML content rendering instead of displaying raw HTML tags
+  - [ ] 6.9 Add channel navigation breadcrumbs and user actions section to content pages
+  - [ ] 6.10 Create consistent footer design across all email-gated content pages matching subscriber layout 
