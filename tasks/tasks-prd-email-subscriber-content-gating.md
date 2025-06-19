@@ -9,6 +9,7 @@
 - `database/migrations/2025_06_19_032305_create_email_verification_requests_table.php` - Migration for verification tracking ✅
 - `database/migrations/2025_06_19_032328_create_subscriber_access_records_table.php` - Migration for access records ✅
 - `database/migrations/2025_06_19_032517_add_email_integration_settings_to_tenants_table.php` - Migration for ESP settings in tenants table ✅
+- `database/migrations/[timestamp]_add_file_and_video_fields_to_email_subscriber_contents_table.php` - Migration for file upload and YouTube video fields
 - `app/Services/EmailServiceProvider/EmailServiceProviderInterface.php` - Abstract interface for ESP integration ✅
 - `app/Services/EmailServiceProvider/KitServiceProvider.php` - Kit/ConvertKit API implementation ✅
 - `app/Services/EmailServiceProvider/EmailServiceProviderManager.php` - ESP factory/manager class ✅
@@ -40,6 +41,9 @@
 - **File Download Support**: Add file upload/download functionality to EmailSubscriberContent similar to SubscriberContent
 - **Content Rendering**: Ensure HTML content is properly rendered instead of displaying raw HTML tags
 - **Layout Consistency**: Maintain consistent header, navigation, and footer design across all email-gated content pages
+- **Admin Interface Enhancement**: Add file upload capabilities and YouTube video selection to content creation/editing forms
+- **File Management**: Support multiple file types (PDF, images, documents) with proper validation and storage handling
+- **Video Integration**: Optional YouTube video embedding in email-gated content similar to subscriber content functionality
 
 ## Tasks
 
@@ -51,6 +55,8 @@
   - [x] 1.5 Create `EmailVerificationRequest` model with encrypted email casting, automatic token generation, and expiration handling
   - [x] 1.6 Create `SubscriberAccessRecord` model with encrypted email casting, JSON tag storage, and cookie token generation
   - [x] 1.7 Add email integration settings to existing tenant settings system (ESP type, API credentials, cookie duration)
+  - [ ] 1.8 Add migration to include file storage fields (file_paths, file_names) and youtube_video_url to email_subscriber_contents table
+  - [ ] 1.9 Update EmailSubscriberContent model to handle file uploads and YouTube video URL with proper casting and validation
 - [x] 2.0 Email Service Provider Integration Architecture  
   - [x] 2.1 Create `EmailServiceProviderInterface` with methods: checkSubscriber(), getTags(), addSubscriber(), addTagToSubscriber()
   - [x] 2.2 Implement `KitServiceProvider` class using Kit API v3 for subscriber management
@@ -67,6 +73,10 @@
   - [x] 3.5 Create content preview functionality showing how the access form will appear to visitors
   - [x] 3.6 Add bulk operations for email-gated content (duplicate, delete, export)
   - [x] 3.7 Implement content analytics view showing email conversion metrics per piece of content
+  - [ ] 3.8 Add file upload functionality to EmailSubscriberContent admin interface similar to SubscriberContent
+  - [ ] 3.9 Implement YouTube video selection dropdown in content creation form (optional field)
+  - [ ] 3.10 Add file management interface for uploaded content files (view, delete, reorder)
+  - [ ] 3.11 Create file validation and storage handling for multiple file types (PDF, images, documents)
 - [x] 4.0 Email Verification & Access Control System
   - [x] 4.1 Create `EmailGatedContentController` with methods for showing access form and handling email submission
   - [x] 4.2 Implement email validation and duplicate request prevention logic
