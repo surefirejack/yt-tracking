@@ -33,6 +33,7 @@ use App\Models\YtVideo;
 use Filament\Forms\Components\Select;
 use Filament\Notifications\Notification;
 use Filament\Forms\Components\ToggleButtons;
+use Filament\Forms\Components\Placeholder;
 
 class LinkResource extends Resource
 {
@@ -103,6 +104,11 @@ class LinkResource extends Resource
                                                                     ->searchable()
                                                                     ->preload()
                                                                     ->visible(fn ($get) => $get('is_youtube_video')),
+
+                                                                Forms\Components\Placeholder::make('utm_instructions')
+                                                                    ->label('')
+                                                                    ->content('It\'s important you fill in at least one field but you\'re not required to fill all of them in')
+                                                                    ->visible(fn ($get) => !$get('is_youtube_video')),
 
                                                                 Grid::make(2)
                                                                     ->schema([
@@ -636,6 +642,11 @@ class LinkResource extends Resource
                                     ->searchable()
                                     ->preload()
                                     ->visible(fn ($get) => $get('is_youtube_video')),
+
+                                Forms\Components\Placeholder::make('utm_instructions')
+                                    ->label('')
+                                    ->content('It\'s important you fill in at least one field but you\'re not required to fill all of them in')
+                                    ->visible(fn ($get) => !$get('is_youtube_video')),
 
                                 Grid::make(2)
                                     ->schema([
