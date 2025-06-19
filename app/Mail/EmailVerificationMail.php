@@ -34,17 +34,17 @@ class EmailVerificationMail extends Mailable implements ShouldQueue
         $content = $this->verificationRequest->content;
         $channelName = $tenant->ytChannel?->title ?? $tenant->name;
 
-        return Envelope::make(
+        return new Envelope(
             subject: "Verify your email to access: {$content->title}",
             from: config('mail.from.address', 'noreply@' . config('app.domain')),
-            replyTo: $tenant->ytChannel?->custom_url ? "noreply@{$tenant->ytChannel->custom_url}" : null,
+            replyTo: $tenant->ytChannel?->custom_url ? ["noreply@{$tenant->ytChannel->custom_url}"] : [],
         );
     }
 
     public function content(): Content
     {
-        return Content::make(
-            view: 'diamonds.emails.email-verification',
+        return new Content(
+            view: 'emails.email-verification',
             with: [
                 'verificationRequest' => $this->verificationRequest,
                 'verificationUrl' => $this->verificationUrl,

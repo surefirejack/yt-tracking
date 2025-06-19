@@ -78,7 +78,7 @@
                 </div>
 
                 <!-- Email Form -->
-                <form id="email-access-form" class="space-y-6">
+                <form id="email-access-form" onsubmit="return false;" class="space-y-6">
                     @csrf
                     <input type="hidden" name="utm_content" value="{{ $utmContent }}">
                     
@@ -120,9 +120,10 @@
                     </div>
 
                     <!-- Submit Button -->
-                    <button type="submit" 
+                    <button type="button" 
                             id="submit-btn"
-                            class="w-full bg-gradient-to-r from-indigo-600 to-blue-600 text-white font-bold py-4 px-6 rounded-lg hover:from-indigo-700 hover:to-blue-700 transform hover:scale-105 transition-all duration-200 shadow-lg">
+                            style="background: linear-gradient(to right, #4f46e5, #2563eb); color: white; border: 2px solid #1e40af;"
+                            class="w-full font-bold py-4 px-6 rounded-lg hover:opacity-90 transform hover:scale-105 transition-all duration-200 shadow-lg">
                         <span id="btn-text">✨ Get Instant Access</span>
                         <span id="btn-loading" class="hidden">
                             <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -198,7 +199,7 @@
 
         <!-- Footer Info -->
         <div class="mt-6 text-center text-sm text-gray-600">
-            <p>Powered by {{ config('app.name') }} • Protecting your privacy since day one</p>
+            <p>Powered by {{ config('app.name') }} • The ultimate software for growing your YouTube channel</p>
         </div>
     </div>
 </div>
@@ -248,12 +249,10 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    form.addEventListener('submit', function(e) {
-        e.preventDefault();
-        
+    function handleSubmit() {
         if (!subscribeCheckbox.checked) {
             showAgreementModal();
-            return;
+            return false;
         }
 
         const formData = new FormData(form);
@@ -272,7 +271,8 @@ document.addEventListener('DOMContentLoaded', function() {
             method: 'POST',
             body: formData,
             headers: {
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                'X-Requested-With': 'XMLHttpRequest'
             }
         })
         .then(response => response.json())
@@ -340,6 +340,17 @@ document.addEventListener('DOMContentLoaded', function() {
             btnText.classList.remove('hidden');
             btnLoading.classList.add('hidden');
         });
+        
+        return false;
+    }
+
+    // Handle both form submit and button click
+    submitBtn.addEventListener('click', handleSubmit);
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        handleSubmit();
+        return false;
     });
 });
 

@@ -99,6 +99,7 @@ class EmailGatedContentController extends Controller
     public function submitEmail(Request $request, $channelname, $slug): JsonResponse
     {
         try {
+
             // Validate input
             $validator = Validator::make($request->all(), [
                 'email' => 'required|email|max:255',
@@ -113,18 +114,26 @@ class EmailGatedContentController extends Controller
                 ], 422);
             }
 
-            // Find tenant and content
-            $tenant = $this->findTenantByChannelName($channelname);
-            if (!$tenant) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Channel not found.'
-                ], 404);
+            // Handle route model binding - both parameters might be objects
+            if ($channelname instanceof Tenant) {
+                $tenant = $channelname;
+            } else {
+                $tenant = $this->findTenantByChannelName($channelname);
+                if (!$tenant) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Channel not found.'
+                    ], 404);
+                }
             }
 
-            $content = EmailSubscriberContent::where('tenant_id', $tenant->id)
-                ->where('slug', $slug)
-                ->first();
+            if ($slug instanceof EmailSubscriberContent) {
+                $content = $slug;
+            } else {
+                $content = EmailSubscriberContent::where('tenant_id', $tenant->id)
+                    ->where('slug', $slug)
+                    ->first();
+            }
 
             if (!$content) {
                 return response()->json([
@@ -216,11 +225,11 @@ class EmailGatedContentController extends Controller
     /**
      * Handle email verification from link clicks
      */
-    public function verifyEmail(Request $request, string $token): View
+    public function verifyEmail(Request $request, string $token)
     {
         try {
+            // First, find the verification request regardless of verified status
             $verificationRequest = EmailVerificationRequest::where('verification_token', $token)
-                ->whereNull('verified_at')
                 ->where('expires_at', '>', now())
                 ->first();
 
@@ -229,6 +238,45 @@ class EmailGatedContentController extends Controller
                 
                 return view('email-verification.expired', [
                     'message' => 'This verification link is invalid or has expired.'
+                ]);
+            }
+
+            // If already verified, check if we can grant access via existing record
+            if ($verificationRequest->verified_at) {
+                Log::info('Verification token already used, checking for existing access', [
+                    'token' => $token,
+                    'verified_at' => $verificationRequest->verified_at
+                ]);
+
+                // Find existing access record
+                $accessRecord = SubscriberAccessRecord::where('email', $verificationRequest->email)
+                    ->where('tenant_id', $verificationRequest->tenant_id)
+                    ->first();
+
+                if ($accessRecord) {
+                    // Grant access using existing record
+                    $tenant = $verificationRequest->tenant;
+                    $content = $verificationRequest->content;
+                    $channelname = $tenant->getChannelName() ?? 'channel';
+                    $contentUrl = route('email-gated-content.show', [
+                        'channelname' => $channelname,
+                        'slug' => $content->slug
+                    ]);
+
+                    $view = view('email-verification.success', [
+                        'tenant' => $tenant,
+                        'content' => $content,
+                        'channelname' => $channelname,
+                        'contentUrl' => $contentUrl,
+                        'message' => 'You already have access to this content!'
+                    ]);
+
+                    return $this->setAccessCookie(response($view), $accessRecord);
+                }
+
+                // If no access record found, show expired (this shouldn't normally happen)
+                return view('email-verification.expired', [
+                    'message' => 'This verification link has already been used.'
                 ]);
             }
 
@@ -268,7 +316,8 @@ class EmailGatedContentController extends Controller
                 'slug' => $content->slug
             ]);
 
-            $response = response()->view('email-verification.success', [
+            // Create view response like other methods in this controller
+            $view = view('email-verification.success', [
                 'tenant' => $tenant,
                 'content' => $content,
                 'channelname' => $channelname,
@@ -276,7 +325,8 @@ class EmailGatedContentController extends Controller
                 'message' => 'Email verified successfully! You now have access to the content.'
             ]);
 
-            return $this->setAccessCookie($response, $accessRecord);
+            // Convert to response and set cookie
+            return $this->setAccessCookie(response($view), $accessRecord);
 
         } catch (\Exception $e) {
             Log::error('Error verifying email token', [

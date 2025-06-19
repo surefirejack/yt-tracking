@@ -85,7 +85,7 @@ class ProcessEmailVerification implements ShouldQueue
             // If subscriber exists, check if they have the required tag
             if ($existingSubscriber) {
                 try {
-                    $subscriberTags = $provider->getSubscriberTags($existingSubscriber['id']);
+                    $subscriberTags = $existingSubscriber['tags'] ?? [];
                     
                     if (in_array($content->required_tag_id, $subscriberTags)) {
                         Log::info('Existing subscriber has required tag, granting immediate access', [
@@ -231,7 +231,8 @@ class ProcessEmailVerification implements ShouldQueue
             }
 
             // Get updated subscriber tags for access record
-            $subscriberTags = $provider->getSubscriberTags($subscriber['id']);
+            $updatedSubscriber = $provider->checkSubscriber($email);
+            $subscriberTags = $updatedSubscriber['tags'] ?? [];
             $this->createAccessRecord($subscriberTags);
 
         } catch (\Exception $e) {

@@ -5,26 +5,26 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>@yield('title', 'Content Access') - {{ $tenant->ytChannel?->title ?? $tenant->name ?? 'Creator' }}</title>
+    <title>@yield('title', 'Content Access') - {{ isset($tenant) ? ($tenant->ytChannel?->title ?? $tenant->name ?? 'Creator') : 'Creator' }}</title>
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
 
     <!-- Favicon -->
-    @if($tenant->member_profile_image)
+    @if(isset($tenant) && $tenant->member_profile_image)
         <link rel="icon" type="image/png" href="{{ Storage::url($tenant->member_profile_image) }}">
-    @elseif($tenant->ytChannel?->thumbnail_url)
+    @elseif(isset($tenant) && $tenant->ytChannel?->thumbnail_url)
         <link rel="icon" type="image/png" href="{{ $tenant->ytChannel->thumbnail_url }}">
     @endif
 
     <!-- Meta Tags -->
-    <meta name="description" content="@yield('meta_description', 'Get access to exclusive content from ' . ($tenant->ytChannel?->title ?? $tenant->name ?? 'Creator'))">
+    <meta name="description" content="@yield('meta_description', 'Get access to exclusive content from ' . (isset($tenant) ? ($tenant->ytChannel?->title ?? $tenant->name ?? 'Creator') : 'Creator'))">
     
     <!-- Open Graph -->
-    <meta property="og:title" content="@yield('title', 'Content Access') - {{ $tenant->ytChannel?->title ?? $tenant->name ?? 'Creator' }}">
+    <meta property="og:title" content="@yield('title', 'Content Access') - {{ isset($tenant) ? ($tenant->ytChannel?->title ?? $tenant->name ?? 'Creator') : 'Creator' }}">
     <meta property="og:description" content="@yield('meta_description', 'Get access to exclusive content')">
-    @if($tenant->ytChannel?->banner_image_url)
+    @if(isset($tenant) && $tenant->ytChannel?->banner_image_url)
         <meta property="og:image" content="{{ $tenant->ytChannel->banner_image_url }}">
     @endif
 
