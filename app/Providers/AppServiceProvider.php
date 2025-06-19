@@ -6,6 +6,7 @@ use App\Services\PaymentProviders\LemonSqueezy\LemonSqueezyProvider;
 use App\Services\PaymentProviders\Paddle\PaddleProvider;
 use App\Services\PaymentProviders\PaymentService;
 use App\Services\PaymentProviders\Stripe\StripeProvider;
+use App\Services\EmailServiceProvider\EmailServiceProviderManager;
 use App\Services\UserVerificationService;
 use App\Services\VerificationProviders\TwilioProvider;
 use Filament\Support\Assets\Js;
@@ -35,6 +36,9 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(PaymentService::class, function () {
             return new PaymentService(...$this->app->tagged('payment-providers'));
         });
+
+        // email service provider manager
+        $this->app->singleton(EmailServiceProviderManager::class);
 
         // verification providers
         $this->app->tag([
