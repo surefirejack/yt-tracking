@@ -73,10 +73,10 @@
   - [x] 3.5 Create content preview functionality showing how the access form will appear to visitors
   - [x] 3.6 Add bulk operations for email-gated content (duplicate, delete, export)
   - [x] 3.7 Implement content analytics view showing email conversion metrics per piece of content
-  - [ ] 3.8 Add file upload functionality to EmailSubscriberContent admin interface similar to SubscriberContent
-  - [ ] 3.9 Implement YouTube video selection dropdown in content creation form (optional field)
-  - [ ] 3.10 Add file management interface for uploaded content files (view, delete, reorder)
-  - [ ] 3.11 Create file validation and storage handling for multiple file types (PDF, images, documents)
+  - [x] 3.8 Add file upload functionality to EmailSubscriberContent admin interface similar to SubscriberContent
+  - [x] 3.9 Implement YouTube video selection dropdown in content creation form (optional field)
+  - [x] 3.10 Add file management interface for uploaded content files (view, delete, reorder)
+  - [x] 3.11 Create file validation and storage handling for multiple file types (PDF, images, documents)
 - [x] 4.0 Email Verification & Access Control System
   - [x] 4.1 Create `EmailGatedContentController` with methods for showing access form and handling email submission
   - [x] 4.2 Implement email validation and duplicate request prevention logic

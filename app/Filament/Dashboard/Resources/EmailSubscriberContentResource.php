@@ -14,6 +14,8 @@ use Filament\Facades\Filament;
 use Filament\Notifications\Notification;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rules\File;
+use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 
 class EmailSubscriberContentResource extends Resource
 {
@@ -203,6 +205,117 @@ class EmailSubscriberContentResource extends Resource
                             ->fileAttachmentsDirectory('email-subscriber-content/attachments')
                             ->helperText('Rich text content that will be displayed to verified email subscribers'),
                     ]),
+
+                Forms\Components\Section::make('YouTube Video')
+                    ->description('Optional YouTube video to embed with this content')
+                    ->icon('heroicon-o-video-camera')
+                    ->schema([
+                        Forms\Components\Select::make('youtube_video_url')
+                            ->label('YouTube Video')
+                            ->options(function () {
+                                $tenant = Filament::getTenant();
+                                if (!$tenant || !$tenant->ytChannel) {
+                                    return [];
+                                }
+
+                                return $tenant->ytChannel->ytVideos()
+                                    ->latest('published_at')
+                                    ->limit(50)
+                                    ->get()
+                                    ->pluck('title', 'url')
+                                    ->toArray();
+                            })
+                            ->searchable()
+                            ->preload()
+                            ->placeholder('Select a video from your channel')
+                            ->helperText('Choose a video from your YouTube channel to embed with this content')
+                            ->columnSpanFull(),
+                    ])
+                    ->collapsible(),
+
+                Forms\Components\Section::make('File Downloads')
+                    ->description('Upload files that subscribers can download')
+                    ->icon('heroicon-o-arrow-down-tray')
+                    ->schema([
+                        // Show current human-readable file names when editing
+                        Forms\Components\Placeholder::make('current_files')
+                            ->label('Current Files')
+                            ->content(function ($record) {
+                                if (!$record || !$record->file_paths || count($record->file_paths) === 0) {
+                                    return 'No files uploaded yet';
+                                }
+                                
+                                $fileNames = [];
+                                foreach ($record->file_paths as $index => $path) {
+                                    $filename = basename($path);
+                                    
+                                    // Use human-readable name if available, otherwise clean up the filename
+                                    if ($record->file_names && isset($record->file_names[$index])) {
+                                        $displayName = $record->file_names[$index];
+                                    } else {
+                                        // Remove timestamp prefix if present
+                                        $displayName = preg_replace('/^\d{14}_/', '', $filename);
+                                    }
+                                    
+                                    $fileNames[] = '• ' . $displayName;
+                                }
+                                
+                                return new \Illuminate\Support\HtmlString(implode('<br>', $fileNames));
+                            })
+                            ->visible(fn ($record) => $record && $record->file_paths && count($record->file_paths) > 0)
+                            ->columnSpanFull(),
+
+                        Forms\Components\FileUpload::make('file_paths')
+                            ->label('Downloadable Files')
+                            ->multiple()
+                            ->directory('email-subscriber-content')
+                            ->disk('local')
+                            ->acceptedFileTypes([
+                                'application/pdf',
+                                'image/jpeg',
+                                'image/jpg', 
+                                'image/png',
+                                'application/zip',
+                                'application/x-zip-compressed',
+                            ])
+                            ->maxSize(50 * 1024) // 50MB in KB
+                            ->maxFiles(10)
+                            ->reorderable()
+                            ->columnSpanFull()
+                            ->helperText('Upload files (PDF, JPG, JPEG, PNG, ZIP) up to 50MB each. Verified subscribers will be able to download these files.')
+                            ->rule([
+                                File::types(['pdf', 'jpg', 'jpeg', 'png', 'zip'])->max(50 * 1024), // 50MB
+                            ])
+                            ->afterStateUpdated(function ($state, callable $set, callable $get) {
+                                // When files are uploaded, store their original names for display
+                                if (is_array($state)) {
+                                    $currentFileNames = $get('file_names') ?? [];
+                                    $newFileNames = [];
+                                    
+                                    foreach ($state as $index => $filePath) {
+                                        if (isset($currentFileNames[$index])) {
+                                            // Keep existing name if it exists
+                                            $newFileNames[] = $currentFileNames[$index];
+                                        } else {
+                                            // Extract original filename from the stored path
+                                            $filename = basename($filePath);
+                                            // Remove timestamp prefix (YmdHis_) if present
+                                            $cleanName = preg_replace('/^\d{14}_/', '', $filename);
+                                            $newFileNames[] = $cleanName;
+                                        }
+                                    }
+                                    
+                                    $set('file_names', $newFileNames);
+                                }
+                            })
+                            ->getUploadedFileNameForStorageUsing(
+                                fn (TemporaryUploadedFile $file): string => now()->format('YmdHis') . '_' . $file->getClientOriginalName()
+                            ),
+
+                        Forms\Components\Hidden::make('file_names')
+                            ->dehydrated(),
+                    ])
+                    ->collapsible(),
             ]);
     }
 
@@ -252,6 +365,26 @@ class EmailSubscriberContentResource extends Resource
                     ->badge()
                     ->color('primary'),
 
+                Tables\Columns\IconColumn::make('has_video')
+                    ->label('Video')
+                    ->getStateUsing(fn (EmailSubscriberContent $record): bool => !empty($record->youtube_video_url))
+                    ->boolean()
+                    ->trueIcon('heroicon-o-video-camera')
+                    ->falseIcon('heroicon-o-video-camera-slash')
+                    ->trueColor('info')
+                    ->falseColor('gray'),
+
+                Tables\Columns\TextColumn::make('file_count')
+                    ->label('Files')
+                    ->getStateUsing(fn (EmailSubscriberContent $record): int => count($record->file_paths ?? []))
+                    ->badge()
+                    ->color(fn (int $state): string => match (true) {
+                        $state === 0 => 'gray',
+                        $state <= 2 => 'success',
+                        $state <= 5 => 'warning',
+                        default => 'danger',
+                    }),
+
                 Tables\Columns\TextColumn::make('verification_count')
                     ->label('Verifications')
                     ->getStateUsing(fn (EmailSubscriberContent $record): int => 
@@ -291,6 +424,16 @@ class EmailSubscriberContentResource extends Resource
                             return [];
                         }
                     }),
+
+                Tables\Filters\Filter::make('has_video')
+                    ->label('Has Video')
+                    ->query(fn (Builder $query): Builder => $query->whereNotNull('youtube_video_url'))
+                    ->toggle(),
+
+                Tables\Filters\Filter::make('has_files')
+                    ->label('Has Files')
+                    ->query(fn (Builder $query): Builder => $query->whereNotNull('file_paths'))
+                    ->toggle(),
             ])
             ->actions([
                 Tables\Actions\Action::make('preview')
