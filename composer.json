@@ -10,6 +10,7 @@
     "require": {
         "php": "^8.2",
         "aws/aws-sdk-php": "^3.293",
+        "binarytorch/larecipe": "^2.8",
         "blade-ui-kit/blade-icons": "^1.5",
         "codeisawesomehq/filament-tinyeditor": "^1.4",
         "filament/filament": "^3.3",
