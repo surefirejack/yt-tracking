@@ -12,6 +12,7 @@ use Filament\Facades\Filament;
 use Filament\Notifications\Notification;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
+use Illuminate\Database\Eloquent\Model;
 
 class EmailSubscriberSettings extends Page implements HasForms
 {
@@ -31,11 +32,13 @@ class EmailSubscriberSettings extends Page implements HasForms
     {
         $tenant = Filament::getTenant();
         
-        $this->form->fill([
+        $this->data = [
             'email_service_provider' => $tenant->email_service_provider ?? 'kit',
             'esp_api_credentials' => $tenant->esp_api_credentials ?? [],
             'email_verification_cookie_duration_days' => $tenant->email_verification_cookie_duration_days ?? 30,
-        ]);
+        ];
+        
+        $this->form->fill($this->data);
     }
 
     public function form(Form $form): Form
@@ -66,10 +69,21 @@ class EmailSubscriberSettings extends Page implements HasForms
                                 ->revealable()
                                 ->required()
                                 ->maxLength(255)
-                                ->helperText('Your Kit API key from your account settings')
+                                ->helperText('Your Kit API key from Account Settings > General')
                                 ->placeholder('Enter your Kit API key')
                                 ->visible(fn (Forms\Get $get) => $get('email_service_provider') === 'kit'),
+
+                            Forms\Components\TextInput::make('esp_api_credentials.api_secret')
+                                ->label('API Secret')
+                                ->password()
+                                ->revealable()
+                                ->required()
+                                ->maxLength(255)
+                                ->helperText('Your Kit API secret from Account Settings > General')
+                                ->placeholder('Enter your Kit API secret')
+                                ->visible(fn (Forms\Get $get) => $get('email_service_provider') === 'kit'),
                         ])
+                        ->columns(2)
                         ->columnSpanFull(),
 
                         Forms\Components\Actions::make([
@@ -81,10 +95,10 @@ class EmailSubscriberSettings extends Page implements HasForms
                                     $provider = $get('email_service_provider');
                                     $credentials = $get('esp_api_credentials') ?? [];
 
-                                    if (empty($credentials['api_key'])) {
+                                    if (empty($credentials['api_key']) || empty($credentials['api_secret'])) {
                                         Notification::make()
-                                            ->title('API Key Required')
-                                            ->body('Please enter your API key before testing the connection.')
+                                            ->title('API Credentials Required')
+                                            ->body('Please enter both your API key and API secret before testing the connection.')
                                             ->danger()
                                             ->send();
                                         return;
@@ -231,11 +245,6 @@ class EmailSubscriberSettings extends Page implements HasForms
     protected function getHeaderActions(): array
     {
         return [
-            Actions\Action::make('save')
-                ->label('Save Settings')
-                ->icon('heroicon-o-check')
-                ->action('save'),
-
             Actions\Action::make('manage_content')
                 ->label('Manage Email-Gated Content')
                 ->icon('heroicon-o-document-text')
@@ -259,8 +268,14 @@ class EmailSubscriberSettings extends Page implements HasForms
         $data = $this->form->getState();
         $tenant = Filament::getTenant();
 
-        // Validate ESP configuration before saving
-        if (!empty($data['esp_api_credentials']['api_key'])) {
+        // Debug logging
+        \Log::info('EmailSubscriberSettings save method called', [
+            'data' => $data,
+            'tenant_id' => $tenant->id
+        ]);
+
+        // Validate ESP configuration before saving (only if credentials are provided)
+        if (!empty($data['esp_api_credentials']['api_key']) || !empty($data['esp_api_credentials']['api_secret'])) {
             $espManager = app(EmailServiceProviderManager::class);
             $validation = $espManager->validateConfiguration(
                 $data['email_service_provider'],
@@ -289,8 +304,12 @@ class EmailSubscriberSettings extends Page implements HasForms
             ->body('Your email subscriber settings have been saved successfully.')
             ->send();
 
-        // Refresh the form
-        $this->mount();
+        // Refresh the form data
+        $this->data = [
+            'email_service_provider' => $tenant->email_service_provider,
+            'esp_api_credentials' => $tenant->esp_api_credentials,
+            'email_verification_cookie_duration_days' => $tenant->email_verification_cookie_duration_days,
+        ];
     }
 
     public function getTitle(): string

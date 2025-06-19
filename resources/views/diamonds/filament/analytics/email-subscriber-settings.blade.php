@@ -19,18 +19,18 @@
     </x-filament::section>
 
     <!-- Settings Form -->
-    <x-filament::section>
-        <form wire:submit="save">
+    <form wire:submit="save">
+        <x-filament::section>
             {{ $this->form }}
             
             <x-slot name="footerActions">
-                <x-filament::button type="submit" size="lg">
-                    <x-filament::icon icon="heroicon-m-check" class="w-5 h-5" />
+                <x-filament::button type="submit">
+                    <x-filament::icon icon="heroicon-m-check" class="w-4 h-4 mr-2" />
                     Save Settings
                 </x-filament::button>
             </x-slot>
-        </form>
-    </x-filament::section>
+        </x-filament::section>
+    </form>
 
     <!-- Quick Links -->
     <x-filament::section>
@@ -95,7 +95,7 @@
         <div class="space-y-4">
             <div class="border-l-4 border-primary-500 pl-4">
                 <div class="font-medium text-gray-950 dark:text-white">Kit/ConvertKit Integration</div>
-                <div class="text-sm text-gray-600 dark:text-gray-300">You'll need your Kit API key from your account settings to enable email list integration.</div>
+                <div class="text-sm text-gray-600 dark:text-gray-300">You'll need both your Kit API Key and API Secret from Account Settings > General to enable email list integration.</div>
             </div>
 
             <div class="border-l-4 border-primary-500 pl-4">

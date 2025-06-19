@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Cache;
 class KitServiceProvider implements EmailServiceProviderInterface
 {
     protected string $apiKey;
+    protected string $apiSecret;
     protected string $baseUrl = 'https://api.kit.com/v3';
     protected int $timeout = 30;
     protected int $retryAttempts = 3;
@@ -17,6 +18,7 @@ class KitServiceProvider implements EmailServiceProviderInterface
     public function __construct(array $credentials)
     {
         $this->apiKey = $credentials['api_key'] ?? '';
+        $this->apiSecret = $credentials['api_secret'] ?? '';
     }
 
     public function getSlug(): string
@@ -248,11 +250,15 @@ class KitServiceProvider implements EmailServiceProviderInterface
             $errors[] = 'API key is required';
         }
 
+        if (empty($credentials['api_secret'])) {
+            $errors[] = 'API secret is required';
+        }
+
         if (empty($errors)) {
-            // Test the API key by making a test call
+            // Test the credentials by making a test call
             $tempProvider = new self($credentials);
             if (!$tempProvider->testConnection()) {
-                $errors[] = 'Invalid API key or connection failed';
+                $errors[] = 'Invalid API credentials or connection failed';
             }
         }
 
@@ -345,26 +351,34 @@ class KitServiceProvider implements EmailServiceProviderInterface
 
                 $response = Http::timeout($this->timeout)
                     ->withHeaders([
-                        'Authorization' => 'Bearer ' . $this->apiKey,
                         'Content-Type' => 'application/json',
                         'Accept' => 'application/json',
                     ]);
 
+                // Add API credentials to the request data
+                $requestData = array_merge($data ?? [], [
+                    'api_key' => $this->apiKey,
+                    'api_secret' => $this->apiSecret,
+                ]);
+
                 // Make the request based on method
                 switch (strtoupper($method)) {
                     case 'GET':
-                        $httpResponse = empty($data) 
-                            ? $response->get($this->baseUrl . $endpoint)
-                            : $response->get($this->baseUrl . $endpoint, $data);
+                        $httpResponse = $response->get($this->baseUrl . $endpoint, $requestData);
                         break;
                     case 'POST':
-                        $httpResponse = $response->post($this->baseUrl . $endpoint, $data);
+                        $httpResponse = $response->post($this->baseUrl . $endpoint, $requestData);
                         break;
                     case 'PUT':
-                        $httpResponse = $response->put($this->baseUrl . $endpoint, $data);
+                        $httpResponse = $response->put($this->baseUrl . $endpoint, $requestData);
                         break;
                     case 'DELETE':
-                        $httpResponse = $response->delete($this->baseUrl . $endpoint);
+                        // For DELETE, add credentials as query parameters
+                        $deleteUrl = $this->baseUrl . $endpoint . '?' . http_build_query([
+                            'api_key' => $this->apiKey,
+                            'api_secret' => $this->apiSecret,
+                        ]);
+                        $httpResponse = $response->delete($deleteUrl);
                         break;
                     default:
                         throw new \InvalidArgumentException("Unsupported HTTP method: {$method}");
