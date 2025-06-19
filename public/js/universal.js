@@ -1,7 +1,7 @@
 (function() {
     // Configuration
     const config = {
-      trackingEndpoint: 'https://youtubetracking.test/api/track-lead',
+      trackingEndpoint: 'https://videostats.ai/api/track-lead',
       debug: true
     };
   
