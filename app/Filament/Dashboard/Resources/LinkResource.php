@@ -32,6 +32,7 @@ use Filament\Forms\Components\Repeater;
 use App\Models\YtVideo;
 use Filament\Forms\Components\Select;
 use Filament\Notifications\Notification;
+use Filament\Forms\Components\ToggleButtons;
 
 class LinkResource extends Resource
 {
@@ -74,8 +75,10 @@ class LinkResource extends Resource
                                                             ->modalDescription('If you\'re using this link in a YouTube video, choose from the dropdown.')
                                                             ->modalSubmitActionLabel('Copy the Link')
                                                             ->form([
-                                                                Toggle::make('is_youtube_video')
+                                                                ToggleButtons::make('is_youtube_video')
                                                                     ->label('Are you using this in a YouTube video description?')
+                                                                    ->boolean()
+                                                                    ->grouped()
                                                                     ->default(true)
                                                                     ->live()
                                                                     ->afterStateUpdated(function ($state, $set) {
@@ -605,8 +608,10 @@ class LinkResource extends Resource
                             ->modalDescription('If you\'re using this link in a YouTube video, choose from the dropdown.')
                             ->modalSubmitActionLabel('Copy the Link')
                             ->form([
-                                Toggle::make('is_youtube_video')
+                                ToggleButtons::make('is_youtube_video')
                                     ->label('Are you using this in a YouTube video description?')
+                                    ->boolean()
+                                    ->grouped()
                                     ->default(true)
                                     ->live()
                                     ->afterStateUpdated(function ($state, $set) {
