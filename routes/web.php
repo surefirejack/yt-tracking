@@ -348,6 +348,13 @@ Route::prefix('p/{channelname}')->group(function () {
         ->name('email-gated-content.submit-email')
         ->where('channelname', '[a-z0-9_-]+')
         ->where('slug', '[a-z0-9_-]+');
+
+    // File downloads (secure, requires valid access)
+    Route::get('/{slug}/download/{filename}', [App\Http\Controllers\EmailGatedContentController::class, 'download'])
+        ->name('email-gated-content.download')
+        ->where('channelname', '[a-z0-9_-]+')
+        ->where('slug', '[a-z0-9_-]+')
+        ->where('filename', '[^/]+'); // Allow various file name patterns
 });
 
 /*

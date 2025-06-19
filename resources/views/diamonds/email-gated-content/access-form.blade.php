@@ -1,30 +1,151 @@
 @extends('layouts.public')
 
-@section('title', 'Get Access to: ' . $content->title)
+@section('title', $content->title . ' - ' . ($tenant->ytChannel?->title ?? $tenant->name))
+@section('description', 'Get exclusive access to ' . $content->title . ' by joining our email list.')
 
 @push('head')
-<!-- Dub Conversion Tracking for Email Gated Content -->
-<script>
-(function(d,s,id,domain){
-    if(d.getElementById(id)) return;
-    var js=d.createElement(s),fjs=d.getElementsByTagName(s)[0];
-    js.id=id;js.async=true;
-    js.src='https://'+domain+'/js/dub-conversion.js';
-    fjs.parentNode.insertBefore(js,fjs);
-})(document,'script','dub-conversion-js','{{ request()->getHost() }}');
-</script>
+<meta name="robots" content="noindex, nofollow">
+<style>
+    /* Dynamic accent color styling */
+    :root {
+        --accent-color: {{ $tenant->subscriber_accent_color ?? '#3b82f6' }};
+        --accent-color-hover: {{ $tenant->subscriber_accent_color ? 'color-mix(in srgb, ' . $tenant->subscriber_accent_color . ' 85%, black 15%)' : '#2563eb' }};
+        --accent-color-light: {{ $tenant->subscriber_accent_color ? 'color-mix(in srgb, ' . $tenant->subscriber_accent_color . ' 10%, white 90%)' : '#dbeafe' }};
+    }
+    
+    .accent-bg {
+        background-color: var(--accent-color);
+    }
+    
+    .accent-bg-light {
+        background-color: var(--accent-color-light);
+    }
+    
+    .accent-text {
+        color: var(--accent-color);
+    }
+    
+    .accent-border {
+        border-color: var(--accent-color);
+    }
+    
+    .accent-ring {
+        --tw-ring-color: var(--accent-color);
+    }
+    
+    .accent-hover:hover {
+        background-color: var(--accent-color-hover);
+    }
+    
+    .gradient-accent {
+        background: linear-gradient(135deg, var(--accent-color), color-mix(in srgb, var(--accent-color) 80%, #6366f1 20%));
+    }
+</style>
 @endpush
 
 @section('content')
-<div class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-12">
-    <div class="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
+<!-- Channel Banner Header -->
+@if($tenant->ytChannel?->banner_image_url)
+    <div class="w-full h-32 md:h-48 lg:h-64 bg-gradient-to-r from-blue-600 to-purple-600 relative overflow-hidden">
+        <img 
+            src="{{ $tenant->ytChannel->banner_image_url }}" 
+            alt="{{ $tenant->ytChannel->name ?? $tenant->name ?? 'Creator' }} Channel Banner"
+            class="w-full h-full object-cover"
+            loading="lazy"
+        >
+        <div class="absolute inset-0 bg-black bg-opacity-20"></div>
         
-        <!-- Channel Banner -->
-        @if($tenant->ytChannel?->banner_image_url)
-        <div class="mb-8 rounded-lg overflow-hidden shadow-lg">
-            <img src="{{ $tenant->ytChannel->banner_image_url }}" 
-                 alt="{{ $tenant->ytChannel->title ?? $tenant->name }}" 
-                 class="w-full h-32 object-cover">
+        <!-- Channel Info Overlay -->
+        <div class="absolute bottom-4 left-4 right-4 text-white">
+            <div class="flex items-center space-x-4">
+                @if($tenant->member_profile_image)
+                    <img 
+                        src="{{ Storage::url($tenant->member_profile_image) }}" 
+                        alt="{{ $tenant->ytChannel->name ?? $tenant->name ?? 'Creator' }}"
+                        class="w-12 h-12 md:w-16 md:h-16 rounded-full border-4 border-white shadow-lg object-cover"
+                    >
+                @endif
+                <div>
+                    <h1 class="text-xl md:text-2xl lg:text-3xl font-bold drop-shadow-lg">
+                        {{ $tenant->ytChannel->name ?? $tenant->name ?? 'Creator' }}
+                    </h1>
+                    <p class="text-sm md:text-base opacity-90 drop-shadow">
+                        Exclusive Email Content Access
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+@else
+    <!-- Fallback Header without Banner -->
+    <div class="w-full gradient-accent py-8 md:py-12">
+        <div class="container mx-auto px-4">
+            <div class="flex items-center space-x-4 text-white">
+                @if($tenant->member_profile_image)
+                    <img 
+                        src="{{ Storage::url($tenant->member_profile_image) }}" 
+                        alt="{{ $tenant->ytChannel->name ?? $tenant->name ?? 'Creator' }}"
+                        class="w-12 h-12 md:w-16 md:h-16 rounded-full border-4 border-white shadow-lg object-cover"
+                    >
+                @endif
+                <div>
+                    <h1 class="text-xl md:text-2xl lg:text-3xl font-bold">
+                        {{ $tenant->ytChannel->name ?? $tenant->name ?? 'Creator' }}
+                    </h1>
+                    <p class="text-sm md:text-base opacity-90">
+                        Exclusive Email Content Access
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+@endif
+
+<!-- Navigation Bar -->
+<div class="bg-white shadow-sm border-b">
+    <div class="container mx-auto px-4">
+        <div class="flex items-center justify-between h-16">
+            <!-- Breadcrumb / Navigation -->
+            <nav class="flex items-center space-x-2 text-sm text-gray-600 overflow-hidden">
+                <a href="{{ url('/') }}" 
+                   class="hover:text-blue-600 transition-colors duration-200 flex items-center accent-text">
+                    <svg class="w-4 h-4 mr-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+                    </svg>
+                    <span class="hidden sm:inline">Home</span>
+                </a>
+                <span class="text-gray-400 hidden sm:inline">/</span>
+                <span class="text-gray-900 font-medium truncate max-w-xs">{{ $content->title }}</span>
+            </nav>
+
+            <!-- User Actions -->
+            <div class="flex items-center space-x-2 sm:space-x-4">
+                <div class="text-sm text-gray-500">
+                    <span class="hidden sm:inline">Exclusive Content</span>
+                    <span class="sm:hidden">🔒</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Main Content -->
+<div class="container mx-auto px-4 py-6 sm:py-8">
+    <div class="max-w-2xl mx-auto">
+        
+        <!-- Video Thumbnail (if from YouTube) -->
+        @if($videoThumbnail && $videoTitle)
+        <div class="mb-6 accent-bg-light rounded-lg p-6 border accent-border">
+            <div class="flex items-center space-x-4">
+                <img src="{{ $videoThumbnail }}" 
+                     alt="{{ $videoTitle }}"
+                     class="w-24 h-18 rounded-lg object-cover shadow-md">
+                <div>
+                    <p class="text-sm text-gray-600 mb-1">Coming from YouTube video:</p>
+                    <p class="font-semibold text-gray-900">{{ $videoTitle }}</p>
+                    <p class="text-xs accent-text mt-1">📺 Thanks for watching!</p>
+                </div>
+            </div>
         </div>
         @endif
 
@@ -32,51 +153,23 @@
         <div class="bg-white rounded-xl shadow-xl overflow-hidden">
             
             <!-- Header -->
-            <div class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-8 text-center">
-                <div class="flex items-center justify-center mb-4">
-                    @if($tenant->ytChannel?->thumbnail_url)
-                    <img src="{{ $tenant->ytChannel->thumbnail_url }}" 
-                         alt="{{ $tenant->ytChannel->title ?? $tenant->name }}"
-                         class="w-16 h-16 rounded-full border-4 border-white shadow-lg mr-4">
-                    @endif
-                    <div>
-                        <h1 class="text-2xl font-bold">{{ $tenant->ytChannel?->title ?? $tenant->name }}</h1>
-                        <p class="opacity-90">Exclusive Content Access</p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Video Thumbnail (if from YouTube) -->
-            @if($videoThumbnail && $videoTitle)
-            <div class="p-6 bg-gray-50 border-b">
-                <div class="flex items-center space-x-4">
-                    <img src="{{ $videoThumbnail }}" 
-                         alt="{{ $videoTitle }}"
-                         class="w-24 h-18 rounded-lg object-cover shadow-md">
-                    <div>
-                        <p class="text-sm text-gray-600 mb-1">Coming from YouTube video:</p>
-                        <p class="font-semibold text-gray-900">{{ $videoTitle }}</p>
-                        <p class="text-xs text-blue-600 mt-1">📺 Thanks for watching!</p>
-                    </div>
-                </div>
-            </div>
-            @endif
-
-            <!-- Content Access Form -->
-            <div class="p-8">
-                <div class="text-center mb-8">
-                    <h2 class="text-3xl font-bold text-gray-900 mb-4">
+            <div class="gradient-accent text-white p-8 text-center">
+                <div class="mb-4">
+                    <h2 class="text-3xl font-bold mb-4">
                         🔓 You're About to Get Access to
                     </h2>
-                    <h3 class="text-xl font-semibold text-indigo-600 mb-2">{{ $content->title }}</h3>
+                    <h3 class="text-xl font-semibold mb-2">{{ $content->title }}</h3>
                     
                     @if($tagName && $tagName !== $content->required_tag_id)
-                    <p class="text-sm text-gray-600">
-                        Required tag: <span class="font-medium text-indigo-600">{{ $tagName }}</span>
+                    <p class="text-sm opacity-90">
+                        Required tag: <span class="font-medium">{{ $tagName }}</span>
                     </p>
                     @endif
                 </div>
+            </div>
 
+            <!-- Content Access Form -->
+            <div class="p-8">
                 <!-- Email Form -->
                 <form id="email-access-form" onsubmit="return false;" class="space-y-6">
                     @csrf
@@ -92,21 +185,21 @@
                                name="email" 
                                required
                                placeholder="yourbestemail@gmail.com"
-                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-lg">
+                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 accent-ring focus:border-transparent text-lg">
                         <p class="mt-2 text-sm text-gray-500">
                             We'll send you a quick email to verify your address
                         </p>
                     </div>
 
                     <!-- Subscription Agreement -->
-                    <div class="bg-blue-50 rounded-lg p-4">
+                    <div class="accent-bg-light rounded-lg p-4">
                         <label class="flex items-start space-x-3 cursor-pointer">
                             <input type="checkbox" 
                                    id="subscribe_agreed" 
                                    name="subscribe_agreed" 
                                    required
                                    checked
-                                   class="mt-1 h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
+                                   class="mt-1 h-4 w-4 accent-text focus:ring-2 accent-ring border-gray-300 rounded">
                             <div class="text-sm">
                                 <span class="font-medium text-gray-900">
                                     Yes, I want to join {{ $tenant->ytChannel?->title ?? $tenant->name }}'s email list
@@ -122,8 +215,7 @@
                     <!-- Submit Button -->
                     <button type="button" 
                             id="submit-btn"
-                            style="background: linear-gradient(to right, #4f46e5, #2563eb); color: white; border: 2px solid #1e40af;"
-                            class="w-full font-bold py-4 px-6 rounded-lg hover:opacity-90 transform hover:scale-105 transition-all duration-200 shadow-lg">
+                            class="w-full accent-bg accent-hover font-bold py-4 px-6 rounded-lg text-white transform hover:scale-105 transition-all duration-200 shadow-lg">
                         <span id="btn-text">✨ Get Instant Access</span>
                         <span id="btn-loading" class="hidden">
                             <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -187,7 +279,7 @@
                             No Spam Guarantee
                         </div>
                         <div class="flex items-center">
-                            <svg class="w-4 h-4 mr-2 text-indigo-500" fill="currentColor" viewBox="0 0 20 20">
+                            <svg class="w-4 h-4 mr-2 accent-text" fill="currentColor" viewBox="0 0 20 20">
                                 <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
                             </svg>
                             Instant Access
@@ -196,13 +288,17 @@
                 </div>
             </div>
         </div>
+    </div>
+</div>
 
-        <!-- Footer Info -->
-        <div class="mt-6 text-center text-sm text-gray-600">
+<!-- Footer -->
+<footer class="bg-gray-50 border-t mt-12">
+    <div class="container mx-auto px-4 py-8">
+        <div class="text-center text-sm text-gray-600">
             <p>Powered by {{ config('app.name') }} • The ultimate software for growing your YouTube channel</p>
         </div>
     </div>
-</div>
+</footer>
 
 <!-- Modal for Agreement Explanation -->
 <div id="agreement-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden items-center justify-center z-50">
@@ -213,20 +309,16 @@
             This means you'll receive:
         </p>
         <ul class="list-disc list-inside text-gray-600 mb-4 space-y-1">
-            <li>Exclusive content notifications</li>
-            <li>Updates about new videos and content</li>
-            <li>Special offers and insights</li>
+            <li>Exclusive content and updates</li>
+            <li>Valuable insights and tips</li>
+            <li>Early access to new content</li>
         </ul>
-        <p class="text-sm text-gray-500 mb-4">
-            You can unsubscribe at any time using the link in any email.
+        <p class="text-gray-600 mb-4">
+            You can unsubscribe at any time using the link in any email we send you.
         </p>
-        <div class="flex space-x-3">
-            <button onclick="closeAgreementModal()" class="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300 transition">
-                Cancel
-            </button>
-            <button onclick="acceptAgreement()" class="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 transition">
-                I Understand
-            </button>
+        <div class="flex justify-end space-x-3">
+            <button onclick="closeModal()" class="px-4 py-2 text-gray-600 hover:text-gray-800">Cancel</button>
+            <button onclick="acceptAndCloseModal()" class="accent-bg text-white px-4 py-2 rounded-lg accent-hover">I Understand</button>
         </div>
     </div>
 </div>
@@ -359,15 +451,15 @@ function showAgreementModal() {
     document.getElementById('agreement-modal').classList.add('flex');
 }
 
-function closeAgreementModal() {
+function closeModal() {
     document.getElementById('agreement-modal').classList.add('hidden');
     document.getElementById('agreement-modal').classList.remove('flex');
     // Re-check the checkbox
     document.getElementById('subscribe_agreed').checked = true;
 }
 
-function acceptAgreement() {
-    closeAgreementModal();
+function acceptAndCloseModal() {
+    closeModal();
     document.getElementById('subscribe_agreed').checked = true;
 }
 </script>

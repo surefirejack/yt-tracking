@@ -1,8 +1,56 @@
 @extends('layouts.public')
 
-@section('title', 'Email Verified Successfully!')
+@section('title', 'Email Verified Successfully! - ' . ($tenant->ytChannel?->title ?? $tenant->name))
+@section('description', 'Your email has been verified successfully. You now have access to exclusive content.')
 
 @push('head')
+<meta name="robots" content="noindex, nofollow">
+<style>
+    /* Dynamic accent color styling */
+    :root {
+        --accent-color: {{ $tenant->subscriber_accent_color ?? '#3b82f6' }};
+        --accent-color-hover: {{ $tenant->subscriber_accent_color ? 'color-mix(in srgb, ' . $tenant->subscriber_accent_color . ' 85%, black 15%)' : '#2563eb' }};
+        --accent-color-light: {{ $tenant->subscriber_accent_color ? 'color-mix(in srgb, ' . $tenant->subscriber_accent_color . ' 10%, white 90%)' : '#dbeafe' }};
+        --success-color: #10b981;
+        --success-color-light: #d1fae5;
+    }
+    
+    .accent-bg {
+        background-color: var(--accent-color);
+    }
+    
+    .accent-bg-light {
+        background-color: var(--accent-color-light);
+    }
+    
+    .accent-text {
+        color: var(--accent-color);
+    }
+    
+    .accent-border {
+        border-color: var(--accent-color);
+    }
+    
+    .accent-ring {
+        --tw-ring-color: var(--accent-color);
+    }
+    
+    .accent-hover:hover {
+        background-color: var(--accent-color-hover);
+    }
+    
+    .success-bg {
+        background-color: var(--success-color);
+    }
+    
+    .success-bg-light {
+        background-color: var(--success-color-light);
+    }
+    
+    .gradient-success {
+        background: linear-gradient(135deg, var(--success-color), #059669);
+    }
+</style>
 <!-- Dub Conversion Tracking for Email Verification -->
 <script>
 window.DubConversionConfig = {
@@ -28,14 +76,102 @@ window.DubConversionConfig = {
 @endpush
 
 @section('content')
-<div class="min-h-screen bg-gradient-to-br from-green-50 to-emerald-100 py-12">
-    <div class="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
+<!-- Channel Banner Header -->
+@if($tenant->ytChannel?->banner_image_url)
+    <div class="w-full h-32 md:h-48 lg:h-64 bg-gradient-to-r from-green-600 to-emerald-600 relative overflow-hidden">
+        <img 
+            src="{{ $tenant->ytChannel->banner_image_url }}" 
+            alt="{{ $tenant->ytChannel->name ?? $tenant->name ?? 'Creator' }} Channel Banner"
+            class="w-full h-full object-cover"
+            loading="lazy"
+        >
+        <div class="absolute inset-0 bg-green-600 bg-opacity-30"></div>
+        
+        <!-- Channel Info Overlay -->
+        <div class="absolute bottom-4 left-4 right-4 text-white">
+            <div class="flex items-center space-x-4">
+                @if($tenant->member_profile_image)
+                    <img 
+                        src="{{ Storage::url($tenant->member_profile_image) }}" 
+                        alt="{{ $tenant->ytChannel->name ?? $tenant->name ?? 'Creator' }}"
+                        class="w-12 h-12 md:w-16 md:h-16 rounded-full border-4 border-white shadow-lg object-cover"
+                    >
+                @endif
+                <div>
+                    <h1 class="text-xl md:text-2xl lg:text-3xl font-bold drop-shadow-lg">
+                        {{ $tenant->ytChannel->name ?? $tenant->name ?? 'Creator' }}
+                    </h1>
+                    <p class="text-sm md:text-base opacity-90 drop-shadow">
+                        ✅ Email Verified Successfully!
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+@else
+    <!-- Fallback Header without Banner -->
+    <div class="w-full gradient-success py-8 md:py-12">
+        <div class="container mx-auto px-4">
+            <div class="flex items-center space-x-4 text-white">
+                @if($tenant->member_profile_image)
+                    <img 
+                        src="{{ Storage::url($tenant->member_profile_image) }}" 
+                        alt="{{ $tenant->ytChannel->name ?? $tenant->name ?? 'Creator' }}"
+                        class="w-12 h-12 md:w-16 md:h-16 rounded-full border-4 border-white shadow-lg object-cover"
+                    >
+                @endif
+                <div>
+                    <h1 class="text-xl md:text-2xl lg:text-3xl font-bold">
+                        {{ $tenant->ytChannel->name ?? $tenant->name ?? 'Creator' }}
+                    </h1>
+                    <p class="text-sm md:text-base opacity-90">
+                        ✅ Email Verified Successfully!
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+@endif
+
+<!-- Navigation Bar -->
+<div class="bg-white shadow-sm border-b">
+    <div class="container mx-auto px-4">
+        <div class="flex items-center justify-between h-16">
+            <!-- Breadcrumb / Navigation -->
+            <nav class="flex items-center space-x-2 text-sm text-gray-600 overflow-hidden">
+                <a href="{{ url('/') }}" 
+                   class="hover:text-blue-600 transition-colors duration-200 flex items-center accent-text">
+                    <svg class="w-4 h-4 mr-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+                    </svg>
+                    <span class="hidden sm:inline">Home</span>
+                </a>
+                <span class="text-gray-400 hidden sm:inline">/</span>
+                <span class="text-gray-900 font-medium truncate max-w-xs">{{ $content->title }}</span>
+                <span class="text-gray-400 hidden sm:inline">/</span>
+                <span class="text-green-600 font-medium">Verified</span>
+            </nav>
+
+            <!-- User Actions -->
+            <div class="flex items-center space-x-2 sm:space-x-4">
+                <div class="text-sm text-green-600">
+                    <span class="hidden sm:inline">Access Granted</span>
+                    <span class="sm:hidden">✅</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Main Content -->
+<div class="container mx-auto px-4 py-6 sm:py-8">
+    <div class="max-w-2xl mx-auto">
         
         <!-- Success Card -->
         <div class="bg-white rounded-xl shadow-xl overflow-hidden">
             
             <!-- Header -->
-            <div class="bg-gradient-to-r from-green-500 to-emerald-600 text-white p-8 text-center">
+            <div class="gradient-success text-white p-8 text-center">
                 <div class="flex items-center justify-center mb-4">
                     <div class="w-16 h-16 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
                         <svg class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
@@ -43,32 +179,15 @@ window.DubConversionConfig = {
                         </svg>
                     </div>
                 </div>
-                <h1 class="text-3xl font-bold mb-2">✅ Email Verified!</h1>
+                <h2 class="text-3xl font-bold mb-2">✅ Email Verified!</h2>
                 <p class="text-lg opacity-90">You now have access to exclusive content</p>
             </div>
 
-            <!-- Channel Information -->
-            @if($tenant->ytChannel)
-            <div class="p-6 bg-gray-50 border-b">
-                <div class="flex items-center justify-center space-x-4">
-                    @if($tenant->ytChannel->thumbnail_url)
-                    <img src="{{ $tenant->ytChannel->thumbnail_url }}" 
-                         alt="{{ $tenant->ytChannel->title ?? $tenant->name }}"
-                         class="w-12 h-12 rounded-full shadow-md">
-                    @endif
-                    <div class="text-center">
-                        <h3 class="font-semibold text-gray-900">{{ $tenant->ytChannel->title ?? $tenant->name }}</h3>
-                        <p class="text-sm text-gray-600">You're now subscribed to updates!</p>
-                    </div>
-                </div>
-            </div>
-            @endif
-
             <!-- Main Content -->
             <div class="p-8 text-center">
-                <h2 class="text-2xl font-bold text-gray-900 mb-4">
+                <h3 class="text-2xl font-bold text-gray-900 mb-4">
                     Welcome to: {{ $content->title }}
-                </h2>
+                </h3>
                 
                 <p class="text-gray-600 mb-8">
                     {{ $message ?? 'Your email has been verified and you now have access to exclusive content!' }}
@@ -84,8 +203,8 @@ window.DubConversionConfig = {
                 @endphp
 
                 <!-- Success Checklist -->
-                <div class="bg-green-50 rounded-lg p-6 mb-8">
-                    <h3 class="font-semibold text-green-900 mb-4">✨ What just happened:</h3>
+                <div class="success-bg-light rounded-lg p-6 mb-8">
+                    <h4 class="font-semibold text-green-900 mb-4">✨ What just happened:</h4>
                     <div class="space-y-3 text-left">
                         <div class="flex items-center text-green-800">
                             <svg class="w-5 h-5 mr-3 text-green-600" fill="currentColor" viewBox="0 0 20 20">
@@ -144,7 +263,7 @@ window.DubConversionConfig = {
                 <!-- Access Button -->
                 <div class="space-y-4">
                     <a href="{{ $contentUrl }}" 
-                       class="inline-block w-full bg-gradient-to-r from-green-600 to-emerald-600 text-white font-bold py-4 px-8 rounded-lg hover:from-green-700 hover:to-emerald-700 transform hover:scale-105 transition-all duration-200 shadow-lg">
+                       class="inline-block w-full success-bg hover:bg-green-700 text-white font-bold py-4 px-8 rounded-lg transform hover:scale-105 transition-all duration-200 shadow-lg">
                         🚀 Access Your Content Now
                     </a>
                     
@@ -178,7 +297,7 @@ window.DubConversionConfig = {
                             Unsubscribe Anytime
                         </div>
                         <div class="flex items-center">
-                            <svg class="w-4 h-4 mr-1 text-purple-500" fill="currentColor" viewBox="0 0 20 20">
+                            <svg class="w-4 h-4 mr-1 accent-text" fill="currentColor" viewBox="0 0 20 20">
                                 <path fill-rule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clip-rule="evenodd"/>
                             </svg>
                             Quality Content
@@ -187,13 +306,17 @@ window.DubConversionConfig = {
                 </div>
             </div>
         </div>
+    </div>
+</div>
 
-        <!-- Footer -->
-        <div class="mt-6 text-center text-sm text-gray-600">
+<!-- Footer -->
+<footer class="bg-gray-50 border-t mt-12">
+    <div class="container mx-auto px-4 py-8">
+        <div class="text-center text-sm text-gray-600">
             <p>Powered by {{ config('app.name') }} • Building better connections between creators and fans</p>
         </div>
     </div>
-</div>
+</footer>
 
 <!-- Auto-redirect script -->
 <script>

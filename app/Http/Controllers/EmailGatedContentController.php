@@ -16,6 +16,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Carbon\Carbon;
 
@@ -237,7 +238,8 @@ class EmailGatedContentController extends Controller
                 Log::warning('Invalid or expired verification token', ['token' => $token]);
                 
                 return view('email-verification.expired', [
-                    'message' => 'This verification link is invalid or has expired.'
+                    'message' => 'This verification link is invalid or has expired.',
+                    'tenant' => null // No tenant context available
                 ]);
             }
 
@@ -276,7 +278,8 @@ class EmailGatedContentController extends Controller
 
                 // If no access record found, show expired (this shouldn't normally happen)
                 return view('email-verification.expired', [
-                    'message' => 'This verification link has already been used.'
+                    'message' => 'This verification link has already been used.',
+                    'tenant' => $verificationRequest->tenant
                 ]);
             }
 
@@ -334,9 +337,120 @@ class EmailGatedContentController extends Controller
                 'error' => $e->getMessage()
             ]);
 
+            // Try to get tenant from verification request if available
+            $tenant = null;
+            try {
+                $verificationRequest = EmailVerificationRequest::where('verification_token', $token)->first();
+                $tenant = $verificationRequest?->tenant;
+            } catch (\Exception $tenantException) {
+                // Ignore tenant lookup errors
+            }
+
             return view('email-verification.expired', [
-                'message' => 'An error occurred during verification. Please try again.'
+                'message' => 'An error occurred during verification. Please try again.',
+                'tenant' => $tenant
             ]);
+        }
+    }
+
+    /**
+     * Handle secure file downloads for email-verified users.
+     */
+    public function download($channelname, $slug, string $filename)
+    {
+        try {
+            // Handle route model binding - both parameters might be objects
+            if ($channelname instanceof Tenant) {
+                $tenant = $channelname;
+                $channelnameStr = $tenant->getChannelName() ?? 'unknown';
+            } else {
+                $channelnameStr = $channelname;
+                $tenant = Tenant::whereHas('ytChannel', function ($query) use ($channelnameStr) {
+                    $query->where(\DB::raw('LOWER(REPLACE(handle, "@", ""))'), '=', strtolower($channelnameStr));
+                })->first();
+
+                if (!$tenant) {
+                    return response()->json(['error' => 'Channel not found'], 404);
+                }
+            }
+
+            if ($slug instanceof EmailSubscriberContent) {
+                $content = $slug;
+            } else {
+                $content = EmailSubscriberContent::where('tenant_id', $tenant->id)
+                    ->where('slug', $slug)
+                    ->first();
+
+                if (!$content) {
+                    return response()->json(['error' => 'Content not found'], 404);
+                }
+            }
+
+            // Verify content belongs to tenant
+            if ($content->tenant_id !== $tenant->id) {
+                return response()->json(['error' => 'Invalid request'], 403);
+            }
+
+            // Check if user has access via cookie
+            $accessRecord = $this->checkExistingAccess(request(), $tenant, $content);
+            
+            if (!$accessRecord) {
+                return response()->json(['error' => 'Access denied. Please verify your email first.'], 403);
+            }
+
+            // Find the file path that matches the filename
+            $matchedFilePath = null;
+            $displayName = $filename;
+            
+            if ($content->file_paths && is_array($content->file_paths)) {
+                foreach ($content->file_paths as $index => $path) {
+                    if (basename($path) === $filename) {
+                        $matchedFilePath = $path;
+                        
+                        // Get human-readable name if available
+                        if ($content->file_names && isset($content->file_names[$index])) {
+                            $displayName = $content->file_names[$index];
+                        } else {
+                            // Remove timestamp prefix if present
+                            $displayName = preg_replace('/^\d{14}_/', '', $filename);
+                        }
+                        break;
+                    }
+                }
+            }
+
+            // Check if file path was found and file exists
+            if (!$matchedFilePath || !Storage::disk('local')->exists($matchedFilePath)) {
+                return response()->json(['error' => 'File not found'], 404);
+            }
+
+            Log::info('Email-gated content file download', [
+                'tenant_id' => $tenant->id,
+                'content_id' => $content->id,
+                'access_record_id' => $accessRecord->id,
+                'filename' => $displayName,
+                'actual_file' => $filename
+            ]);
+
+            // Get file path and MIME type
+            $fullFilePath = Storage::disk('local')->path($matchedFilePath);
+            $mimeType = Storage::disk('local')->mimeType($matchedFilePath);
+
+            // Return file download response with human-readable name
+            return response()->download($fullFilePath, $displayName, [
+                'Content-Type' => $mimeType,
+                'Content-Disposition' => 'attachment; filename="' . $displayName . '"'
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Error downloading email-gated content file', [
+                'channelname' => is_object($channelname) ? get_class($channelname) : $channelname,
+                'slug' => is_object($slug) ? get_class($slug) : $slug,
+                'filename' => $filename,
+                'error' => $e->getMessage()
+            ]);
+            
+            return response()->json(['error' => 'Download failed'], 500);
         }
     }
 
@@ -395,11 +509,26 @@ class EmailGatedContentController extends Controller
      */
     private function showContent(Tenant $tenant, EmailSubscriberContent $content, string $channelname, SubscriberAccessRecord $accessRecord): View
     {
+        // Get video title if YouTube video is set
+        $videoTitle = null;
+        if ($content->youtube_video_url) {
+            // Extract YouTube video ID from URL
+            preg_match('/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/', $content->youtube_video_url, $matches);
+            $videoId = $matches[1] ?? null;
+            
+            if ($videoId && $tenant->ytChannel) {
+                // Find the video in the yt_videos table
+                $video = $tenant->ytChannel->ytVideos()->where('video_id', $videoId)->first();
+                $videoTitle = $video?->title;
+            }
+        }
+
         return view('email-gated-content.content', [
             'tenant' => $tenant,
             'content' => $content,
             'channelname' => $channelname,
             'accessRecord' => $accessRecord,
+            'videoTitle' => $videoTitle,
         ]);
     }
 
