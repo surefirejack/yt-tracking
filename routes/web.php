@@ -322,6 +322,36 @@ Route::prefix('s/{channelname}')->middleware('verify.subscription')->group(funct
 
 /*
 |--------------------------------------------------------------------------
+| Email-Gated Content Routes
+|--------------------------------------------------------------------------
+|
+| Routes for email subscriber content gating. Uses the /p/{channelname}/{slug}
+| pattern where channelname is the tenant's YouTube channel name (lowercase).
+|
+*/
+
+// Email verification route (global, not scoped to channelname)
+Route::get('/email-verification/{token}', [App\Http\Controllers\EmailGatedContentController::class, 'verifyEmail'])
+    ->name('email-verification.verify')
+    ->where('token', '[a-zA-Z0-9]+');
+
+// Email-gated content routes
+Route::prefix('p/{channelname}')->group(function () {
+    // Show email access form or content if verified
+    Route::get('/{slug}', [App\Http\Controllers\EmailGatedContentController::class, 'show'])
+        ->name('email-gated-content.show')
+        ->where('channelname', '[a-z0-9_-]+')
+        ->where('slug', '[a-z0-9_-]+');
+
+    // Handle email submission for verification
+    Route::post('/{slug}/submit-email', [App\Http\Controllers\EmailGatedContentController::class, 'submitEmail'])
+        ->name('email-gated-content.submit-email')
+        ->where('channelname', '[a-z0-9_-]+')
+        ->where('slug', '[a-z0-9_-]+');
+});
+
+/*
+|--------------------------------------------------------------------------
 | Route Model Binding for Subscriber Routes
 |--------------------------------------------------------------------------
 |
@@ -364,4 +394,36 @@ Route::bind('slug', function ($value, $route) {
     
     // Return the content if found, or return the string value to let middleware handle it
     return $content ?: $value;
-    });
+});
+
+// Extend route model binding for email-gated content (p/ routes)
+Route::bind('slug', function ($value, $route) {
+    // Check if this is an email-gated content route
+    if (str_starts_with($route->uri(), 'p/')) {
+        // Get the tenant from the channelname parameter
+        $channelname = $route->parameter('channelname');
+        
+        if ($channelname instanceof \App\Models\Tenant) {
+            $tenant = $channelname;
+        } else {
+            // If channelname is still a string, try to find the tenant
+            $tenant = \App\Models\Tenant::whereHas('ytChannel', function ($query) use ($channelname) {
+                $query->whereRaw('LOWER(REPLACE(handle, "@", "")) = ?', [strtolower($channelname)]);
+            })->first();
+        }
+
+        if (!$tenant) {
+            // Return the string value to let middleware handle tenant not found
+            return $value;
+        }
+
+        // Find email-gated content by slug within this tenant
+        $content = $tenant->emailSubscriberContents()->where('slug', $value)->first();
+        
+        // Return the content if found, or return the string value to let middleware handle it
+        return $content ?: $value;
+    }
+    
+    // For other routes, use the original logic (already handled above)
+    return $value;
+});

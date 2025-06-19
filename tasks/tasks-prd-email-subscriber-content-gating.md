@@ -60,17 +60,17 @@
   - [x] 3.5 Create content preview functionality showing how the access form will appear to visitors
   - [x] 3.6 Add bulk operations for email-gated content (duplicate, delete, export)
   - [x] 3.7 Implement content analytics view showing email conversion metrics per piece of content
-- [ ] 4.0 Email Verification & Access Control System
-  - [ ] 4.1 Create `EmailGatedContentController` with methods for showing access form and handling email submission
-  - [ ] 4.2 Implement email validation and duplicate request prevention logic
-  - [ ] 4.3 Create `ProcessEmailVerification` queue job for ESP API interactions (check subscriber, add subscriber, assign tags)
-  - [ ] 4.4 Create verification token generation with cryptographically secure random strings
-  - [ ] 4.5 Implement `EmailVerificationMail` mailable with branded templates and verification links
-  - [ ] 4.6 Create verification link handler that validates tokens and grants content access
-  - [ ] 4.7 Implement cookie-based access control with encrypted subscriber access records
-  - [ ] 4.8 Add automatic tag synchronization logic (check ESP if local tags don't grant access)
-  - [ ] 4.9 Create `CleanupExpiredVerifications` scheduled job to remove expired verification requests
-  - [ ] 4.10 Implement immediate access flow for existing subscribers with required tags
+- [x] 4.0 Email Verification & Access Control System
+  - [x] 4.1 Create `EmailGatedContentController` with methods for showing access form and handling email submission
+  - [x] 4.2 Implement email validation and duplicate request prevention logic
+  - [x] 4.3 Create `ProcessEmailVerification` queue job for ESP API interactions (check subscriber, add subscriber, assign tags)
+  - [x] 4.4 Create verification token generation with cryptographically secure random strings
+  - [x] 4.5 Implement `EmailVerificationMail` mailable with branded templates and verification links
+  - [x] 4.6 Create verification link handler that validates tokens and grants content access
+  - [x] 4.7 Implement cookie-based access control with encrypted subscriber access records
+  - [x] 4.8 Add automatic tag synchronization logic (check ESP if local tags don't grant access)
+  - [x] 4.9 Create `CleanupExpiredVerifications` scheduled job to remove expired verification requests
+  - [x] 4.10 Implement immediate access flow for existing subscribers with required tags
 - [ ] 5.0 Frontend UI & User Experience Implementation
   - [ ] 5.1 Create email-gated content access form with email input, video thumbnail, and subscription agreement
   - [ ] 5.2 Add frontend email validation with helpful error messages and loading states
