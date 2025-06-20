@@ -254,7 +254,57 @@ window.DubConversionConfig = {
         </div>
     </div>
 
-    
+    <!-- Call to Action Video (if available) -->
+    @if($ctaVideo)
+        <div class="mb-8">
+            <h3 class="text-2xl font-bold text-gray-900 mb-6">Watch This Next</h3>
+            
+            <div class="max-w-md">
+                <div class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-200 group">
+                    <a href="{{ $ctaVideo['url'] }}" target="_blank" class="block">
+                        <div class="relative h-48 bg-gradient-to-br from-blue-400 to-purple-500">
+                            <img 
+                                src="{{ $ctaVideo['thumbnail_url'] }}" 
+                                alt="{{ $ctaVideo['title'] }}"
+                                class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                loading="lazy"
+                            >
+                            <!-- Play button overlay -->
+                            <div class="absolute inset-0 flex items-center justify-center">
+                                <div class="bg-red-600 rounded-full p-4 group-hover:bg-red-700 transition-colors duration-200 shadow-lg">
+                                    <svg class="w-8 h-8 text-white ml-1" fill="currentColor" viewBox="0 0 24 24">
+                                        <path d="M8 5v14l11-7z"/>
+                                    </svg>
+                                </div>
+                            </div>
+                        </div>
+                    </a>
+                    
+                    <div class="p-6">
+                        <h4 class="font-semibold text-gray-900 mb-3 text-lg group-hover:text-blue-600 transition-colors duration-200">
+                            {{ $ctaVideo['title'] }}
+                        </h4>
+                        
+                        <p class="text-sm text-gray-600 mb-4">
+                            Watch this video on {{ $tenant->ytChannel?->title ?? $tenant->name }}'s YouTube channel and discover more great content!
+                        </p>
+                        
+                        <a href="{{ $ctaVideo['url'] }}" 
+                           target="_blank"
+                           class="inline-flex items-center justify-center px-6 py-3 bg-red-600 text-white font-medium rounded-lg hover:bg-red-700 focus:outline-none focus:ring-4 focus:ring-red-500 focus:ring-opacity-25 transition-all duration-200">
+                            <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                            </svg>
+                            Watch on YouTube
+                            <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+                            </svg>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
     
 </div>
 

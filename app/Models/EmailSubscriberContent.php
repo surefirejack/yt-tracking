@@ -20,6 +20,7 @@ class EmailSubscriberContent extends Model
         'file_paths',
         'file_names',
         'youtube_video_url',
+        'cta_youtube_video_url',
     ];
 
     protected $casts = [

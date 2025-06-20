@@ -233,6 +233,33 @@ class EmailSubscriberContentResource extends Resource
                     ])
                     ->collapsible(),
 
+                Forms\Components\Section::make('Call to Action')
+                    ->description('Show a call-to-action video to encourage viewers to return to your YouTube channel')
+                    ->icon('heroicon-o-arrow-top-right-on-square')
+                    ->schema([
+                        Forms\Components\Select::make('cta_youtube_video_url')
+                            ->label('Call to Action Video')
+                            ->options(function () {
+                                $tenant = Filament::getTenant();
+                                if (!$tenant || !$tenant->ytChannel) {
+                                    return [];
+                                }
+
+                                return $tenant->ytChannel->ytVideos()
+                                    ->latest('published_at')
+                                    ->limit(50)
+                                    ->get()
+                                    ->pluck('title', 'url')
+                                    ->toArray();
+                            })
+                            ->searchable()
+                            ->preload()
+                            ->placeholder('Select a video to promote your YouTube channel')
+                            ->helperText('This video will be shown as a call-to-action at the bottom of the content page, linking to your YouTube channel')
+                            ->columnSpanFull(),
+                    ])
+                    ->collapsible(),
+
                 Forms\Components\Section::make('File Downloads')
                     ->description('Upload files that subscribers can download')
                     ->icon('heroicon-o-arrow-down-tray')
@@ -374,6 +401,18 @@ class EmailSubscriberContentResource extends Resource
                     ->trueColor('info')
                     ->falseColor('gray'),
 
+                Tables\Columns\IconColumn::make('has_cta_video')
+                    ->label('CTA')
+                    ->getStateUsing(fn (EmailSubscriberContent $record): bool => !empty($record->cta_youtube_video_url))
+                    ->boolean()
+                    ->trueIcon('heroicon-o-arrow-top-right-on-square')
+                    ->falseIcon('heroicon-o-minus')
+                    ->trueColor('success')
+                    ->falseColor('gray')
+                    ->tooltip(fn (EmailSubscriberContent $record): string => 
+                        !empty($record->cta_youtube_video_url) ? 'Has call-to-action video' : 'No call-to-action video'
+                    ),
+
                 Tables\Columns\TextColumn::make('file_count')
                     ->label('Files')
                     ->getStateUsing(fn (EmailSubscriberContent $record): int => count($record->file_paths ?? []))
@@ -428,6 +467,11 @@ class EmailSubscriberContentResource extends Resource
                 Tables\Filters\Filter::make('has_video')
                     ->label('Has Video')
                     ->query(fn (Builder $query): Builder => $query->whereNotNull('youtube_video_url'))
+                    ->toggle(),
+
+                Tables\Filters\Filter::make('has_cta_video')
+                    ->label('Has CTA Video')
+                    ->query(fn (Builder $query): Builder => $query->whereNotNull('cta_youtube_video_url'))
                     ->toggle(),
 
                 Tables\Filters\Filter::make('has_files')

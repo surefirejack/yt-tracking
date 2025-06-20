@@ -551,12 +551,34 @@ class EmailGatedContentController extends Controller
             }
         }
 
+        // Get CTA video data if CTA video is set
+        $ctaVideo = null;
+        if ($content->cta_youtube_video_url) {
+            // Extract YouTube video ID from CTA URL
+            preg_match('/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/', $content->cta_youtube_video_url, $matches);
+            $ctaVideoId = $matches[1] ?? null;
+            
+            if ($ctaVideoId && $tenant->ytChannel) {
+                // Find the CTA video in the yt_videos table
+                $video = $tenant->ytChannel->ytVideos()->where('video_id', $ctaVideoId)->first();
+                if ($video) {
+                    $ctaVideo = [
+                        'id' => $ctaVideoId,
+                        'title' => $video->title,
+                        'url' => $content->cta_youtube_video_url,
+                        'thumbnail_url' => "https://img.youtube.com/vi/{$ctaVideoId}/hqdefault.jpg"
+                    ];
+                }
+            }
+        }
+
         return view('email-gated-content.content', [
             'tenant' => $tenant,
             'content' => $content,
             'channelname' => $channelname,
             'accessRecord' => $accessRecord,
             'videoTitle' => $videoTitle,
+            'ctaVideo' => $ctaVideo,
         ]);
     }
 
