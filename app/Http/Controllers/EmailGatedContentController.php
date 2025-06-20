@@ -860,17 +860,24 @@ class EmailGatedContentController extends Controller
             $accessRecord->isCheckCompleted() && 
             $accessRecord->access_check_completed_at->isAfter(now()->subMinutes(5))) {
             
-            // Use cached result if it's less than 5 minutes old
-            if ($accessRecord->has_required_access) {
-                Log::info('Using cached access check result - access granted', [
+            // ALWAYS verify current tags match required tag - don't rely on cached has_required_access
+            // because tags might have changed in the database without our knowledge
+            $currentUserTags = $accessRecord->tags_json ?? [];
+            $currentlyHasTag = in_array($content->required_tag_id, $currentUserTags);
+            
+            if ($currentlyHasTag) {
+                Log::info('Using cached access check result - access granted (verified current tags)', [
                     'access_record_id' => $accessRecord->id,
-                    'required_tag_id' => $content->required_tag_id
+                    'required_tag_id' => $content->required_tag_id,
+                    'current_tags' => $currentUserTags
                 ]);
                 return $accessRecord;
             } else {
-                Log::info('Using cached access check result - access denied', [
+                Log::info('Using cached access check result - access denied (current tags do not match)', [
                     'access_record_id' => $accessRecord->id,
-                    'required_tag_id' => $content->required_tag_id
+                    'required_tag_id' => $content->required_tag_id,
+                    'current_tags' => $currentUserTags,
+                    'cached_has_access' => $accessRecord->has_required_access
                 ]);
                 return null;
             }
