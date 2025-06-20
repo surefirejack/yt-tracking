@@ -179,7 +179,7 @@ window.DubConversionConfig = {
                                 
                                 <div class="w-full">
                                     <a href="{{ route('email-gated-content.download', ['channelname' => $channelname, 'slug' => $content->slug, 'filename' => $filename]) }}" 
-                                       class="w-full flex items-center justify-center px-4 py-3 accent-bg text-white text-sm font-medium rounded-lg accent-hover focus:outline-none focus:ring-4 accent-ring focus:ring-opacity-25 transition-all duration-200 group"
+                                       class="w-full flex items-center justify-center px-4 py-3 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 focus:outline-none focus:ring-4 focus:ring-green-500 focus:ring-opacity-25 transition-all duration-200 group"
                                        download>
                                         <svg class="w-4 h-4 mr-2 group-hover:translate-y-0.5 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3"></path>
@@ -254,61 +254,8 @@ window.DubConversionConfig = {
         </div>
     </div>
 
-    <!-- Content Actions -->
-    <div class="mb-8">
-        <div class="bg-gray-50 border border-gray-200 rounded-xl p-4 sm:p-6">
-            <div class="flex flex-col gap-4 justify-between items-start">
-                <div class="text-center sm:text-left w-full sm:w-auto">
-                    <h4 class="font-semibold text-gray-900 mb-2">Enjoying this content?</h4>
-                    <p class="text-sm text-gray-600">
-                        You'll receive emails about new exclusive content and updates from {{ $tenant->ytChannel?->title ?? $tenant->name }}.
-                    </p>
-                </div>
-                
-                <div class="flex flex-col w-full sm:w-auto sm:flex-row gap-3">
-                    @if($tenant->ytChannel?->channel_url)
-                        <a href="{{ $tenant->ytChannel->channel_url }}" 
-                           target="_blank"
-                           class="inline-flex items-center justify-center px-4 py-2 bg-red-600 text-white font-medium rounded-lg hover:bg-red-700 focus:outline-none focus:ring-4 focus:ring-red-500 focus:ring-opacity-25 transition-all duration-200 text-sm sm:text-base">
-                            <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
-                                <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
-                            </svg>
-                            YouTube Channel
-                        </a>
-                    @endif
-                    
-                    <a href="mailto:{{ config('mail.from.address') }}" 
-                       class="inline-flex items-center justify-center px-4 py-2 accent-bg text-white font-medium rounded-lg accent-hover focus:outline-none focus:ring-4 accent-ring focus:ring-opacity-25 transition-all duration-200 text-sm sm:text-base">
-                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
-                        </svg>
-                        Contact
-                    </a>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Access Information -->
-    <div class="bg-blue-50 rounded-lg p-6">
-        <h3 class="text-lg font-semibold text-blue-900 mb-3">📧 Your Email Access</h3>
-        <div class="grid md:grid-cols-2 gap-4 text-sm">
-            <div class="bg-white rounded-lg p-4">
-                <h4 class="font-semibold text-gray-900 mb-2">Stay Connected</h4>
-                <p class="text-gray-600">
-                    You'll receive emails about new exclusive content and updates from 
-                    {{ $tenant->ytChannel?->title ?? $tenant->name }}.
-                </p>
-            </div>
-            <div class="bg-white rounded-lg p-4">
-                <h4 class="font-semibold text-gray-900 mb-2">Future Access</h4>
-                <p class="text-gray-600">
-                    Your browser access expires {{ $accessRecord->last_verified_at->addDays($tenant->email_verification_cookie_duration_days ?? 30)->format('M j, Y') }}.
-                    You can always re-verify your email for continued access.
-                </p>
-            </div>
-        </div>
-    </div>
+    
+    
 </div>
 
 <!-- Cookie Notice (if first time accessing) -->
