@@ -161,9 +161,7 @@
                     <h3 class="text-xl font-semibold mb-2">{{ $content->title }}</h3>
                     
                     @if($tagName && $tagName !== $content->required_tag_id)
-                    <p class="text-sm opacity-90">
-                        Required tag: <span class="font-medium">{{ $tagName }}</span>
-                    </p>
+                  
                     @endif
                 </div>
             </div>

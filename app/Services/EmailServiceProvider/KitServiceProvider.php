@@ -10,7 +10,7 @@ class KitServiceProvider implements EmailServiceProviderInterface
 {
     protected string $apiKey;
     protected string $apiSecret;
-    protected string $baseUrl = 'https://api.kit.com/v3';
+    protected string $baseUrl = 'https://api.convertkit.com/v3';
     protected int $timeout = 30;
     protected int $retryAttempts = 3;
     protected int $retryDelay = 1000; // milliseconds
@@ -98,12 +98,55 @@ class KitServiceProvider implements EmailServiceProviderInterface
         }
     }
 
+    public function getForms(): array
+    {
+        try {
+            $cacheKey = 'kit_forms_' . hash('sha256', $this->apiKey);
+            
+            return Cache::remember($cacheKey, 300, function () { // 5 minute cache
+                $response = $this->makeApiCall('GET', '/forms');
+
+                if ($response['success']) {
+                    return collect($response['data']['forms'] ?? [])
+                        ->map(function ($form) {
+                            return [
+                                'id' => (string) $form['id'],
+                                'name' => $form['name'],
+                                'created_at' => $form['created_at'] ?? null,
+                            ];
+                        })
+                        ->toArray();
+                }
+
+                return [];
+            });
+        } catch (\Exception $e) {
+            Log::error('Kit API getForms failed', [
+                'error' => $e->getMessage()
+            ]);
+            return [];
+        }
+    }
+
     public function addSubscriber(string $email, array $tags = []): array
     {
         try {
+            // In Kit API v3, we need to add subscribers to a form, not directly
+            // Let's get the first available form and use it
+            $forms = $this->getForms();
+            
+            if (empty($forms)) {
+                return [
+                    'success' => false,
+                    'error' => 'No forms available to add subscriber to'
+                ];
+            }
+
+            // Use the first form to add the subscriber
+            $formId = $forms[0]['id'];
+            
             $data = [
-                'email_address' => $email,
-                'state' => 'active'
+                'email' => $email,
             ];
 
             // Add tags if provided
@@ -111,15 +154,17 @@ class KitServiceProvider implements EmailServiceProviderInterface
                 $data['tags'] = $tags;
             }
 
-            $response = $this->makeApiCall('POST', '/subscribers', $data);
+            $response = $this->makeApiCall('POST', "/forms/{$formId}/subscribe", $data);
 
             if ($response['success']) {
-                $subscriber = $response['data']['subscriber'];
+                $subscription = $response['data']['subscription'];
                 return [
                     'success' => true,
-                    'subscriber_id' => $subscriber['id'],
-                    'email' => $subscriber['email_address'],
-                    'state' => $subscriber['state'],
+                    'subscriber' => [
+                        'id' => $subscription['subscriber']['id'],
+                        'email' => $subscription['subscriber']['email_address'],
+                        'state' => $subscription['subscriber']['state'],
+                    ]
                 ];
             }
 

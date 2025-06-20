@@ -178,9 +178,9 @@ class ProcessEmailVerification implements ShouldQueue
             }
 
             // Check if subscriber exists
-            $subscriber = $provider->checkSubscriber($email);
+            $subscriberCheck = $provider->checkSubscriber($email);
             
-            if (!$subscriber) {
+            if (!$subscriberCheck['is_subscribed']) {
                 // Add new subscriber
                 Log::info('Adding new subscriber to ESP', [
                     'email' => $email,
@@ -199,6 +199,12 @@ class ProcessEmailVerification implements ShouldQueue
                 }
 
                 $subscriber = $addResult['subscriber'];
+            } else {
+                // Use existing subscriber
+                $subscriber = [
+                    'id' => $subscriberCheck['subscriber_id'],
+                    'email' => $email,
+                ];
             }
 
             // Add required tag to subscriber
@@ -210,14 +216,13 @@ class ProcessEmailVerification implements ShouldQueue
                     'verification_request_id' => $this->verificationRequest->id
                 ]);
 
-                $tagResult = $provider->addTagToSubscriber($subscriber['id'], $content->required_tag_id);
+                $tagResult = $provider->addTagToSubscriber($email, $content->required_tag_id);
                 
-                if (!$tagResult['success']) {
+                if (!$tagResult) {
                     Log::error('Failed to add tag to subscriber', [
                         'email' => $email,
                         'subscriber_id' => $subscriber['id'],
                         'tag_id' => $content->required_tag_id,
-                        'error' => $tagResult['error'] ?? 'Unknown error',
                         'verification_request_id' => $this->verificationRequest->id
                     ]);
                 } else {
