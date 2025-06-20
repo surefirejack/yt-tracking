@@ -210,11 +210,12 @@ class ProcessEmailVerification implements ShouldQueue
                 Log::info('Successfully added new subscriber with tag', [
                     'email' => $email,
                     'tag_id' => $content->required_tag_id,
-                    'verification_request_id' => $this->verificationRequest->id
+                    'verification_request_id' => $this->verificationRequest->id,
+                    'subscriber_id' => $addResult['subscriber_id'] ?? 'unknown'
                 ]);
 
                 // Mark access record as completed since ESP call succeeded
-                $this->markAccessRecordCompleted();
+                $this->markAccessRecordCompleted($addResult['subscriber_id'] ?? null);
                 return; // Exit early since we've successfully processed
             } else {
                 // Use existing subscriber and their current tags
@@ -263,7 +264,7 @@ class ProcessEmailVerification implements ShouldQueue
                         ]);
                         
                         // Mark access record as completed since ESP call succeeded
-                        $this->markAccessRecordCompleted();
+                        $this->markAccessRecordCompleted($subscriber['id']);
                         return; // Exit early since we've successfully processed
                     }
                 }
@@ -316,7 +317,7 @@ class ProcessEmailVerification implements ShouldQueue
     /**
      * Mark access record as completed after successful ESP operation
      */
-    private function markAccessRecordCompleted(): void
+    private function markAccessRecordCompleted(?string $subscriberId = null): void
     {
         try {
             // Find access record - use direct ID if available, otherwise search by email
@@ -333,16 +334,24 @@ class ProcessEmailVerification implements ShouldQueue
 
             if ($accessRecord) {
                 // Mark as completed since ESP operation succeeded
-                $accessRecord->update([
+                $updateData = [
                     'access_check_status' => 'completed',
                     'access_check_completed_at' => now(),
                     'last_verified_at' => now(),
-                ]);
+                ];
+                
+                // Store subscriber ID if provided
+                if ($subscriberId) {
+                    $updateData['subscriber_id'] = $subscriberId;
+                }
+                
+                $accessRecord->update($updateData);
 
                 Log::info('Access record marked as completed after ESP success', [
                     'email' => $this->verificationRequest->email,
                     'access_record_id' => $accessRecord->id,
                     'verification_request_id' => $this->verificationRequest->id,
+                    'subscriber_id' => $subscriberId,
                     'found_via' => $this->accessRecordId ? 'direct_id' : 'email_search'
                 ]);
             } else {

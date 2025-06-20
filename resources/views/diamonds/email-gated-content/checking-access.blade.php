@@ -1,39 +1,9 @@
-@extends('layouts.public')
+@extends('layouts.subscriber')
 
-@push('styles')
-<style>
-    :root {
-        --accent-color: {{ $tenant->subscriber_accent_color ?? '#3B82F6' }};
-        --accent-color-hover: {{ $tenant->subscriber_accent_color ? 'color-mix(in srgb, ' . $tenant->subscriber_accent_color . ' 80%, black)' : '#2563EB' }};
-        --accent-color-light: {{ $tenant->subscriber_accent_color ? 'color-mix(in srgb, ' . $tenant->subscriber_accent_color . ' 20%, white)' : '#DBEAFE' }};
-    }
-</style>
-@endpush
+@section('title', 'Checking Access - ' . $content->title)
 
 @section('content')
-<div class="min-h-screen bg-gray-50">
-    <!-- Channel Banner Header -->
-    <div class="relative bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 text-white">
-        <div class="absolute inset-0 bg-black opacity-50"></div>
-        <div class="relative container mx-auto px-4 py-8">
-            <div class="flex items-center space-x-4">
-                @if($tenant->ytChannel && $tenant->ytChannel->profile_image_url)
-                    <div class="w-16 h-16 rounded-full overflow-hidden border-4 border-white shadow-lg">
-                        <img src="{{ $tenant->ytChannel->profile_image_url }}" 
-                             alt="{{ $tenant->ytChannel->title }}" 
-                             class="w-full h-full object-cover">
-                    </div>
-                @endif
-                <div>
-                    <h1 class="text-2xl font-bold">{{ $tenant->ytChannel->title ?? 'Channel' }}</h1>
-                    <p class="text-gray-300">Verifying your access...</p>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Main Content -->
-    <div class="container mx-auto px-4 py-12">
+<div class="max-w-4xl mx-auto">
         <div class="max-w-2xl mx-auto">
             <div class="bg-white rounded-lg shadow-lg p-8 text-center">
                 <!-- Loading Animation -->
@@ -80,9 +50,10 @@
                 </p>
             </div>
         </div>
-    </div>
 </div>
+@endsection
 
+@push('scripts')
 <script>
 let checkCount = 0;
 let startTime = Date.now();
@@ -171,4 +142,4 @@ function checkAccessStatus() {
 // Start checking immediately
 setTimeout(checkAccessStatus, 1000);
 </script>
-@endsection 
+@endpush 

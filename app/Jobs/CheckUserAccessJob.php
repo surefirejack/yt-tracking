@@ -58,27 +58,64 @@ class CheckUserAccessJob implements ShouldQueue
                 throw new \Exception('ESP provider not configured for tenant');
             }
 
-            // Get subscriber from ESP
-            $subscriber = $provider->getSubscriber($this->accessRecord->email);
-            if (!$subscriber) {
-                Log::warning('Subscriber not found in ESP', [
-                    'email' => $this->accessRecord->email,
-                    'tenant_id' => $this->tenant->id
+            // Get subscriber from ESP - use subscriber_id if available, otherwise email
+            if ($this->accessRecord->subscriber_id) {
+                Log::info('Using stored subscriber ID for API call', [
+                    'subscriber_id' => $this->accessRecord->subscriber_id,
+                    'access_record_id' => $this->accessRecord->id
                 ]);
                 
-                $this->accessRecord->update([
-                    'access_check_status' => 'completed',
-                    'access_check_completed_at' => now(),
-                    'access_check_error' => 'Subscriber not found in ESP'
+                try {
+                    // Get fresh tags directly using subscriber ID
+                    $subscriberTags = $provider->getSubscriberTags($this->accessRecord->subscriber_id);
+                    $tagIds = collect($subscriberTags)->pluck('id')->toArray();
+                } catch (\Exception $e) {
+                    Log::warning('Failed to get tags using subscriber ID, falling back to email lookup', [
+                        'subscriber_id' => $this->accessRecord->subscriber_id,
+                        'error' => $e->getMessage()
+                    ]);
+                    
+                    // Fall back to email lookup
+                    $subscriber = $provider->getSubscriber($this->accessRecord->email);
+                    if (!$subscriber) {
+                        throw new \Exception('Subscriber not found in ESP using email fallback');
+                    }
+                    
+                    // Update the subscriber_id for future calls
+                    $this->accessRecord->update(['subscriber_id' => $subscriber['id']]);
+                    $subscriberTags = $provider->getSubscriberTags($subscriber['id']);
+                    $tagIds = collect($subscriberTags)->pluck('id')->toArray();
+                }
+            } else {
+                Log::info('No stored subscriber ID, looking up by email', [
+                    'email' => $this->accessRecord->email,
+                    'access_record_id' => $this->accessRecord->id
                 ]);
-                return;
-            }
+                
+                $subscriber = $provider->getSubscriber($this->accessRecord->email);
+                if (!$subscriber) {
+                    Log::warning('Subscriber not found in ESP', [
+                        'email' => $this->accessRecord->email,
+                        'tenant_id' => $this->tenant->id
+                    ]);
+                    
+                    $this->accessRecord->update([
+                        'access_check_status' => 'completed',
+                        'access_check_completed_at' => now(),
+                        'access_check_error' => 'Subscriber not found in ESP'
+                    ]);
+                    return;
+                }
 
-            // Get fresh tags from ESP
-            $subscriberTags = $provider->getSubscriberTags($subscriber['id']);
-            
-            // Extract just the tag IDs for storage
-            $tagIds = collect($subscriberTags)->pluck('id')->toArray();
+                // Store the subscriber ID for future use
+                $this->accessRecord->update(['subscriber_id' => $subscriber['id']]);
+                
+                // Get fresh tags from ESP
+                $subscriberTags = $provider->getSubscriberTags($subscriber['id']);
+                
+                // Extract just the tag IDs for storage
+                $tagIds = collect($subscriberTags)->pluck('id')->toArray();
+            }
             
             // Check if user has required tag
             $hasRequiredTag = in_array($this->content->required_tag_id, $tagIds);

@@ -788,44 +788,15 @@ class EmailGatedContentController extends Controller
         ]);
         
         if (!$hasRequiredTag) {
-            // If Kit API sync is still pending, check for timeout
-            if ($accessRecord->access_check_status === 'pending') {
-                // Check if the pending state has been going on too long (5 minutes)
-                $pendingTimeout = 5; // minutes
-                $pendingSince = $accessRecord->access_check_started_at ?? $accessRecord->last_verified_at;
-                
-                if ($pendingSince && $pendingSince->addMinutes($pendingTimeout)->isPast()) {
-                    Log::warning('ESP job has been pending too long, clearing cookie and showing opt-in form', [
-                        'access_record_id' => $accessRecord->id,
-                        'pending_since' => $pendingSince,
-                        'timeout_minutes' => $pendingTimeout,
-                        'required_tag_id' => $content->required_tag_id
-                    ]);
-                    
-                    // Clear the access record status to allow retry
-                    $accessRecord->update([
-                        'access_check_status' => 'timeout',
-                        'access_check_error' => 'ESP sync timeout after ' . $pendingTimeout . ' minutes'
-                    ]);
-                    
-                    return null; // This will show the opt-in form
-                }
-                
-                Log::info('Kit API sync still pending, showing loading page', [
-                    'access_record_id' => $accessRecord->id,
-                    'required_tag_id' => $content->required_tag_id
-                ]);
-                return $accessRecord; // Will show loading page
-            }
-            
-            // User doesn't have required tag and sync is complete - deny access
-            Log::info('User does not have required tag, denying access', [
+            // User doesn't have required tag - trigger async tag check
+            Log::info('User does not have required tag, triggering async tag check', [
                 'access_record_id' => $accessRecord->id,
                 'required_tag_id' => $content->required_tag_id,
                 'user_tags' => $userTags,
                 'access_check_status' => $accessRecord->access_check_status
             ]);
-            return null;
+            
+            return $this->handleAsyncTagCheck($accessRecord, $tenant, $content);
         }
 
         Log::info('Granting access - user has required tag', [

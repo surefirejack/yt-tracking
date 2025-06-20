@@ -11,6 +11,7 @@ class SubscriberAccessRecord extends Model
 {
     protected $fillable = [
         'email',
+        'subscriber_id',
         'tenant_id',
         'tags_json',
         'cookie_token',
