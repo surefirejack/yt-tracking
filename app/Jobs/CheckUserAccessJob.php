@@ -48,7 +48,6 @@ class CheckUserAccessJob implements ShouldQueue
             // Update status to processing
             $this->accessRecord->update([
                 'access_check_status' => 'processing',
-                'required_tag_id' => $this->content->required_tag_id,
                 'access_check_started_at' => now(),
                 'access_check_error' => null
             ]);
@@ -69,7 +68,6 @@ class CheckUserAccessJob implements ShouldQueue
                 
                 $this->accessRecord->update([
                     'access_check_status' => 'completed',
-                    'has_required_access' => false,
                     'access_check_completed_at' => now(),
                     'access_check_error' => 'Subscriber not found in ESP'
                 ]);
@@ -89,14 +87,13 @@ class CheckUserAccessJob implements ShouldQueue
             $this->accessRecord->update([
                 'tags_json' => $tagIds,
                 'access_check_status' => 'completed',
-                'has_required_access' => $hasRequiredTag,
                 'last_verified_at' => now(),
                 'access_check_completed_at' => now()
             ]);
 
             Log::info('Async access check completed', [
                 'access_record_id' => $this->accessRecord->id,
-                'has_required_access' => $hasRequiredTag,
+                'has_required_tag' => $hasRequiredTag,
                 'required_tag_id' => $this->content->required_tag_id,
                 'user_tags' => $tagIds,
                 'processing_time' => $this->accessRecord->access_check_completed_at->diffInSeconds($this->accessRecord->access_check_started_at)
@@ -113,7 +110,6 @@ class CheckUserAccessJob implements ShouldQueue
             // Update record with error status
             $this->accessRecord->update([
                 'access_check_status' => 'failed',
-                'has_required_access' => false,
                 'access_check_completed_at' => now(),
                 'access_check_error' => $e->getMessage()
             ]);
@@ -137,7 +133,6 @@ class CheckUserAccessJob implements ShouldQueue
         // Mark as permanently failed
         $this->accessRecord->update([
             'access_check_status' => 'failed',
-            'has_required_access' => false,
             'access_check_completed_at' => now(),
             'access_check_error' => 'Permanent failure: ' . $exception->getMessage()
         ]);
