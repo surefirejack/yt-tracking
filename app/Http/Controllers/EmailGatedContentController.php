@@ -813,8 +813,8 @@ class EmailGatedContentController extends Controller
      */
     private function handleAsyncTagCheck(SubscriberAccessRecord $accessRecord, Tenant $tenant, EmailSubscriberContent $content): ?SubscriberAccessRecord
     {
-        // Check if there's already an access check in progress for this content
-        if ($accessRecord->required_tag_id === $content->required_tag_id && $accessRecord->isCheckInProgress()) {
+        // Check if there's already an access check in progress
+        if ($accessRecord->isCheckInProgress()) {
             Log::info('Access check already in progress', [
                 'access_record_id' => $accessRecord->id,
                 'required_tag_id' => $content->required_tag_id,
@@ -823,9 +823,8 @@ class EmailGatedContentController extends Controller
             return $accessRecord; // Return record to show loading page
         }
 
-        // Check if we have a recent completed check for this content
-        if ($accessRecord->required_tag_id === $content->required_tag_id && 
-            $accessRecord->isCheckCompleted() && 
+        // Check if we have a recent completed check
+        if ($accessRecord->isCheckCompleted() && 
             $accessRecord->access_check_completed_at->isAfter(now()->subMinutes(5))) {
             
             // ALWAYS verify current tags match required tag - don't rely on cached has_required_access
