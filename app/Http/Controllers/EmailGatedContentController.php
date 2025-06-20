@@ -226,20 +226,48 @@ class EmailGatedContentController extends Controller
     /**
      * Handle email verification from link clicks
      */
-    public function verifyEmail(Request $request, string $token)
+    public function verifyEmail(Request $request, int $tenantId, string $token)
     {
         try {
-            // First, find the verification request regardless of verified status
+            // Get tenant first using the tenant ID from URL
+            $tenant = Tenant::with('ytChannel')->find($tenantId);
+            
+            if (!$tenant) {
+                Log::warning('Invalid tenant ID in verification URL', ['tenantId' => $tenantId, 'token' => $token]);
+                
+                return view('email-verification.expired', [
+                    'message' => 'This verification link is invalid.',
+                    'tenant' => null,
+                    'channelname' => 'channel'
+                ]);
+            }
+            
+            $channelname = $tenant->getChannelName() ?? 'channel';
+            
+            // Find verification request (regardless of expiration to check if already verified)
             $verificationRequest = EmailVerificationRequest::where('verification_token', $token)
-                ->where('expires_at', '>', now())
+                ->where('tenant_id', $tenantId)
+                ->with(['content'])
                 ->first();
 
             if (!$verificationRequest) {
-                Log::warning('Invalid or expired verification token', ['token' => $token]);
+                Log::warning('Invalid verification token', ['tenantId' => $tenantId, 'token' => $token]);
                 
                 return view('email-verification.expired', [
-                    'message' => 'This verification link is invalid or has expired.',
-                    'tenant' => null // No tenant context available
+                    'message' => 'This verification link is invalid.',
+                    'tenant' => $tenant,
+                    'channelname' => $channelname
+                ]);
+            }
+
+            // Check if token has expired (but only if not already verified)
+            if (!$verificationRequest->verified_at && $verificationRequest->expires_at <= now()) {
+                Log::warning('Expired verification token', ['tenantId' => $tenantId, 'token' => $token]);
+                
+                return view('email-verification.expired', [
+                    'message' => 'This verification link has expired.',
+                    'tenant' => $tenant,
+                    'channelname' => $channelname
                 ]);
             }
 
@@ -257,9 +285,7 @@ class EmailGatedContentController extends Controller
 
                 if ($accessRecord) {
                     // Grant access using existing record
-                    $tenant = $verificationRequest->tenant;
                     $content = $verificationRequest->content;
-                    $channelname = $tenant->getChannelName() ?? 'channel';
                     $contentUrl = route('email-gated-content.show', [
                         'channelname' => $channelname,
                         'slug' => $content->slug
@@ -279,11 +305,11 @@ class EmailGatedContentController extends Controller
                 // If no access record found, show expired (this shouldn't normally happen)
                 return view('email-verification.expired', [
                     'message' => 'This verification link has already been used.',
-                    'tenant' => $verificationRequest->tenant
+                    'tenant' => $tenant,
+                    'channelname' => $channelname
                 ]);
             }
 
-            $tenant = $verificationRequest->tenant;
             $content = $verificationRequest->content;
 
             // Mark as verified
@@ -313,7 +339,6 @@ class EmailGatedContentController extends Controller
             ]);
 
             // Set access cookie and redirect to content
-            $channelname = $tenant->getChannelName() ?? 'channel';
             $contentUrl = route('email-gated-content.show', [
                 'channelname' => $channelname,
                 'slug' => $content->slug
@@ -333,22 +358,25 @@ class EmailGatedContentController extends Controller
 
         } catch (\Exception $e) {
             Log::error('Error verifying email token', [
+                'tenantId' => $tenantId,
                 'token' => $token,
                 'error' => $e->getMessage()
             ]);
 
-            // Try to get tenant from verification request if available
+            // Try to get tenant from tenant ID if available
             $tenant = null;
+            $channelname = 'channel';
             try {
-                $verificationRequest = EmailVerificationRequest::where('verification_token', $token)->first();
-                $tenant = $verificationRequest?->tenant;
+                $tenant = Tenant::with('ytChannel')->find($tenantId);
+                $channelname = $tenant?->getChannelName() ?? 'channel';
             } catch (\Exception $tenantException) {
                 // Ignore tenant lookup errors
             }
 
             return view('email-verification.expired', [
                 'message' => 'An error occurred during verification. Please try again.',
-                'tenant' => $tenant
+                'tenant' => $tenant,
+                'channelname' => $channelname
             ]);
         }
     }

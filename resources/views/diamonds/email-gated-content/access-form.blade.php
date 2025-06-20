@@ -190,6 +190,21 @@
                             We'll send you a quick email to verify your address
                         </p>
                     </div>
+                    <br />
+
+                    <!-- Submit Button -->
+                    <button type="button" 
+                            id="submit-btn"
+                            class="w-full accent-bg accent-hover font-bold py-4 px-6 rounded-lg text-white transform hover:scale-105 transition-all duration-200 shadow-lg">
+                        <span id="btn-text">✨ Get Instant Access</span>
+                        <span id="btn-loading" class="hidden">
+                            <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            Sending verification email...
+                        </span>
+                    </button>
 
                     <!-- Subscription Agreement -->
                     <div class="accent-bg-light rounded-lg p-4">
@@ -211,20 +226,6 @@
                             </div>
                         </label>
                     </div>
-
-                    <!-- Submit Button -->
-                    <button type="button" 
-                            id="submit-btn"
-                            class="w-full accent-bg accent-hover font-bold py-4 px-6 rounded-lg text-white transform hover:scale-105 transition-all duration-200 shadow-lg">
-                        <span id="btn-text">✨ Get Instant Access</span>
-                        <span id="btn-loading" class="hidden">
-                            <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                            </svg>
-                            Sending verification email...
-                        </span>
-                    </button>
                 </form>
 
                 <!-- Success/Error Messages -->
@@ -262,30 +263,7 @@
                     </div>
                 </div>
 
-                <!-- Trust Indicators -->
-                <div class="mt-8 pt-6 border-t border-gray-200">
-                    <div class="flex items-center justify-center space-x-6 text-sm text-gray-500">
-                        <div class="flex items-center">
-                            <svg class="w-4 h-4 mr-2 text-green-500" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-                            </svg>
-                            Secure & Encrypted
-                        </div>
-                        <div class="flex items-center">
-                            <svg class="w-4 h-4 mr-2 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
-                                <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"/>
-                                <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"/>
-                            </svg>
-                            No Spam Guarantee
-                        </div>
-                        <div class="flex items-center">
-                            <svg class="w-4 h-4 mr-2 accent-text" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
-                            </svg>
-                            Instant Access
-                        </div>
-                    </div>
-                </div>
+                
             </div>
         </div>
     </div>
@@ -303,15 +281,18 @@
 <!-- Modal for Agreement Explanation -->
 <div id="agreement-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden items-center justify-center z-50">
     <div class="bg-white rounded-lg p-6 m-4 max-w-md">
-        <h3 class="text-lg font-semibold mb-4">About Email Subscription</h3>
+        <h3 class="text-lg font-semibold mb-4">Why Join Our Email List?</h3>
         <p class="text-gray-600 mb-4">
-            By checking this box, you're agreeing to join {{ $tenant->ytChannel?->title ?? $tenant->name }}'s email list. 
-            This means you'll receive:
+            To get the content, you need to join the {{ $tenant->ytChannel?->title ?? $tenant->name }} email list. 
+        </p>
+        <p class="text-gray-600 mb-4">
+            When you join, in addition to getting the content, you'll receive:
         </p>
         <ul class="list-disc list-inside text-gray-600 mb-4 space-y-1">
-            <li>Exclusive content and updates</li>
+            <li>Exclusive content</li>
             <li>Valuable insights and tips</li>
             <li>Early access to new content</li>
+            <li>And more!</li>
         </ul>
         <p class="text-gray-600 mb-4">
             You can unsubscribe at any time using the link in any email we send you.

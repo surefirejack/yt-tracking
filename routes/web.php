@@ -331,7 +331,7 @@ Route::prefix('s/{channelname}')->middleware('verify.subscription')->group(funct
 */
 
 // Email verification route (global, not scoped to channelname)
-Route::get('/email-verification/{token}', [App\Http\Controllers\EmailGatedContentController::class, 'verifyEmail'])
+Route::get('/email-verification/{tenantId}/{token}', [App\Http\Controllers\EmailGatedContentController::class, 'verifyEmail'])
     ->name('email-verification.verify')
     ->where('token', '[a-zA-Z0-9]+');
 

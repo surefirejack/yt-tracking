@@ -250,6 +250,7 @@ class ProcessEmailVerification implements ShouldQueue
     {
         try {
             $verificationUrl = route('email-verification.verify', [
+                'tenantId' => $this->verificationRequest->tenant_id,
                 'token' => $this->verificationRequest->verification_token
             ]);
 

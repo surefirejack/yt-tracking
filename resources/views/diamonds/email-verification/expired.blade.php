@@ -9,8 +9,18 @@
     /* Dynamic accent color styling */
     :root {
         --accent-color: {{ $tenant?->subscriber_accent_color ?? '#3b82f6' }};
-        --accent-color-hover: {{ $tenant?->subscriber_accent_color ? 'color-mix(in srgb, ' . $tenant->subscriber_accent_color . ' 85%, black 15%)' : '#2563eb' }};
-        --accent-color-light: {{ $tenant?->subscriber_accent_color ? 'color-mix(in srgb, ' . $tenant->subscriber_accent_color . ' 10%, white 90%)' : '#dbeafe' }};
+        @if($tenant?->subscriber_accent_color)
+            @if(str_starts_with($tenant->subscriber_accent_color, 'rgb'))
+                --accent-color-hover: {{ str_replace('rgb(', 'rgba(', rtrim($tenant->subscriber_accent_color, ')')) }}, 0.85);
+                --accent-color-light: {{ str_replace('rgb(', 'rgba(', rtrim($tenant->subscriber_accent_color, ')')) }}, 0.1);
+            @else
+                --accent-color-hover: color-mix(in srgb, {{ $tenant->subscriber_accent_color }} 85%, black 15%);
+                --accent-color-light: color-mix(in srgb, {{ $tenant->subscriber_accent_color }} 10%, white 90%);
+            @endif
+        @else
+            --accent-color-hover: #2563eb;
+            --accent-color-light: #dbeafe;
+        @endif
         --error-color: #ef4444;
         --error-color-light: #fee2e2;
         --warning-color: #f59e0b;
@@ -60,6 +70,7 @@
 @endpush
 
 @section('content')
+<!-- DEBUG: View updated at {{ now() }} -->
 <!-- Channel Banner Header -->
 @if($tenant?->ytChannel?->banner_image_url)
     <div class="w-full h-32 md:h-48 lg:h-64 bg-gradient-to-r from-blue-600 to-purple-600 relative overflow-hidden">
@@ -161,7 +172,6 @@
     </div>
 </div>
 
-<!-- Main Content -->
 <div class="container mx-auto px-4 py-6 sm:py-8">
     <div class="max-w-2xl mx-auto">
         
