@@ -323,7 +323,8 @@ class EmailGatedContentController extends Controller
             Log::info('Processing email verification', [
                 'token' => $token,
                 'email' => $verificationRequest->email,
-                'is_first_time' => !$verificationRequest->verified_at
+                'is_first_time' => !$verificationRequest->verified_at,
+                'has_existing_access_record' => $accessRecord ? 'yes' : 'no'
             ]);
 
             // Mark as verified if not already
@@ -331,29 +332,44 @@ class EmailGatedContentController extends Controller
                 $verificationRequest->update(['verified_at' => now()]);
             }
 
-            // Create or update access record immediately (no ESP calls)
-            $accessRecord = SubscriberAccessRecord::firstOrCreate(
-                [
+            // Check if access record exists (should be created by ProcessEmailVerification job)
+            if (!$accessRecord) {
+                Log::info('No access record found after verification - job may still be processing', [
                     'email' => $verificationRequest->email,
-                    'tenant_id' => $tenant->id,
-                ],
-                [
-                    'tags_json' => [$content->required_tag_id],
-                    'cookie_token' => Str::random(64),
-                    'last_verified_at' => now(),
-                ]
-            );
+                    'verification_request_id' => $verificationRequest->id,
+                    'tenant_id' => $tenant->id
+                ]);
+                
+                // Wait a moment for job to potentially finish
+                sleep(1);
+                
+                // Check again
+                $accessRecord = SubscriberAccessRecord::where('email', $verificationRequest->email)
+                    ->where('tenant_id', $tenant->id)
+                    ->first();
+            }
 
-            // Queue ESP integration asynchronously (no delay for user)
-            ProcessEmailVerification::dispatch($verificationRequest, null, true) // true = espOnly
-                ->onQueue('default')
-                ->delay(now()->addSeconds(2)); // Small delay to ensure user sees success page first
+            if ($accessRecord) {
+                // Update existing record with verification time
+                $accessRecord->update([
+                    'last_verified_at' => now(),
+                ]);
+
+                Log::info('Updated existing access record for verified email', [
+                    'email' => $verificationRequest->email,
+                    'access_record_id' => $accessRecord->id,
+                    'verification_request_id' => $verificationRequest->id
+                ]);
+            }
+
+            // NOTE: Access record creation is handled by the ProcessEmailVerification job
+            // dispatched from submitEmail(). If job hasn't finished, user gets temporary access.
 
             Log::info('Email verification completed', [
                 'tenant_id' => $tenant->id,
                 'content_id' => $content->id,
                 'verification_request_id' => $verificationRequest->id,
-                'access_record_id' => $accessRecord->id
+                'access_record_id' => $accessRecord ? $accessRecord->id : 'none'
             ]);
 
             // Set access cookie and redirect to content
@@ -362,17 +378,47 @@ class EmailGatedContentController extends Controller
                 'slug' => $content->slug
             ]);
 
-            // Create view response like other methods in this controller
-            $view = view('email-verification.success', [
-                'tenant' => $tenant,
-                'content' => $content,
-                'channelname' => $channelname,
-                'contentUrl' => $contentUrl,
-                'message' => 'Email verified successfully! You now have access to the content.'
-            ]);
+            // Create view response
+            if ($accessRecord) {
+                // User has proper access record - set cookie and show success
+                $view = view('email-verification.success', [
+                    'tenant' => $tenant,
+                    'content' => $content,
+                    'channelname' => $channelname,
+                    'contentUrl' => $contentUrl,
+                    'message' => 'Email verified successfully! You now have access to the content.'
+                ]);
 
-            // Convert to response and set cookie
-            return $this->setAccessCookie(response($view), $accessRecord);
+                // Convert to response and set cookie
+                return $this->setAccessCookie(response($view), $accessRecord);
+            } else {
+                // Job hasn't finished creating access record yet - provide temporary access
+                Log::info('Providing temporary access while job processes', [
+                    'email' => $verificationRequest->email,
+                    'verification_request_id' => $verificationRequest->id,
+                    'content_id' => $content->id
+                ]);
+
+                // Create temporary session-based access
+                session([
+                    'temp_email_access' => [
+                        'email' => $verificationRequest->email,
+                        'tenant_id' => $tenant->id,
+                        'content_id' => $content->id,
+                        'expires_at' => now()->addHour()->timestamp
+                    ]
+                ]);
+
+                $view = view('email-verification.success', [
+                    'tenant' => $tenant,
+                    'content' => $content,
+                    'channelname' => $channelname,
+                    'contentUrl' => $contentUrl,
+                    'message' => 'Email verified successfully! You now have access to the content.'
+                ]);
+
+                return response($view);
+            }
 
         } catch (\Exception $e) {
             Log::error('Error verifying email token', [
@@ -650,10 +696,58 @@ class EmailGatedContentController extends Controller
     }
 
     /**
-     * Check if user has existing access via cookie
+     * Check if user has existing access via cookie or temporary session
      */
     private function checkExistingAccess(Request $request, Tenant $tenant, EmailSubscriberContent $content): ?SubscriberAccessRecord
     {
+        // First check for temporary session access
+        $tempAccess = session('temp_email_access');
+        if ($tempAccess && 
+            $tempAccess['tenant_id'] === $tenant->id && 
+            $tempAccess['content_id'] === $content->id &&
+            $tempAccess['expires_at'] > now()->timestamp) {
+            
+            Log::info('Found valid temporary session access', [
+                'tenant_id' => $tenant->id,
+                'content_id' => $content->id,
+                'email' => $tempAccess['email'],
+                'expires_at' => $tempAccess['expires_at']
+            ]);
+
+            // Try to find the access record that should have been created by the job
+            $accessRecord = SubscriberAccessRecord::where('email', $tempAccess['email'])
+                ->where('tenant_id', $tenant->id)
+                ->first();
+
+            if ($accessRecord) {
+                // Clear temporary access since we now have the real record
+                session()->forget('temp_email_access');
+                Log::info('Found real access record, cleared temporary session', [
+                    'access_record_id' => $accessRecord->id,
+                    'email' => $tempAccess['email']
+                ]);
+                return $accessRecord;
+            } else {
+                // Still waiting for job - return a mock record for temporary access
+                Log::info('Still using temporary access - job not completed yet', [
+                    'email' => $tempAccess['email'],
+                    'tenant_id' => $tenant->id
+                ]);
+                
+                // Create a temporary mock record (not saved to database)
+                $mockRecord = new SubscriberAccessRecord([
+                    'email' => $tempAccess['email'],
+                    'tenant_id' => $tenant->id,
+                    'tags_json' => [$content->required_tag_id],
+                    'cookie_token' => 'temp_session',
+                    'last_verified_at' => now(),
+                ]);
+                $mockRecord->id = 'temp';
+                return $mockRecord;
+            }
+        }
+
+        // Check for cookie-based access
         $cookieToken = $request->cookie('email_access_' . $tenant->id);
         
         Log::info('Checking existing access', [
@@ -893,6 +987,15 @@ class EmailGatedContentController extends Controller
      */
     private function setAccessCookie($response, SubscriberAccessRecord $accessRecord)
     {
+        // Don't set cookie for temporary session access
+        if ($accessRecord->cookie_token === 'temp_session' || $accessRecord->id === 'temp') {
+            Log::info('Skipping cookie for temporary access record', [
+                'access_record_id' => $accessRecord->id,
+                'cookie_token' => $accessRecord->cookie_token
+            ]);
+            return $response;
+        }
+
         $cookieDuration = $accessRecord->tenant->email_verification_cookie_duration_days ?? 30;
         $cookieName = 'email_access_' . $accessRecord->tenant_id;
         

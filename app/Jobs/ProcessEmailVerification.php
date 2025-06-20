@@ -293,32 +293,51 @@ class ProcessEmailVerification implements ShouldQueue
         }
     }
 
-
-
     /**
      * Create access record for the subscriber
      */
     private function createAccessRecord(array $subscriberTags): void
     {
         try {
-            SubscriberAccessRecord::updateOrCreate(
-                [
+            // Check if record already exists to avoid regenerating cookie token
+            $existingRecord = SubscriberAccessRecord::where('email', $this->verificationRequest->email)
+                ->where('tenant_id', $this->verificationRequest->tenant_id)
+                ->first();
+
+            if ($existingRecord) {
+                // Update existing record, keep the original cookie token
+                $existingRecord->update([
+                    'tags_json' => $subscriberTags,
+                    'last_verified_at' => now(),
+                ]);
+
+                Log::info('Access record updated', [
                     'email' => $this->verificationRequest->email,
                     'tenant_id' => $this->verificationRequest->tenant_id,
-                ],
-                [
+                    'tags' => $subscriberTags,
+                    'verification_request_id' => $this->verificationRequest->id,
+                    'access_record_id' => $existingRecord->id,
+                    'cookie_token_preserved' => true
+                ]);
+            } else {
+                // Create new record with new cookie token
+                $newRecord = SubscriberAccessRecord::create([
+                    'email' => $this->verificationRequest->email,
+                    'tenant_id' => $this->verificationRequest->tenant_id,
                     'tags_json' => $subscriberTags,
                     'cookie_token' => Str::random(64),
                     'last_verified_at' => now(),
-                ]
-            );
+                ]);
 
-            Log::info('Access record created/updated', [
-                'email' => $this->verificationRequest->email,
-                'tenant_id' => $this->verificationRequest->tenant_id,
-                'tags' => $subscriberTags,
-                'verification_request_id' => $this->verificationRequest->id
-            ]);
+                Log::info('Access record created', [
+                    'email' => $this->verificationRequest->email,
+                    'tenant_id' => $this->verificationRequest->tenant_id,
+                    'tags' => $subscriberTags,
+                    'verification_request_id' => $this->verificationRequest->id,
+                    'access_record_id' => $newRecord->id,
+                    'new_cookie_token' => true
+                ]);
+            }
 
         } catch (\Exception $e) {
             Log::error('Failed to create access record', [
