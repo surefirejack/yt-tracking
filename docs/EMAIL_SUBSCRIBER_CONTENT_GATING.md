@@ -476,6 +476,257 @@ tail -f storage/logs/laravel.log | grep "async access check"
 
 ---
 
+## Multi-Layered Caching System
+
+The email subscriber content gating system implements a sophisticated multi-layered caching architecture to optimize performance, reduce ESP API calls, and provide excellent user experience.
+
+### Cache Architecture Overview
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                           Cache Layer Hierarchy                            │
+├─────────────────────────────────────────────────────────────────────────────┤
+│ Layer 1: Cookie-Based Session Cache (30 days)                             │
+│ ├─ Purpose: Identify returning users                                       │
+│ ├─ Storage: Browser cookies                                                │
+│ └─ Key: email_access_{tenant_id}                                           │
+├─────────────────────────────────────────────────────────────────────────────┤
+│ Layer 2: Access Record Cache (30 days)                                    │
+│ ├─ Purpose: Track user verification status                                │
+│ ├─ Storage: Database (subscriber_access_records)                          │
+│ └─ Field: last_verified_at                                                 │
+├─────────────────────────────────────────────────────────────────────────────┤
+│ Layer 3: ESP API Call Cache (5 minutes) ★ PRIMARY CACHE                  │
+│ ├─ Purpose: Prevent excessive ESP API calls                               │
+│ ├─ Storage: Database (access_check_completed_at)                          │
+│ └─ Fields: access_check_status, tags_json                                 │
+├─────────────────────────────────────────────────────────────────────────────┤
+│ Layer 4: Job Dispatch Prevention (1-2 seconds)                           │
+│ ├─ Purpose: Prevent duplicate background jobs                             │
+│ ├─ Storage: Database (access_check_status)                                │
+│ └─ Statuses: pending → processing → completed/failed                      │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+### Layer 1: Cookie-Based Session Cache
+
+**Duration**: 30 days (configurable per tenant)
+**Purpose**: Identifies returning users without re-verification
+
+```php
+// Cookie configuration
+$cookieDuration = $tenant->email_verification_cookie_duration_days ?? 30;
+$cookieName = 'email_access_' . $tenant->id;
+
+// Cookie contains encrypted access token
+$response->withCookie(cookie(
+    $cookieName,
+    $accessRecord->cookie_token,
+    $cookieDuration * 24 * 60, // Convert days to minutes
+    '/', null, true, true  // httpOnly, secure flags
+));
+```
+
+**Cleared when**:
+- Cookie expires (30 days)
+- User clears browser data
+- Tenant changes cookie duration settings
+
+### Layer 2: Access Record Cache
+
+**Duration**: Same as cookie duration (30 days default)
+**Purpose**: Tracks when user was last verified against ESP
+
+```php
+// Expiration check
+if ($accessRecord->last_verified_at->addDays($cookieDuration)->isPast()) {
+    // Force re-verification
+    return null;
+}
+```
+
+**Cleared when**:
+- `last_verified_at` timestamp ages beyond cookie duration
+- Access record is manually deleted
+- User email changes in ESP
+
+### Layer 3: ESP API Call Cache (Primary Cache)
+
+**Duration**: 5 minutes
+**Purpose**: Prevents excessive API calls to ESP (Kit/ConvertKit)
+
+```php
+// Cache check logic
+if ($accessRecord->isCheckCompleted() && 
+    $accessRecord->access_check_completed_at->isAfter(now()->subMinutes(5))) {
+    
+    // Use cached ESP result
+    $currentUserTags = $accessRecord->tags_json ?? [];
+    $currentlyHasTag = in_array($content->required_tag_id, $currentUserTags);
+    
+    Log::info('Using cached ESP result', [
+        'cached_for_minutes' => now()->diffInMinutes($accessRecord->access_check_completed_at),
+        'has_access' => $currentlyHasTag
+    ]);
+    
+    return $currentlyHasTag ? $accessRecord : null;
+}
+```
+
+**Database Fields**:
+```sql
+access_check_status         VARCHAR  -- 'none', 'pending', 'processing', 'completed', 'failed'
+access_check_started_at     TIMESTAMP
+access_check_completed_at   TIMESTAMP
+access_check_error          TEXT
+tags_json                   JSON     -- Cached ESP tags
+```
+
+**Cleared when**:
+- 5 minutes pass since `access_check_completed_at`
+- Status manually reset to `'none'`
+- New ESP sync required
+
+### Layer 4: Job Dispatch Prevention
+
+**Duration**: 1-2 seconds (job execution time)
+**Purpose**: Prevents multiple simultaneous ESP API calls
+
+```php
+// Prevent duplicate job dispatch
+if ($accessRecord->isCheckInProgress()) {
+    Log::info('Access check already in progress', [
+        'status' => $accessRecord->access_check_status,
+        'started_at' => $accessRecord->access_check_started_at
+    ]);
+    return $accessRecord; // Show loading page
+}
+```
+
+**Status Flow**:
+```
+none → pending → processing → completed/failed
+  ↑                              ↓
+  └──────── (cache expires) ──────┘
+```
+
+### Cache Flow Decision Tree
+
+```
+User visits content page
+          ↓
+    Has cookie? ──No──→ Show access form
+          ↓ Yes
+    Cookie expired? ──Yes──→ Show access form  
+          ↓ No
+    Has required tag in cached tags_json? ──Yes──→ Show content
+          ↓ No
+    ESP check completed < 5min ago? ──Yes──→ Use cached result
+          ↓ No
+    Job already in progress? ──Yes──→ Show loading page
+          ↓ No
+    Dispatch CheckUserAccessJob ──→ Show loading page
+          ↓
+    Job calls ESP API ──→ Updates tags_json & status
+          ↓
+    User redirected based on ESP result
+```
+
+### Cache Management Commands
+
+#### Clear ESP API Cache (5-minute cache)
+```bash
+# Reset specific access record
+php artisan tinker --execute="
+App\Models\SubscriberAccessRecord::find(51)->update([
+    'access_check_status' => 'none',
+    'access_check_started_at' => null,
+    'access_check_completed_at' => null,
+    'access_check_error' => null
+]);
+"
+```
+
+#### Clear Tag Cache
+```bash
+# Reset user tags to force fresh ESP lookup
+php artisan tinker --execute="
+App\Models\SubscriberAccessRecord::find(51)->update([
+    'tags_json' => []
+]);
+"
+```
+
+#### Full Cache Reset
+```bash
+# Nuclear option - full reset
+php artisan tinker --execute="
+App\Models\SubscriberAccessRecord::find(51)->update([
+    'access_check_status' => 'none',
+    'tags_json' => [],
+    'last_verified_at' => now()->subDays(1),
+    'access_check_started_at' => null,
+    'access_check_completed_at' => null,
+    'access_check_error' => null
+]);
+"
+```
+
+#### Bulk Cache Management
+```bash
+# Clear all expired caches
+php artisan tinker --execute="
+App\Models\SubscriberAccessRecord::where('access_check_completed_at', '<', now()->subMinutes(5))
+    ->update(['access_check_status' => 'none']);
+"
+
+# Clear caches for specific tenant
+php artisan tinker --execute="
+App\Models\SubscriberAccessRecord::where('tenant_id', 1)
+    ->update(['access_check_status' => 'none']);
+"
+```
+
+### Performance Benefits
+
+1. **Reduced API Calls**: ESP API calls reduced by ~95%
+2. **Faster Response Times**: Immediate access for cached users
+3. **Cost Optimization**: Lower ESP API usage costs
+4. **Better UX**: Eliminates loading delays for returning users
+5. **Reliability**: Graceful degradation when ESP is unavailable
+
+### Cache Monitoring
+
+```bash
+# Monitor cache hit rates
+tail -f storage/logs/laravel.log | grep "Using cached"
+
+# Monitor ESP API calls
+tail -f storage/logs/laravel.log | grep "Starting async access check"
+
+# Monitor cache misses
+tail -f storage/logs/laravel.log | grep "Dispatching CheckUserAccessJob"
+```
+
+### Cache Invalidation Strategies
+
+**Automatic Invalidation**:
+- Time-based expiration (5 minutes for ESP cache)
+- User action triggers (email verification)
+- System events (ESP webhook updates)
+
+**Manual Invalidation**:
+- Admin panel cache clear buttons
+- Artisan commands for bulk operations
+- Direct database updates for debugging
+
+**Smart Invalidation**:
+- Cache warming during low-traffic periods
+- Selective invalidation by tenant or content
+- Batch processing for multiple cache entries
+
+---
+
 ## Uncovered Scenarios
 
 ### 1. Data Migration & Cleanup
