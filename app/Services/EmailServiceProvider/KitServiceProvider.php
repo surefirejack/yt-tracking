@@ -34,17 +34,35 @@ class KitServiceProvider implements EmailServiceProviderInterface
     public function checkSubscriber(string $email): array
     {
         try {
-            $response = $this->makeApiCall('GET', '/subscribers', [
-                'email_address' => $email
+            // Check both active and inactive subscribers
+            $activeResponse = $this->makeApiCall('GET', '/subscribers', [
+                'email_address' => $email,
+                'subscriber_state' => 'active'
             ]);
 
-            if ($response['success'] && !empty($response['data']['subscribers'])) {
-                $subscriber = $response['data']['subscribers'][0];
+            $inactiveResponse = $this->makeApiCall('GET', '/subscribers', [
+                'email_address' => $email,
+                'subscriber_state' => 'inactive'
+            ]);
+
+            $subscriber = null;
+            
+            // Check active subscribers first
+            if ($activeResponse['success'] && !empty($activeResponse['data']['subscribers'])) {
+                $subscriber = $activeResponse['data']['subscribers'][0];
+            }
+            // Then check inactive subscribers
+            elseif ($inactiveResponse['success'] && !empty($inactiveResponse['data']['subscribers'])) {
+                $subscriber = $inactiveResponse['data']['subscribers'][0];
+            }
+
+            if ($subscriber) {
                 return [
-                    'is_subscribed' => $subscriber['state'] === 'active',
+                    'is_subscribed' => true, // Consider both active and inactive as subscribed
                     'subscriber_id' => $subscriber['id'],
                     'tags' => $this->getSubscriberTags($subscriber['id']),
                     'created_at' => $subscriber['created_at'] ?? null,
+                    'state' => $subscriber['state'],
                 ];
             }
 
@@ -158,6 +176,11 @@ class KitServiceProvider implements EmailServiceProviderInterface
 
             if ($response['success']) {
                 $subscription = $response['data']['subscription'];
+                $subscriberId = $subscription['subscriber']['id'];
+                
+                // Try to confirm the subscriber by updating their state to active
+                $this->confirmSubscriber($subscriberId);
+                
                 return [
                     'success' => true,
                     'subscriber' => [
@@ -186,22 +209,59 @@ class KitServiceProvider implements EmailServiceProviderInterface
         }
     }
 
+    /**
+     * Try to confirm a subscriber by updating their state
+     */
+    private function confirmSubscriber(string $subscriberId): bool
+    {
+        try {
+            $response = $this->makeApiCall('PUT', "/subscribers/{$subscriberId}", [
+                'state' => 'active'
+            ]);
+
+            if ($response['success']) {
+                Log::info('Subscriber confirmed via API', [
+                    'subscriber_id' => $subscriberId
+                ]);
+                return true;
+            } else {
+                Log::warning('Failed to confirm subscriber via API', [
+                    'subscriber_id' => $subscriberId,
+                    'error' => $response['error'] ?? 'Unknown error'
+                ]);
+                return false;
+            }
+        } catch (\Exception $e) {
+            Log::warning('Exception while confirming subscriber', [
+                'subscriber_id' => $subscriberId,
+                'error' => $e->getMessage()
+            ]);
+            return false;
+        }
+    }
+
     public function addTagToSubscriber(string $email, string $tagId): bool
     {
         try {
-            $subscriber = $this->checkSubscriber($email);
-            
-            if (!$subscriber['is_subscribed']) {
-                // Add subscriber first if they don't exist
-                $addResult = $this->addSubscriber($email, [$tagId]);
-                return $addResult['success'] ?? false;
-            }
-
-            $response = $this->makeApiCall('POST', "/subscribers/{$subscriber['subscriber_id']}/tags", [
-                'tag_id' => $tagId
+            // Use the correct Kit API endpoint: POST /v3/tags/{tag_id}/subscribe
+            $response = $this->makeApiCall('POST', "/tags/{$tagId}/subscribe", [
+                'email' => $email
             ]);
 
-            return $response['success'];
+            if ($response['success']) {
+                Log::info('Successfully added tag to subscriber via correct API endpoint', [
+                    'email' => $email,
+                    'tag_id' => $tagId
+                ]);
+                return true;
+            } else {
+                Log::warning('Failed to add tag to subscriber', [
+                    'email' => $email,
+                    'tag_id' => $tagId,
+                    'error' => $response['error'] ?? 'Unknown error'
+                ]);
+                return false;
+            }
         } catch (\Exception $e) {
             Log::error('Kit API addTagToSubscriber failed', [
                 'email' => $email,
@@ -255,13 +315,10 @@ class KitServiceProvider implements EmailServiceProviderInterface
     public function removeTagFromSubscriber(string $email, string $tagId): bool
     {
         try {
-            $subscriber = $this->checkSubscriber($email);
-            
-            if (!$subscriber['is_subscribed']) {
-                return false; // Can't remove tag from non-existent subscriber
-            }
-
-            $response = $this->makeApiCall('DELETE', "/subscribers/{$subscriber['subscriber_id']}/tags/{$tagId}");
+            // Use the correct Kit API endpoint: POST /v3/tags/{tag_id}/unsubscribe
+            $response = $this->makeApiCall('POST', "/tags/{$tagId}/unsubscribe", [
+                'email' => $email
+            ]);
 
             return $response['success'];
         } catch (\Exception $e) {
@@ -353,24 +410,37 @@ class KitServiceProvider implements EmailServiceProviderInterface
 
     /**
      * Get tags for a specific subscriber by their ID
+     * Note: Kit API v3 doesn't have a direct endpoint for this, so we need to check all tags
      */
     protected function getSubscriberTags(string $subscriberId): array
     {
         try {
-            $response = $this->makeApiCall('GET', "/subscribers/{$subscriberId}/tags");
+            $allTags = $this->getTags();
+            $subscriberTags = [];
 
-            if ($response['success']) {
-                return collect($response['data']['tags'] ?? [])
-                    ->map(function ($tag) {
-                        return [
-                            'id' => (string) $tag['id'],
+            foreach ($allTags as $tag) {
+                // Check if this subscriber is subscribed to this tag
+                $response = $this->makeApiCall('GET', "/tags/{$tag['id']}/subscriptions", [
+                    'subscriber_state' => 'active'
+                ]);
+
+                if ($response['success'] && !empty($response['data']['subscriptions'])) {
+                    // Check if our subscriber is in the list
+                    $isSubscribed = collect($response['data']['subscriptions'])
+                        ->contains(function ($subscription) use ($subscriberId) {
+                            return $subscription['subscriber']['id'] == $subscriberId;
+                        });
+
+                    if ($isSubscribed) {
+                        $subscriberTags[] = [
+                            'id' => $tag['id'],
                             'name' => $tag['name'],
                         ];
-                    })
-                    ->toArray();
+                    }
+                }
             }
 
-            return [];
+            return $subscriberTags;
         } catch (\Exception $e) {
             Log::error('Kit API getSubscriberTags failed', [
                 'subscriber_id' => $subscriberId,
