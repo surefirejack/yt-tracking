@@ -8,6 +8,7 @@ use App\Models\EmailVerificationRequest;
 use App\Models\SubscriberAccessRecord;
 use App\Services\EmailServiceProvider\EmailServiceProviderManager;
 use App\Jobs\ProcessEmailVerification;
+use App\Jobs\CheckUserAccessJob;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\View\View;
@@ -488,36 +489,17 @@ class EmailGatedContentController extends Controller
      */
     private function showAccessForm(Request $request, Tenant $tenant, EmailSubscriberContent $content, string $channelname): View
     {
-        // Get ESP provider for tag name
-        $tagName = $content->required_tag_id;
-        $provider = $this->espManager->getProviderForTenant($tenant);
-        
-        if ($provider && $content->required_tag_id) {
-            try {
-                $tags = $provider->getTags();
-                $tag = collect($tags)->firstWhere('id', $content->required_tag_id);
-                $tagName = $tag['name'] ?? $content->required_tag_id;
-            } catch (\Exception $e) {
-                Log::warning('Failed to fetch tag name for content', [
-                    'content_id' => $content->id,
-                    'tag_id' => $content->required_tag_id,
-                    'error' => $e->getMessage()
-                ]);
-            }
-        }
+        // Check for special query parameters
+        $accessDenied = $request->query('access_denied');
+        $timeout = $request->query('timeout');
+        $error = $request->query('error');
 
-        // Get video info if utm_content parameter matches
-        $videoThumbnail = null;
+        // Get video title if utm_content is provided
         $videoTitle = null;
-        $utmContent = $request->get('utm_content');
-        
+        $utmContent = $request->query('utm_content');
         if ($utmContent && $tenant->ytChannel) {
-            $video = $tenant->ytChannel->ytVideos()
-                ->where('video_id', $utmContent)
-                ->first();
-            
+            $video = $tenant->ytChannel->ytVideos()->where('video_id', $utmContent)->first();
             if ($video) {
-                $videoThumbnail = $video->thumbnail_url;
                 $videoTitle = $video->title;
             }
         }
@@ -526,10 +508,10 @@ class EmailGatedContentController extends Controller
             'tenant' => $tenant,
             'content' => $content,
             'channelname' => $channelname,
-            'tagName' => $tagName,
-            'videoThumbnail' => $videoThumbnail,
             'videoTitle' => $videoTitle,
-            'utmContent' => $utmContent,
+            'accessDenied' => $accessDenied,
+            'timeout' => $timeout,
+            'error' => $error,
         ]);
     }
 
@@ -538,29 +520,43 @@ class EmailGatedContentController extends Controller
      */
     private function showContent(Tenant $tenant, EmailSubscriberContent $content, string $channelname, SubscriberAccessRecord $accessRecord): View
     {
-        // Get video title if YouTube video is set
+        // If access check is in progress, show loading page
+        if ($accessRecord->isCheckInProgress()) {
+            return view('email-gated-content.checking-access', [
+                'tenant' => $tenant,
+                'content' => $content,
+                'channelname' => $channelname,
+                'accessRecord' => $accessRecord,
+            ]);
+        }
+
+        // If access check completed but access denied, redirect to access form
+        if ($accessRecord->isCheckCompleted() && !$accessRecord->has_required_access) {
+            return redirect()->route('email-gated-content.show', [$channelname, $content->slug])
+                ->with('message', 'You do not have access to this content. Please verify your subscription.');
+        }
+
+        // Show content (existing logic)
         $videoTitle = null;
         if ($content->youtube_video_url) {
-            // Extract YouTube video ID from URL
             preg_match('/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/', $content->youtube_video_url, $matches);
             $videoId = $matches[1] ?? null;
             
             if ($videoId && $tenant->ytChannel) {
-                // Find the video in the yt_videos table
                 $video = $tenant->ytChannel->ytVideos()->where('video_id', $videoId)->first();
-                $videoTitle = $video?->title;
+                if ($video) {
+                    $videoTitle = $video->title;
+                }
             }
         }
 
         // Get CTA video data if CTA video is set
         $ctaVideo = null;
         if ($content->cta_youtube_video_url) {
-            // Extract YouTube video ID from CTA URL
             preg_match('/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/', $content->cta_youtube_video_url, $matches);
             $ctaVideoId = $matches[1] ?? null;
             
             if ($ctaVideoId && $tenant->ytChannel) {
-                // Find the CTA video in the yt_videos table
                 $video = $tenant->ytChannel->ytVideos()->where('video_id', $ctaVideoId)->first();
                 if ($video) {
                     $ctaVideo = [
@@ -646,15 +642,73 @@ class EmailGatedContentController extends Controller
         // Check if user has required tag
         $userTags = $accessRecord->tags_json ?? [];
         if (!in_array($content->required_tag_id, $userTags)) {
-            // Try to sync tags from ESP
-            return $this->syncUserTags($accessRecord, $tenant, $content);
+            // Instead of sync synchronously, use async approach
+            return $this->handleAsyncTagCheck($accessRecord, $tenant, $content);
         }
 
         return $accessRecord;
     }
 
     /**
-     * Check if email has access via existing verification
+     * Handle async tag checking
+     */
+    private function handleAsyncTagCheck(SubscriberAccessRecord $accessRecord, Tenant $tenant, EmailSubscriberContent $content): ?SubscriberAccessRecord
+    {
+        // Check if there's already an access check in progress for this content
+        if ($accessRecord->required_tag_id === $content->required_tag_id && $accessRecord->isCheckInProgress()) {
+            Log::info('Access check already in progress', [
+                'access_record_id' => $accessRecord->id,
+                'required_tag_id' => $content->required_tag_id,
+                'status' => $accessRecord->access_check_status
+            ]);
+            return $accessRecord; // Return record to show loading page
+        }
+
+        // Check if we have a recent completed check for this content
+        if ($accessRecord->required_tag_id === $content->required_tag_id && 
+            $accessRecord->isCheckCompleted() && 
+            $accessRecord->access_check_completed_at->isAfter(now()->subMinutes(5))) {
+            
+            // Use cached result if it's less than 5 minutes old
+            if ($accessRecord->has_required_access) {
+                Log::info('Using cached access check result - access granted', [
+                    'access_record_id' => $accessRecord->id,
+                    'required_tag_id' => $content->required_tag_id
+                ]);
+                return $accessRecord;
+            } else {
+                Log::info('Using cached access check result - access denied', [
+                    'access_record_id' => $accessRecord->id,
+                    'required_tag_id' => $content->required_tag_id
+                ]);
+                return null;
+            }
+        }
+
+        // Start new async check
+        Log::info('Starting async access check', [
+            'access_record_id' => $accessRecord->id,
+            'required_tag_id' => $content->required_tag_id
+        ]);
+
+        // Reset status for new check
+        $accessRecord->update([
+            'access_check_status' => 'pending',
+            'required_tag_id' => $content->required_tag_id,
+            'has_required_access' => null,
+            'access_check_started_at' => null,
+            'access_check_completed_at' => null,
+            'access_check_error' => null
+        ]);
+
+        // Dispatch background job
+        CheckUserAccessJob::dispatch($accessRecord, $content, $tenant);
+
+        return $accessRecord; // Return record to show loading page
+    }
+
+    /**
+     * Check if email has access via existing verification (async version)
      */
     private function checkEmailAccess(string $email, Tenant $tenant, EmailSubscriberContent $content): ?SubscriberAccessRecord
     {
@@ -669,53 +723,72 @@ class EmailGatedContentController extends Controller
         // Check if user has required tag
         $userTags = $accessRecord->tags_json ?? [];
         if (!in_array($content->required_tag_id, $userTags)) {
-            // Try to sync tags from ESP
-            return $this->syncUserTags($accessRecord, $tenant, $content);
+            // Use async approach for tag checking
+            return $this->handleAsyncTagCheck($accessRecord, $tenant, $content);
         }
 
         return $accessRecord;
     }
 
     /**
-     * Sync user tags from ESP
+     * API endpoint to check access status
      */
-    private function syncUserTags(SubscriberAccessRecord $accessRecord, Tenant $tenant, EmailSubscriberContent $content): ?SubscriberAccessRecord
+    public function checkAccessStatus(Request $request, int $accessRecordId)
     {
         try {
-            $provider = $this->espManager->getProviderForTenant($tenant);
-            if (!$provider) {
-                return null;
+            $accessRecord = SubscriberAccessRecord::find($accessRecordId);
+            
+            if (!$accessRecord) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Access record not found'
+                ], 404);
             }
 
-            $subscriber = $provider->getSubscriber($accessRecord->email);
-            if (!$subscriber) {
-                return null;
+            // Get the content for URL generation
+            $content = EmailSubscriberContent::where('required_tag_id', $accessRecord->required_tag_id)
+                ->where('tenant_id', $accessRecord->tenant_id)
+                ->first();
+
+            if (!$content) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Content not found'
+                ], 404);
             }
 
-            $subscriberTags = $provider->getSubscriberTags($subscriber['id']);
-            $accessRecord->update([
-                'tags_json' => $subscriberTags,
-                'last_verified_at' => now(),
-            ]);
+            $tenant = $accessRecord->tenant;
+            $channelname = strtolower(str_replace('@', '', $tenant->ytChannel->handle ?? 'channel'));
 
-            // Check if user now has required tag
-            if (in_array($content->required_tag_id, $subscriberTags)) {
-                Log::info('User tags synced from ESP, access granted', [
-                    'access_record_id' => $accessRecord->id,
-                    'required_tag' => $content->required_tag_id,
-                    'user_tags' => $subscriberTags
-                ]);
-                return $accessRecord;
+            $response = [
+                'status' => $accessRecord->access_check_status,
+                'accessRecordId' => $accessRecord->id,
+                'contentUrl' => route('email-gated-content.show', [$channelname, $content->slug]),
+                'accessFormUrl' => route('email-gated-content.show', [$channelname, $content->slug]) . '?access_denied=1',
+            ];
+
+            if ($accessRecord->isCheckCompleted()) {
+                $response['hasAccess'] = $accessRecord->has_required_access;
+                $response['processingTime'] = $accessRecord->getProcessingTime();
+                
+                if ($accessRecord->access_check_error) {
+                    $response['error'] = $accessRecord->access_check_error;
+                }
             }
+
+            return response()->json($response);
 
         } catch (\Exception $e) {
-            Log::error('Failed to sync user tags from ESP', [
-                'access_record_id' => $accessRecord->id,
+            Log::error('Error checking access status', [
+                'access_record_id' => $accessRecordId,
                 'error' => $e->getMessage()
             ]);
-        }
 
-        return null;
+            return response()->json([
+                'status' => 'error',
+                'message' => 'An error occurred while checking access'
+            ], 500);
+        }
     }
 
     /**
@@ -736,8 +809,6 @@ class EmailGatedContentController extends Controller
             true  // httpOnly
         ));
     }
-
-
 
     /**
      * Find tenant by channel name

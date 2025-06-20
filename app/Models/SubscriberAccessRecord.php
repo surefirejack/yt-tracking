@@ -15,12 +15,21 @@ class SubscriberAccessRecord extends Model
         'tags_json',
         'cookie_token',
         'last_verified_at',
+        'access_check_status',
+        'has_required_access',
+        'required_tag_id',
+        'access_check_started_at',
+        'access_check_completed_at',
+        'access_check_error',
     ];
 
     protected $casts = [
         'email' => 'encrypted', // Automatically encrypt/decrypt email
         'tags_json' => 'array', // Automatically handle JSON array conversion
         'last_verified_at' => 'datetime',
+        'has_required_access' => 'boolean',
+        'access_check_started_at' => 'datetime',
+        'access_check_completed_at' => 'datetime',
     ];
 
     protected static function boot()
@@ -94,6 +103,41 @@ class SubscriberAccessRecord extends Model
     }
 
     /**
+     * Check if access check is in progress
+     */
+    public function isCheckInProgress(): bool
+    {
+        return in_array($this->access_check_status, ['pending', 'processing']);
+    }
+
+    /**
+     * Check if access check is completed
+     */
+    public function isCheckCompleted(): bool
+    {
+        return in_array($this->access_check_status, ['completed', 'failed']);
+    }
+
+    /**
+     * Check if access check failed
+     */
+    public function isCheckFailed(): bool
+    {
+        return $this->access_check_status === 'failed';
+    }
+
+    /**
+     * Get the processing time for the access check
+     */
+    public function getProcessingTime(): ?int
+    {
+        if ($this->access_check_started_at && $this->access_check_completed_at) {
+            return $this->access_check_completed_at->diffInSeconds($this->access_check_started_at);
+        }
+        return null;
+    }
+
+    /**
      * Scope to find records by cookie token
      */
     public function scopeByCookieToken($query, string $token)
@@ -107,5 +151,21 @@ class SubscriberAccessRecord extends Model
     public function scopeByEmailAndTenant($query, string $email, int $tenantId)
     {
         return $query->where('email', $email)->where('tenant_id', $tenantId);
+    }
+
+    /**
+     * Scope to find records that need access checking
+     */
+    public function scopeNeedsAccessCheck($query)
+    {
+        return $query->where('access_check_status', 'pending');
+    }
+
+    /**
+     * Scope to find records with completed access checks
+     */
+    public function scopeAccessCheckCompleted($query)
+    {
+        return $query->whereIn('access_check_status', ['completed', 'failed']);
     }
 } 

@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\YouTubeIntegrationController;
 use App\Http\Controllers\SubscriptionCheckoutController;
 use App\Http\Controllers\ProductCheckoutController;
+use App\Http\Controllers\EmailGatedContentController;
 
 /*
 |--------------------------------------------------------------------------
@@ -331,30 +332,36 @@ Route::prefix('s/{channelname}')->middleware('verify.subscription')->group(funct
 */
 
 // Email verification route (global, not scoped to channelname)
-Route::get('/email-verification/{tenantId}/{token}', [App\Http\Controllers\EmailGatedContentController::class, 'verifyEmail'])
+Route::get('/email-verification/{tenantId}/{token}', [EmailGatedContentController::class, 'verifyEmail'])
     ->name('email-verification.verify')
     ->where('token', '[a-zA-Z0-9]+');
 
 // Email-gated content routes
 Route::prefix('p/{channelname}')->group(function () {
     // Show email access form or content if verified
-    Route::get('/{slug}', [App\Http\Controllers\EmailGatedContentController::class, 'show'])
+    Route::get('/{slug}', [EmailGatedContentController::class, 'show'])
         ->name('email-gated-content.show')
         ->where('channelname', '[a-z0-9_-]+')
         ->where('slug', '[a-z0-9_-]+');
 
     // Handle email submission for verification
-    Route::post('/{slug}/submit-email', [App\Http\Controllers\EmailGatedContentController::class, 'submitEmail'])
+    Route::post('/{slug}/submit-email', [EmailGatedContentController::class, 'submitEmail'])
         ->name('email-gated-content.submit-email')
         ->where('channelname', '[a-z0-9_-]+')
         ->where('slug', '[a-z0-9_-]+');
 
     // File downloads (secure, requires valid access)
-    Route::get('/{slug}/download/{filename}', [App\Http\Controllers\EmailGatedContentController::class, 'download'])
+    Route::get('/{slug}/download/{filename}', [EmailGatedContentController::class, 'download'])
         ->name('email-gated-content.download')
         ->where('channelname', '[a-z0-9_-]+')
         ->where('slug', '[a-z0-9_-]+')
         ->where('filename', '[^/]+'); // Allow various file name patterns
+});
+
+// API routes for async access checking
+Route::prefix('api')->group(function () {
+    Route::get('/check-access-status/{accessRecordId}', [EmailGatedContentController::class, 'checkAccessStatus'])
+        ->name('api.check-access-status');
 });
 
 /*
