@@ -327,7 +327,7 @@ class KitServiceProvider implements EmailServiceProviderInterface
     /**
      * Get tags for a specific subscriber by their ID using the direct endpoint
      */
-    protected function getSubscriberTags(string $subscriberId): array
+    public function getSubscriberTags(string $subscriberId): array
     {
         try {
             // Use the direct subscriber tags endpoint
