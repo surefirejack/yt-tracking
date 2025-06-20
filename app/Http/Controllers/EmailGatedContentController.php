@@ -42,14 +42,24 @@ class EmailGatedContentController extends Controller
                 $channelnameStr = $tenant->getChannelName() ?? 'unknown';
             } else {
                 $channelnameStr = $channelname;
-                $tenant = Tenant::whereHas('ytChannel', function ($query) use ($channelnameStr) {
-                    $query->where(\DB::raw('LOWER(REPLACE(handle, "@", ""))'), '=', strtolower($channelnameStr));
-                })->first();
+                $tenant = $this->findTenantByChannelName($channelnameStr);
 
                 if (!$tenant) {
+                    Log::warning('Tenant not found for channel name', [
+                        'channelname' => $channelnameStr,
+                        'url' => $request->url()
+                    ]);
                     return redirect()->route('home')->with('error', 'Channel not found.');
                 }
             }
+
+            Log::info('Tenant found for email-gated content', [
+                'tenant_id' => $tenant->id,
+                'channelname' => $channelnameStr,
+                'has_ytchannel' => $tenant->ytChannel ? 'yes' : 'no',
+                'channel_title' => $tenant->ytChannel->title ?? 'none',
+                'channel_handle' => $tenant->ytChannel->handle ?? 'none'
+            ]);
 
             if ($slug instanceof EmailSubscriberContent) {
                 $content = $slug;
@@ -59,6 +69,10 @@ class EmailGatedContentController extends Controller
                     ->first();
 
                 if (!$content) {
+                    Log::warning('Content not found', [
+                        'tenant_id' => $tenant->id,
+                        'slug' => $slug
+                    ]);
                     return redirect()->route('home')->with('error', 'Content not found.');
                 }
             }
@@ -75,7 +89,8 @@ class EmailGatedContentController extends Controller
                 Log::info('User has existing access via cookie', [
                     'tenant_id' => $tenant->id,
                     'content_id' => $content->id,
-                    'access_record_id' => $accessRecord->id
+                    'access_record_id' => $accessRecord->id,
+                    'access_check_status' => $accessRecord->access_check_status ?? 'none'
                 ]);
 
                 return $this->showContent($tenant, $content, $channelnameStr, $accessRecord);
@@ -88,7 +103,8 @@ class EmailGatedContentController extends Controller
             Log::error('Error loading email-gated content', [
                 'channelname' => is_object($channelname) ? get_class($channelname) : $channelname,
                 'slug' => is_object($slug) ? get_class($slug) : $slug,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
             ]);
             
             return redirect()->route('home')->with('error', 'An error occurred.');
@@ -494,13 +510,34 @@ class EmailGatedContentController extends Controller
         $timeout = $request->query('timeout');
         $error = $request->query('error');
 
-        // Get video title if utm_content is provided
+        // Get video title and thumbnail if utm_content is provided
         $videoTitle = null;
+        $videoThumbnail = null;
         $utmContent = $request->query('utm_content');
         if ($utmContent && $tenant->ytChannel) {
             $video = $tenant->ytChannel->ytVideos()->where('video_id', $utmContent)->first();
             if ($video) {
                 $videoTitle = $video->title;
+                $videoThumbnail = "https://img.youtube.com/vi/{$utmContent}/hqdefault.jpg";
+            }
+        }
+
+        // Get tag name for display
+        $tagName = null;
+        if ($content->required_tag_id) {
+            try {
+                $provider = $this->espManager->getProviderForTenant($tenant);
+                if ($provider) {
+                    $tags = $provider->getTags();
+                    $tag = collect($tags)->firstWhere('id', $content->required_tag_id);
+                    $tagName = $tag['name'] ?? null;
+                }
+            } catch (\Exception $e) {
+                Log::warning('Failed to get tag name for display', [
+                    'tenant_id' => $tenant->id,
+                    'tag_id' => $content->required_tag_id,
+                    'error' => $e->getMessage()
+                ]);
             }
         }
 
@@ -509,6 +546,9 @@ class EmailGatedContentController extends Controller
             'content' => $content,
             'channelname' => $channelname,
             'videoTitle' => $videoTitle,
+            'videoThumbnail' => $videoThumbnail,
+            'utmContent' => $utmContent,
+            'tagName' => $tagName,
             'accessDenied' => $accessDenied,
             'timeout' => $timeout,
             'error' => $error,
@@ -616,6 +656,14 @@ class EmailGatedContentController extends Controller
     {
         $cookieToken = $request->cookie('email_access_' . $tenant->id);
         
+        Log::info('Checking existing access', [
+            'tenant_id' => $tenant->id,
+            'content_slug' => $content->slug,
+            'required_tag_id' => $content->required_tag_id,
+            'cookie_token_present' => $cookieToken ? 'yes' : 'no',
+            'cookie_token_length' => $cookieToken ? strlen($cookieToken) : 0
+        ]);
+        
         if (!$cookieToken) {
             return null;
         }
@@ -625,8 +673,21 @@ class EmailGatedContentController extends Controller
             ->first();
 
         if (!$accessRecord) {
+            Log::warning('Access record not found for cookie token', [
+                'tenant_id' => $tenant->id,
+                'cookie_token_length' => strlen($cookieToken)
+            ]);
             return null;
         }
+
+        Log::info('Found access record via cookie', [
+            'access_record_id' => $accessRecord->id,
+            'tenant_id' => $tenant->id,
+            'user_tags' => $accessRecord->tags_json,
+            'required_tag_id' => $content->required_tag_id,
+            'last_verified_at' => $accessRecord->last_verified_at,
+            'access_check_status' => $accessRecord->access_check_status ?? 'none'
+        ]);
 
         // Check if cookie has expired
         $cookieDuration = $tenant->email_verification_cookie_duration_days ?? 30;
@@ -641,10 +702,46 @@ class EmailGatedContentController extends Controller
 
         // Check if user has required tag
         $userTags = $accessRecord->tags_json ?? [];
-        if (!in_array($content->required_tag_id, $userTags)) {
-            // Instead of sync synchronously, use async approach
+        $hasRequiredTag = in_array($content->required_tag_id, $userTags);
+        
+        Log::info('Tag check result', [
+            'access_record_id' => $accessRecord->id,
+            'required_tag_id' => $content->required_tag_id,
+            'user_tags' => $userTags,
+            'has_required_tag' => $hasRequiredTag ? 'yes' : 'no'
+        ]);
+        
+        if (!$hasRequiredTag) {
+            // User doesn't have required tag, use async approach
+            Log::info('User does not have required tag, triggering async check', [
+                'access_record_id' => $accessRecord->id,
+                'required_tag_id' => $content->required_tag_id,
+                'user_tags' => $userTags
+            ]);
             return $this->handleAsyncTagCheck($accessRecord, $tenant, $content);
         }
+
+        // User has the required tag - ensure access record is in correct state for immediate access
+        if ($accessRecord->access_check_status === 'pending' || $accessRecord->access_check_status === 'processing') {
+            Log::info('User has required tag, resetting access record status for immediate access', [
+                'access_record_id' => $accessRecord->id,
+                'required_tag_id' => $content->required_tag_id,
+                'user_tags' => $userTags
+            ]);
+            
+            $accessRecord->update([
+                'access_check_status' => 'completed',
+                'has_required_access' => true,
+                'required_tag_id' => $content->required_tag_id,
+                'access_check_completed_at' => now(),
+                'access_check_error' => null
+            ]);
+        }
+
+        Log::info('Granting immediate access - user has required tag', [
+            'access_record_id' => $accessRecord->id,
+            'required_tag_id' => $content->required_tag_id
+        ]);
 
         return $accessRecord;
     }
@@ -815,8 +912,36 @@ class EmailGatedContentController extends Controller
      */
     private function findTenantByChannelName(string $channelname): ?Tenant
     {
-        return Tenant::whereHas('ytChannel', function ($query) use ($channelname) {
-            $query->where(\DB::raw('LOWER(REPLACE(handle, "@", ""))'), '=', strtolower($channelname));
-        })->first();
+        Log::info('Looking for tenant by channel name', [
+            'channelname' => $channelname,
+            'normalized' => strtolower($channelname)
+        ]);
+
+        $tenant = Tenant::with('ytChannel')
+            ->whereHas('ytChannel', function ($query) use ($channelname) {
+                $query->where(\DB::raw('LOWER(REPLACE(handle, "@", ""))'), '=', strtolower($channelname));
+            })
+            ->first();
+
+        if ($tenant) {
+            Log::info('Tenant found by channel name', [
+                'tenant_id' => $tenant->id,
+                'channel_handle' => $tenant->ytChannel->handle ?? 'none',
+                'channel_title' => $tenant->ytChannel->title ?? 'none'
+            ]);
+        } else {
+            Log::warning('No tenant found for channel name', [
+                'channelname' => $channelname,
+                'available_channels' => Tenant::with('ytChannel')->get()->map(function($t) {
+                    return [
+                        'id' => $t->id,
+                        'handle' => $t->ytChannel->handle ?? 'none',
+                        'normalized' => strtolower(str_replace('@', '', $t->ytChannel->handle ?? ''))
+                    ];
+                })->toArray()
+            ]);
+        }
+
+        return $tenant;
     }
 } 
