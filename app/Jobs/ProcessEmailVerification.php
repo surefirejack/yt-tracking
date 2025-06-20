@@ -82,28 +82,18 @@ class ProcessEmailVerification implements ShouldQueue
                 ]);
             }
 
-            // If subscriber exists, check if they have the required tag
+            // If subscriber exists, log their status but always require email verification
             if ($existingSubscriber) {
                 try {
                     $subscriberTags = $existingSubscriber['tags'] ?? [];
                     
                     if (in_array($content->required_tag_id, $subscriberTags)) {
-                        Log::info('Existing subscriber has required tag, granting immediate access', [
+                        Log::info('Existing subscriber has required tag, will grant access after email verification', [
                             'email' => $email,
                             'required_tag' => $content->required_tag_id,
                             'subscriber_tags' => $subscriberTags,
                             'verification_request_id' => $this->verificationRequest->id
                         ]);
-
-                        // Create access record for immediate access
-                        $this->createAccessRecord($subscriberTags);
-                        
-                        // Mark verification as completed
-                        $this->verificationRequest->update(['verified_at' => now()]);
-                        
-                        // Send confirmation email instead of verification
-                        $this->sendImmediateAccessEmail();
-                        return;
                     } else {
                         Log::info('Existing subscriber missing required tag, will add tag after verification', [
                             'email' => $email,
@@ -115,7 +105,7 @@ class ProcessEmailVerification implements ShouldQueue
                 } catch (\Exception $e) {
                     Log::error('Failed to check subscriber tags in ESP', [
                         'email' => $email,
-                        'subscriber_id' => $existingSubscriber['id'],
+                        'subscriber_id' => $existingSubscriber['id'] ?? 'unknown',
                         'error' => $e->getMessage(),
                         'verification_request_id' => $this->verificationRequest->id
                     ]);
@@ -207,31 +197,44 @@ class ProcessEmailVerification implements ShouldQueue
                 ];
             }
 
-            // Add required tag to subscriber
+            // Add required tag to subscriber (if they don't already have it)
             if ($content->required_tag_id) {
-                Log::info('Adding required tag to subscriber', [
-                    'email' => $email,
-                    'subscriber_id' => $subscriber['id'],
-                    'tag_id' => $content->required_tag_id,
-                    'verification_request_id' => $this->verificationRequest->id
-                ]);
-
-                $tagResult = $provider->addTagToSubscriber($email, $content->required_tag_id);
+                // Check if subscriber already has the tag
+                $currentTags = $subscriberCheck['tags'] ?? [];
+                $hasRequiredTag = in_array($content->required_tag_id, array_column($currentTags, 'id'));
                 
-                if (!$tagResult) {
-                    Log::error('Failed to add tag to subscriber', [
+                if ($hasRequiredTag) {
+                    Log::info('Subscriber already has required tag', [
                         'email' => $email,
                         'subscriber_id' => $subscriber['id'],
                         'tag_id' => $content->required_tag_id,
                         'verification_request_id' => $this->verificationRequest->id
                     ]);
                 } else {
-                    Log::info('Successfully added tag to subscriber', [
+                    Log::info('Adding required tag to subscriber', [
                         'email' => $email,
                         'subscriber_id' => $subscriber['id'],
                         'tag_id' => $content->required_tag_id,
                         'verification_request_id' => $this->verificationRequest->id
                     ]);
+
+                    $tagResult = $provider->addTagToSubscriber($email, $content->required_tag_id);
+                    
+                    if (!$tagResult) {
+                        Log::error('Failed to add tag to subscriber', [
+                            'email' => $email,
+                            'subscriber_id' => $subscriber['id'],
+                            'tag_id' => $content->required_tag_id,
+                            'verification_request_id' => $this->verificationRequest->id
+                        ]);
+                    } else {
+                        Log::info('Successfully added tag to subscriber', [
+                            'email' => $email,
+                            'subscriber_id' => $subscriber['id'],
+                            'tag_id' => $content->required_tag_id,
+                            'verification_request_id' => $this->verificationRequest->id
+                        ]);
+                    }
                 }
             }
 
@@ -281,46 +284,7 @@ class ProcessEmailVerification implements ShouldQueue
         }
     }
 
-    /**
-     * Send immediate access email for existing subscribers
-     */
-    private function sendImmediateAccessEmail(): void
-    {
-        try {
-            $tenant = $this->verificationRequest->tenant;
-            $content = $this->verificationRequest->content;
-            $channelname = $tenant->getChannelName() ?? 'channel';
-            
-            $contentUrl = route('email-gated-content.show', [
-                'channelname' => $channelname,
-                'slug' => $content->slug
-            ]);
 
-            // You could create a separate mailable for immediate access
-            // For now, we'll use a simple notification approach
-            Mail::raw(
-                "Great news! You already have access to '{$content->title}'.\n\n" .
-                "Click here to view your content: {$contentUrl}\n\n" .
-                "Thanks for being a subscriber!",
-                function ($message) {
-                    $message->to($this->verificationRequest->email)
-                        ->subject('Your content is ready!');
-                }
-            );
-
-            Log::info('Immediate access email sent', [
-                'email' => $this->verificationRequest->email,
-                'verification_request_id' => $this->verificationRequest->id
-            ]);
-
-        } catch (\Exception $e) {
-            Log::error('Failed to send immediate access email', [
-                'email' => $this->verificationRequest->email,
-                'verification_request_id' => $this->verificationRequest->id,
-                'error' => $e->getMessage()
-            ]);
-        }
-    }
 
     /**
      * Create access record for the subscriber
