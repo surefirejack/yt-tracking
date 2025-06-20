@@ -21,6 +21,7 @@ class ProcessEmailVerification implements ShouldQueue
 
     public EmailVerificationRequest $verificationRequest;
     public ?string $utmContent;
+    public bool $espOnly;
 
     /**
      * The number of times the job may be attempted.
@@ -32,10 +33,11 @@ class ProcessEmailVerification implements ShouldQueue
      */
     public int $timeout = 120;
 
-    public function __construct(EmailVerificationRequest $verificationRequest, ?string $utmContent = null)
+    public function __construct(EmailVerificationRequest $verificationRequest, ?string $utmContent = null, bool $espOnly = false)
     {
         $this->verificationRequest = $verificationRequest;
         $this->utmContent = $utmContent;
+        $this->espOnly = $espOnly;
     }
 
     public function handle(EmailServiceProviderManager $espManager): void
@@ -45,7 +47,14 @@ class ProcessEmailVerification implements ShouldQueue
                 'verification_request_id' => $this->verificationRequest->id,
                 'tenant_id' => $this->verificationRequest->tenant_id,
                 'content_id' => $this->verificationRequest->content_id,
+                'esp_only' => $this->espOnly,
             ]);
+
+            // If this is ESP-only processing (post-verification), handle ESP integration only
+            if ($this->espOnly) {
+                $this->handlePostVerificationESP();
+                return;
+            }
 
             $tenant = $this->verificationRequest->tenant;
             $content = $this->verificationRequest->content;

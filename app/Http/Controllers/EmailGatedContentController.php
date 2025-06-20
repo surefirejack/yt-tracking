@@ -314,10 +314,7 @@ class EmailGatedContentController extends Controller
                 $verificationRequest->update(['verified_at' => now()]);
             }
 
-            // Handle ESP integration (add subscriber and tag)
-            $this->handlePostVerificationESP($verificationRequest);
-
-            // Create or update access record
+            // Create or update access record immediately (no ESP calls)
             $accessRecord = SubscriberAccessRecord::firstOrCreate(
                 [
                     'email' => $verificationRequest->email,
@@ -329,6 +326,11 @@ class EmailGatedContentController extends Controller
                     'last_verified_at' => now(),
                 ]
             );
+
+            // Queue ESP integration asynchronously (no delay for user)
+            ProcessEmailVerification::dispatch($verificationRequest, null, true) // true = espOnly
+                ->onQueue('default')
+                ->delay(now()->addSeconds(2)); // Small delay to ensure user sees success page first
 
             Log::info('Email verification completed', [
                 'tenant_id' => $tenant->id,
@@ -735,21 +737,7 @@ class EmailGatedContentController extends Controller
         ));
     }
 
-    /**
-     * Handle ESP integration after email verification
-     */
-    private function handlePostVerificationESP(EmailVerificationRequest $verificationRequest): void
-    {
-        try {
-            $processVerificationJob = new ProcessEmailVerification($verificationRequest);
-            $processVerificationJob->handlePostVerificationESP();
-        } catch (\Exception $e) {
-            Log::error('Failed to handle post-verification ESP integration', [
-                'verification_request_id' => $verificationRequest->id,
-                'error' => $e->getMessage()
-            ]);
-        }
-    }
+
 
     /**
      * Find tenant by channel name
