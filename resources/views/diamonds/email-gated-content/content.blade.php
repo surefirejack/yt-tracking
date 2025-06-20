@@ -1,4 +1,4 @@
-@extends('layouts.subscriber', ['contentTitle' => $content->title])
+@extends('layouts.subscriber', ['contentTitle' => $content->title, 'hideNavigation' => true])
 
 @push('head')
 <style>

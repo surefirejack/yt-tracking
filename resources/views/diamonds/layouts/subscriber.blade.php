@@ -162,6 +162,7 @@
     @endif
 
     <!-- Navigation Bar -->
+    @if(!isset($hideNavigation) || !$hideNavigation)
     <div class="bg-white shadow-sm border-b">
         <div class="container mx-auto px-4">
             <div class="flex items-center justify-between h-16">
@@ -218,6 +219,20 @@
             </div>
         </div>
     </div>
+    @else
+    <!-- Simplified header for email-gated content -->
+    <div class="bg-white shadow-sm border-b">
+        <div class="container mx-auto px-4">
+            <div class="flex items-center h-16">
+                @if(isset($contentTitle))
+                    <nav class="flex items-center space-x-2 text-sm text-gray-600">
+                        <span class="text-gray-900 font-medium">{{ $contentTitle }}</span>
+                    </nav>
+                @endif
+            </div>
+        </div>
+    </div>
+    @endif
 
     <!-- Main Content -->
     <main class="container mx-auto px-4 py-6 sm:py-8">
