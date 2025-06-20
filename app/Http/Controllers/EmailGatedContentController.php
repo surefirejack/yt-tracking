@@ -198,6 +198,16 @@ class EmailGatedContentController extends Controller
                 'expires_at' => now()->addHours(2),
             ]);
 
+            Log::info('Email verification request created (not yet verified)', [
+                'tenant_id' => $tenant->id,
+                'content_id' => $content->id,
+                'verification_request_id' => $verificationRequest->id,
+                'email' => $email,
+                'verified_at' => $verificationRequest->verified_at, // Should be null
+                'esp_connected' => $this->checkESPConnectivity($tenant),
+                'verification_token' => substr($verificationRequest->verification_token, 0, 8) . '...' // First 8 chars for debugging
+            ]);
+
             // Check ESP connectivity before dispatching job
             $espConnected = $this->checkESPConnectivity($tenant);
             
@@ -246,6 +256,23 @@ class EmailGatedContentController extends Controller
     public function verifyEmail(Request $request, int $tenantId, string $token)
     {
         try {
+            // Detect if this is a bot request
+            $userAgent = $request->header('User-Agent', '');
+            $isBot = $this->detectBot($userAgent);
+            
+            if ($isBot) {
+                Log::info('Bot detected accessing verification link', [
+                    'user_agent' => $userAgent,
+                    'ip_address' => $request->ip(),
+                    'token' => substr($token, 0, 8) . '...',
+                    'tenant_id' => $tenantId
+                ]);
+                
+                // Return a simple page for bots without verifying
+                return response('Email verification link detected. This link is for human verification only.', 200)
+                    ->header('Content-Type', 'text/plain');
+            }
+
             // Get tenant first using the tenant ID from URL
             $tenant = Tenant::with('ytChannel')->find($tenantId);
             
@@ -330,23 +357,43 @@ class EmailGatedContentController extends Controller
             // Mark as verified if not already
             if (!$verificationRequest->verified_at) {
                 $verificationRequest->update(['verified_at' => now()]);
+                
+                Log::info('Verification request marked as verified', [
+                    'verification_request_id' => $verificationRequest->id,
+                    'email' => $verificationRequest->email,
+                    'token' => substr($verificationRequest->verification_token, 0, 8) . '...',
+                    'verified_at' => $verificationRequest->fresh()->verified_at,
+                    'user_agent' => $request->header('User-Agent'),
+                    'ip_address' => $request->ip()
+                ]);
             }
 
-            // Check if access record exists (should be created by ProcessEmailVerification job)
+            // Create access record immediately if it doesn't exist (for cookie purposes)
             if (!$accessRecord) {
-                Log::info('No access record found after verification - job may still be processing', [
+                $accessRecord = SubscriberAccessRecord::create([
                     'email' => $verificationRequest->email,
+                    'tenant_id' => $tenant->id,
+                    'tags_json' => [$content->required_tag_id], // Include required tag immediately
+                    'access_check_status' => 'pending',
+                    'access_check_started_at' => now(),
+                    'last_verified_at' => now(),
+                ]);
+
+                Log::info('Created access record for verified email', [
+                    'email' => $verificationRequest->email,
+                    'access_record_id' => $accessRecord->id,
                     'verification_request_id' => $verificationRequest->id,
-                    'tenant_id' => $tenant->id
+                    'tags_included' => [$content->required_tag_id]
                 ]);
                 
-                // Wait a moment for job to potentially finish
-                sleep(1);
+                // Dispatch async job to handle Kit API integration
+                ProcessEmailVerification::dispatch($verificationRequest, null, true, $accessRecord->id);
                 
-                // Check again
-                $accessRecord = SubscriberAccessRecord::where('email', $verificationRequest->email)
-                    ->where('tenant_id', $tenant->id)
-                    ->first();
+                Log::info('Dispatched async Kit API job', [
+                    'email' => $verificationRequest->email,
+                    'verification_request_id' => $verificationRequest->id,
+                    'access_record_id' => $accessRecord->id
+                ]);
             }
 
             if ($accessRecord) {
@@ -378,47 +425,16 @@ class EmailGatedContentController extends Controller
                 'slug' => $content->slug
             ]);
 
-            // Create view response
-            if ($accessRecord) {
-                // User has proper access record - set cookie and show success
-                $view = view('email-verification.success', [
-                    'tenant' => $tenant,
-                    'content' => $content,
-                    'channelname' => $channelname,
-                    'contentUrl' => $contentUrl,
-                    'message' => 'Email verified successfully! You now have access to the content.'
-                ]);
+            $view = view('email-verification.success', [
+                'tenant' => $tenant,
+                'content' => $content,
+                'channelname' => $channelname,
+                'contentUrl' => $contentUrl,
+                'message' => 'Email verified successfully! You now have access to the content.'
+            ]);
 
-                // Convert to response and set cookie
-                return $this->setAccessCookie(response($view), $accessRecord);
-            } else {
-                // Job hasn't finished creating access record yet - provide temporary access
-                Log::info('Providing temporary access while job processes', [
-                    'email' => $verificationRequest->email,
-                    'verification_request_id' => $verificationRequest->id,
-                    'content_id' => $content->id
-                ]);
-
-                // Create temporary session-based access
-                session([
-                    'temp_email_access' => [
-                        'email' => $verificationRequest->email,
-                        'tenant_id' => $tenant->id,
-                        'content_id' => $content->id,
-                        'expires_at' => now()->addHour()->timestamp
-                    ]
-                ]);
-
-                $view = view('email-verification.success', [
-                    'tenant' => $tenant,
-                    'content' => $content,
-                    'channelname' => $channelname,
-                    'contentUrl' => $contentUrl,
-                    'message' => 'Email verified successfully! You now have access to the content.'
-                ]);
-
-                return response($view);
-            }
+            // Set cookie pointing to the access record and return
+            return $this->setAccessCookie(response($view), $accessRecord);
 
         } catch (\Exception $e) {
             Log::error('Error verifying email token', [
@@ -616,10 +632,23 @@ class EmailGatedContentController extends Controller
             ]);
         }
 
-        // If access check completed but access denied, redirect to access form
-        if ($accessRecord->isCheckCompleted() && !$accessRecord->has_required_access) {
-            return redirect()->route('email-gated-content.show', [$channelname, $content->slug])
-                ->with('message', 'You do not have access to this content. Please verify your subscription.');
+        // Check if user has required tag - if not, this shouldn't have gotten to showContent
+        // This is a safety check that should not normally trigger
+        if (!$accessRecord->hasTag($content->required_tag_id)) {
+            Log::warning('showContent called for user without required tag', [
+                'access_record_id' => $accessRecord->id,
+                'required_tag_id' => $content->required_tag_id,
+                'user_tags' => $accessRecord->tags_json,
+                'access_check_status' => $accessRecord->access_check_status
+            ]);
+            
+            // Return a view showing access denied instead of redirect
+            return view('email-gated-content.access-denied', [
+                'tenant' => $tenant,
+                'content' => $content,
+                'channelname' => $channelname,
+                'message' => 'You do not have access to this content. Please verify your subscription.'
+            ]);
         }
 
         // Show content (existing logic)
@@ -696,58 +725,10 @@ class EmailGatedContentController extends Controller
     }
 
     /**
-     * Check if user has existing access via cookie or temporary session
+     * Check if user has existing access via cookie
      */
     private function checkExistingAccess(Request $request, Tenant $tenant, EmailSubscriberContent $content): ?SubscriberAccessRecord
     {
-        // First check for temporary session access
-        $tempAccess = session('temp_email_access');
-        if ($tempAccess && 
-            $tempAccess['tenant_id'] === $tenant->id && 
-            $tempAccess['content_id'] === $content->id &&
-            $tempAccess['expires_at'] > now()->timestamp) {
-            
-            Log::info('Found valid temporary session access', [
-                'tenant_id' => $tenant->id,
-                'content_id' => $content->id,
-                'email' => $tempAccess['email'],
-                'expires_at' => $tempAccess['expires_at']
-            ]);
-
-            // Try to find the access record that should have been created by the job
-            $accessRecord = SubscriberAccessRecord::where('email', $tempAccess['email'])
-                ->where('tenant_id', $tenant->id)
-                ->first();
-
-            if ($accessRecord) {
-                // Clear temporary access since we now have the real record
-                session()->forget('temp_email_access');
-                Log::info('Found real access record, cleared temporary session', [
-                    'access_record_id' => $accessRecord->id,
-                    'email' => $tempAccess['email']
-                ]);
-                return $accessRecord;
-            } else {
-                // Still waiting for job - return a mock record for temporary access
-                Log::info('Still using temporary access - job not completed yet', [
-                    'email' => $tempAccess['email'],
-                    'tenant_id' => $tenant->id
-                ]);
-                
-                // Create a temporary mock record (not saved to database)
-                $mockRecord = new SubscriberAccessRecord([
-                    'email' => $tempAccess['email'],
-                    'tenant_id' => $tenant->id,
-                    'tags_json' => [$content->required_tag_id],
-                    'cookie_token' => 'temp_session',
-                    'last_verified_at' => now(),
-                ]);
-                $mockRecord->id = 'temp';
-                return $mockRecord;
-            }
-        }
-
-        // Check for cookie-based access
         $cookieToken = $request->cookie('email_access_' . $tenant->id);
         
         Log::info('Checking existing access', [
@@ -802,39 +783,55 @@ class EmailGatedContentController extends Controller
             'access_record_id' => $accessRecord->id,
             'required_tag_id' => $content->required_tag_id,
             'user_tags' => $userTags,
-            'has_required_tag' => $hasRequiredTag ? 'yes' : 'no'
+            'has_required_tag' => $hasRequiredTag ? 'yes' : 'no',
+            'access_check_status' => $accessRecord->access_check_status
         ]);
         
         if (!$hasRequiredTag) {
-            // User doesn't have required tag, use async approach
-            Log::info('User does not have required tag, triggering async check', [
-                'access_record_id' => $accessRecord->id,
-                'required_tag_id' => $content->required_tag_id,
-                'user_tags' => $userTags
-            ]);
-            return $this->handleAsyncTagCheck($accessRecord, $tenant, $content);
-        }
-
-        // User has the required tag - ensure access record is in correct state for immediate access
-        if ($accessRecord->access_check_status === 'pending' || $accessRecord->access_check_status === 'processing') {
-            Log::info('User has required tag, resetting access record status for immediate access', [
-                'access_record_id' => $accessRecord->id,
-                'required_tag_id' => $content->required_tag_id,
-                'user_tags' => $userTags
-            ]);
+            // If Kit API sync is still pending, check for timeout
+            if ($accessRecord->access_check_status === 'pending') {
+                // Check if the pending state has been going on too long (5 minutes)
+                $pendingTimeout = 5; // minutes
+                $pendingSince = $accessRecord->access_check_started_at ?? $accessRecord->last_verified_at;
+                
+                if ($pendingSince && $pendingSince->addMinutes($pendingTimeout)->isPast()) {
+                    Log::warning('ESP job has been pending too long, clearing cookie and showing opt-in form', [
+                        'access_record_id' => $accessRecord->id,
+                        'pending_since' => $pendingSince,
+                        'timeout_minutes' => $pendingTimeout,
+                        'required_tag_id' => $content->required_tag_id
+                    ]);
+                    
+                    // Clear the access record status to allow retry
+                    $accessRecord->update([
+                        'access_check_status' => 'timeout',
+                        'access_check_error' => 'ESP sync timeout after ' . $pendingTimeout . ' minutes'
+                    ]);
+                    
+                    return null; // This will show the opt-in form
+                }
+                
+                Log::info('Kit API sync still pending, showing loading page', [
+                    'access_record_id' => $accessRecord->id,
+                    'required_tag_id' => $content->required_tag_id
+                ]);
+                return $accessRecord; // Will show loading page
+            }
             
-            $accessRecord->update([
-                'access_check_status' => 'completed',
-                'has_required_access' => true,
+            // User doesn't have required tag and sync is complete - deny access
+            Log::info('User does not have required tag, denying access', [
+                'access_record_id' => $accessRecord->id,
                 'required_tag_id' => $content->required_tag_id,
-                'access_check_completed_at' => now(),
-                'access_check_error' => null
+                'user_tags' => $userTags,
+                'access_check_status' => $accessRecord->access_check_status
             ]);
+            return null;
         }
 
-        Log::info('Granting immediate access - user has required tag', [
+        Log::info('Granting access - user has required tag', [
             'access_record_id' => $accessRecord->id,
-            'required_tag_id' => $content->required_tag_id
+            'required_tag_id' => $content->required_tag_id,
+            'user_tags' => $userTags
         ]);
 
         return $accessRecord;
@@ -877,7 +874,7 @@ class EmailGatedContentController extends Controller
                     'access_record_id' => $accessRecord->id,
                     'required_tag_id' => $content->required_tag_id,
                     'current_tags' => $currentUserTags,
-                    'cached_has_access' => $accessRecord->has_required_access
+                    'has_required_tag' => false
                 ]);
                 return null;
             }
@@ -892,8 +889,6 @@ class EmailGatedContentController extends Controller
         // Reset status for new check
         $accessRecord->update([
             'access_check_status' => 'pending',
-            'required_tag_id' => $content->required_tag_id,
-            'has_required_access' => null,
             'access_check_started_at' => null,
             'access_check_completed_at' => null,
             'access_check_error' => null
@@ -943,10 +938,18 @@ class EmailGatedContentController extends Controller
                 ], 404);
             }
 
-            // Get the content for URL generation
-            $content = EmailSubscriberContent::where('required_tag_id', $accessRecord->required_tag_id)
-                ->where('tenant_id', $accessRecord->tenant_id)
-                ->first();
+            // For the checkAccessStatus endpoint, we need the content ID to be passed
+            // or we need to find it another way. For now, let's get the first content
+            // that the user is trying to access (this is a limitation of the current design)
+            $contentId = $request->input('content_id');
+            if ($contentId) {
+                $content = EmailSubscriberContent::where('id', $contentId)
+                    ->where('tenant_id', $accessRecord->tenant_id)
+                    ->first();
+            } else {
+                // Fallback: get any content from this tenant (not ideal but works for single content scenarios)
+                $content = EmailSubscriberContent::where('tenant_id', $accessRecord->tenant_id)->first();
+            }
 
             if (!$content) {
                 return response()->json([
@@ -966,7 +969,9 @@ class EmailGatedContentController extends Controller
             ];
 
             if ($accessRecord->isCheckCompleted()) {
-                $response['hasAccess'] = $accessRecord->has_required_access;
+                // Check if user has required tag for this content
+                $hasRequiredTag = $accessRecord->hasTag($content->required_tag_id);
+                $response['hasAccess'] = $hasRequiredTag;
                 $response['processingTime'] = $accessRecord->getProcessingTime();
                 
                 if ($accessRecord->access_check_error) {
@@ -1053,5 +1058,100 @@ class EmailGatedContentController extends Controller
         }
 
         return $tenant;
+    }
+
+    /**
+     * Detect if the request is from a bot or automated crawler
+     */
+    private function detectBot(string $userAgent): bool
+    {
+        $userAgent = strtolower($userAgent);
+        
+        // Common bot patterns - focused on the most relevant ones
+        $botPatterns = [
+            'broken-link-checker',
+            'linkchecker',
+            'link-checker',
+            'bot',
+            'crawler',
+            'spider',
+            'scraper',
+            'curl',
+            'wget',
+            'python',
+            'node.js',
+            'nodejs',
+            'axios',
+            'scanner',
+            'validator',
+            'monitor',
+            'check',
+            'test',
+            'probe',
+            'security',
+            'mimecast',
+            'proofpoint',
+            'barracuda',
+            'forcepoint',
+            'symantec',
+            'mcafee',
+            'kaspersky',
+            'microsoft defender',
+            'windows defender',
+            'google safe browsing',
+            'phishtank',
+            'urlhaus',
+            'spamhaus',
+            'virustotal',
+            'urlvoid',
+            'hybrid-analysis',
+            'joesandbox',
+            'cuckoo',
+            'falcon',
+            'crowdstrike',
+            'carbonblack',
+            'cylance',
+            'sentinelone',
+            'fireeye',
+            'mandiant',
+            'paloalto',
+            'checkpoint',
+            'fortinet',
+            'cisco',
+            'bluecoat',
+            'websense',
+            'sonicwall',
+            'watchguard',
+            'clearswift',
+            'zscaler',
+            'cloudflare',
+            'akamai',
+            'sucuri',
+            'qualys',
+            'nessus',
+            'openvas',
+            'burp',
+            'owasp',
+            'nikto',
+            'nmap',
+            'shodan',
+            'censys',
+            'binaryedge',
+            'rapid7',
+            'securitytrails',
+        ];
+        
+        foreach ($botPatterns as $pattern) {
+            if (strpos($userAgent, $pattern) !== false) {
+                return true;
+            }
+        }
+        
+        // Additional checks for empty or suspicious user agents
+        if (empty($userAgent) || strlen($userAgent) < 10) {
+            return true;
+        }
+        
+        return false;
     }
 } 

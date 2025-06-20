@@ -22,6 +22,7 @@ class ProcessEmailVerification implements ShouldQueue
     public EmailVerificationRequest $verificationRequest;
     public ?string $utmContent;
     public bool $espOnly;
+    public ?int $accessRecordId;
 
     /**
      * The number of times the job may be attempted.
@@ -33,11 +34,15 @@ class ProcessEmailVerification implements ShouldQueue
      */
     public int $timeout = 120;
 
-    public function __construct(EmailVerificationRequest $verificationRequest, ?string $utmContent = null, bool $espOnly = false)
+    /**
+     * Create a new job instance.
+     */
+    public function __construct(EmailVerificationRequest $verificationRequest, ?string $utmContent = null, bool $espOnly = false, ?int $accessRecordId = null)
     {
         $this->verificationRequest = $verificationRequest;
         $this->utmContent = $utmContent;
         $this->espOnly = $espOnly;
+        $this->accessRecordId = $accessRecordId;
     }
 
     public function handle(EmailServiceProviderManager $espManager): void
@@ -176,41 +181,54 @@ class ProcessEmailVerification implements ShouldQueue
                 return;
             }
 
+            // Track the tags we know this subscriber should have
+            $knownTags = [];
+
             // Check if subscriber exists
             $subscriberCheck = $provider->checkSubscriber($email);
             
             if (!$subscriberCheck['is_subscribed']) {
-                // Add new subscriber
-                Log::info('Adding new subscriber to ESP', [
+                // Add new subscriber with the required tag
+                Log::info('Adding new subscriber to ESP with required tag', [
                     'email' => $email,
+                    'tag_id' => $content->required_tag_id,
                     'verification_request_id' => $this->verificationRequest->id
                 ]);
 
-                $addResult = $provider->addSubscriber($email);
+                $addResult = $provider->addSubscriber($email, [$content->required_tag_id]);
                 
                 if (!$addResult['success']) {
                     Log::error('Failed to add subscriber to ESP', [
                         'email' => $email,
+                        'tag_id' => $content->required_tag_id,
                         'error' => $addResult['error'] ?? 'Unknown error',
                         'verification_request_id' => $this->verificationRequest->id
                     ]);
                     return;
                 }
 
-                $subscriber = $addResult['subscriber'];
+                Log::info('Successfully added new subscriber with tag', [
+                    'email' => $email,
+                    'tag_id' => $content->required_tag_id,
+                    'verification_request_id' => $this->verificationRequest->id
+                ]);
+
+                // Mark access record as completed since ESP call succeeded
+                $this->markAccessRecordCompleted();
+                return; // Exit early since we've successfully processed
             } else {
-                // Use existing subscriber
+                // Use existing subscriber and their current tags
                 $subscriber = [
                     'id' => $subscriberCheck['subscriber_id'],
                     'email' => $email,
                 ];
+                // Get existing tags for this subscriber
+                $knownTags = array_column($subscriberCheck['tags'] ?? [], 'id');
             }
 
             // Add required tag to subscriber (if they don't already have it)
             if ($content->required_tag_id) {
-                // Check if subscriber already has the tag
-                $currentTags = $subscriberCheck['tags'] ?? [];
-                $hasRequiredTag = in_array($content->required_tag_id, array_column($currentTags, 'id'));
+                $hasRequiredTag = in_array($content->required_tag_id, $knownTags);
                 
                 if ($hasRequiredTag) {
                     Log::info('Subscriber already has required tag', [
@@ -243,14 +261,16 @@ class ProcessEmailVerification implements ShouldQueue
                             'tag_id' => $content->required_tag_id,
                             'verification_request_id' => $this->verificationRequest->id
                         ]);
+                        
+                        // Mark access record as completed since ESP call succeeded
+                        $this->markAccessRecordCompleted();
+                        return; // Exit early since we've successfully processed
                     }
                 }
             }
 
-            // Get updated subscriber tags for access record
-            $updatedSubscriber = $provider->checkSubscriber($email);
-            $subscriberTags = $updatedSubscriber['tags'] ?? [];
-            $this->createAccessRecord($subscriberTags);
+            // No need for fallback update since tags are set at creation
+            // and we only update status when ESP succeeds
 
         } catch (\Exception $e) {
             Log::error('Error in post-verification ESP processing', [
@@ -294,53 +314,49 @@ class ProcessEmailVerification implements ShouldQueue
     }
 
     /**
-     * Create access record for the subscriber
+     * Mark access record as completed after successful ESP operation
      */
-    private function createAccessRecord(array $subscriberTags): void
+    private function markAccessRecordCompleted(): void
     {
         try {
-            // Check if record already exists to avoid regenerating cookie token
-            $existingRecord = SubscriberAccessRecord::where('email', $this->verificationRequest->email)
-                ->where('tenant_id', $this->verificationRequest->tenant_id)
-                ->first();
+            // Find access record - use direct ID if available, otherwise search by email
+            $accessRecord = null;
+            if ($this->accessRecordId) {
+                $accessRecord = SubscriberAccessRecord::find($this->accessRecordId);
+            } else {
+                // Fallback to finding by email and tenant
+                $accessRecord = SubscriberAccessRecord::where('email', $this->verificationRequest->email)
+                    ->where('tenant_id', $this->verificationRequest->tenant_id)
+                    ->orderBy('created_at', 'desc')
+                    ->first();
+            }
 
-            if ($existingRecord) {
-                // Update existing record, keep the original cookie token
-                $existingRecord->update([
-                    'tags_json' => $subscriberTags,
+            if ($accessRecord) {
+                // Mark as completed since ESP operation succeeded
+                $accessRecord->update([
+                    'access_check_status' => 'completed',
+                    'access_check_completed_at' => now(),
                     'last_verified_at' => now(),
                 ]);
 
-                Log::info('Access record updated', [
+                Log::info('Access record marked as completed after ESP success', [
                     'email' => $this->verificationRequest->email,
-                    'tenant_id' => $this->verificationRequest->tenant_id,
-                    'tags' => $subscriberTags,
+                    'access_record_id' => $accessRecord->id,
                     'verification_request_id' => $this->verificationRequest->id,
-                    'access_record_id' => $existingRecord->id,
-                    'cookie_token_preserved' => true
+                    'found_via' => $this->accessRecordId ? 'direct_id' : 'email_search'
                 ]);
             } else {
-                // Create new record with new cookie token
-                $newRecord = SubscriberAccessRecord::create([
+                Log::error('Access record not found for ESP completion update', [
                     'email' => $this->verificationRequest->email,
                     'tenant_id' => $this->verificationRequest->tenant_id,
-                    'tags_json' => $subscriberTags,
-                    'cookie_token' => Str::random(64),
-                    'last_verified_at' => now(),
-                ]);
-
-                Log::info('Access record created', [
-                    'email' => $this->verificationRequest->email,
-                    'tenant_id' => $this->verificationRequest->tenant_id,
-                    'tags' => $subscriberTags,
                     'verification_request_id' => $this->verificationRequest->id,
-                    'access_record_id' => $newRecord->id,
-                    'new_cookie_token' => true
+                    'access_record_id' => $this->accessRecordId,
+                    'search_method' => $this->accessRecordId ? 'direct_id' : 'email_search'
                 ]);
             }
 
         } catch (\Exception $e) {
-            Log::error('Failed to create access record', [
+            Log::error('Failed to mark access record as completed', [
                 'email' => $this->verificationRequest->email,
                 'verification_request_id' => $this->verificationRequest->id,
                 'error' => $e->getMessage()

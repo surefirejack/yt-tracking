@@ -16,8 +16,6 @@ class SubscriberAccessRecord extends Model
         'cookie_token',
         'last_verified_at',
         'access_check_status',
-        'has_required_access',
-        'required_tag_id',
         'access_check_started_at',
         'access_check_completed_at',
         'access_check_error',
@@ -27,7 +25,6 @@ class SubscriberAccessRecord extends Model
         'email' => 'encrypted', // Automatically encrypt/decrypt email
         'tags_json' => 'array', // Automatically handle JSON array conversion
         'last_verified_at' => 'datetime',
-        'has_required_access' => 'boolean',
         'access_check_started_at' => 'datetime',
         'access_check_completed_at' => 'datetime',
     ];
