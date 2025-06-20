@@ -271,54 +271,53 @@ class EmailGatedContentController extends Controller
                 ]);
             }
 
-            // If already verified, check if we can grant access via existing record
-            if ($verificationRequest->verified_at) {
-                Log::info('Verification token already used, checking for existing access', [
-                    'token' => $token,
-                    'verified_at' => $verificationRequest->verified_at
-                ]);
-
-                // Find existing access record
-                $accessRecord = SubscriberAccessRecord::where('email', $verificationRequest->email)
-                    ->where('tenant_id', $verificationRequest->tenant_id)
-                    ->first();
-
-                if ($accessRecord) {
-                    // Grant access using existing record
-                    $content = $verificationRequest->content;
-                    $contentUrl = route('email-gated-content.show', [
-                        'channelname' => $channelname,
-                        'slug' => $content->slug
-                    ]);
-
-                    $view = view('email-verification.success', [
-                        'tenant' => $tenant,
-                        'content' => $content,
-                        'channelname' => $channelname,
-                        'contentUrl' => $contentUrl,
-                        'message' => 'You already have access to this content!'
-                    ]);
-
-                    return $this->setAccessCookie(response($view), $accessRecord);
-                }
-
-                // If no access record found, show expired (this shouldn't normally happen)
-                return view('email-verification.expired', [
-                    'message' => 'This verification link has already been used.',
-                    'tenant' => $tenant,
-                    'channelname' => $channelname
-                ]);
-            }
-
             $content = $verificationRequest->content;
 
-            // Mark as verified
-            $verificationRequest->update(['verified_at' => now()]);
+            // Check if we already have an access record for this user
+            $accessRecord = SubscriberAccessRecord::where('email', $verificationRequest->email)
+                ->where('tenant_id', $verificationRequest->tenant_id)
+                ->first();
+
+            // If already verified and access record exists, grant access
+            if ($verificationRequest->verified_at && $accessRecord) {
+                Log::info('Verification token already used, granting access via existing record', [
+                    'token' => $token,
+                    'verified_at' => $verificationRequest->verified_at,
+                    'access_record_id' => $accessRecord->id
+                ]);
+
+                $contentUrl = route('email-gated-content.show', [
+                    'channelname' => $channelname,
+                    'slug' => $content->slug
+                ]);
+
+                $view = view('email-verification.success', [
+                    'tenant' => $tenant,
+                    'content' => $content,
+                    'channelname' => $channelname,
+                    'contentUrl' => $contentUrl,
+                    'message' => 'You already have access to this content!'
+                ]);
+
+                return $this->setAccessCookie(response($view), $accessRecord);
+            }
+
+            // Process verification (either first time or if access record doesn't exist)
+            Log::info('Processing email verification', [
+                'token' => $token,
+                'email' => $verificationRequest->email,
+                'is_first_time' => !$verificationRequest->verified_at
+            ]);
+
+            // Mark as verified if not already
+            if (!$verificationRequest->verified_at) {
+                $verificationRequest->update(['verified_at' => now()]);
+            }
 
             // Handle ESP integration (add subscriber and tag)
             $this->handlePostVerificationESP($verificationRequest);
 
-            // Create or update access record (will be updated by ESP job)
+            // Create or update access record
             $accessRecord = SubscriberAccessRecord::firstOrCreate(
                 [
                     'email' => $verificationRequest->email,
