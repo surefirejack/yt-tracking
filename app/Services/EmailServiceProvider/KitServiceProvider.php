@@ -101,109 +101,47 @@ class KitServiceProvider implements EmailServiceProviderInterface
         }
     }
 
-    public function getForms(): array
-    {
-        try {
-            $cacheKey = 'kit_forms_' . hash('sha256', $this->apiKey);
-            
-            return Cache::remember($cacheKey, 300, function () { // 5 minute cache
-                $response = $this->makeApiCall('GET', '/forms');
 
-                if ($response['success']) {
-                    return collect($response['data']['forms'] ?? [])
-                        ->map(function ($form) {
-                            return [
-                                'id' => (string) $form['id'],
-                                'name' => $form['name'],
-                                'created_at' => $form['created_at'] ?? null,
-                            ];
-                        })
-                        ->toArray();
-                }
-
-                return [];
-            });
-        } catch (\Exception $e) {
-            Log::error('Kit API getForms failed', [
-                'error' => $e->getMessage()
-            ]);
-            return [];
-        }
-    }
 
     public function addSubscriber(string $email, array $tags = []): array
     {
         try {
-            // First, try to add subscriber directly via tag subscription if tags are provided
-            if (!empty($tags)) {
-                $firstTag = $tags[0];
-                $response = $this->makeApiCall('POST', "/tags/{$firstTag}/subscribe", [
-                    'email' => $email
-                ]);
-
-                if ($response['success']) {
-                    // Get the subscriber info
-                    $subscriberCheck = $this->checkSubscriber($email);
-                    
-                    if ($subscriberCheck['is_subscribed']) {
-                        // Add any additional tags
-                        for ($i = 1; $i < count($tags); $i++) {
-                            $this->addTagToSubscriber($email, $tags[$i]);
-                        }
-
-                        return [
-                            'success' => true,
-                            'subscriber' => [
-                                'id' => $subscriberCheck['subscriber_id'],
-                                'email' => $email,
-                                'state' => $subscriberCheck['state'],
-                            ]
-                        ];
-                    }
-                }
-            }
-
-            // Fallback to form-based subscription if no tags or tag subscription failed
-            $forms = $this->getForms();
-            
-            if (empty($forms)) {
+            // We require at least one tag to subscribe via tag endpoint
+            if (empty($tags)) {
                 return [
                     'success' => false,
-                    'error' => 'No forms available and tag subscription failed'
+                    'error' => 'At least one tag is required for subscription'
                 ];
             }
 
-            // Use the first form to add the subscriber
-            $formId = $forms[0]['id'];
-            
-            $data = [
-                'email' => $email,
-            ];
+            // Subscribe to the first tag - this creates the subscriber if they don't exist
+            $firstTag = $tags[0];
+            $response = $this->makeApiCall('POST', "/tags/{$firstTag}/subscribe", [
+                'email' => $email
+            ]);
 
-            // Add tags if provided
-            if (!empty($tags)) {
-                $data['tags'] = $tags;
-            }
-
-            $response = $this->makeApiCall('POST', "/forms/{$formId}/subscribe", $data);
-
-            if ($response['success']) {
-                $subscription = $response['data']['subscription'];
-                
+            if (!$response['success']) {
                 return [
-                    'success' => true,
-                    'subscriber' => [
-                        'id' => $subscription['subscriber']['id'],
-                        'email' => $subscription['subscriber']['email_address'],
-                        'state' => $subscription['subscriber']['state'],
-                    ]
+                    'success' => false,
+                    'error' => $response['error'] ?? 'Failed to subscribe to tag'
                 ];
             }
 
+            // Add any additional tags
+            for ($i = 1; $i < count($tags); $i++) {
+                $this->addTagToSubscriber($email, $tags[$i]);
+            }
+
+            // Return success without making another API call
             return [
-                'success' => false,
-                'error' => $response['error'] ?? 'Unknown error'
+                'success' => true,
+                'subscriber' => [
+                    'id' => null, // We don't need the ID for our purposes
+                    'email' => $email,
+                    'state' => 'active', // Assume active after successful subscription
+                ]
             ];
+
         } catch (\Exception $e) {
             Log::error('Kit API addSubscriber failed', [
                 'email' => $email,
