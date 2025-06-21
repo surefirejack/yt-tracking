@@ -11,6 +11,7 @@ use App\Services\UserVerificationService;
 use App\Services\VerificationProviders\TwilioProvider;
 use Filament\Support\Assets\Js;
 use Filament\Support\Facades\FilamentAsset;
+use Guava\FilamentKnowledgeBase\Filament\Panels\KnowledgeBasePanel;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\ServiceProvider;
 
@@ -48,6 +49,12 @@ class AppServiceProvider extends ServiceProvider
         $this->app->afterResolving(UserVerificationService::class, function (UserVerificationService $service) {
             $service->setVerificationProviders(...$this->app->tagged('verification-providers'));
         });
+
+        // Configure Knowledge Base Panel to use the same theme as dashboard
+        KnowledgeBasePanel::configureUsing(
+            fn(KnowledgeBasePanel $panel) => $panel
+                ->viteTheme('resources/css/filament/dashboard/theme.css')
+        );
     }
 
     /**

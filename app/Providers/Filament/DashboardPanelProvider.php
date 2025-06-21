@@ -30,6 +30,7 @@ use Illuminate\Session\Middleware\StartSession;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 use Jeffgreco13\FilamentBreezy\BreezyCore;
+use Guava\FilamentKnowledgeBase\KnowledgeBasePlugin;
 
 class DashboardPanelProvider extends PanelProvider
 {
@@ -134,6 +135,7 @@ class DashboardPanelProvider extends PanelProvider
                     ->myProfileComponents([
                         \App\Livewire\AddressForm::class,
                     ]),
+                KnowledgeBasePlugin::make(),
             ])
             ->renderHook(PanelsRenderHook::HEAD_END, function () {
                 return <<<'HTML'

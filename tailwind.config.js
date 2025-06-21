@@ -13,6 +13,8 @@ export default {
         './app/Filament/**/*.php',
         './vendor/filament/**/*.blade.php',
         './vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php',
+        './vendor/guava/filament-knowledge-base/src/**/*.php',
+        './vendor/guava/filament-knowledge-base/resources/**/*.blade.php',
     ],
     darkMode: 'class',
     theme: {
