@@ -28,11 +28,15 @@ class Tenant extends Model
         'member_profile_image',
         'member_signature_name',
         'subscriber_accent_color',
+        'email_service_provider',
+        'esp_api_credentials',
+        'email_verification_cookie_duration_days',
     ];
 
     protected $casts = [
         'can_use_subscriber_only_lms' => 'boolean',
         'subscriber_only_lms_status' => 'boolean',
+        'esp_api_credentials' => 'encrypted:array', // Encrypted JSON for API credentials
     ];
 
     public function invitations(): HasMany
@@ -139,6 +143,21 @@ class Tenant extends Model
     public function tenantReferrals(): HasMany
     {
         return $this->hasMany(TenantReferral::class);
+    }
+
+    public function emailSubscriberContents(): HasMany
+    {
+        return $this->hasMany(EmailSubscriberContent::class);
+    }
+
+    public function emailVerificationRequests(): HasMany
+    {
+        return $this->hasMany(EmailVerificationRequest::class);
+    }
+
+    public function subscriberAccessRecords(): HasMany
+    {
+        return $this->hasMany(SubscriberAccessRecord::class);
     }
 
     /**

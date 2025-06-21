@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\YouTubeIntegrationController;
 use App\Http\Controllers\SubscriptionCheckoutController;
 use App\Http\Controllers\ProductCheckoutController;
+use App\Http\Controllers\EmailGatedContentController;
 
 /*
 |--------------------------------------------------------------------------
@@ -322,6 +323,49 @@ Route::prefix('s/{channelname}')->middleware('verify.subscription')->group(funct
 
 /*
 |--------------------------------------------------------------------------
+| Email-Gated Content Routes
+|--------------------------------------------------------------------------
+|
+| Routes for email subscriber content gating. Uses the /p/{channelname}/{slug}
+| pattern where channelname is the tenant's YouTube channel name (lowercase).
+|
+*/
+
+// Email verification route (global, not scoped to channelname)
+Route::get('/email-verification/{tenantId}/{token}', [EmailGatedContentController::class, 'verifyEmail'])
+    ->name('email-verification.verify')
+    ->where('token', '[a-zA-Z0-9]+');
+
+// Email-gated content routes
+Route::prefix('p/{channelname}')->group(function () {
+    // Show email access form or content if verified
+    Route::get('/{slug}', [EmailGatedContentController::class, 'show'])
+        ->name('email-gated-content.show')
+        ->where('channelname', '[a-z0-9_-]+')
+        ->where('slug', '[a-z0-9_-]+');
+
+    // Handle email submission for verification
+    Route::post('/{slug}/submit-email', [EmailGatedContentController::class, 'submitEmail'])
+        ->name('email-gated-content.submit-email')
+        ->where('channelname', '[a-z0-9_-]+')
+        ->where('slug', '[a-z0-9_-]+');
+
+    // File downloads (secure, requires valid access)
+    Route::get('/{slug}/download/{filename}', [EmailGatedContentController::class, 'download'])
+        ->name('email-gated-content.download')
+        ->where('channelname', '[a-z0-9_-]+')
+        ->where('slug', '[a-z0-9_-]+')
+        ->where('filename', '[^/]+'); // Allow various file name patterns
+});
+
+// API routes for async access checking
+Route::prefix('api')->group(function () {
+    Route::get('/check-access-status/{accessRecordId}', [EmailGatedContentController::class, 'checkAccessStatus'])
+        ->name('api.check-access-status');
+});
+
+/*
+|--------------------------------------------------------------------------
 | Route Model Binding for Subscriber Routes
 |--------------------------------------------------------------------------
 |
@@ -340,7 +384,7 @@ Route::bind('channelname', function ($value) {
     return $tenant ?: $value;
 });
 
-// Bind slug to SubscriberContent within tenant scope
+// Bind slug to content within tenant scope (handles both subscriber and email-gated content)
 Route::bind('slug', function ($value, $route) {
     // Get the tenant from the channelname parameter
     $channelname = $route->parameter('channelname');
@@ -359,9 +403,18 @@ Route::bind('slug', function ($value, $route) {
         return $value;
     }
 
-    // Find content by slug within this tenant
+    // Check if this is an email-gated content route (p/ prefix)
+    if (str_starts_with($route->uri(), 'p/')) {
+        // Find email-gated content by slug within this tenant
+        $content = $tenant->emailSubscriberContents()->where('slug', $value)->first();
+        
+        // Return the content if found, or return the string value to let middleware handle it
+        return $content ?: $value;
+    }
+    
+    // For subscriber routes (s/ prefix), find subscriber content
     $content = $tenant->subscriberContent()->where('slug', $value)->first();
     
     // Return the content if found, or return the string value to let middleware handle it
     return $content ?: $value;
-    });
+});

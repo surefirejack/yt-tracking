@@ -162,6 +162,7 @@
     @endif
 
     <!-- Navigation Bar -->
+    @if(!isset($hideNavigation) || !$hideNavigation)
     <div class="bg-white shadow-sm border-b">
         <div class="container mx-auto px-4">
             <div class="flex items-center justify-between h-16">
@@ -218,6 +219,20 @@
             </div>
         </div>
     </div>
+    @else
+    <!-- Simplified header for email-gated content -->
+    <div class="bg-white shadow-sm border-b">
+        <div class="container mx-auto px-4">
+            <div class="flex items-center h-16">
+                @if(isset($contentTitle))
+                    <nav class="flex items-center space-x-2 text-sm text-gray-600">
+                        <span class="text-gray-900 font-medium">{{ $contentTitle }}</span>
+                    </nav>
+                @endif
+            </div>
+        </div>
+    </div>
+    @endif
 
     <!-- Main Content -->
     <main class="container mx-auto px-4 py-6 sm:py-8">
@@ -295,7 +310,7 @@
                        target="_blank"
                        class="text-gray-500 hover:text-blue-600 transition-colors duration-200 flex items-center space-x-1">
                         <span>Powered by</span>
-                        <span class="font-semibold">{{ config('app.name', 'YT Tracking') }}</span>
+                        <span class="font-semibold">{{ config('app.name', 'VideoStats.ai') }}</span>
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
                         </svg>

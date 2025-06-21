@@ -1,0 +1,112 @@
+# Task List: Email Subscriber Content Gating
+
+## Relevant Files
+
+- `app/Models/EmailSubscriberContent.php` - Model for email-gated content similar to SubscriberContent ✅
+- `app/Models/EmailVerificationRequest.php` - Model for tracking email verification requests ✅ 
+- `app/Models/SubscriberAccessRecord.php` - Model for storing verified subscriber access data ✅
+- `database/migrations/2025_06_19_032249_create_email_subscriber_contents_table.php` - Migration for email gated content ✅
+- `database/migrations/2025_06_19_032305_create_email_verification_requests_table.php` - Migration for verification tracking ✅
+- `database/migrations/2025_06_19_032328_create_subscriber_access_records_table.php` - Migration for access records ✅
+- `database/migrations/2025_06_19_032517_add_email_integration_settings_to_tenants_table.php` - Migration for ESP settings in tenants table ✅
+- `database/migrations/2025_06_19_183644_add_file_and_video_fields_to_email_subscriber_contents_table.php` - Migration for file upload and YouTube video fields ✅
+- `app/Services/EmailServiceProvider/EmailServiceProviderInterface.php` - Abstract interface for ESP integration ✅
+- `app/Services/EmailServiceProvider/KitServiceProvider.php` - Kit/ConvertKit API implementation ✅
+- `app/Services/EmailServiceProvider/EmailServiceProviderManager.php` - ESP factory/manager class ✅
+- `app/Providers/AppServiceProvider.php` - Updated to register EmailServiceProviderManager ✅
+- `app/Filament/Resources/EmailSubscriberContentResource.php` - Filament admin resource for content management ✅
+- `app/Http/Controllers/EmailGatedContentController.php` - Controller for handling content access and verification ✅
+- `app/Mail/EmailVerificationMail.php` - Mailable for sending verification emails ✅
+- `app/Jobs/ProcessEmailVerification.php` - Queue job for ESP API interactions ✅
+- `app/Jobs/CleanupExpiredVerifications.php` - Job to clean up expired verification requests ✅
+- `resources/views/diamonds/email-gated-content/access-form.blade.php` - Content access form view ✅ (needs UI enhancement)
+- `resources/views/diamonds/email-gated-content/content.blade.php` - Content display page ✅ (needs UI enhancement)
+- `resources/views/diamonds/email-verification/success.blade.php` - Post-verification success page ✅ (needs UI enhancement)
+- `resources/views/diamonds/email-verification/expired.blade.php` - Verification error/expired page ✅ (needs UI enhancement)
+- `resources/views/emails/email-verification.blade.php` - Email verification template ✅
+- `routes/web.php` - Routes for email-gated content (pattern: /p/{channelname}/{slug}) ✅
+- `tests/Feature/EmailGatedContentTest.php` - Feature tests for the complete workflow ✅
+- `tests/Unit/KitServiceProviderTest.php` - Unit tests for Kit API integration ✅
+
+### Notes
+
+- All database tables should include tenant_id for multi-tenancy support
+- Email fields must use Laravel's encrypted casting for security
+- ESP API calls should be queued to prevent blocking user experience
+- Use existing tenant settings system for ESP configuration
+- Follow Laravel 11+ patterns and register services in bootstrap/app.php
+- Tests should cover the complete user flow from content access to verification
+- **UI Enhancement Phase**: Update all email-gated content views to match the subscriber layout design patterns
+- **Accent Color Integration**: Use tenant's `subscriber_accent_color` field for consistent branding across all email-gated pages
+- **File Download Support**: Add file upload/download functionality to EmailSubscriberContent similar to SubscriberContent
+- **Content Rendering**: Ensure HTML content is properly rendered instead of displaying raw HTML tags
+- **Layout Consistency**: Maintain consistent header, navigation, and footer design across all email-gated content pages
+- **Admin Interface Enhancement**: Add file upload capabilities and YouTube video selection to content creation/editing forms
+- **File Management**: Support multiple file types (PDF, images, documents) with proper validation and storage handling
+- **Video Integration**: Optional YouTube video embedding in email-gated content similar to subscriber content functionality
+
+## Tasks
+
+- [x] 1.0 Database Schema & Models Setup
+  - [x] 1.1 Create migration for `email_subscriber_contents` table with fields: id, tenant_id, title, slug, content, required_tag_id, created_at, updated_at
+  - [x] 1.2 Create migration for `email_verification_requests` table with fields: id, email (encrypted), verification_token, content_id, tenant_id, expires_at, verified_at, created_at, updated_at
+  - [x] 1.3 Create migration for `subscriber_access_records` table with fields: id, email (encrypted), tenant_id, tags_json, cookie_token, last_verified_at, created_at, updated_at
+  - [x] 1.4 Create `EmailSubscriberContent` model with encrypted email casting, tenant relationship, and slug generation
+  - [x] 1.5 Create `EmailVerificationRequest` model with encrypted email casting, automatic token generation, and expiration handling
+  - [x] 1.6 Create `SubscriberAccessRecord` model with encrypted email casting, JSON tag storage, and cookie token generation
+  - [x] 1.7 Add email integration settings to existing tenant settings system (ESP type, API credentials, cookie duration)
+  - [x] 1.8 Add migration to include file storage fields (file_paths, file_names) and youtube_video_url to email_subscriber_contents table
+  - [x] 1.9 Update EmailSubscriberContent model to handle file uploads and YouTube video URL with proper casting and validation
+- [x] 2.0 Email Service Provider Integration Architecture  
+  - [x] 2.1 Create `EmailServiceProviderInterface` with methods: checkSubscriber(), getTags(), addSubscriber(), addTagToSubscriber()
+  - [x] 2.2 Implement `KitServiceProvider` class using Kit API v3 for subscriber management
+  - [x] 2.3 Implement `KitServiceProvider` tag management methods (list tags, create tags, assign tags)
+  - [x] 2.4 Add ESP configuration validation and connection testing functionality
+  - [x] 2.5 Create ESP factory/manager class to resolve correct provider based on tenant settings
+  - [x] 2.6 Implement proper error handling and API response validation for Kit API calls
+  - [x] 2.7 Add rate limiting protection and retry logic for ESP API calls
+- [x] 3.0 Content Management & Admin Interface
+  - [x] 3.1 Create `EmailSubscriberContentResource` in Filament copying structure from existing `SubscriberContentResource`
+  - [x] 3.2 Add tag selection dropdown that dynamically fetches available tags from configured ESP
+  - [x] 3.3 Implement "Create New Tag" functionality within the content creation form
+  - [x] 3.4 Add ESP configuration section to tenant settings with API key input and connection testing
+  - [x] 3.5 Create content preview functionality showing how the access form will appear to visitors
+  - [x] 3.6 Add bulk operations for email-gated content (duplicate, delete, export)
+  - [x] 3.7 Implement content analytics view showing email conversion metrics per piece of content
+  - [x] 3.8 Add file upload functionality to EmailSubscriberContent admin interface similar to SubscriberContent
+  - [x] 3.9 Implement YouTube video selection dropdown in content creation form (optional field)
+  - [x] 3.10 Add file management interface for uploaded content files (view, delete, reorder)
+  - [x] 3.11 Create file validation and storage handling for multiple file types (PDF, images, documents)
+- [x] 4.0 Email Verification & Access Control System
+  - [x] 4.1 Create `EmailGatedContentController` with methods for showing access form and handling email submission
+  - [x] 4.2 Implement email validation and duplicate request prevention logic
+  - [x] 4.3 Create `ProcessEmailVerification` queue job for ESP API interactions (check subscriber, add subscriber, assign tags)
+  - [x] 4.4 Create verification token generation with cryptographically secure random strings
+  - [x] 4.5 Implement `EmailVerificationMail` mailable with branded templates and verification links
+  - [x] 4.6 Create verification link handler that validates tokens and grants content access
+  - [x] 4.7 Implement cookie-based access control with encrypted subscriber access records
+  - [x] 4.8 Add automatic tag synchronization logic (check ESP if local tags don't grant access)
+  - [x] 4.9 Create `CleanupExpiredVerifications` scheduled job to remove expired verification requests
+  - [x] 4.10 Implement immediate access flow for existing subscribers with required tags
+- [x] 5.0 Frontend UI & User Experience Implementation
+  - [x] 5.1 Create email-gated content access form with email input, video thumbnail, and subscription agreement
+  - [x] 5.2 Add frontend email validation with helpful error messages and loading states
+  - [x] 5.3 Implement video thumbnail display logic when utm_content parameter matches tenant's video
+  - [x] 5.4 Create verification success page with immediate access to requested content
+  - [x] 5.5 Add subscription agreement checkbox with modal explanation when unchecked
+  - [x] 5.6 Implement proper error handling for ESP API failures with user-friendly messages
+  - [x] 5.7 Create responsive design ensuring mobile-friendly email entry experience
+  - [x] 5.8 Add loading animations and progress indicators for verification process
+  - [x] 5.9 Implement routes using pattern `/p/{channelname}/{slug}` for email-gated content
+  - [x] 5.10 Add analytics event firing for email conversion tracking (email entry → verification → content access)
+- [x] 6.0 Enhanced UI & Layout Improvements
+  - [x] 6.1 Update email access form layout to match subscriber layout design with channel banner header
+  - [x] 6.2 Implement tenant accent color integration for buttons and content area highlights on access form
+  - [x] 6.3 Add channel profile image and banner display to access form header section
+  - [x] 6.4 Update email verification success page with subscriber-style banner and accent color theming
+  - [x] 6.5 Enhance verification expired/error page with consistent banner design and accent color usage
+  - [x] 6.6 Update email-gated content display page to match subscriber content layout structure
+  - [x] 6.7 Add file download functionality to email-gated content similar to subscriber content downloads
+  - [x] 6.8 Implement proper HTML content rendering instead of displaying raw HTML tags
+  - [x] 6.9 Add channel navigation breadcrumbs and user actions section to content pages
+  - [x] 6.10 Create consistent footer design across all email-gated content pages matching subscriber layout 

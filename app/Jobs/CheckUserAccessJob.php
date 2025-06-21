@@ -1,0 +1,177 @@
+<?php
+
+namespace App\Jobs;
+
+use App\Models\EmailSubscriberContent;
+use App\Models\SubscriberAccessRecord;
+use App\Models\Tenant;
+use App\Services\EmailServiceProvider\EmailServiceProviderManager;
+use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Foundation\Bus\Dispatchable;
+use Illuminate\Queue\InteractsWithQueue;
+use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Log;
+
+class CheckUserAccessJob implements ShouldQueue
+{
+    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+
+    public $timeout = 120; // 2 minutes timeout
+    public $tries = 3; // Retry up to 3 times
+
+    /**
+     * Create a new job instance.
+     */
+    public function __construct(
+        public SubscriberAccessRecord $accessRecord,
+        public EmailSubscriberContent $content,
+        public Tenant $tenant
+    ) {
+        // Set the queue name for better organization
+        $this->onQueue('esp-sync');
+    }
+
+    /**
+     * Execute the job.
+     */
+    public function handle(EmailServiceProviderManager $espManager): void
+    {
+        try {
+            Log::info('Starting async access check', [
+                'access_record_id' => $this->accessRecord->id,
+                'content_id' => $this->content->id,
+                'tenant_id' => $this->tenant->id,
+                'required_tag_id' => $this->content->required_tag_id
+            ]);
+
+            // Update status to processing
+            $this->accessRecord->update([
+                'access_check_status' => 'processing',
+                'access_check_started_at' => now(),
+                'access_check_error' => null
+            ]);
+
+            // Get ESP provider
+            $provider = $espManager->getProviderForTenant($this->tenant);
+            if (!$provider) {
+                throw new \Exception('ESP provider not configured for tenant');
+            }
+
+            // Get subscriber from ESP - use subscriber_id if available, otherwise email
+            if ($this->accessRecord->subscriber_id) {
+                Log::info('Using stored subscriber ID for API call', [
+                    'subscriber_id' => $this->accessRecord->subscriber_id,
+                    'access_record_id' => $this->accessRecord->id
+                ]);
+                
+                try {
+                    // Get fresh tags directly using subscriber ID
+                    $subscriberTags = $provider->getSubscriberTags($this->accessRecord->subscriber_id);
+                    $tagIds = collect($subscriberTags)->pluck('id')->toArray();
+                } catch (\Exception $e) {
+                    Log::warning('Failed to get tags using subscriber ID, falling back to email lookup', [
+                        'subscriber_id' => $this->accessRecord->subscriber_id,
+                        'error' => $e->getMessage()
+                    ]);
+                    
+                    // Fall back to email lookup
+                    $subscriber = $provider->getSubscriber($this->accessRecord->email);
+                    if (!$subscriber) {
+                        throw new \Exception('Subscriber not found in ESP using email fallback');
+                    }
+                    
+                    // Update the subscriber_id for future calls
+                    $this->accessRecord->update(['subscriber_id' => $subscriber['id']]);
+                    $subscriberTags = $provider->getSubscriberTags($subscriber['id']);
+                    $tagIds = collect($subscriberTags)->pluck('id')->toArray();
+                }
+            } else {
+                Log::info('No stored subscriber ID, looking up by email', [
+                    'email' => $this->accessRecord->email,
+                    'access_record_id' => $this->accessRecord->id
+                ]);
+                
+                $subscriber = $provider->getSubscriber($this->accessRecord->email);
+                if (!$subscriber) {
+                    Log::warning('Subscriber not found in ESP', [
+                        'email' => $this->accessRecord->email,
+                        'tenant_id' => $this->tenant->id
+                    ]);
+                    
+                    $this->accessRecord->update([
+                        'access_check_status' => 'completed',
+                        'access_check_completed_at' => now(),
+                        'access_check_error' => 'Subscriber not found in ESP'
+                    ]);
+                    return;
+                }
+
+                // Store the subscriber ID for future use
+                $this->accessRecord->update(['subscriber_id' => $subscriber['id']]);
+                
+                // Get fresh tags from ESP
+                $subscriberTags = $provider->getSubscriberTags($subscriber['id']);
+                
+                // Extract just the tag IDs for storage
+                $tagIds = collect($subscriberTags)->pluck('id')->toArray();
+            }
+            
+            // Check if user has required tag
+            $hasRequiredTag = in_array($this->content->required_tag_id, $tagIds);
+
+            // Update access record with results
+            $this->accessRecord->update([
+                'tags_json' => $tagIds,
+                'access_check_status' => 'completed',
+                'last_verified_at' => now(),
+                'access_check_completed_at' => now()
+            ]);
+
+            Log::info('Async access check completed', [
+                'access_record_id' => $this->accessRecord->id,
+                'has_required_tag' => $hasRequiredTag,
+                'required_tag_id' => $this->content->required_tag_id,
+                'user_tags' => $tagIds,
+                'processing_time' => $this->accessRecord->access_check_completed_at->diffInSeconds($this->accessRecord->access_check_started_at)
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Async access check failed', [
+                'access_record_id' => $this->accessRecord->id,
+                'content_id' => $this->content->id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            // Update record with error status
+            $this->accessRecord->update([
+                'access_check_status' => 'failed',
+                'access_check_completed_at' => now(),
+                'access_check_error' => $e->getMessage()
+            ]);
+
+            // Re-throw to trigger retry mechanism
+            throw $e;
+        }
+    }
+
+    /**
+     * Handle a job failure.
+     */
+    public function failed(\Throwable $exception): void
+    {
+        Log::error('CheckUserAccessJob failed permanently', [
+            'access_record_id' => $this->accessRecord->id,
+            'content_id' => $this->content->id,
+            'error' => $exception->getMessage()
+        ]);
+
+        // Mark as permanently failed
+        $this->accessRecord->update([
+            'access_check_status' => 'failed',
+            'access_check_completed_at' => now(),
+            'access_check_error' => 'Permanent failure: ' . $exception->getMessage()
+        ]);
+    }
+}
