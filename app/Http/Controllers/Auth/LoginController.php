@@ -31,6 +31,7 @@ class LoginController extends Controller
     //     */
     //    protected $redirectTo = RouteServiceProvider::HOME;
 
+    
     public function __construct(
         private LoginValidator $loginValidator,
         private LoginService $loginService,
@@ -61,6 +62,12 @@ class LoginController extends Controller
                 'email' => 'Your account has been blocked. Please contact support.',
             ]);
         }
+
+        if ($user->is_admin) {
+            return redirect()->route('filament.admin.pages.dashboard');
+        }
+
+        return redirect(app(\App\Services\UserDashboardService::class)->getUserDashboardUrl($user));
     }
 
     protected function validateLogin(Request $request)
